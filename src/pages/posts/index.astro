@@ -10,7 +10,7 @@ const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
 
 <BaseLayout title="全部文章 · GFXVis">
   <header class="mb-6">
-    <h1 class="text-2xl font-bold text-white">全部文章</h1>
+    <h1 class="text-2xl font-bold text-ink">全部文章</h1>
     <p class="mt-2 text-sm text-muted">共 {posts.length} 篇</p>
   </header>
   <div class="grid gap-5">

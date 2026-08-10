@@ -1,14 +1,68 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@theme {
-  --color-background: #0b0f14;
-  --color-surface: #12181f;
-  --color-border: #1f2937;
-  --color-accent: #4cc2ff;
-  --color-muted: #94a3b8;
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --gfx-bg: #ffffff;
+  --gfx-surface: #f8fafc;
+  --gfx-border: #e2e8f0;
+  --gfx-ink: #0f172a;
+  --gfx-muted: #64748b;
+  --gfx-accent: #2563eb;
+}
+
+.dark {
+  color-scheme: dark;
+  --gfx-bg: #0b0f14;
+  --gfx-surface: #12181f;
+  --gfx-border: #1f2937;
+  --gfx-ink: #f1f5f9;
+  --gfx-muted: #94a3b8;
+  --gfx-accent: #4cc2ff;
+}
+
+@theme inline {
+  --color-background: var(--gfx-bg);
+  --color-surface: var(--gfx-surface);
+  --color-border: var(--gfx-border);
+  --color-ink: var(--gfx-ink);
+  --color-muted: var(--gfx-muted);
+  --color-accent: var(--gfx-accent);
 }
 
 body {
-  @apply bg-background text-slate-200 antialiased;
+  @apply bg-background text-ink antialiased;
+}
+
+/* Shiki dual-theme: Astro emits --shiki-* CSS variables inline on .astro-code;
+   pick the active scheme by the .dark class instead of prefers-color-scheme.
+   Light code blocks use a fixed gray background (github-light's own bg is pure
+   white and would be invisible on the light page background). */
+pre.astro-code {
+  color: var(--shiki-light);
+  background-color: #f6f8fa;
+  border: 1px solid var(--gfx-border);
+}
+pre.astro-code span {
+  color: var(--shiki-light);
+}
+html.dark pre.astro-code {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+html.dark pre.astro-code span {
+  color: var(--shiki-dark);
+}
+
+/* Theme toggle icons: show sun in light mode, moon in dark mode. */
+.icon-moon {
+  display: none;
+}
+html.dark .icon-sun {
+  display: none;
+}
+html.dark .icon-moon {
+  display: block;
 }

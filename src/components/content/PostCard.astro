@@ -13,7 +13,7 @@ const { title, description, date, tags } = post.data;
   class="rounded-xl border border-border bg-surface p-6 transition-colors hover:border-accent/60"
 >
   <a href={`/posts/${post.id}`} class="block">
-    <h3 class="text-xl font-semibold text-white hover:text-accent">{title}</h3>
+    <h3 class="text-xl font-semibold text-ink hover:text-accent">{title}</h3>
     <p class="mt-2 text-sm leading-relaxed text-muted">{description}</p>
     <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted">
       <time datetime={date.toISOString()}
