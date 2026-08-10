@@ -1,0 +1,32 @@
+---
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("posts", ({ data }) => !data.draft);
+const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort(
+  (a, b) => a.localeCompare(b),
+);
+---
+
+<aside class="hidden w-56 shrink-0 md:block">
+  <h2 class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+    标签
+  </h2>
+  {
+    tags.length > 0 ? (
+      <ul class="flex flex-wrap gap-2">
+        {tags.map((tag) => (
+          <li>
+            <a
+              href={`/tags/${tag}`}
+              class="rounded-full border border-border px-3 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              {tag}
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="text-xs text-muted">暂无标签</p>
+    )
+  }
+</aside>

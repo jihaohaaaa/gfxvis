@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="关于 · GFXVis">
+  <article class="prose prose-slate max-w-none prose-invert">
+    <h1 class="text-3xl font-bold text-white">关于</h1>
+    <p>
+      GFXVis 是一个本地托管的图形学与可视化技术博客。文章以 MDX 编写,支持 KaTeX
+      公式、 Shiki 代码高亮,以及基于 React + Three.js 的交互式 3D 示例。
+    </p>
+    <h2 class="text-xl font-semibold text-white">技术栈</h2>
+    <ul>
+      <li>Astro(静态输出)+ TypeScript</li>
+      <li>MDX + KaTeX + Shiki</li>
+      <li>Tailwind CSS v4</li>
+      <li>React Islands + Three.js</li>
+    </ul>
+  </article>
+</BaseLayout>

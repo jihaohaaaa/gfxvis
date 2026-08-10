@@ -1,0 +1,51 @@
+---
+title: "阴影映射 Shadow Mapping"
+description: "从光源视角的深度图到阴影比较:shadow mapping 的核心思路与实现要点。"
+date: 2026-08-09
+tags: ["graphics", "rendering"]
+draft: false
+---
+
+# 阴影映射 Shadow Mapping
+
+Shadow mapping 分两步:先从光源视角渲染深度图,再在着色阶段比较深度。
+
+## 深度图
+
+从光源的透视视角,NDC 深度可以写成:
+
+$$
+z_{ndc} = \frac{z_{view}}{w_{view}}
+$$
+
+## 阴影比较
+
+片段的可见性:
+
+$$
+s(x) = \begin{cases}
+1 & d_{depth}(x) \ge d_{fragment}(x) \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+## 代码
+
+GLSL 侧:
+
+```glsl
+float shadow =
+    texture(shadowMap, shadowCoord.xy).r < shadowCoord.z ? 0.0 : 1.0;
+```
+
+C++ 侧,正交投影下使用同一个 view-projection 矩阵:
+
+```cpp
+auto lightSpaceMatrix = lightProjection * lightView;
+```
+
+## 常见问题
+
+- Peter Panning:深度偏移不足,阴影与物体分离
+- 自阴影 / acne:需要 depth bias 或 normal offset
+- 硬阴影边缘:可以配合 PCF 做软阴影

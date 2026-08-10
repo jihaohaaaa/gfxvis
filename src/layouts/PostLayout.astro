@@ -1,0 +1,39 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+}
+
+const { post } = Astro.props;
+const { title, description, date, tags } = post.data;
+---
+
+<BaseLayout title={`${title} · GFXVis`} description={description}>
+  <article>
+    <header class="mb-8 border-b border-border pb-6">
+      <h1 class="text-3xl font-bold text-white">{title}</h1>
+      <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
+        <time datetime={date.toISOString()}
+          >{date.toLocaleDateString("zh-CN")}</time
+        >
+        <span class="flex flex-wrap gap-2">
+          {
+            tags.map((tag) => (
+              <a
+                href={`/tags/${tag}`}
+                class="rounded-full border border-border px-2 py-0.5 text-xs transition-colors hover:border-accent hover:text-accent"
+              >
+                {tag}
+              </a>
+            ))
+          }
+        </span>
+      </div>
+    </header>
+    <div class="prose prose-slate max-w-none prose-invert prose-pre:bg-surface">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>

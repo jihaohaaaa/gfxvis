@@ -1,0 +1,27 @@
+---
+const nav = [
+  { href: "/", label: "首页" },
+  { href: "/posts", label: "文章" },
+  { href: "/about", label: "关于" },
+];
+---
+
+<header class="border-b border-border py-5">
+  <div class="flex items-center justify-between">
+    <a href="/" class="text-lg font-bold tracking-tight text-white">
+      GFX<span class="text-accent">Vis</span>
+    </a>
+    <nav class="flex items-center gap-5 text-sm">
+      {
+        nav.map((item) => (
+          <a
+            href={item.href}
+            class="text-muted transition-colors hover:text-white"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>
