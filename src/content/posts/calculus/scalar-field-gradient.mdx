@@ -1,0 +1,55 @@
+---
+title: "标量场与梯度"
+description: "标量场、等值线与梯度:梯度为何垂直于等值线,又为何指向最陡上升。"
+date: 2026-08-10
+tags: ["vector-calculus", "scalar-field", "gradient"]
+draft: false
+---
+
+import ScalarFieldDemo from "../../../components/visualization/ScalarFieldDemo";
+import ScalarField3DDemo from "../../../components/visualization/ScalarField3DDemo";
+
+# 标量场与梯度
+
+**标量场**把空间中的每个点映射到一个数值:温度场、气压场、高度图都是标量场。
+
+## 标量场与等值线
+
+记标量场为 $\varphi(x, y)$。满足 $\varphi(x,y) = c$ 的点构成的曲线称为**等值线**(等高线)。在等值线上,函数值不变。
+
+## 梯度
+
+梯度把标量场变成一个向量场:
+
+$$
+\nabla \varphi = \left( \frac{\partial \varphi}{\partial x}, \frac{\partial \varphi}{\partial y} \right)
+$$
+
+梯度有两个关键性质:
+
+$$
+\nabla \varphi \perp \text{等值线}, \qquad
+\nabla \varphi \text{ 指向 } \varphi \text{ 增长最快的方向}
+$$
+
+第一个性质来自链式法则:沿等值线方向 $t$ 有 $\nabla\varphi \cdot t = d\varphi = 0$。
+
+## 交互实验(二维)
+
+下面演示 $\varphi(x,y) = \sin x \cos y$:颜色表示场值(蓝→白→红),细线是等值线,箭头是梯度。注意梯度箭头总是与等值线垂直。
+
+<ScalarFieldDemo client:visible />
+
+## 从二维到三维:切片可视化
+
+三维标量场 $\varphi(x,y,z)$ 无法直接画出,常用**切片**观察:固定一个坐标,把剩下二维的场画成彩色平面。下面演示:
+
+$$
+\varphi(x,y,z) = x^2 + y^2 - z^2
+$$
+
+切换切片轴并拖动滑块,观察不同截面的场值分布。
+
+<ScalarField3DDemo client:visible />
+
+> 梯度是连接标量场与向量场的桥梁——下一篇将看到,对向量场还可以再定义散度与旋度。

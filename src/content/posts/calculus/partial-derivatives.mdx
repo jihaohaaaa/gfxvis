@@ -1,0 +1,137 @@
+---
+title: "偏导数、切平面与法线"
+description: "二元函数的偏导数、梯度、切平面方程,以及曲面法向量的计算。"
+date: 2026-08-10
+tags: ["calculus", "multivariable", "geometry"]
+draft: false
+---
+
+import TangentPlaneDemo from "../../../components/visualization/TangentPlaneDemo";
+
+# 偏导数、切平面与法线
+
+一元函数的切线,在二元函数这里升级成了**切平面**。而法线则是垂直于这个平面的方向。
+
+## 偏导数
+
+对二元函数 $f(x, y)$,固定 $y$ 只让 $x$ 变化,就得到关于 $x$ 的偏导数:
+
+$$
+\frac{\partial f}{\partial x}(a,b) = \lim_{h \to 0} \frac{f(a+h, b) - f(a,b)}{h}
+$$
+
+同理可定义 $\partial f / \partial y$。偏导数衡量的是函数沿某个坐标方向的变化率。
+
+## 梯度
+
+把两个偏导数排成向量,就是**梯度**:
+
+$$
+\nabla f = \left( \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right)
+$$
+
+梯度指向函数增长最快的方向。
+
+## 切平面
+
+在点 $(a, b)$ 处,用两个偏导数张成曲面的线性逼近:
+
+$$
+z = f(a,b) + \frac{\partial f}{\partial x}(a,b)(x-a) + \frac{\partial f}{\partial y}(a,b)(y-b)
+$$
+
+这个平面与曲面在 $(a, b, f(a,b))$ 处一阶相切。
+
+## 法线:从切平面到法向量
+
+### 切平面由两个方向张成
+
+把曲面写成参数形式:
+
+$$
+\mathbf{r}(x, y) = (x,\; y,\; f(x, y))
+$$
+
+在点 $(a, b)$ 处,沿 $x$ 与 $y$ 两个方向的偏导向量正好张成切平面:
+
+$$
+\mathbf{r}_x = \left( 1,\; 0,\; \frac{\partial f}{\partial x} \right), \qquad
+\mathbf{r}_y = \left( 0,\; 1,\; \frac{\partial f}{\partial y} \right)
+$$
+
+### 叉积给出法向量
+
+法向量垂直于切平面,也就是同时垂直于这两个方向。取它们的叉积:
+
+$$
+\mathbf{n} = \mathbf{r}_x \times \mathbf{r}_y
+= \begin{vmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+1 & 0 & \frac{\partial f}{\partial x} \\
+0 & 1 & \frac{\partial f}{\partial y}
+\end{vmatrix}
+= \left( -\frac{\partial f}{\partial x},\; -\frac{\partial f}{\partial y},\; 1 \right)
+$$
+
+叉积的第三个分量为 $1 > 0$,所以 $\mathbf{n}$ 指向 $z$ 轴正方向(朝上),这就是**法线**方向。
+
+### 直接验证正交性
+
+把 $\mathbf{n}$ 与两个切向方向点乘,结果都为零:
+
+$$
+\mathbf{n} \cdot \mathbf{r}_x
+= \left(-\frac{\partial f}{\partial x}\right) \cdot 1
++ \left(-\frac{\partial f}{\partial y}\right) \cdot 0
++ 1 \cdot \frac{\partial f}{\partial x}
+= 0
+$$
+
+$$
+\mathbf{n} \cdot \mathbf{r}_y
+= \left(-\frac{\partial f}{\partial x}\right) \cdot 0
++ \left(-\frac{\partial f}{\partial y}\right) \cdot 1
++ 1 \cdot \frac{\partial f}{\partial y}
+= 0
+$$
+
+### 另一种看法:隐式函数的梯度
+
+把曲面看作隐式方程 $F(x,y,z) = f(x,y) - z = 0$ 的零等值面。梯度 $\nabla F$ 总是垂直于等值面:
+
+$$
+\nabla F = \left( \frac{\partial f}{\partial x},\; \frac{\partial f}{\partial y},\; -1 \right)
+$$
+
+取反方向就得到朝上的法向量,与叉积结果完全一致:
+
+$$
+\mathbf{n} = (-f_x,\; -f_y,\; 1)
+$$
+
+### 单位法向量
+
+图形学中常用单位法向量,归一化后为:
+
+$$
+\hat{\mathbf{n}} = \frac{\mathbf{n}}{|\mathbf{n}|}
+= \frac{(-f_x,\; -f_y,\; 1)}{\sqrt{f_x^2 + f_y^2 + 1}}
+$$
+
+## 与图形学 normal matrix 的联系
+
+在渲染中,顶点法线需要经过模型变换。对非均匀缩放,直接用 Model Matrix 变换会破坏法线与切面的正交性,正确做法是用逆转置矩阵:
+
+$$
+N = (M^{-1})^{T}
+$$
+
+这与偏导数的思想一脉相承:法线是切平面(切空间)的法向,变换时必须保持与切空间的正交关系。
+
+## 交互实验
+
+在曲面上拖拽移动切点:蓝色半透明平面是切平面,红色/绿色短线是两个偏导方向,蓝色箭头是法向量。
+
+<TangentPlaneDemo client:visible />
+
+> 试试把切点拖到原点附近(鞍面的中心),观察 $f_x$ 与 $f_y$ 的符号变化。

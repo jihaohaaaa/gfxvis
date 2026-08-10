@@ -19,6 +19,10 @@ export default defineConfig([
     },
     rules: {
       "@typescript-eslint/no-deprecated": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
     },
   },
 ]);
