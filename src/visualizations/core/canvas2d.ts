@@ -30,6 +30,8 @@ export interface Canvas2DOptions extends Canvas2DHandlers {
 
 export interface Canvas2DController {
   redraw(): void;
+  /** Reset the viewport to a new world-space bounds (e.g. switching curves). */
+  setBounds(bounds: Bounds2): void;
   dispose(): void;
 }
 
@@ -160,6 +162,10 @@ export function createCanvas2D(
 
   return {
     redraw: draw,
+    setBounds(next: Bounds2) {
+      bounds = { ...next };
+      draw();
+    },
     dispose() {
       canvas.removeEventListener("wheel", onWheel);
       canvas.removeEventListener("pointerdown", onPointerDown);

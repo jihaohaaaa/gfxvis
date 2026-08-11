@@ -2,17 +2,90 @@ import { lerp } from "../../core/math";
 import { coolwarm, valueToT } from "../../core/colormap";
 import type { Bounds2 } from "../../core/plot2d";
 
-export const SCALAR_FN = {
-  phi: (x: number, y: number) => Math.sin(x) * Math.cos(y),
-  gradX: (x: number, y: number) => Math.cos(x) * Math.cos(y),
-  gradY: (x: number, y: number) => -Math.sin(x) * Math.sin(y),
-};
+export type Field2DId = "sincos" | "circle" | "parabola";
 
-export const FIELD_BOUNDS: Bounds2 = {
-  xMin: -Math.PI,
-  xMax: Math.PI,
-  yMin: -Math.PI,
-  yMax: Math.PI,
+export interface Field2D {
+  id: Field2DId;
+  label: string;
+  /** Original KaTeX formula of F(x, y), e.g. `\sin x \cos y`. */
+  tex: string;
+  bounds: Bounds2;
+  ticksX: number[];
+  ticksY: number[];
+  /** 3D surface height scale so every field fits the default camera. */
+  zScale: number;
+  /** F(x, y) - c (c is the adjustable level constant). */
+  phi(x: number, y: number, c: number): number;
+  gradX(x: number, y: number): number;
+  gradY(x: number, y: number): number;
+  hasC: boolean;
+  cMin: number;
+  cMax: number;
+  defaultC: number;
+  /** KaTeX formula of phi = F - c with c substituted. */
+  texAt(c: number): string;
+  /** Level equation F(x, y) = c, e.g. `x^2+y^2 = 1.50`. */
+  levelTex(c: number): string;
+}
+
+const fmt = (n: number): string => n.toFixed(2);
+
+export const FIELDS2D: Record<Field2DId, Field2D> = {
+  sincos: {
+    id: "sincos",
+    label: "sin x cos y",
+    tex: "\\sin x \\cos y",
+    bounds: { xMin: -Math.PI, xMax: Math.PI, yMin: -Math.PI, yMax: Math.PI },
+    ticksX: [-3, -2, -1, 1, 2, 3],
+    ticksY: [-3, -2, -1, 1, 2, 3],
+    zScale: 1,
+    phi: (x, y, c) => Math.sin(x) * Math.cos(y) - c,
+    gradX: (x, y) => Math.cos(x) * Math.cos(y),
+    gradY: (x, y) => -Math.sin(x) * Math.sin(y),
+    hasC: true,
+    cMin: -1,
+    cMax: 1,
+    defaultC: 0,
+    texAt: (c) =>
+      Math.abs(c) < 0.005 ? "\\sin x \\cos y" : `\\sin x \\cos y-${fmt(c)}`,
+    levelTex: (c) => `\\sin x \\cos y = ${fmt(c)}`,
+  },
+  circle: {
+    id: "circle",
+    label: "圆族",
+    tex: "x^2+y^2",
+    bounds: { xMin: -2.2, xMax: 2.2, yMin: -2.2, yMax: 2.2 },
+    ticksX: [-2, -1, 1, 2],
+    ticksY: [-2, -1, 1, 2],
+    zScale: 0.3,
+    phi: (x, y, c) => x * x + y * y - c,
+    gradX: (x, _y) => 2 * x,
+    gradY: (_x, y) => 2 * y,
+    hasC: true,
+    cMin: 0.5,
+    cMax: 6,
+    defaultC: 1.5,
+    texAt: (c) => (Math.abs(c) < 0.005 ? "x^2+y^2" : `x^2+y^2-${fmt(c)}`),
+    levelTex: (c) => `x^2+y^2 = ${fmt(c)}`,
+  },
+  parabola: {
+    id: "parabola",
+    label: "抛物线族",
+    tex: "y-x^2",
+    bounds: { xMin: -2.2, xMax: 2.2, yMin: -1.4, yMax: 4.8 },
+    ticksX: [-2, -1, 1, 2],
+    ticksY: [1, 2, 3, 4],
+    zScale: 0.32,
+    phi: (x, y, c) => y - x * x - c,
+    gradX: (x, _y) => -2 * x,
+    gradY: (_x, _y) => 1,
+    hasC: true,
+    cMin: -2,
+    cMax: 2,
+    defaultC: 0.5,
+    texAt: (c) => (Math.abs(c) < 0.005 ? "y-x^2" : `y-x^2-${fmt(c)}`),
+    levelTex: (c) => `y = x^2+${fmt(c)}`,
+  },
 };
 
 export interface FieldSample {
@@ -24,9 +97,11 @@ export interface FieldSample {
 }
 
 export function sampleField(
+  field: Field2D,
   bounds: Bounds2,
   nx: number,
   ny: number,
+  c = 0,
 ): FieldSample {
   const values = new Float32Array((nx + 1) * (ny + 1));
   let min = Infinity;
@@ -35,7 +110,7 @@ export function sampleField(
     const y = bounds.yMin + ((bounds.yMax - bounds.yMin) * i) / ny;
     for (let j = 0; j <= nx; j++) {
       const x = bounds.xMin + ((bounds.xMax - bounds.xMin) * j) / nx;
-      const v = SCALAR_FN.phi(x, y);
+      const v = field.phi(x, y, c);
       values[i * (nx + 1) + j] = v;
       if (v < min) min = v;
       if (v > max) max = v;

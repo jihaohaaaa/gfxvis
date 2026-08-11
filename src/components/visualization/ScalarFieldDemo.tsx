@@ -4,16 +4,22 @@ import {
   createCanvas2D,
   type Canvas2DController,
 } from "../../visualizations/core/canvas2d";
-import { drawArrow, drawAxes } from "../../visualizations/core/plot2d";
+import {
+  drawArrow,
+  drawAxes,
+  type Bounds2,
+} from "../../visualizations/core/plot2d";
 import { attachDrag3D } from "../../visualizations/core/drag3d";
 import { createViewer3D } from "../../visualizations/core/viewer3d";
 import {
-  FIELD_BOUNDS,
-  SCALAR_FN,
+  FIELDS2D,
   buildFieldImage,
   contourLevels,
   marchingSquares,
   sampleField,
+  type Field2DId,
+  type FieldSample,
+  type Segment,
 } from "../../visualizations/demos/scalar-field/field";
 import {
   createScalarFieldSurfaceScene,
@@ -27,15 +33,50 @@ const NX = 180;
 const NY = 140;
 const MARGIN = 24;
 
+const FIELD_OPTIONS: { id: Field2DId; label: string }[] = [
+  { id: "sincos", label: "sin x cos y" },
+  { id: "circle", label: "圆族" },
+  { id: "parabola", label: "抛物线族" },
+];
+
 const GRADIENT_MODES: { id: GradientArrowMode; label: string }[] = [
   { id: "horizontal", label: "水平梯度" },
   { id: "steepest", label: "最陡上升(曲面)" },
 ];
 
+interface HeatData {
+  image: HTMLCanvasElement | null;
+  contourSegments: Segment[];
+  bounds: Bounds2;
+  sample: FieldSample | null;
+}
+
+/** Sample a field once (c = 0) and precompute heatmap + contours. */
+function buildHeat(fieldId: Field2DId): HeatData {
+  const f = FIELDS2D[fieldId];
+  const sample = sampleField(f, f.bounds, NX, NY, 0);
+  return {
+    image: buildFieldImage(sample),
+    contourSegments: contourLevels(sample.min, sample.max, 9).flatMap((level) =>
+      marchingSquares(sample.values, sample.nx, sample.ny, f.bounds, level),
+    ),
+    bounds: f.bounds,
+    sample,
+  };
+}
+
+const INITIAL_HEAT: HeatData = {
+  image: null,
+  contourSegments: [],
+  bounds: FIELDS2D.sincos.bounds,
+  sample: null,
+};
+
 /**
  * Combined scalar-field experiment: 2D heatmap (left) + 3D surface z = phi(x,y)
- * (right) of the same function, sharing one probe. Dragging in either view
- * moves the other synchronously.
+ * (right) of the same function, sharing one probe. The field F can be switched
+ * (sin x cos y / circle family / parabola family) and the level constant c
+ * adjusts the zero level set.
  */
 export default function ScalarFieldDemo() {
   const container2dRef = useRef<HTMLDivElement>(null);
@@ -46,45 +87,55 @@ export default function ScalarFieldDemo() {
     typeof createScalarFieldSurfaceScene
   > | null>(null);
   const viewerRef = useRef<ReturnType<typeof createViewer3D> | null>(null);
+  const fieldIdRef = useRef<Field2DId>("sincos");
+  const cRef = useRef(0);
   const probeRef = useRef({ x: 0.6, y: 0.6 });
   const axesRef = useRef(true);
+  const heatRef = useRef<HeatData>(INITIAL_HEAT);
+  const [fieldId, setFieldId] = useState<Field2DId>("sincos");
+  const [c, setC] = useState(0);
   const [probe, setProbe] = useState({ x: 0.6, y: 0.6 });
   const [showAxes, setShowAxes] = useState(true);
   const [gradientMode, setGradientMode] =
     useState<GradientArrowMode>("horizontal");
   const [surfaceTransparent, setSurfaceTransparent] = useState(true);
 
+  const field = FIELDS2D[fieldId];
+
+  // Field change: rebuild the 2D heatmap data and the 3D surface.
+  useEffect(() => {
+    fieldIdRef.current = fieldId;
+    const f = FIELDS2D[fieldId];
+    heatRef.current = buildHeat(fieldId);
+    controllerRef.current?.setBounds(f.bounds);
+    sceneRef.current?.setField(f);
+    setC(f.defaultC);
+    setProbe((p) => ({
+      x: clamp(p.x, f.bounds.xMin, f.bounds.xMax),
+      y: clamp(p.y, f.bounds.yMin, f.bounds.yMax),
+    }));
+  }, [fieldId]);
+
   useEffect(() => {
     const container = container2dRef.current;
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
-    const field = sampleField(FIELD_BOUNDS, NX, NY);
-    const image = buildFieldImage(field);
-    const levels = contourLevels(field.min, field.max, 9);
-    const contourSegments = levels.flatMap((level) =>
-      marchingSquares(field.values, field.nx, field.ny, FIELD_BOUNDS, level),
-    );
-
     const controller = createCanvas2D(container, canvas, {
-      initialBounds: FIELD_BOUNDS,
+      initialBounds: FIELDS2D.sincos.bounds,
       margin: MARGIN,
       draw(ctx, plot, theme) {
-        if (axesRef.current) {
-          drawAxes(
-            ctx,
-            plot,
-            theme,
-            [-3, -2, -1, 1, 2, 3],
-            [-3, -2, -1, 1, 2, 3],
-          );
-        }
+        const f = FIELDS2D[fieldIdRef.current];
+        const pc = cRef.current;
+        const { image, contourSegments, bounds, sample } = heatRef.current;
+        if (axesRef.current) drawAxes(ctx, plot, theme, f.ticksX, f.ticksY);
+        if (!image) return;
 
         // Heatmap anchored to its world rect (so zoom/pan keep it correct).
-        const hx0 = plot.toScreenX(FIELD_BOUNDS.xMin);
-        const hx1 = plot.toScreenX(FIELD_BOUNDS.xMax);
-        const hy0 = plot.toScreenY(FIELD_BOUNDS.yMax);
-        const hy1 = plot.toScreenY(FIELD_BOUNDS.yMin);
+        const hx0 = plot.toScreenX(bounds.xMin);
+        const hx1 = plot.toScreenX(bounds.xMax);
+        const hy0 = plot.toScreenY(bounds.yMax);
+        const hy1 = plot.toScreenY(bounds.yMin);
         ctx.imageSmoothingEnabled = true;
         ctx.drawImage(image, hx0, hy1, hx1 - hx0, hy0 - hy1);
         ctx.strokeStyle = theme.border;
@@ -103,14 +154,37 @@ export default function ScalarFieldDemo() {
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        // Sparse gradient arrows.
+        // Highlight the current level set F = c (via marching squares).
+        if (f.hasC && sample) {
+          const level = clamp(pc, sample.min, sample.max);
+          const segments = marchingSquares(
+            sample.values,
+            sample.nx,
+            sample.ny,
+            bounds,
+            level,
+          );
+          ctx.strokeStyle = theme.accent;
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          for (const [p0, p1] of segments) {
+            ctx.moveTo(plot.toScreenX(p0[0]), plot.toScreenY(p0[1]));
+            ctx.lineTo(plot.toScreenX(p1[0]), plot.toScreenY(p1[1]));
+          }
+          ctx.stroke();
+        }
+
+        // Sparse gradient arrows across the field bounds.
         const kx = plot.toScreenX(1) - plot.toScreenX(0);
         const ky = plot.toScreenY(0) - plot.toScreenY(1);
         const arrowScale = 0.42;
-        for (let x = -2.4; x <= 2.4; x += 1.2) {
-          for (let y = -2.4; y <= 2.4; y += 1.2) {
-            const gx = SCALAR_FN.gradX(x, y);
-            const gy = SCALAR_FN.gradY(x, y);
+        const n = 5;
+        for (let i = 0; i <= n; i++) {
+          for (let j = 0; j <= n; j++) {
+            const x = bounds.xMin + ((bounds.xMax - bounds.xMin) * i) / n;
+            const y = bounds.yMin + ((bounds.yMax - bounds.yMin) * j) / n;
+            const gx = f.gradX(x, y);
+            const gy = f.gradY(x, y);
             const mag = Math.hypot(gx, gy);
             if (mag < 1e-4) continue;
             const len = Math.min(arrowScale, 0.3 * mag);
@@ -131,8 +205,8 @@ export default function ScalarFieldDemo() {
         // Probe point + gradient arrow.
         const px = probeRef.current.x;
         const py = probeRef.current.y;
-        const gx = SCALAR_FN.gradX(px, py);
-        const gy = SCALAR_FN.gradY(px, py);
+        const gx = f.gradX(px, py);
+        const gy = f.gradY(px, py);
         const mag = Math.hypot(gx, gy);
         const sx = plot.toScreenX(px);
         const sy = plot.toScreenY(py);
@@ -156,17 +230,18 @@ export default function ScalarFieldDemo() {
         }
       },
       onHover(e, plot) {
+        const f = FIELDS2D[fieldIdRef.current];
         const rect = canvas.getBoundingClientRect();
         setProbe({
           x: clamp(
             plot.toWorldX(e.clientX - rect.left),
-            FIELD_BOUNDS.xMin,
-            FIELD_BOUNDS.xMax,
+            f.bounds.xMin,
+            f.bounds.xMax,
           ),
           y: clamp(
             plot.toWorldY(e.clientY - rect.top),
-            FIELD_BOUNDS.yMin,
-            FIELD_BOUNDS.yMax,
+            f.bounds.yMin,
+            f.bounds.yMax,
           ),
         });
       },
@@ -174,17 +249,18 @@ export default function ScalarFieldDemo() {
         return true;
       },
       onLeftMove(e, plot) {
+        const f = FIELDS2D[fieldIdRef.current];
         const rect = canvas.getBoundingClientRect();
         setProbe({
           x: clamp(
             plot.toWorldX(e.clientX - rect.left),
-            FIELD_BOUNDS.xMin,
-            FIELD_BOUNDS.xMax,
+            f.bounds.xMin,
+            f.bounds.xMax,
           ),
           y: clamp(
             plot.toWorldY(e.clientY - rect.top),
-            FIELD_BOUNDS.yMin,
-            FIELD_BOUNDS.yMax,
+            f.bounds.yMin,
+            f.bounds.yMax,
           ),
         });
       },
@@ -196,7 +272,7 @@ export default function ScalarFieldDemo() {
   useEffect(() => {
     const container = container3dRef.current;
     if (!container) return;
-    const api = createScalarFieldSurfaceScene();
+    const api = createScalarFieldSurfaceScene(FIELDS2D.sincos);
     const viewer = createViewer3D(container, api.scene);
     sceneRef.current = api;
     viewerRef.current = viewer;
@@ -209,9 +285,10 @@ export default function ScalarFieldDemo() {
       hit: { point: { x: number; z: number } } | null,
     ): void => {
       if (!hit) return;
+      const f = FIELDS2D[fieldIdRef.current];
       // Invert mathToWorld: math x = world x, math y = -world z.
-      const nx = clamp(hit.point.x, FIELD_BOUNDS.xMin, FIELD_BOUNDS.xMax);
-      const ny = clamp(-hit.point.z, FIELD_BOUNDS.yMin, FIELD_BOUNDS.yMax);
+      const nx = clamp(hit.point.x, f.bounds.xMin, f.bounds.xMax);
+      const ny = clamp(-hit.point.z, f.bounds.yMin, f.bounds.yMax);
       probeRef.current = { x: nx, y: ny };
       setProbe({ x: nx, y: ny });
       api.setPoint(nx, ny);
@@ -239,6 +316,11 @@ export default function ScalarFieldDemo() {
   }, []);
 
   useEffect(() => {
+    sceneRef.current?.setC(c);
+    controllerRef.current?.redraw();
+  }, [c]);
+
+  useEffect(() => {
     probeRef.current = probe;
     axesRef.current = showAxes;
     controllerRef.current?.redraw();
@@ -246,16 +328,17 @@ export default function ScalarFieldDemo() {
     const viewer = viewerRef.current;
     if (api && viewer) {
       api.setPoint(probe.x, probe.y);
+      api.setC(c);
       api.setAxesVisible(showAxes);
       api.setGradientMode(gradientMode);
       api.setSurfaceTransparent(surfaceTransparent);
       viewer.render();
     }
-  }, [probe, showAxes, gradientMode, surfaceTransparent]);
+  }, [probe, showAxes, gradientMode, surfaceTransparent, c]);
 
-  const phi = SCALAR_FN.phi(probe.x, probe.y);
-  const gx = SCALAR_FN.gradX(probe.x, probe.y);
-  const gy = SCALAR_FN.gradY(probe.x, probe.y);
+  const value = field.phi(probe.x, probe.y, c);
+  const gx = field.gradX(probe.x, probe.y);
+  const gy = field.gradY(probe.x, probe.y);
 
   return (
     <ExpandableDemo>
@@ -276,22 +359,38 @@ export default function ScalarFieldDemo() {
           />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
-            <p>
-              <InlineMath
-                tex={`\\varphi(${probe.x.toFixed(2)}, ${probe.y.toFixed(2)}) = ${phi.toFixed(3)}`}
-              />
-            </p>
-            <p>
-              <InlineMath
-                tex={`\\nabla\\varphi = (${gx.toFixed(3)}, ${gy.toFixed(3)})`}
-              />
-            </p>
-            <p>
-              <InlineMath
-                tex={`\\lVert\\nabla\\varphi\\rVert = ${Math.hypot(gx, gy).toFixed(3)}`}
-              />
-            </p>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex items-center gap-1">
+              {FIELD_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setFieldId(option.id)}
+                  className={
+                    fieldId === option.id
+                      ? "rounded-full border border-accent px-3 py-1 text-xs text-accent"
+                      : "rounded-full border border-border px-3 py-1 text-xs text-muted hover:text-ink"
+                  }
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            {field.hasC && (
+              <label className="flex items-center gap-2 text-muted">
+                <InlineMath tex="c" />
+                <input
+                  type="range"
+                  min={field.cMin}
+                  max={field.cMax}
+                  step={0.05}
+                  value={c}
+                  onChange={(event) => setC(Number(event.target.value))}
+                  className="w-36 accent-[var(--color-accent)]"
+                />
+                <span className="tabular-nums">{c.toFixed(2)}</span>
+              </label>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1">
@@ -325,10 +424,38 @@ export default function ScalarFieldDemo() {
             <AxesToggle checked={showAxes} onChange={setShowAxes} />
           </div>
         </div>
+        <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
+          <p>
+            <InlineMath tex={`\\varphi(x,y) = ${field.texAt(c)}`} />
+          </p>
+          <p>
+            <InlineMath
+              tex={`\\varphi(${probe.x.toFixed(2)}, ${probe.y.toFixed(2)}) = ${value.toFixed(3)}`}
+            />
+          </p>
+          <p>
+            <InlineMath
+              tex={`\\nabla\\varphi = (${gx.toFixed(3)}, ${gy.toFixed(3)})`}
+            />
+          </p>
+          <p>
+            <InlineMath
+              tex={`\\lVert\\nabla\\varphi\\rVert = ${Math.hypot(gx, gy).toFixed(3)}`}
+            />
+          </p>
+          {field.hasC && (
+            <p>
+              <InlineMath
+                tex={`F(x,y) = ${c.toFixed(2)} \\Rightarrow ${field.levelTex(c)}`}
+              />
+            </p>
+          )}
+        </div>
         <p className="text-xs text-muted">
-          任一视图移动鼠标或拖动即可摆放探针,另一视图同步;3D
-          箭头可切换:水平梯度或沿曲面最陡上升(曲面默认半透明便于观察);2D:滚轮缩放
-          · 中键平移;3D:左键/中键旋转 · 滚轮缩放 · 右键平移。
+          切换字段,圆族/抛物线族可调 c(accent 实线为零等值线
+          F=c);任一视图移动鼠标或拖动摆放探针,另一视图同步;3D
+          箭头可切换水平梯度/最陡上升;2D:滚轮缩放 · 中键平移;3D:左键/中键旋转 ·
+          滚轮缩放 · 右键平移。
         </p>
       </div>
     </ExpandableDemo>

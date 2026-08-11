@@ -34,9 +34,58 @@ $$
 
 第一个性质来自链式法则:沿等值线方向 $t$ 有 $\nabla\varphi \cdot t = d\varphi = 0$。
 
+## 方向导数
+
+"梯度指向增长最快的方向"可以用**方向导数**精确化。设 $\mathbf u = (u_1, u_2)$ 是一个单位方向向量,标量场 $\varphi$ 在点 $(a,b)$ 沿方向 $\mathbf u$ 的**方向导数**定义为
+
+$$
+D_{\mathbf u}\varphi(a,b) = \lim_{h \to 0} \frac{\varphi(a+hu_1, b+hu_2) - \varphi(a,b)}{h}
+$$
+
+它衡量的是:从 $(a,b)$ 出发沿 $\mathbf u$ 方向移动,$\varphi$ 的变化率。记沿该方向的轨迹为
+
+$$
+g(t) = \varphi(a + t u_1,\, b + t u_2), \qquad g(0) = \varphi(a,b)
+$$
+
+由定义,$D_{\mathbf u}\varphi(a,b)$ 正是 $g'(0)$。对 $g$ 用多元链式法则:
+
+$$
+g'(t) = \frac{\partial \varphi}{\partial x}\frac{d(a + t u_1)}{dt} + \frac{\partial \varphi}{\partial y}\frac{d(b + t u_2)}{dt}
+= \frac{\partial \varphi}{\partial x}u_1 + \frac{\partial \varphi}{\partial y}u_2
+$$
+
+其中偏导在 $(a + t u_1, b + t u_2)$ 处取值。取 $t = 0$,并把它写成点积:
+
+$$
+D_{\mathbf u}\varphi = \nabla\varphi \cdot \mathbf u = \frac{\partial \varphi}{\partial x}u_1 + \frac{\partial \varphi}{\partial y}u_2
+$$
+
+两个特例:取 $\mathbf u = (1,0)$ 得 $D_{\mathbf u}\varphi = \partial\varphi/\partial x$,取 $\mathbf u = (0,1)$ 得 $D_{\mathbf u}\varphi = \partial\varphi/\partial y$——**偏导数就是沿坐标轴方向的方向导数**。
+
+由点积的定义,两个向量的点积等于它们的模长之积乘以夹角的余弦。记 $\theta$ 为 $\mathbf u$ 与 $\nabla\varphi$ 的夹角,则
+
+$$
+D_{\mathbf u}\varphi = \nabla\varphi \cdot \mathbf u = \lVert\nabla\varphi\rVert \cdot \lVert\mathbf u\rVert \cdot \cos\theta
+$$
+
+而 $\mathbf u$ 是单位向量,$\lVert\mathbf u\rVert = 1$,于是
+
+$$
+D_{\mathbf u}\varphi = \lVert\nabla\varphi\rVert \cos\theta
+$$
+
+于是方向导数完全由夹角决定:
+
+- $\theta = 0$($\mathbf u$ 与梯度同向)时最大,等于 $\lVert\nabla\varphi\rVert$——这正是"梯度指向增长最快的方向";
+- $\theta = \pi/2$($\mathbf u$ 与梯度垂直,即沿等值线方向)时为零——等值线上函数值不变;
+- $\theta = \pi$($\mathbf u$ 与梯度反向)时最小,等于 $-\lVert\nabla\varphi\rVert$,下降最快。
+
+这就是梯度的几何意义:它的大小给出最大方向导数,它的方向给出取得最大方向导数的方向。
+
 ## 交互实验:二维热力图 + 三维曲面
 
-下面演示 $\varphi(x,y) = \sin x \cos y$:左侧是俯视的二维热力图,右侧是它的三维曲面 $z = \varphi(x,y)$。颜色表示场值(蓝→白→红),细线是等值线——在三维曲面上它们就是等高线;箭头是梯度,总是与等值线垂直并指向上升最快的方向。两个视图共享同一个探针:在任一视图拖动,另一视图同步跟随。
+下面演示 $\varphi(x,y) = \sin x \cos y - c$;也可以切换到圆族 $F = x^2+y^2$ 或抛物线族 $F = y-x^2$(同样带常数 $c$),accent 实线为零等值线 $F=c$。左侧是俯视的二维热力图,右侧是它的三维曲面 $z=\varphi(x,y)$:颜色表示场值(蓝→白→红),细线是等值线——在三维曲面上它们就是等高线;箭头是梯度,总是与等值线垂直并指向上升最快的方向。两个视图共享同一个探针:在任一视图拖动,另一视图同步跟随。
 
 <ScalarFieldDemo client:visible />
 
