@@ -20,6 +20,7 @@ import {
   type FieldPresetId,
   type VectorSample,
 } from "../../visualizations/demos/vector-field/field";
+import InlineMath from "./InlineMath";
 import AxesToggle from "./AxesToggle";
 import ExpandableDemo from "./ExpandableDemo";
 
@@ -176,13 +177,22 @@ export default function VectorFieldDemo() {
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
           <p>
-            ∇·F ≈ {divNumeric.toFixed(3)}(解析 {preset.div.toFixed(1)})
+            <InlineMath
+              tex={`\\nabla\\cdot F \\approx ${divNumeric.toFixed(3)}`}
+            />
+            <span className="ml-1">(解析 {preset.div.toFixed(1)})</span>
           </p>
           <p>
-            ∇×F ≈ {curlNumeric.toFixed(3)}(解析 {preset.curl.toFixed(1)})
+            <InlineMath
+              tex={`\\nabla\\times F \\approx ${curlNumeric.toFixed(3)}`}
+            />
+            <span className="ml-1">(解析 {preset.curl.toFixed(1)})</span>
           </p>
           <p>
-            探针 ({probe.x.toFixed(2)}, {probe.y.toFixed(2)})
+            探针{" "}
+            <InlineMath
+              tex={`(${probe.x.toFixed(2)}, ${probe.y.toFixed(2)})`}
+            />
           </p>
         </div>
         <p className="text-xs text-muted">

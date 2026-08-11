@@ -7,6 +7,7 @@ import {
   DOMAIN,
   SURFACE_FN,
 } from "../../visualizations/demos/bivariate/surface";
+import InlineMath from "./InlineMath";
 import AxesToggle from "./AxesToggle";
 import ExpandableDemo from "./ExpandableDemo";
 
@@ -16,6 +17,7 @@ export default function TangentPlaneDemo() {
   const viewerRef = useRef<ReturnType<typeof createViewer3D> | null>(null);
   const [point, setPoint] = useState({ x: 0.8, y: 0.6 });
   const [showAxes, setShowAxes] = useState(true);
+  const [surfaceTransparent, setSurfaceTransparent] = useState(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -35,6 +37,7 @@ export default function TangentPlaneDemo() {
       controls: viewer.controls,
       targets: [api.surface],
       onDrag(hit) {
+        if (!hit) return;
         // Invert mathToWorld: math x = world x, math y = -world z.
         const nx = clamp(hit.point.x, -DOMAIN, DOMAIN);
         const ny = clamp(-hit.point.z, -DOMAIN, DOMAIN);
@@ -56,8 +59,9 @@ export default function TangentPlaneDemo() {
     const viewer = viewerRef.current;
     if (!api || !viewer) return;
     api.setAxesVisible(showAxes);
+    api.setSurfaceTransparent(surfaceTransparent);
     viewer.render();
-  }, [showAxes]);
+  }, [showAxes, surfaceTransparent]);
 
   const { x, y } = point;
   const z = SURFACE_FN.f(x, y);
@@ -74,19 +78,36 @@ export default function TangentPlaneDemo() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
             <p>
-              f({x.toFixed(2)}, {y.toFixed(2)}) = {z.toFixed(3)}
+              <InlineMath
+                tex={`f(${x.toFixed(2)}, ${y.toFixed(2)}) = ${z.toFixed(3)}`}
+              />
             </p>
             <p>
-              ∂f/∂x = {fx.toFixed(3)} · ∂f/∂y = {fy.toFixed(3)}
+              <InlineMath
+                tex={`\\frac{\\partial f}{\\partial x} = ${fx.toFixed(3)}, \\quad \\frac{\\partial f}{\\partial y} = ${fy.toFixed(3)}`}
+              />
             </p>
             <p>
-              法向量 n = ({(-fx).toFixed(2)}, {(-fy).toFixed(2)}, 1)
+              法向量{" "}
+              <InlineMath
+                tex={`n = (${(-fx).toFixed(2)}, ${(-fy).toFixed(2)}, 1)`}
+              />
             </p>
           </div>
+          <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-muted">
+            <input
+              type="checkbox"
+              checked={surfaceTransparent}
+              onChange={(event) => setSurfaceTransparent(event.target.checked)}
+              className="accent-[var(--color-accent)]"
+            />
+            曲面透明
+          </label>
           <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>
         <p className="text-xs text-muted">
-          左键/中键旋转 · 滚轮缩放 · 右键平移;在曲面上拖拽移动切点。
+          左键/中键旋转 · 滚轮缩放 ·
+          右键平移;在曲面上拖拽移动切点;曲面默认半透明便于观察法线与切平面。
         </p>
       </div>
     </ExpandableDemo>

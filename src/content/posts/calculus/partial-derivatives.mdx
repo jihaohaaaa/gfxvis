@@ -7,6 +7,7 @@ draft: false
 ---
 
 import TangentPlaneDemo from "../../../components/visualization/TangentPlaneDemo";
+import PartialDerivativesDemo from "../../../components/visualization/PartialDerivativesDemo";
 
 # 偏导数、切平面与法线
 
@@ -20,7 +21,21 @@ $$
 \frac{\partial f}{\partial x}(a,b) = \lim_{h \to 0} \frac{f(a+h, b) - f(a,b)}{h}
 $$
 
-同理可定义 $\partial f / \partial y$。偏导数衡量的是函数沿某个坐标方向的变化率。
+同样,固定 $x$ 只让 $y$ 变化,就得到关于 $y$ 的偏导数:
+
+$$
+\frac{\partial f}{\partial y}(a,b) = \lim_{h \to 0} \frac{f(a, b+h) - f(a,b)}{h}
+$$
+
+偏导数衡量的是函数沿某个坐标方向的变化率。
+
+## 偏导数交互:切片平面
+
+把另一个变量固定,曲面就退化成一条一维曲线——这条曲线的切线斜率正是偏导数。选择"固定 x"或"固定 y",曲面上会显示对应的半透明切片平面与切片曲线(黄色),曲线上的红点可沿曲线拖动,青色切线段的斜率即偏导数:
+
+<PartialDerivativesDemo client:visible />
+
+> 操作:拖拽切片平面改变固定值,拖拽红点沿切片曲线移动。试试把固定值或红点拖到原点附近,此时偏导接近零,对应鞍面中心的"平坦"感觉。
 
 ## 梯度
 

@@ -35,6 +35,7 @@ export interface SurfaceScene {
   setPoint(x: number, y: number): void;
   getPoint(): { x: number; y: number };
   setAxesVisible(visible: boolean): void;
+  setSurfaceTransparent(transparent: boolean): void;
   dispose(): void;
 }
 
@@ -70,13 +71,18 @@ export function createSurfaceScene(): SurfaceScene {
   scene.add(axesGroup);
 
   const geometry = buildSurfaceGeometry(96);
-  const material = new MeshStandardMaterial({
+  const surfaceMaterial = new MeshStandardMaterial({
     vertexColors: true,
     roughness: 0.7,
     metalness: 0,
     side: DoubleSide,
+    // Semi-transparent by default (depthWrite off) so the normal arrow,
+    // tangent plane and direction lines stay visible; toggleable.
+    transparent: true,
+    opacity: 0.55,
+    depthWrite: false,
   });
-  const surface = new Mesh(geometry, material);
+  const surface = new Mesh(geometry, surfaceMaterial);
   scene.add(surface);
 
   const marker = new Mesh(
@@ -162,15 +168,30 @@ export function createSurfaceScene(): SurfaceScene {
     axesGroup.visible = visible;
   }
 
+  function setSurfaceTransparent(transparent: boolean): void {
+    surfaceMaterial.transparent = transparent;
+    surfaceMaterial.opacity = transparent ? 0.55 : 1;
+    surfaceMaterial.depthWrite = !transparent;
+    surfaceMaterial.needsUpdate = true;
+  }
+
   function dispose(): void {
     disposeObject(scene);
   }
 
   update();
-  return { scene, surface, setPoint, getPoint, setAxesVisible, dispose };
+  return {
+    scene,
+    surface,
+    setPoint,
+    getPoint,
+    setAxesVisible,
+    setSurfaceTransparent,
+    dispose,
+  };
 }
 
-function buildSurfaceGeometry(res: number): BufferGeometry {
+export function buildSurfaceGeometry(res: number): BufferGeometry {
   const step = (2 * DOMAIN) / res;
   const values: number[] = [];
   let min = Infinity;

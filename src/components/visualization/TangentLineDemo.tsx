@@ -18,6 +18,7 @@ import {
   secantSlope,
   tangentLineAt,
 } from "../../visualizations/demos/univariate/tangent";
+import InlineMath from "./InlineMath";
 import AxesToggle from "./AxesToggle";
 import ExpandableDemo from "./ExpandableDemo";
 
@@ -191,10 +192,22 @@ export default function TangentLineDemo() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
             <p>
-              切线斜率 f′({a.toFixed(2)}) = {derivative.toFixed(3)}
+              切线斜率{" "}
+              <InlineMath
+                tex={`f'(${a.toFixed(2)}) = ${derivative.toFixed(3)}`}
+              />
             </p>
-            <p>割线斜率 = {secant.toFixed(3)}</p>
-            <p>h = |a − b| = {Math.abs(a - b).toFixed(3)}</p>
+            <p>
+              割线斜率{" "}
+              <InlineMath
+                tex={`\\frac{f(${b.toFixed(2)})-f(${a.toFixed(2)})}{${b.toFixed(2)}-${a.toFixed(2)}} = ${secant.toFixed(3)}`}
+              />
+            </p>
+            <p>
+              <InlineMath
+                tex={`h = |${a.toFixed(2)} - ${b.toFixed(2)}| = ${Math.abs(a - b).toFixed(3)}`}
+              />
+            </p>
           </div>
           <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>

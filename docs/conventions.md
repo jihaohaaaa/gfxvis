@@ -15,6 +15,7 @@
 
 - 法线朝上:数学法线 n_z > 0;曲面切平面由 r_x = (1, 0, f_x)、r_y = (0, 1, f_y) 叉积张成,n = r_x × r_y = (−f_x, −f_y, 1)。
 - 二维旋度以逆时针为正(∇×F > 0 逆时针);散度正 = 源、负 = 汇;梯度指向函数上升最快的方向。
+- 3D 曲面上的梯度箭头有两种模式(默认水平):水平模式画二维梯度 (φ_x, φ_y, 0)(z = 0,方向与 2D 一致);曲面模式画沿曲面最陡上升切线方向 (φ_x, φ_y, |∇φ|²)(切于曲面,水平投影即 2D 梯度);∇φ = 0 时隐藏。
 - 3D 轴色沿用图形学 RGB 约定:x 红、y 绿、z 蓝;2D 一律使用主题 token,不硬编码颜色。
 
 ## 记号与命名
@@ -30,6 +31,7 @@
 - 3D 交互统一走共享层:`core/viewer3d.ts`(renderer/camera/controls/resize/主题/清理)与 `core/drag3d.ts`(raycast 拖拽,拖拽时禁用 controls);3D 场景的坐标由 `core/coords.ts` 的 `mathToWorld` 唯一映射。
 - 每个 demo 自带"坐标轴"开关(默认开启):2D 用 `drawAxes`(含刻度 / 网格),3D 用 `core/axes3d.ts` 的彩色轴线组(x 红 / y 绿 / z 蓝),scene API 提供 `setAxesVisible(v)`。
 - 交互区增强:每个 demo 由 `ExpandableDemo` 包裹,右上角"展开"进入伪全屏固定浮层(非 Fullscreen API),× 关闭恢复;同一实例状态保留;画布高度用 CSS 变量 `--demo-height`(默认 2D 20rem / 3D 28rem,展开 70vh)。
+- 3D 曲面默认半透明(opacity≈0.55、depthWrite=false)并带开关,保证箭头/标记可见;切换时同步 transparent/opacity/depthWrite。
 - 主题:2D 用 `watchTheme` 触发重绘;3D 监听 `html` 的 class 变化,重设 `setClearColor` 并重渲;颜色从 CSS 变量读取(`readThemeColors`),禁止硬编码。
 - 数值微分统一走 `core/math.ts`(中心差分:梯度 / 散度 / 旋度),默认步长 h = 1e-4。
 - 资源清理:Three 场景销毁时遍历 dispose 几何体 / 材质 / 纹理并移除 canvas;React effect cleanup 必须完整。

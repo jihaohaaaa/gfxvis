@@ -7,10 +7,14 @@ export interface Drag3DOptions {
   controls: OrbitControls;
   /** Objects that can be grabbed with a left-drag. */
   targets: THREE.Object3D[];
-  /** Called with the first intersection while dragging. */
-  onDrag(hit: THREE.Intersection): void;
+  /** Called when a drag gesture starts (pointer down on a target). */
+  onDragStart?(hit: THREE.Intersection, event: PointerEvent): void;
+  /** Called while dragging; hit is null when the ray no longer hits a target. */
+  onDrag(hit: THREE.Intersection | null, event: PointerEvent): void;
   /** Optional per-hit rejection. */
   canStart?(hit: THREE.Intersection): boolean;
+  /** Hover (pointer move with no buttons): e.g. place a probe under the mouse. */
+  onHover?(hit: THREE.Intersection | null, event: PointerEvent): void;
 }
 
 /**
@@ -19,7 +23,16 @@ export interface Drag3DOptions {
  * Returns a detach function.
  */
 export function attachDrag3D(options: Drag3DOptions): () => void {
-  const { domElement, camera, controls, targets, onDrag, canStart } = options;
+  const {
+    domElement,
+    camera,
+    controls,
+    targets,
+    onDrag,
+    onDragStart,
+    canStart,
+    onHover,
+  } = options;
   let dragging = false;
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -43,13 +56,22 @@ export function attachDrag3D(options: Drag3DOptions): () => void {
       dragging = true;
       controls.enabled = false;
       domElement.setPointerCapture(e.pointerId);
-      onDrag(hit);
+      onDragStart?.(hit, e);
+      onDrag(hit, e);
     }
   };
   const onPointerMove = (e: PointerEvent) => {
-    if (!dragging) return;
-    const hit = pick(e);
-    if (hit) onDrag(hit);
+    if (dragging) {
+      // Keep dragging even when the ray misses (e.g. the grabbed object moved).
+      const hit = pick(e);
+      onDrag(hit, e);
+      return;
+    }
+    // Hover placement: only when no button is held, so rotating/panning
+    // does not move the probe.
+    if (e.buttons === 0) {
+      onHover?.(pick(e), e);
+    }
   };
   const onPointerUp = () => {
     if (dragging) {

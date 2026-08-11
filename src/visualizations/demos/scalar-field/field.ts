@@ -8,6 +8,13 @@ export const SCALAR_FN = {
   gradY: (x: number, y: number) => -Math.sin(x) * Math.sin(y),
 };
 
+export const FIELD_BOUNDS: Bounds2 = {
+  xMin: -Math.PI,
+  xMax: Math.PI,
+  yMin: -Math.PI,
+  yMax: Math.PI,
+};
+
 export interface FieldSample {
   values: Float32Array;
   min: number;
