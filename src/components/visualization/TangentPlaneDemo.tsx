@@ -1,61 +1,48 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { clamp } from "../../visualizations/core/math";
 import { attachDrag3D } from "../../visualizations/core/drag3d";
-import { createViewer3D } from "../../visualizations/core/viewer3d";
 import {
-  createSurfaceScene,
   DOMAIN,
   SURFACE_FN,
+  createSurfaceScene,
 } from "../../visualizations/demos/bivariate/surface";
-import InlineMath from "./InlineMath";
 import AxesToggle from "./AxesToggle";
+import Checkbox from "./Checkbox";
 import ExpandableDemo from "./ExpandableDemo";
+import InlineMath from "./InlineMath";
+import { useViewer3D } from "./useViewer3D";
 
 export default function TangentPlaneDemo() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<ReturnType<typeof createSurfaceScene> | null>(null);
-  const viewerRef = useRef<ReturnType<typeof createViewer3D> | null>(null);
   const [point, setPoint] = useState({ x: 0.8, y: 0.6 });
   const [showAxes, setShowAxes] = useState(true);
   const [surfaceTransparent, setSurfaceTransparent] = useState(true);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const api = createSurfaceScene();
-    const viewer = createViewer3D(container, api.scene);
-    sceneRef.current = api;
-    viewerRef.current = viewer;
-
-    api.setPoint(point.x, point.y);
-    api.setAxesVisible(showAxes);
-    viewer.render();
-
-    const detach = attachDrag3D({
-      domElement: viewer.renderer.domElement,
-      camera: viewer.camera,
-      controls: viewer.controls,
-      targets: [api.surface],
-      onDrag(hit) {
-        if (!hit) return;
-        // Invert mathToWorld: math x = world x, math y = -world z.
-        const nx = clamp(hit.point.x, -DOMAIN, DOMAIN);
-        const ny = clamp(-hit.point.z, -DOMAIN, DOMAIN);
-        setPoint({ x: nx, y: ny });
-        api.setPoint(nx, ny);
-        viewer.render();
-      },
-    });
-
-    return () => {
-      detach();
-      viewer.dispose();
-      api.dispose();
-    };
-  }, []);
+  const { containerRef, apiRef, viewerRef } = useViewer3D(
+    () => createSurfaceScene(),
+    ({ api, viewer }) => {
+      api.setPoint(point.x, point.y);
+      api.setAxesVisible(showAxes);
+      viewer.render();
+      return attachDrag3D({
+        domElement: viewer.renderer.domElement,
+        camera: viewer.camera,
+        controls: viewer.controls,
+        targets: [api.surface],
+        onDrag(hit) {
+          if (!hit) return;
+          // Invert mathToWorld: math x = world x, math y = -world z.
+          const nx = clamp(hit.point.x, -DOMAIN, DOMAIN);
+          const ny = clamp(-hit.point.z, -DOMAIN, DOMAIN);
+          setPoint({ x: nx, y: ny });
+          api.setPoint(nx, ny);
+          viewer.render();
+        },
+      });
+    },
+  );
 
   useEffect(() => {
-    const api = sceneRef.current;
+    const api = apiRef.current;
     const viewer = viewerRef.current;
     if (!api || !viewer) return;
     api.setAxesVisible(showAxes);
@@ -94,16 +81,14 @@ export default function TangentPlaneDemo() {
               />
             </p>
           </div>
-          <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-muted">
-            <input
-              type="checkbox"
+          <div className="flex flex-wrap items-center gap-3">
+            <Checkbox
+              label="曲面透明"
               checked={surfaceTransparent}
-              onChange={(event) => setSurfaceTransparent(event.target.checked)}
-              className="accent-[var(--color-accent)]"
+              onChange={setSurfaceTransparent}
             />
-            曲面透明
-          </label>
-          <AxesToggle checked={showAxes} onChange={setShowAxes} />
+            <AxesToggle checked={showAxes} onChange={setShowAxes} />
+          </div>
         </div>
         <p className="text-xs text-muted">
           左键/中键旋转 · 滚轮缩放 ·

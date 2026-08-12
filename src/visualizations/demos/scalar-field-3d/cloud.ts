@@ -9,17 +9,17 @@ import {
   Group,
   LineBasicMaterial,
   LineSegments,
-  Object3D,
   Points,
   PointsMaterial,
   Scene,
   SRGBColorSpace,
   Vector3,
 } from "three";
-import { clamp } from "../../core/math";
+import { createAxesGroup } from "../../core/axes3d";
 import { coolwarm, valueToT } from "../../core/colormap";
 import { mathToWorld } from "../../core/coords";
-import { createAxesGroup } from "../../core/axes3d";
+import { clamp, forEachCube } from "../../core/math";
+import { disposeObject } from "../../core/three-utils";
 
 export const FIELD3D = {
   f: (x: number, y: number, z: number) => x * x + y * y - z * z,
@@ -41,22 +41,6 @@ export interface CloudScene {
   setAxesVisible(visible: boolean): void;
   setArrowsVisible(visible: boolean): void;
   dispose(): void;
-}
-
-function disposeObject(object: Object3D): void {
-  object.traverse((child) => {
-    const candidate = child as {
-      geometry?: { dispose?: () => void };
-      material?: { dispose?: () => void } | Array<{ dispose?: () => void }>;
-    };
-    candidate.geometry?.dispose?.();
-    const material = candidate.material;
-    if (Array.isArray(material)) {
-      material.forEach((entry) => entry.dispose?.());
-    } else {
-      material?.dispose?.();
-    }
-  });
 }
 
 /** Radial-gradient sprite so Points render as round dots instead of squares. */
@@ -93,20 +77,13 @@ function buildCloud(
 ): Points {
   const positions: number[] = [];
   const colors: number[] = [];
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      for (let k = 0; k < n; k++) {
-        const x = -CUBE_HALF + (2 * CUBE_HALF * i) / (n - 1);
-        const y = -CUBE_HALF + (2 * CUBE_HALF * j) / (n - 1);
-        const z = -CUBE_HALF + (2 * CUBE_HALF * k) / (n - 1);
-        const value = FIELD3D.f(x, y, z);
-        positions.push(...mathToWorld(x, y, z));
-        const [r, g, b] = coolwarm(valueToT(value, stats.min, stats.max));
-        const color = new Color(r / 255, g / 255, b / 255);
-        colors.push(color.r, color.g, color.b);
-      }
-    }
-  }
+  forEachCube(n, CUBE_HALF, (x, y, z) => {
+    const value = FIELD3D.f(x, y, z);
+    positions.push(...mathToWorld(x, y, z));
+    const [r, g, b] = coolwarm(valueToT(value, stats.min, stats.max));
+    const color = new Color(r / 255, g / 255, b / 255);
+    colors.push(color.r, color.g, color.b);
+  });
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
   geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
@@ -130,53 +107,39 @@ function buildCloud(
 /** Gradient arrows at every `stride`-th lattice point (direction = nabla phi). */
 function buildArrows(n: number, stride: number): Group {
   const group = new Group();
-  for (let i = 0; i < n; i += stride) {
-    for (let j = 0; j < n; j += stride) {
-      for (let k = 0; k < n; k += stride) {
-        const x = -CUBE_HALF + (2 * CUBE_HALF * i) / (n - 1);
-        const y = -CUBE_HALF + (2 * CUBE_HALF * j) / (n - 1);
-        const z = -CUBE_HALF + (2 * CUBE_HALF * k) / (n - 1);
-        const gx = FIELD3D.gradX(x);
-        const gy = FIELD3D.gradY(y);
-        const gz = FIELD3D.gradZ(z);
-        const mag = Math.hypot(gx, gy, gz);
-        if (mag < 1e-4) continue; // zero gradient at the origin
-        const [ox, oy, oz] = mathToWorld(x, y, z);
-        const [dx, dy, dz] = mathToWorld(gx, gy, gz);
-        const direction = new Vector3(dx, dy, dz).normalize();
-        const length = clamp(0.15 * mag, 0.25, 0.9);
-        group.add(
-          new ArrowHelper(
-            direction,
-            new Vector3(ox, oy, oz),
-            length,
-            0x3b82f6,
-            length * 0.22,
-            length * 0.14,
-          ),
-        );
-      }
-    }
-  }
+  forEachCube(n, CUBE_HALF, (x, y, z, i, j, k) => {
+    if (i % stride !== 0 || j % stride !== 0 || k % stride !== 0) return;
+    const gx = FIELD3D.gradX(x);
+    const gy = FIELD3D.gradY(y);
+    const gz = FIELD3D.gradZ(z);
+    const mag = Math.hypot(gx, gy, gz);
+    if (mag < 1e-4) return; // zero gradient at the origin
+    const [ox, oy, oz] = mathToWorld(x, y, z);
+    const [dx, dy, dz] = mathToWorld(gx, gy, gz);
+    const direction = new Vector3(dx, dy, dz).normalize();
+    const length = clamp(0.15 * mag, 0.25, 0.9);
+    group.add(
+      new ArrowHelper(
+        direction,
+        new Vector3(ox, oy, oz),
+        length,
+        0x3b82f6,
+        length * 0.22,
+        length * 0.14,
+      ),
+    );
+  });
   return group;
 }
 
 function computeStats(): { min: number; max: number } {
   let min = Infinity;
   let max = -Infinity;
-  const n = 40;
-  for (let i = 0; i <= n; i++) {
-    for (let j = 0; j <= n; j++) {
-      for (let k = 0; k <= n; k++) {
-        const x = -CUBE_HALF + (2 * CUBE_HALF * i) / n;
-        const y = -CUBE_HALF + (2 * CUBE_HALF * j) / n;
-        const z = -CUBE_HALF + (2 * CUBE_HALF * k) / n;
-        const v = FIELD3D.f(x, y, z);
-        if (v < min) min = v;
-        if (v > max) max = v;
-      }
-    }
-  }
+  forEachCube(40, CUBE_HALF, (x, y, z) => {
+    const v = FIELD3D.f(x, y, z);
+    if (v < min) min = v;
+    if (v > max) max = v;
+  });
   return { min, max };
 }
 

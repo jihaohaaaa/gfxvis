@@ -1,5 +1,5 @@
-import { lerp } from "../../core/math";
 import { coolwarm, valueToT } from "../../core/colormap";
+import { lerp, sampleGrid } from "../../core/math";
 import type { Bounds2 } from "../../core/plot2d";
 
 export type Field2DId = "sincos" | "circle" | "parabola";
@@ -26,6 +26,12 @@ export interface Field2D {
   texAt(c: number): string;
   /** Level equation F(x, y) = c, e.g. `x^2+y^2 = 1.50`. */
   levelTex(c: number): string;
+  /**
+   * Analytic sample points on the level curve F(x, y) = c (empty when no real
+   * curve). Optional: families without a simple closed form (e.g. sincos) fall
+   * back to marching squares in the heatmap demo.
+   */
+  levelCurve?(c: number, steps: number): Array<[number, number]>;
 }
 
 const fmt = (n: number): string => n.toFixed(2);
@@ -54,7 +60,7 @@ export const FIELDS2D: Record<Field2DId, Field2D> = {
     id: "circle",
     label: "圆族",
     tex: "x^2+y^2",
-    bounds: { xMin: -2.2, xMax: 2.2, yMin: -2.2, yMax: 2.2 },
+    bounds: { xMin: -2.6, xMax: 2.6, yMin: -2.6, yMax: 2.6 },
     ticksX: [-2, -1, 1, 2],
     ticksY: [-2, -1, 1, 2],
     zScale: 0.3,
@@ -62,19 +68,29 @@ export const FIELDS2D: Record<Field2DId, Field2D> = {
     gradX: (x, _y) => 2 * x,
     gradY: (_x, y) => 2 * y,
     hasC: true,
-    cMin: 0.5,
+    cMin: 0.2,
     cMax: 6,
     defaultC: 1.5,
     texAt: (c) => (Math.abs(c) < 0.005 ? "x^2+y^2" : `x^2+y^2-${fmt(c)}`),
     levelTex: (c) => `x^2+y^2 = ${fmt(c)}`,
+    levelCurve: (c, steps) => {
+      if (c < 0) return [];
+      const r = Math.sqrt(c);
+      const pts: Array<[number, number]> = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = (2 * Math.PI * i) / steps;
+        pts.push([r * Math.cos(t), r * Math.sin(t)]);
+      }
+      return pts;
+    },
   },
   parabola: {
     id: "parabola",
     label: "抛物线族",
     tex: "y-x^2",
-    bounds: { xMin: -2.2, xMax: 2.2, yMin: -1.4, yMax: 4.8 },
+    bounds: { xMin: -2.4, xMax: 2.4, yMin: -1.8, yMax: 6.2 },
     ticksX: [-2, -1, 1, 2],
-    ticksY: [1, 2, 3, 4],
+    ticksY: [1, 2, 3, 4, 5, 6],
     zScale: 0.32,
     phi: (x, y, c) => y - x * x - c,
     gradX: (x, _y) => -2 * x,
@@ -85,6 +101,14 @@ export const FIELDS2D: Record<Field2DId, Field2D> = {
     defaultC: 0.5,
     texAt: (c) => (Math.abs(c) < 0.005 ? "y-x^2" : `y-x^2-${fmt(c)}`),
     levelTex: (c) => `y = x^2+${fmt(c)}`,
+    levelCurve: (c, steps) => {
+      const pts: Array<[number, number]> = [];
+      for (let i = 0; i <= steps; i++) {
+        const x = -2 + (4 * i) / steps;
+        pts.push([x, x * x + c]);
+      }
+      return pts;
+    },
   },
 };
 
@@ -103,20 +127,7 @@ export function sampleField(
   ny: number,
   c = 0,
 ): FieldSample {
-  const values = new Float32Array((nx + 1) * (ny + 1));
-  let min = Infinity;
-  let max = -Infinity;
-  for (let i = 0; i <= ny; i++) {
-    const y = bounds.yMin + ((bounds.yMax - bounds.yMin) * i) / ny;
-    for (let j = 0; j <= nx; j++) {
-      const x = bounds.xMin + ((bounds.xMax - bounds.xMin) * j) / nx;
-      const v = field.phi(x, y, c);
-      values[i * (nx + 1) + j] = v;
-      if (v < min) min = v;
-      if (v > max) max = v;
-    }
-  }
-  return { values, min, max, nx, ny };
+  return sampleGrid(bounds, nx, ny, (x, y) => field.phi(x, y, c));
 }
 
 export type Segment = [[number, number], [number, number]];

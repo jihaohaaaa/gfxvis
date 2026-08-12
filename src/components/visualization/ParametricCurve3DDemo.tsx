@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { createViewer3D } from "../../visualizations/core/viewer3d";
+import { useEffect, useState } from "react";
 import {
   SPACE_CURVES,
   createCurve3DScene,
   type SpaceCurveId,
 } from "../../visualizations/demos/parametric/curve3d";
-import InlineMath from "./InlineMath";
 import AxesToggle from "./AxesToggle";
+import CapsuleTabs from "./CapsuleTabs";
 import ExpandableDemo from "./ExpandableDemo";
+import InlineMath from "./InlineMath";
+import ParamSlider from "./ParamSlider";
+import { useViewer3D } from "./useViewer3D";
 
 const CURVE_OPTIONS: { id: SpaceCurveId; label: string }[] = [
   { id: "circle", label: "圆" },
@@ -17,9 +19,6 @@ const CURVE_OPTIONS: { id: SpaceCurveId; label: string }[] = [
 
 /** 3D space-curve explorer: circle / helix / trefoil knot with a t slider. */
 export default function ParametricCurve3DDemo() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const apiRef = useRef<ReturnType<typeof createCurve3DScene> | null>(null);
-  const viewerRef = useRef<ReturnType<typeof createViewer3D> | null>(null);
   const [curveId, setCurveId] = useState<SpaceCurveId>("circle");
   const [t, setT] = useState(1.0);
   const [showAxes, setShowAxes] = useState(true);
@@ -27,18 +26,15 @@ export default function ParametricCurve3DDemo() {
   const curve = SPACE_CURVES[curveId];
   const [x, y, z] = curve.point(t);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const api = createCurve3DScene();
-    const viewer = createViewer3D(container, api.scene);
-    apiRef.current = api;
-    viewerRef.current = viewer;
-    return () => {
-      viewer.dispose();
-      api.dispose();
-    };
-  }, []);
+  const { containerRef, apiRef, viewerRef } = useViewer3D(
+    () => createCurve3DScene(),
+    ({ api, viewer }) => {
+      api.setCurve(curveId);
+      api.setT(t);
+      api.setAxesVisible(showAxes);
+      viewer.render();
+    },
+  );
 
   useEffect(() => {
     const api = apiRef.current;
@@ -64,35 +60,20 @@ export default function ParametricCurve3DDemo() {
         />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              {CURVE_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => handleCurveChange(option.id)}
-                  className={
-                    curveId === option.id
-                      ? "rounded-full border border-accent px-3 py-1 text-accent"
-                      : "rounded-full border border-border px-3 py-1 text-muted hover:text-ink"
-                  }
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-            <label className="flex items-center gap-2 text-muted">
-              <InlineMath tex="t" />
-              <input
-                type="range"
-                min={curve.tMin}
-                max={curve.tMax}
-                step={0.01}
-                value={t}
-                onChange={(event) => setT(Number(event.target.value))}
-                className="w-44 accent-[var(--color-accent)]"
-              />
-              <span className="tabular-nums">{t.toFixed(2)}</span>
-            </label>
+            <CapsuleTabs
+              options={CURVE_OPTIONS}
+              value={curveId}
+              onChange={handleCurveChange}
+            />
+            <ParamSlider
+              label={<InlineMath tex="t" />}
+              min={curve.tMin}
+              max={curve.tMax}
+              step={0.01}
+              value={t}
+              onChange={setT}
+              widthClass="w-44"
+            />
           </div>
           <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>

@@ -1,23 +1,25 @@
 import {
-  AmbientLight,
   BufferGeometry,
-  DirectionalLight,
   DoubleSide,
-  GridHelper,
   Line,
   LineBasicMaterial,
   LineSegments,
   Mesh,
   MeshBasicMaterial,
-  MeshStandardMaterial,
-  Object3D,
   PlaneGeometry,
   Scene,
-  SphereGeometry,
   Vector3,
 } from "three";
-import { mathToWorld } from "../../core/coords";
 import { createAxesGroup } from "../../core/axes3d";
+import { mathToWorld } from "../../core/coords";
+import {
+  addGroundGrid,
+  addStandardLights,
+  applySurfaceTransparency,
+  createMarker,
+  createSurfaceMaterial,
+  disposeObject,
+} from "../../core/three-utils";
 import { buildSurfaceGeometry, DOMAIN, SURFACE_FN } from "./surface";
 
 export type FixMode = "x" | "y";
@@ -32,22 +34,6 @@ export interface PartialDerivScene {
   dispose(): void;
 }
 
-function disposeObject(object: Object3D): void {
-  object.traverse((child) => {
-    const candidate = child as {
-      geometry?: { dispose?: () => void };
-      material?: { dispose?: () => void } | Array<{ dispose?: () => void }>;
-    };
-    candidate.geometry?.dispose?.();
-    const material = candidate.material;
-    if (Array.isArray(material)) {
-      material.forEach((entry) => entry.dispose?.());
-    } else {
-      material?.dispose?.();
-    }
-  });
-}
-
 const SLICE_STEP = 0.04;
 const LIFT = 0.02;
 
@@ -58,29 +44,17 @@ const LIFT = 0.02;
  */
 export function createPartialDerivScene(): PartialDerivScene {
   const scene = new Scene();
-  scene.add(new AmbientLight(0xffffff, 0.7));
-  const sun = new DirectionalLight(0xffffff, 1.4);
-  sun.position.set(4, 8, 3);
-  scene.add(sun);
 
-  scene.add(new GridHelper(2 * DOMAIN, 16, 0x64748b, 0x475569));
+  addStandardLights(scene);
+  addGroundGrid(scene, 2 * DOMAIN);
 
-  const surfaceMaterial = new MeshStandardMaterial({
-    vertexColors: true,
-    roughness: 0.7,
-    metalness: 0,
-    side: DoubleSide,
-    // Semi-transparent by default (depthWrite off) so the slice curve,
-    // tangent line and marker stay visible; toggleable.
-    transparent: true,
-    opacity: 0.55,
-    depthWrite: false,
-  });
-  const surface = new Mesh(buildSurfaceGeometry(96), surfaceMaterial);
-  scene.add(surface);
-
+  // Math axes (x red, y green, z blue) via mathToWorld; toggleable.
   const axesGroup = createAxesGroup(3);
   scene.add(axesGroup);
+
+  const surfaceMaterial = createSurfaceMaterial();
+  const surface = new Mesh(buildSurfaceGeometry(96), surfaceMaterial);
+  scene.add(surface);
 
   const slicePlane = new Mesh(
     new PlaneGeometry(2 * DOMAIN, 5.6),
@@ -105,10 +79,7 @@ export function createPartialDerivScene(): PartialDerivScene {
   );
   scene.add(sliceCurve, tangentLine);
 
-  const marker = new Mesh(
-    new SphereGeometry(0.09, 20, 20),
-    new MeshStandardMaterial({ color: 0xff6b6b }),
-  );
+  const marker = createMarker(0xff6b6b, 0.09);
   marker.renderOrder = 2;
   scene.add(marker);
 
@@ -164,10 +135,7 @@ export function createPartialDerivScene(): PartialDerivScene {
   }
 
   function setSurfaceTransparent(transparent: boolean): void {
-    surfaceMaterial.transparent = transparent;
-    surfaceMaterial.opacity = transparent ? 0.55 : 1;
-    surfaceMaterial.depthWrite = !transparent;
-    surfaceMaterial.needsUpdate = true;
+    applySurfaceTransparency(surfaceMaterial, transparent);
   }
 
   function dispose(): void {

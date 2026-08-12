@@ -1,28 +1,29 @@
 import {
-  AmbientLight,
   ArrowHelper,
   BufferGeometry,
-  Group,
-  Color,
-  DirectionalLight,
   DoubleSide,
   Float32BufferAttribute,
-  GridHelper,
+  Group,
   Line,
   LineBasicMaterial,
   LineSegments,
   Mesh,
   MeshStandardMaterial,
-  Object3D,
   PlaneGeometry,
   Scene,
-  SphereGeometry,
   Vector3,
 } from "three";
-import { clamp } from "../../core/math";
-import { coolwarm, valueToT } from "../../core/colormap";
-import { mathToWorld } from "../../core/coords";
 import { createAxesGroup } from "../../core/axes3d";
+import { mathToWorld } from "../../core/coords";
+import { clamp } from "../../core/math";
+import {
+  addGroundGrid,
+  addStandardLights,
+  buildColoredGrid,
+  createMarker,
+  createSurfaceMaterial,
+  disposeObject,
+} from "../../core/three-utils";
 
 export type SurfaceId = "sphere" | "graph";
 
@@ -103,72 +104,29 @@ export interface ParametricSurfaceScene {
   dispose(): void;
 }
 
-function disposeObject(object: Object3D): void {
-  object.traverse((child) => {
-    const candidate = child as {
-      geometry?: { dispose?: () => void };
-      material?: { dispose?: () => void } | Array<{ dispose?: () => void }>;
-    };
-    candidate.geometry?.dispose?.();
-    const material = candidate.material;
-    if (Array.isArray(material)) {
-      material.forEach((entry) => entry.dispose?.());
-    } else {
-      material?.dispose?.();
-    }
-  });
-}
-
 /** Vertex-colored parametric mesh (color = math z height). */
 function buildMesh(s: ParametricSurface): Mesh {
-  const positions: number[] = [];
-  const values: number[] = [];
-  const index = (i: number, j: number) => i * (s.nv + 1) + j;
+  const uAt = (i: number) => s.uMin + ((s.uMax - s.uMin) * i) / s.nu;
+  const vAt = (j: number) => s.vMin + ((s.vMax - s.vMin) * j) / s.nv;
+  let zMin = Infinity;
+  let zMax = -Infinity;
   for (let i = 0; i <= s.nu; i++) {
-    const u = s.uMin + ((s.uMax - s.uMin) * i) / s.nu;
     for (let j = 0; j <= s.nv; j++) {
-      const v = s.vMin + ((s.vMax - s.vMin) * j) / s.nv;
-      const [x, y, z] = s.point(u, v);
-      values.push(z);
-      positions.push(...mathToWorld(x, y, z));
+      const z = s.point(uAt(i), vAt(j))[2];
+      if (z < zMin) zMin = z;
+      if (z > zMax) zMax = z;
     }
   }
-  const zMin = Math.min(...values);
-  const zMax = Math.max(...values);
-  const colors: number[] = [];
-  for (const z of values) {
-    const [r, g, b] = coolwarm(valueToT(z, zMin, zMax));
-    const color = new Color(r / 255, g / 255, b / 255);
-    colors.push(color.r, color.g, color.b);
-  }
-  const indices: number[] = [];
-  for (let i = 0; i < s.nu; i++) {
-    for (let j = 0; j < s.nv; j++) {
-      const a = index(i, j);
-      const b = index(i, j + 1);
-      const c = index(i + 1, j);
-      const d = index(i + 1, j + 1);
-      indices.push(a, b, d, a, d, c);
-    }
-  }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
+  const geometry = buildColoredGrid(
+    s.nu,
+    s.nv,
+    (i, j) => mathToWorld(...s.point(uAt(i), vAt(j))),
+    (i, j) => s.point(uAt(i), vAt(j))[2],
+    { min: zMin, max: zMax },
+  );
   return new Mesh(
     geometry,
-    new MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 0.7,
-      metalness: 0,
-      side: DoubleSide,
-      // Push the surface slightly back so the parameter lines render on top
-      // without z-fighting.
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    }),
+    createSurfaceMaterial({ transparent: false, polygonOffset: true }),
   );
 }
 
@@ -213,12 +171,9 @@ function buildGrid(s: ParametricSurface): BufferGeometry {
  */
 export function createParametricSurfaceScene(): ParametricSurfaceScene {
   const scene = new Scene();
-  scene.add(new AmbientLight(0xffffff, 0.7));
-  const sun = new DirectionalLight(0xffffff, 1.4);
-  sun.position.set(4, 8, 3);
-  scene.add(sun);
 
-  scene.add(new GridHelper(5, 16, 0x64748b, 0x475569));
+  addStandardLights(scene);
+  addGroundGrid(scene, 5);
 
   const axesGroup = createAxesGroup(2.8);
   scene.add(axesGroup);
@@ -239,10 +194,7 @@ export function createParametricSurfaceScene(): ParametricSurfaceScene {
   vCurve.renderOrder = 1;
   scene.add(uCurve, vCurve);
 
-  const marker = new Mesh(
-    new SphereGeometry(0.09, 20, 20),
-    new MeshStandardMaterial({ color: 0xef4444 }),
-  );
+  const marker = createMarker();
   marker.renderOrder = 1;
   scene.add(marker);
 
@@ -345,12 +297,10 @@ export function createParametricSurfaceScene(): ParametricSurfaceScene {
     tangentArrowV.setDirection(new Vector3(dvx, dvy, dvz).normalize());
 
     // Tangent plane: normal = du x dv (math coords), mapped to world.
-    const [pux, puy, puz] = s.du(uc, vc);
-    const [pvx, pvy, pvz] = s.dv(uc, vc);
-    const cnx = puy * pvz - puz * pvy;
-    const cny = puz * pvx - pux * pvz;
-    const cnz = pux * pvy - puy * pvx;
-    const [wnx, wny, wnz] = mathToWorld(cnx, cny, cnz);
+    const du = new Vector3(...s.du(uc, vc));
+    const dv = new Vector3(...s.dv(uc, vc));
+    const cross = new Vector3().crossVectors(du, dv);
+    const [wnx, wny, wnz] = mathToWorld(cross.x, cross.y, cross.z);
     const normal = new Vector3(wnx, wny, wnz).normalize();
     tangentPlane.position.copy(marker.position);
     tangentPlane.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), normal);

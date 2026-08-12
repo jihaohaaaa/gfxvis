@@ -1,25 +1,26 @@
 import {
-  AmbientLight,
   ArrowHelper,
   BufferGeometry,
-  Color,
-  DirectionalLight,
   DoubleSide,
-  Float32BufferAttribute,
-  GridHelper,
   LineBasicMaterial,
   LineSegments,
   Mesh,
   MeshStandardMaterial,
-  Object3D,
   PlaneGeometry,
   Scene,
-  SphereGeometry,
   Vector3,
 } from "three";
-import { coolwarm, valueToT } from "../../core/colormap";
-import { mathToWorld } from "../../core/coords";
 import { createAxesGroup } from "../../core/axes3d";
+import { mathToWorld } from "../../core/coords";
+import {
+  addGroundGrid,
+  addStandardLights,
+  applySurfaceTransparency,
+  buildColoredGrid,
+  createMarker,
+  createSurfaceMaterial,
+  disposeObject,
+} from "../../core/three-utils";
 
 export const SURFACE_FN = {
   f: (x: number, y: number) => (x * x - y * y) / 2,
@@ -39,56 +40,23 @@ export interface SurfaceScene {
   dispose(): void;
 }
 
-function disposeObject(object: Object3D): void {
-  object.traverse((child) => {
-    const candidate = child as {
-      geometry?: { dispose?: () => void };
-      material?: { dispose?: () => void } | Array<{ dispose?: () => void }>;
-    };
-    candidate.geometry?.dispose?.();
-    const material = candidate.material;
-    if (Array.isArray(material)) {
-      material.forEach((entry) => entry.dispose?.());
-    } else {
-      material?.dispose?.();
-    }
-  });
-}
-
 export function createSurfaceScene(): SurfaceScene {
   const scene = new Scene();
 
-  scene.add(new AmbientLight(0xffffff, 0.7));
-  const sun = new DirectionalLight(0xffffff, 1.4);
-  sun.position.set(4, 8, 3);
-  scene.add(sun);
+  addStandardLights(scene);
 
   // Ground grid on the math z = 0 plane (Three XZ plane).
-  scene.add(new GridHelper(2 * DOMAIN, 16, 0x64748b, 0x475569));
+  addGroundGrid(scene, 2 * DOMAIN);
 
   // Math axes (x red, y green, z blue) via mathToWorld; toggleable.
   const axesGroup = createAxesGroup(3);
   scene.add(axesGroup);
 
-  const geometry = buildSurfaceGeometry(96);
-  const surfaceMaterial = new MeshStandardMaterial({
-    vertexColors: true,
-    roughness: 0.7,
-    metalness: 0,
-    side: DoubleSide,
-    // Semi-transparent by default (depthWrite off) so the normal arrow,
-    // tangent plane and direction lines stay visible; toggleable.
-    transparent: true,
-    opacity: 0.55,
-    depthWrite: false,
-  });
-  const surface = new Mesh(geometry, surfaceMaterial);
+  const surfaceMaterial = createSurfaceMaterial();
+  const surface = new Mesh(buildSurfaceGeometry(96), surfaceMaterial);
   scene.add(surface);
 
-  const marker = new Mesh(
-    new SphereGeometry(0.08, 20, 20),
-    new MeshStandardMaterial({ color: 0xef4444 }),
-  );
+  const marker = createMarker();
   scene.add(marker);
 
   const tangentPlane = new Mesh(
@@ -169,10 +137,7 @@ export function createSurfaceScene(): SurfaceScene {
   }
 
   function setSurfaceTransparent(transparent: boolean): void {
-    surfaceMaterial.transparent = transparent;
-    surfaceMaterial.opacity = transparent ? 0.55 : 1;
-    surfaceMaterial.depthWrite = !transparent;
-    surfaceMaterial.needsUpdate = true;
+    applySurfaceTransparency(surfaceMaterial, transparent);
   }
 
   function dispose(): void {
@@ -191,53 +156,31 @@ export function createSurfaceScene(): SurfaceScene {
   };
 }
 
+/** Vertex-colored grid for z = f(x, y) over [-DOMAIN, DOMAIN]^2. */
 export function buildSurfaceGeometry(res: number): BufferGeometry {
   const step = (2 * DOMAIN) / res;
-  const values: number[] = [];
   let min = Infinity;
   let max = -Infinity;
   for (let i = 0; i <= res; i++) {
     for (let j = 0; j <= res; j++) {
-      const x = -DOMAIN + j * step;
-      const y = -DOMAIN + i * step;
-      const v = SURFACE_FN.f(x, y);
-      values.push(v);
+      const v = SURFACE_FN.f(-DOMAIN + j * step, -DOMAIN + i * step);
       if (v < min) min = v;
       if (v > max) max = v;
     }
   }
-
-  const positions: number[] = [];
-  const colors: number[] = [];
-  const index = (i: number, j: number) => i * (res + 1) + j;
-  for (let i = 0; i <= res; i++) {
-    for (let j = 0; j <= res; j++) {
+  return buildColoredGrid(
+    res,
+    res,
+    (i, j) => {
       const x = -DOMAIN + j * step;
       const y = -DOMAIN + i * step;
-      const z = values[index(i, j)];
-      const [wx, wy, wz] = mathToWorld(x, y, z);
-      positions.push(wx, wy, wz);
-      const [cr, cg, cb] = coolwarm(valueToT(z, min, max));
-      const color = new Color(cr / 255, cg / 255, cb / 255);
-      colors.push(color.r, color.g, color.b);
-    }
-  }
-
-  const indices: number[] = [];
-  for (let i = 0; i < res; i++) {
-    for (let j = 0; j < res; j++) {
-      const a = index(i, j);
-      const b = index(i, j + 1);
-      const c = index(i + 1, j);
-      const d = index(i + 1, j + 1);
-      indices.push(a, b, d, a, d, c);
-    }
-  }
-
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  return geometry;
+      return mathToWorld(x, y, SURFACE_FN.f(x, y));
+    },
+    (i, j) => {
+      const x = -DOMAIN + j * step;
+      const y = -DOMAIN + i * step;
+      return SURFACE_FN.f(x, y);
+    },
+    { min, max },
+  );
 }

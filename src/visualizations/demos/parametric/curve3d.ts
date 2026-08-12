@@ -1,20 +1,19 @@
 import {
-  AmbientLight,
   ArrowHelper,
   BufferGeometry,
-  DirectionalLight,
-  GridHelper,
   Line,
   LineBasicMaterial,
-  Mesh,
-  MeshStandardMaterial,
-  Object3D,
   Scene,
-  SphereGeometry,
   Vector3,
 } from "three";
-import { mathToWorld } from "../../core/coords";
 import { createAxesGroup } from "../../core/axes3d";
+import { mathToWorld } from "../../core/coords";
+import {
+  addGroundGrid,
+  addStandardLights,
+  createMarker,
+  disposeObject,
+} from "../../core/three-utils";
 
 export type SpaceCurveId = "circle" | "helix" | "trefoil";
 
@@ -81,35 +80,17 @@ export interface Curve3DScene {
   dispose(): void;
 }
 
-function disposeObject(object: Object3D): void {
-  object.traverse((child) => {
-    const candidate = child as {
-      geometry?: { dispose?: () => void };
-      material?: { dispose?: () => void } | Array<{ dispose?: () => void }>;
-    };
-    candidate.geometry?.dispose?.();
-    const material = candidate.material;
-    if (Array.isArray(material)) {
-      material.forEach((entry) => entry.dispose?.());
-    } else {
-      material?.dispose?.();
-    }
-  });
-}
-
 /**
  * 3D space-curve explorer: circle (z = 0), helix (z linear) and trefoil knot
  * (all three coordinates). A marker and velocity arrow follow r(t).
  */
 export function createCurve3DScene(): Curve3DScene {
   const scene = new Scene();
-  scene.add(new AmbientLight(0xffffff, 0.7));
-  const sun = new DirectionalLight(0xffffff, 1.4);
-  sun.position.set(4, 8, 3);
-  scene.add(sun);
+
+  addStandardLights(scene);
 
   // Fixed grid/axes sized to fit all three curves.
-  scene.add(new GridHelper(6, 16, 0x64748b, 0x475569));
+  addGroundGrid(scene, 6);
 
   const axesGroup = createAxesGroup(3.0);
   scene.add(axesGroup);
@@ -118,10 +99,7 @@ export function createCurve3DScene(): Curve3DScene {
   let curveLine: Line | null = null;
   const curveMaterial = new LineBasicMaterial({ color: 0x94a3b8 });
 
-  const marker = new Mesh(
-    new SphereGeometry(0.09, 20, 20),
-    new MeshStandardMaterial({ color: 0xef4444 }),
-  );
+  const marker = createMarker();
   scene.add(marker);
 
   const velocityArrow = new ArrowHelper(

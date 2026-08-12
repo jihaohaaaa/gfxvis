@@ -22,6 +22,7 @@
 
 - 记号:标量场 φ(x, y);向量场 F = (P, Q);函数 f 及其偏导 f_x、f_y;微分算子用 ∇(grad / div / curl)。
 - 目录与文件:demo 场景放 `src/visualizations/demos/<kebab-name>/`;React island 放 `src/components/visualization/<PascalCase>.tsx`;共享工具放 `src/visualizations/core/`(math / colormap / plot2d / coords);预设场 id 用 kebab-case。
+- 框架与共享层:Three 工具集中在 `core/three-utils.ts`(灯光 / 网格 / 标记 / 曲面材质与透明度 / `disposeObject` / `buildColoredGrid`),2D 绘制辅助在 `core/plot2d.ts`(`drawAxes` / `drawPolyline` / `drawPoint` / `drawSegment` / `drawArrow`),数值与网格采样在 `core/math.ts`(`sampleGrid` / `forEachCube`);React 侧复用 `useCanvas2D` / `useViewer3D` hooks 与 `CapsuleTabs` / `ParamSlider` / `Checkbox` / `AxesToggle` 原子组件;预设场唯一来源是 `demos/scalar-field/field.ts` 的 `FIELDS2D`(圆族 / 抛物线族自带可选 `levelCurve`)。
 - 文章放 `src/content/posts/<category>/<slug>.mdx`,frontmatter 沿用现有 schema。
 
 ## 渲染与交互
@@ -35,6 +36,7 @@
 - 主题:2D 用 `watchTheme` 触发重绘;3D 监听 `html` 的 class 变化,重设 `setClearColor` 并重渲;颜色从 CSS 变量读取(`readThemeColors`),禁止硬编码。
 - 数值微分统一走 `core/math.ts`(中心差分:梯度 / 散度 / 旋度),默认步长 h = 1e-4。
 - 资源清理:Three 场景销毁时遍历 dispose 几何体 / 材质 / 纹理并移除 canvas;React effect cleanup 必须完整。
+- 禁止重复造轮子:不要复制 `disposeObject`、灯光 / 网格 / 曲面材质、顶点着色网格构建等代码,一律从 `core/three-utils.ts` 引入;2D 画布挂载走 `useCanvas2D`(组件内只调 `redraw()` / `setBounds()`),3D 场景挂载 / 清理走 `useViewer3D`(`setup` 里做初始状态与 `attachDrag3D`,清理由 hook 完成)。
 
 ## 工程约定
 

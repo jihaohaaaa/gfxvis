@@ -225,3 +225,89 @@ export function drawAxes(
   ctx.fillText(xLabel, right + 14, sy0 - 8);
   ctx.fillText(yLabel, sx0 + 10, top - 12);
 }
+
+export interface PolylineStyle {
+  color?: string;
+  width?: number;
+  dash?: number[];
+  alpha?: number;
+}
+
+/** Stroke a polyline of world-space points through a plot. */
+export function drawPolyline(
+  ctx: CanvasRenderingContext2D,
+  plot: Plot2D,
+  pts: Array<[number, number]>,
+  style: PolylineStyle = {},
+): void {
+  if (pts.length === 0) return;
+  const { color = "#0f172a", width = 1.6, dash = [], alpha = 1 } = style;
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.setLineDash(dash);
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => {
+    const sx = plot.toScreenX(x);
+    const sy = plot.toScreenY(y);
+    if (i === 0) ctx.moveTo(sx, sy);
+    else ctx.lineTo(sx, sy);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+}
+
+export interface PointStyle {
+  color?: string;
+  filled?: boolean;
+  radius?: number;
+  width?: number;
+}
+
+/** Draw a small circle (probe / marker) at a world-space point. */
+export function drawPoint(
+  ctx: CanvasRenderingContext2D,
+  plot: Plot2D,
+  x: number,
+  y: number,
+  style: PointStyle = {},
+): void {
+  const { color = "#0f172a", filled = true, radius = 6, width = 2 } = style;
+  const sx = plot.toScreenX(x);
+  const sy = plot.toScreenY(y);
+  ctx.beginPath();
+  ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+  ctx.fillStyle = filled ? color : readThemeColors().bg;
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.stroke();
+}
+
+export interface SegmentStyle {
+  color?: string;
+  width?: number;
+  dash?: number[];
+}
+
+/** Draw a straight segment between two world-space points. */
+export function drawSegment(
+  ctx: CanvasRenderingContext2D,
+  plot: Plot2D,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  style: SegmentStyle = {},
+): void {
+  const { color = "#0f172a", width = 1.6, dash = [] } = style;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.setLineDash(dash);
+  ctx.beginPath();
+  ctx.moveTo(plot.toScreenX(x0), plot.toScreenY(y0));
+  ctx.lineTo(plot.toScreenX(x1), plot.toScreenY(y1));
+  ctx.stroke();
+  ctx.setLineDash([]);
+}

@@ -1,25 +1,25 @@
 import {
-  AmbientLight,
   ArrowHelper,
   BufferGeometry,
-  Color,
-  DirectionalLight,
-  DoubleSide,
   Float32BufferAttribute,
-  GridHelper,
   Group,
   LineBasicMaterial,
   LineSegments,
   Mesh,
-  MeshStandardMaterial,
-  Object3D,
   Scene,
-  SphereGeometry,
   Vector3,
 } from "three";
-import { coolwarm, valueToT } from "../../core/colormap";
-import { mathToWorld } from "../../core/coords";
 import { createAxesGroup } from "../../core/axes3d";
+import { mathToWorld } from "../../core/coords";
+import {
+  addGroundGrid,
+  addStandardLights,
+  applySurfaceTransparency,
+  buildColoredGrid,
+  createMarker,
+  createSurfaceMaterial,
+  disposeObject,
+} from "../../core/three-utils";
 import {
   contourLevels,
   marchingSquares,
@@ -44,59 +44,23 @@ export interface ScalarFieldSurfaceScene {
   dispose(): void;
 }
 
-function disposeObject(object: Object3D): void {
-  object.traverse((child) => {
-    const candidate = child as {
-      geometry?: { dispose?: () => void };
-      material?: { dispose?: () => void } | Array<{ dispose?: () => void }>;
-    };
-    candidate.geometry?.dispose?.();
-    const material = candidate.material;
-    if (Array.isArray(material)) {
-      material.forEach((entry) => entry.dispose?.());
-    } else {
-      material?.dispose?.();
-    }
-  });
-}
-
 /** Vertex-colored surface z = (F - c) * zScale over the field bounds. */
 function buildSurfaceGeometry(field: Field2D): BufferGeometry {
   const { bounds, zScale } = field;
   const res = 96;
   const sample = sampleField(field, bounds, res, res, 0);
   const { nx, ny, values, min, max } = sample;
-  const positions: number[] = [];
-  const colors: number[] = [];
-  const index = (i: number, j: number) => i * (nx + 1) + j;
-  for (let i = 0; i <= ny; i++) {
-    const y = bounds.yMin + ((bounds.yMax - bounds.yMin) * i) / ny;
-    for (let j = 0; j <= nx; j++) {
+  return buildColoredGrid(
+    ny,
+    nx,
+    (i, j) => {
       const x = bounds.xMin + ((bounds.xMax - bounds.xMin) * j) / nx;
-      const z = values[index(i, j)] * zScale;
-      const [wx, wy, wz] = mathToWorld(x, y, z);
-      positions.push(wx, wy, wz);
-      const [cr, cg, cb] = coolwarm(valueToT(values[index(i, j)], min, max));
-      const color = new Color(cr / 255, cg / 255, cb / 255);
-      colors.push(color.r, color.g, color.b);
-    }
-  }
-  const indices: number[] = [];
-  for (let i = 0; i < ny; i++) {
-    for (let j = 0; j < nx; j++) {
-      const a = index(i, j);
-      const b = index(i, j + 1);
-      const c = index(i + 1, j);
-      const d = index(i + 1, j + 1);
-      indices.push(a, b, d, a, d, c);
-    }
-  }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  return geometry;
+      const y = bounds.yMin + ((bounds.yMax - bounds.yMin) * i) / ny;
+      return mathToWorld(x, y, values[i * (nx + 1) + j] * zScale);
+    },
+    (i, j) => values[i * (nx + 1) + j],
+    { min, max },
+  );
 }
 
 /** Lift the 2D marching-squares iso-lines onto the surface as contours. */
@@ -137,28 +101,15 @@ export function createScalarFieldSurfaceScene(
 ): ScalarFieldSurfaceScene {
   const scene = new Scene();
 
-  scene.add(new AmbientLight(0xffffff, 0.7));
-  const sun = new DirectionalLight(0xffffff, 1.4);
-  sun.position.set(4, 8, 3);
-  scene.add(sun);
+  addStandardLights(scene);
 
   // Fixed grid/axes sized to fit every field.
-  scene.add(new GridHelper(7, 16, 0x64748b, 0x475569));
+  addGroundGrid(scene, 7);
 
   const axesGroup = createAxesGroup(3.6);
   scene.add(axesGroup);
 
-  const surfaceMaterial = new MeshStandardMaterial({
-    vertexColors: true,
-    roughness: 0.7,
-    metalness: 0,
-    side: DoubleSide,
-    // Semi-transparent by default (depthWrite off) so the gradient arrow and
-    // probe marker stay visible through the surface; toggleable.
-    transparent: true,
-    opacity: 0.55,
-    depthWrite: false,
-  });
+  const surfaceMaterial = createSurfaceMaterial();
   const surface = new Mesh(buildSurfaceGeometry(field), surfaceMaterial);
 
   const contourLines = new LineSegments(
@@ -174,10 +125,7 @@ export function createScalarFieldSurfaceScene(
   surfaceGroup.add(surface, contourLines);
   scene.add(surfaceGroup);
 
-  const marker = new Mesh(
-    new SphereGeometry(0.09, 20, 20),
-    new MeshStandardMaterial({ color: 0xef4444 }),
-  );
+  const marker = createMarker();
   scene.add(marker);
 
   const gradientArrow = new ArrowHelper(
@@ -259,10 +207,7 @@ export function createScalarFieldSurfaceScene(
   }
 
   function setSurfaceTransparent(transparent: boolean): void {
-    surfaceMaterial.transparent = transparent;
-    surfaceMaterial.opacity = transparent ? 0.55 : 1;
-    surfaceMaterial.depthWrite = !transparent;
-    surfaceMaterial.needsUpdate = true;
+    applySurfaceTransparency(surfaceMaterial, transparent);
   }
 
   function dispose(): void {

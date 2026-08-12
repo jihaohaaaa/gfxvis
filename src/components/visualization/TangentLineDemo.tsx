@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { clamp } from "../../visualizations/core/math";
 import {
-  createCanvas2D,
-  type Canvas2DController,
-} from "../../visualizations/core/canvas2d";
-import {
   drawAxes,
-  readThemeColors,
+  drawPoint,
+  drawPolyline,
+  drawSegment,
   type Bounds2,
-  type Plot2D,
-  type ThemeColors,
 } from "../../visualizations/core/plot2d";
 import {
   f,
@@ -18,161 +14,92 @@ import {
   secantSlope,
   tangentLineAt,
 } from "../../visualizations/demos/univariate/tangent";
-import InlineMath from "./InlineMath";
 import AxesToggle from "./AxesToggle";
 import ExpandableDemo from "./ExpandableDemo";
+import InlineMath from "./InlineMath";
+import { useCanvas2D } from "./useCanvas2D";
 
 const BOUNDS: Bounds2 = { xMin: -4.5, xMax: 4.5, yMin: -1.8, yMax: 1.8 };
 const MARGIN = 30;
 
-function drawCurve(
-  ctx: CanvasRenderingContext2D,
-  plot: Plot2D,
-  theme: ThemeColors,
-): void {
-  const curve = sampleCurve(BOUNDS.xMin, BOUNDS.xMax, 240);
-  ctx.strokeStyle = theme.ink;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  curve.forEach((p, i) => {
-    const sx = plot.toScreenX(p.x);
-    const sy = plot.toScreenY(p.y);
-    if (i === 0) ctx.moveTo(sx, sy);
-    else ctx.lineTo(sx, sy);
-  });
-  ctx.stroke();
-}
-
-function drawLineThrough(
-  ctx: CanvasRenderingContext2D,
-  plot: Plot2D,
-  color: string,
-  width: number,
-  dash: number[],
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-): void {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.setLineDash(dash);
-  ctx.beginPath();
-  ctx.moveTo(plot.toScreenX(x0), plot.toScreenY(y0));
-  ctx.lineTo(plot.toScreenX(x1), plot.toScreenY(y1));
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-function drawPoint(
-  ctx: CanvasRenderingContext2D,
-  plot: Plot2D,
-  x: number,
-  y: number,
-  color: string,
-  filled: boolean,
-): void {
-  const sx = plot.toScreenX(x);
-  const sy = plot.toScreenY(y);
-  ctx.beginPath();
-  ctx.arc(sx, sy, 6, 0, Math.PI * 2);
-  ctx.fillStyle = filled ? color : readThemeColors().bg;
-  ctx.fill();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-}
-
 export default function TangentLineDemo() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const controllerRef = useRef<Canvas2DController | null>(null);
-  const dragRef = useRef<"a" | "b" | null>(null);
-  const stateRef = useRef({ a: 0.9, b: 2.4 });
-  const axesRef = useRef(true);
   const [a, setA] = useState(0.9);
   const [b, setB] = useState(2.4);
   const [showAxes, setShowAxes] = useState(true);
+  const stateRef = useRef({ a: 0.9, b: 2.4 });
+  const dragRef = useRef<"a" | "b" | null>(null);
+  const axesRef = useRef(true);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return;
-
-    const controller = createCanvas2D(container, canvas, {
-      initialBounds: BOUNDS,
-      margin: MARGIN,
-      draw(ctx, plot, theme) {
-        const { a: pa, b: pb } = stateRef.current;
-        if (axesRef.current)
-          drawAxes(ctx, plot, theme, [-4, -2, 2, 4], [-1, 1]);
-        drawCurve(ctx, plot, theme);
-        drawLineThrough(
-          ctx,
-          plot,
-          theme.accent,
-          1.6,
-          [5, 4],
-          pa,
-          f(pa),
-          pb,
-          f(pb),
-        );
-        drawLineThrough(
-          ctx,
-          plot,
-          "#ef4444",
-          2,
-          [],
-          BOUNDS.xMin,
-          tangentLineAt(pa, BOUNDS.xMin),
-          BOUNDS.xMax,
-          tangentLineAt(pa, BOUNDS.xMax),
-        );
-        drawPoint(ctx, plot, pa, f(pa), "#ef4444", true);
-        drawPoint(ctx, plot, pb, f(pb), theme.accent, false);
-      },
-      onLeftDown(_e, plot) {
-        const { a: pa, b: pb } = stateRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const px = _e.clientX - rect.left;
-        const py = _e.clientY - rect.top;
-        const da = Math.hypot(
-          px - plot.toScreenX(pa),
-          py - plot.toScreenY(f(pa)),
-        );
-        const db = Math.hypot(
-          px - plot.toScreenX(pb),
-          py - plot.toScreenY(f(pb)),
-        );
-        dragRef.current = da <= db ? "a" : "b";
-        return true;
-      },
-      onLeftMove(e, plot) {
-        const target = dragRef.current;
-        if (!target) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = clamp(
-          plot.toWorldX(e.clientX - rect.left),
-          BOUNDS.xMin,
-          BOUNDS.xMax,
-        );
-        if (target === "a") setA(x);
-        else setB(x);
-      },
-      onLeftUp() {
-        dragRef.current = null;
-      },
-    });
-    controllerRef.current = controller;
-    return () => controller.dispose();
-  }, []);
+  const { containerRef, canvasRef, redraw } = useCanvas2D({
+    initialBounds: BOUNDS,
+    margin: MARGIN,
+    draw(ctx, plot, theme) {
+      const { a: pa, b: pb } = stateRef.current;
+      if (axesRef.current) drawAxes(ctx, plot, theme, [-4, -2, 2, 4], [-1, 1]);
+      const curve = sampleCurve(BOUNDS.xMin, BOUNDS.xMax, 240);
+      drawPolyline(
+        ctx,
+        plot,
+        curve.map((p) => [p.x, p.y] as [number, number]),
+        { color: theme.ink, width: 2 },
+      );
+      drawSegment(ctx, plot, pa, f(pa), pb, f(pb), {
+        color: theme.accent,
+        width: 1.6,
+        dash: [5, 4],
+      });
+      drawSegment(
+        ctx,
+        plot,
+        BOUNDS.xMin,
+        tangentLineAt(pa, BOUNDS.xMin),
+        BOUNDS.xMax,
+        tangentLineAt(pa, BOUNDS.xMax),
+        { color: "#ef4444", width: 2 },
+      );
+      drawPoint(ctx, plot, pa, f(pa), { color: "#ef4444", filled: true });
+      drawPoint(ctx, plot, pb, f(pb), { color: theme.accent, filled: false });
+    },
+    onLeftDown(_e, plot) {
+      const { a: pa, b: pb } = stateRef.current;
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return false;
+      const px = _e.clientX - rect.left;
+      const py = _e.clientY - rect.top;
+      const da = Math.hypot(
+        px - plot.toScreenX(pa),
+        py - plot.toScreenY(f(pa)),
+      );
+      const db = Math.hypot(
+        px - plot.toScreenX(pb),
+        py - plot.toScreenY(f(pb)),
+      );
+      dragRef.current = da <= db ? "a" : "b";
+      return true;
+    },
+    onLeftMove(e, plot) {
+      const target = dragRef.current;
+      if (!target) return;
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const x = clamp(
+        plot.toWorldX(e.clientX - rect.left),
+        BOUNDS.xMin,
+        BOUNDS.xMax,
+      );
+      if (target === "a") setA(x);
+      else setB(x);
+    },
+    onLeftUp() {
+      dragRef.current = null;
+    },
+  });
 
   useEffect(() => {
     stateRef.current = { a, b };
     axesRef.current = showAxes;
-    controllerRef.current?.redraw();
-  }, [a, b, showAxes]);
+    redraw();
+  }, [a, b, showAxes, redraw]);
 
   const derivative = fprime(a);
   const secant = secantSlope(a, b);

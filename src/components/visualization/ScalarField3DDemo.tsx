@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { colormapGradient } from "../../visualizations/core/colormap";
-import { createViewer3D } from "../../visualizations/core/viewer3d";
 import {
   GRID_DEFAULT,
   GRID_MAX,
@@ -8,7 +7,10 @@ import {
   createCloudScene,
 } from "../../visualizations/demos/scalar-field-3d/cloud";
 import AxesToggle from "./AxesToggle";
+import Checkbox from "./Checkbox";
 import ExpandableDemo from "./ExpandableDemo";
+import ParamSlider from "./ParamSlider";
+import { useViewer3D } from "./useViewer3D";
 
 /**
  * 3D scalar field shown as a discrete point cloud (color = value) with
@@ -16,27 +18,18 @@ import ExpandableDemo from "./ExpandableDemo";
  * slider rebuilds the lattice (points per axis) on the fly.
  */
 export default function ScalarField3DDemo() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const apiRef = useRef<ReturnType<typeof createCloudScene> | null>(null);
-  const viewerRef = useRef<ReturnType<typeof createViewer3D> | null>(null);
   const [stats, setStats] = useState({ min: -4, max: 8 });
   const [density, setDensity] = useState(GRID_DEFAULT);
   const [showAxes, setShowAxes] = useState(true);
   const [arrowsVisible, setArrowsVisible] = useState(true);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const api = createCloudScene();
-    const viewer = createViewer3D(container, api.scene);
-    apiRef.current = api;
-    viewerRef.current = viewer;
-    setStats(api.getStats());
-    return () => {
-      viewer.dispose();
-      api.dispose();
-    };
-  }, []);
+  const { containerRef, apiRef, viewerRef } = useViewer3D(
+    () => createCloudScene(),
+    ({ api, viewer }) => {
+      setStats(api.getStats());
+      viewer.render();
+    },
+  );
 
   useEffect(() => {
     const api = apiRef.current;
@@ -65,30 +58,23 @@ export default function ScalarField3DDemo() {
               />
               <span>{stats.max.toFixed(1)}</span>
             </div>
-            <label className="flex items-center gap-2 text-muted">
-              密度
-              <input
-                type="range"
-                min={GRID_MIN}
-                max={GRID_MAX}
-                step={2}
-                value={density}
-                onChange={(event) => setDensity(Number(event.target.value))}
-                className="w-32 accent-[var(--color-accent)]"
-              />
-              <span className="tabular-nums">{density}³</span>
-            </label>
+            <ParamSlider
+              label="密度"
+              min={GRID_MIN}
+              max={GRID_MAX}
+              step={2}
+              value={density}
+              onChange={setDensity}
+              widthClass="w-32"
+              display={`${density}³`}
+            />
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-muted">
-              <input
-                type="checkbox"
-                checked={arrowsVisible}
-                onChange={(event) => setArrowsVisible(event.target.checked)}
-                className="accent-[var(--color-accent)]"
-              />
-              梯度箭头
-            </label>
+            <Checkbox
+              label="梯度箭头"
+              checked={arrowsVisible}
+              onChange={setArrowsVisible}
+            />
             <AxesToggle checked={showAxes} onChange={setShowAxes} />
           </div>
         </div>
