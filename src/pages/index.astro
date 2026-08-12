@@ -8,7 +8,7 @@ const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
 );
 ---
 
-<BaseLayout>
+<BaseLayout showSidebar>
   <section class="mb-10">
     <h1 class="text-4xl font-bold tracking-tight text-ink">
       GFX<span class="text-accent">Vis</span>

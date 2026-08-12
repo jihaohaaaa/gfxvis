@@ -26,6 +26,14 @@ export interface Canvas2DOptions extends Canvas2DHandlers {
   /** Zoom clamp relative to the initial span. */
   minZoom?: number;
   maxZoom?: number;
+  /**
+   * Keep the x and y axes at the same pixels-per-unit (default true): the
+   * viewport is always a canvas-aspect rectangle centered on the requested
+   * bounds, so the requested region stays fully visible and a unit step looks
+   * identical on both axes. Zoom scales both axes equally; panning and resizing
+   * preserve the scale. Set to false for the old independent x/y framing.
+   */
+  equalScale?: boolean;
 }
 
 export interface Canvas2DController {
@@ -35,9 +43,62 @@ export interface Canvas2DController {
   dispose(): void;
 }
 
+export interface Size {
+  w: number;
+  h: number;
+}
+
+/** Centered canvas-aspect rectangle that contains `req` at equal px/unit. */
+export function fitBounds(req: Bounds2, size: Size, margin: number): Bounds2 {
+  const innerW = size.w - 2 * margin;
+  const innerH = size.h - 2 * margin;
+  const reqW = req.xMax - req.xMin;
+  const reqH = req.yMax - req.yMin;
+  const scale = Math.min(innerW / reqW, innerH / reqH);
+  const spanX = innerW / scale;
+  const spanY = innerH / scale;
+  const cx = (req.xMin + req.xMax) / 2;
+  const cy = (req.yMin + req.yMax) / 2;
+  return {
+    xMin: cx - spanX / 2,
+    xMax: cx + spanX / 2,
+    yMin: cy - spanY / 2,
+    yMax: cy + spanY / 2,
+  };
+}
+
+/** px-per-unit that fits `req` into `size`. */
+export function fitScale(req: Bounds2, size: Size, margin: number): number {
+  const innerW = size.w - 2 * margin;
+  const innerH = size.h - 2 * margin;
+  return Math.min(
+    innerW / (req.xMax - req.xMin),
+    innerH / (req.yMax - req.yMin),
+  );
+}
+
+/** Rect centered at (cx, cy) that fills the canvas at the given px/unit. */
+export function centeredBounds(
+  cx: number,
+  cy: number,
+  size: Size,
+  scale: number,
+  margin: number,
+): Bounds2 {
+  const innerW = size.w - 2 * margin;
+  const innerH = size.h - 2 * margin;
+  return {
+    xMin: cx - innerW / (2 * scale),
+    xMax: cx + innerW / (2 * scale),
+    yMin: cy - innerH / (2 * scale),
+    yMax: cy + innerH / (2 * scale),
+  };
+}
+
 /**
  * Shared 2D canvas controller: wheel = zoom at cursor, middle-drag = pan,
- * left-drag = the demo's own interaction, plus resize/theme handling.
+ * left-drag = the demo's own interaction, plus resize/theme handling. By
+ * default the view keeps equal x/y pixels-per-unit (see equalScale).
  */
 export function createCanvas2D(
   container: HTMLElement,
@@ -47,13 +108,19 @@ export function createCanvas2D(
   const margin = options.margin ?? 24;
   const minZoom = options.minZoom ?? 0.25;
   const maxZoom = options.maxZoom ?? 8;
+  const equalScale = options.equalScale ?? true;
   const initial = options.initialBounds;
   const minSpanX = (initial.xMax - initial.xMin) * minZoom;
   const maxSpanX = (initial.xMax - initial.xMin) * maxZoom;
   const minSpanY = (initial.yMax - initial.yMin) * minZoom;
   const maxSpanY = (initial.yMax - initial.yMin) * maxZoom;
 
+  /** The bounds the demo asked for; the view is fitted around it when equalScale. */
+  let requestedBounds: Bounds2 = { ...initial };
   let bounds: Bounds2 = { ...initial };
+  /** Pixels per world unit when equalScale is on. */
+  let pxPerUnit = 0;
+  let lastRect: Size = { w: 0, h: 0 };
   let panning = false;
   let dragging = false;
   let lastX = 0;
@@ -62,6 +129,20 @@ export function createCanvas2D(
   const draw = () => {
     const rect = container.getBoundingClientRect();
     if (rect.width < 40 || rect.height < 40) return;
+    const size = { w: rect.width, h: rect.height };
+    if (equalScale) {
+      if (lastRect.w === 0 && lastRect.h === 0) {
+        // First fit: show the requested region at equal scale.
+        bounds = fitBounds(requestedBounds, size, margin);
+        pxPerUnit = fitScale(requestedBounds, size, margin);
+      } else if (size.w !== lastRect.w || size.h !== lastRect.h) {
+        // Resize: keep the center and px/unit, refill the new canvas.
+        const cx = (bounds.xMin + bounds.xMax) / 2;
+        const cy = (bounds.yMin + bounds.yMax) / 2;
+        bounds = centeredBounds(cx, cy, size, pxPerUnit, margin);
+      }
+      lastRect = size;
+    }
     const ctx = resizeCanvas(canvas, rect.width, rect.height);
     const theme = readThemeColors();
     clearCanvas(ctx, rect.width, rect.height, theme.bg);
@@ -75,6 +156,35 @@ export function createCanvas2D(
     const plot = createPlot2D(bounds, rect.width, rect.height, margin);
     const wx = plot.toWorldX(clientX - rect.left);
     const wy = plot.toWorldY(clientY - rect.top);
+
+    if (equalScale) {
+      const size = { w: rect.width, h: rect.height };
+      const baseScale = fitScale(requestedBounds, size, margin);
+      const nextScale = clamp(
+        pxPerUnit * factor,
+        baseScale * minZoom,
+        baseScale * maxZoom,
+      );
+      if (nextScale === pxPerUnit) return;
+      const innerW = rect.width - 2 * margin;
+      const innerH = rect.height - 2 * margin;
+      const newSpanX = innerW / nextScale;
+      const newSpanY = innerH / nextScale;
+      const spanX = bounds.xMax - bounds.xMin;
+      const spanY = bounds.yMax - bounds.yMin;
+      const tx = (wx - bounds.xMin) / spanX;
+      const ty = (wy - bounds.yMin) / spanY;
+      bounds = {
+        xMin: wx - tx * newSpanX,
+        xMax: wx + (1 - tx) * newSpanX,
+        yMin: wy - ty * newSpanY,
+        yMax: wy + (1 - ty) * newSpanY,
+      };
+      pxPerUnit = nextScale;
+      draw();
+      return;
+    }
+
     const spanX = bounds.xMax - bounds.xMin;
     const spanY = bounds.yMax - bounds.yMin;
     const newSpanX = clamp(spanX / factor, minSpanX, maxSpanX);
@@ -163,7 +273,19 @@ export function createCanvas2D(
   return {
     redraw: draw,
     setBounds(next: Bounds2) {
-      bounds = { ...next };
+      requestedBounds = { ...next };
+      if (equalScale) {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width >= 40 && rect.height >= 40) {
+          const size = { w: rect.width, h: rect.height };
+          bounds = fitBounds(next, size, margin);
+          pxPerUnit = fitScale(next, size, margin);
+        } else {
+          bounds = { ...next };
+        }
+      } else {
+        bounds = { ...next };
+      }
       draw();
     },
     dispose() {

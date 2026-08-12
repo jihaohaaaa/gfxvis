@@ -8,11 +8,14 @@ import Sidebar from "../components/layout/Sidebar.astro";
 interface Props {
   title?: string;
   description?: string;
+  /** Render the right-hand tags sidebar (homepage only). */
+  showSidebar?: boolean;
 }
 
 const {
   title = "GFXVis · 图形学与可视化",
   description = "图形学与可视化技术博客",
+  showSidebar = false,
 } = Astro.props;
 ---
 
@@ -43,7 +46,7 @@ const {
         <main class="min-w-0 flex-1">
           <slot />
         </main>
-        <Sidebar />
+        {showSidebar && <Sidebar />}
       </div>
       <Footer />
     </div>

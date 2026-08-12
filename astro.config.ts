@@ -6,7 +6,7 @@ import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
 import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import remarkKatex from "./src/plugins/remark-katex";
 
 // https://astro.build/config
 export default defineConfig({
@@ -14,8 +14,7 @@ export default defineConfig({
 
   markdown: {
     processor: unified({
-      remarkPlugins: [remarkMath],
-      rehypePlugins: [rehypeKatex],
+      remarkPlugins: [remarkMath, remarkKatex],
     }),
     shikiConfig: {
       themes: {

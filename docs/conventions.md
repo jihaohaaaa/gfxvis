@@ -29,6 +29,7 @@
 
 - 交互组件一律以 `client:visible` 挂载;SSR 无副作用(DOM 访问只发生在 `useEffect` 内)。
 - 交互手势统一:2D 画布 = 左键拖拽(探针 / 切点等自身交互)、滚轮 = 光标中心缩放、中键拖拽 = 平移(`core/canvas2d.ts`);3D = 左键/中键拖拽旋转、滚轮缩放、右键平移(`core/viewer3d.ts` + `core/controls.ts` 统一参数)。
+- 2D 画布默认等比例轴(`canvas2d` 的 `equalScale` 默认开启,无 UI 开关):视图恒为画布等比的居中矩形,xy 每单位像素相同,请求区域完整可见;缩放按同一系数作用于两轴,平移/尺寸变化保持比例。非等比(`equalScale: false`)仅作内部回退,当前无 demo 使用。
 - 3D 交互统一走共享层:`core/viewer3d.ts`(renderer/camera/controls/resize/主题/清理)与 `core/drag3d.ts`(raycast 拖拽,拖拽时禁用 controls);3D 场景的坐标由 `core/coords.ts` 的 `mathToWorld` 唯一映射。
 - 每个 demo 自带"坐标轴"开关(默认开启):2D 用 `drawAxes`(含刻度 / 网格),3D 用 `core/axes3d.ts` 的彩色轴线组(x 红 / y 绿 / z 蓝),scene API 提供 `setAxesVisible(v)`。
 - 交互区增强:每个 demo 由 `ExpandableDemo` 包裹,右上角"展开"进入伪全屏固定浮层(非 Fullscreen API),× 关闭恢复;同一实例状态保留;画布高度用 CSS 变量 `--demo-height`(默认 2D 20rem / 3D 28rem,展开 70vh)。

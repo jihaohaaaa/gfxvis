@@ -1,0 +1,300 @@
+---
+title: "投影算子"
+description: "投影算子 P²=P 把空间分解为 im(P) ⊕ ker(P);它只要求投影两次等于投影一次,不要求垂直。本文沿正交投影、投影矩阵、秩与特征值、最小二乘这条线展开。"
+date: 2026-08-12
+tags:
+  [
+    "linear-algebra",
+    "projection",
+    "matrix",
+    "orthogonal-projection",
+    "least-squares",
+  ]
+draft: false
+---
+
+import Projection3DDemo from "../../../components/visualization/Projection3DDemo";
+import ProjectionDemo from "../../../components/visualization/ProjectionDemo";
+
+# 投影算子
+
+**投影算子(projection operator)** 把一个向量空间中的任意向量"投到"某个子空间上。它看上去是一个具体的几何动作,却可以只用一条代数性质刻画;而正交投影、投影矩阵、秩与特征值、最小二乘,全都从这条性质展开。
+
+## 先从直观说起
+
+最简单的投影发生在平面上:把每个向量垂直"拍"到 $x$ 轴上。
+
+$$
+(x, y) \mapsto (x, 0)
+$$
+
+原来的向量被分成了两部分:落在 $x$ 轴上的 $(x, 0)$ 保留下来,竖直方向 $(0, y)$ 被完全消掉。落点所在的那条直线,就是这次投影的目标子空间。
+
+也可以不沿垂直方向拍:比如沿 $(1,-1)$ 方向把向量斜着"刮"到 $x$ 轴上。两种做法落点不同,但有一个共同点——**拍一次之后,落点已经在目标直线上了,再拍一次不会变**。这一条,正是投影最核心的代数特征。
+
+把向量 $x$ 拖到不同位置,在正交投影与斜投影之间切换,观察落点 $Px$、被消掉的部分 $(I-P)x$,以及"再投一次"仍是同一个落点:
+
+<ProjectionDemo client:visible />
+
+再把维度升到三维,目标换成 $xy$ 平面($z=0$),用滑块调整 $x=(x,y,z)$,同样可以切换正交与斜投影:
+
+<Projection3DDemo client:visible />
+
+## 代数定义
+
+设 $V$ 是一个向量空间。一个线性算子
+
+$$
+P: V \to V
+$$
+
+如果满足
+
+$$
+P^2 = P
+$$
+
+就叫做一个 **projection operator**。
+
+$P^2 = P$ 的意思是:投影一次以后,再投影一次,没有任何变化,即
+
+$$
+P(Px) = Px
+$$
+
+所以投影的核心不是"垂直",而是:
+
+> 投影两次 = 投影一次。
+
+也就是说,定义只要求 $P$ 是**幂等的(idempotent)**,并没有规定投影方向是否垂直。
+
+## 为什么 $P^2 = P$ 就是投影?
+
+设想 $P$ 把向量投到某个子空间 $W$。既然 $Px$ 已经落在 $W$ 里,而 $W$ 上的点在投影下保持不动,那么
+
+$$
+P(Px) = Px
+$$
+
+反过来,满足 $P^2 = P$ 的线性算子,它的像
+
+$$
+\operatorname{im}(P) = \{ Px \mid x \in V \}
+$$
+
+恰好就是被投影到的子空间 $W$:所有 $Px$ 都躺在 $\operatorname{im}(P)$ 里,而 $\operatorname{im}(P)$ 中的每个点 $Py$ 都被 $P$ 固定,因为
+
+$$
+P(Py) = P^2 y = Py
+$$
+
+所以"投影到 $W$"与"$P^2 = P$ 且 $W = \operatorname{im}(P)$"是同一件事——投影落到的子空间不需要额外指定,它就是 $P$ 自己的像。
+
+## Image 与 Null Space
+
+投影算子最重要的两个子空间是像空间与零空间:
+
+$$
+\operatorname{im}(P) = \{ Px \mid x \in V \}, \qquad
+\ker(P) = \{ x \in V \mid Px = 0 \}
+$$
+
+$\operatorname{im}(P)$ 是投影之后留下来的空间;$\ker(P)$ 是被投影完全消掉的方向。
+
+例如
+
+$$
+P = \begin{pmatrix} 1 & 0 \\ 0 & 0 \end{pmatrix}
+$$
+
+对 $x = \begin{pmatrix} x \\ y \end{pmatrix}$ 有
+
+$$
+Px = \begin{pmatrix} x \\ 0 \end{pmatrix}
+$$
+
+所以
+
+$$
+\operatorname{im}(P) = \operatorname{span}\left\{ \begin{pmatrix} 1 \\ 0 \end{pmatrix} \right\}
+$$
+
+也就是 $x$ 轴;而
+
+$$
+\ker(P) = \operatorname{span}\left\{ \begin{pmatrix} 0 \\ 1 \end{pmatrix} \right\}
+$$
+
+也就是 $y$ 轴。这和开头的直观例子完全一致:落在 $x$ 轴上的部分留下,竖直方向被消掉。
+
+## 直和分解
+
+投影最重要的结构性质是:它把整个空间拆成两个互补的部分。
+
+$$
+V = \operatorname{im}(P) \oplus \ker(P)
+$$
+
+也就是说,任意向量 $x$ 都可以**唯一**写成
+
+$$
+x = u + v, \qquad u \in \operatorname{im}(P), \quad v \in \ker(P)
+$$
+
+并且 $Px = u$。原因在于
+
+$$
+x = Px + (I - P)x
+$$
+
+其中 $Px \in \operatorname{im}(P)$,而
+
+$$
+P(I - P) = P - P^2 = 0
+$$
+
+所以 $(I - P)x \in \ker(P)$。唯一性来自 $\operatorname{im}(P) \cap \ker(P) = \{0\}$:若 $x = Py$ 且 $Px = 0$,则 $x = Py = P^2 y = Px = 0$。
+
+因此可以把投影理解成:
+
+$$
+x = \underbrace{Px}_{\text{保留下来的部分}} + \underbrace{(I - P)x}_{\text{被消掉的部分}}
+$$
+
+$P$ 负责"留下",$I - P$ 负责"消掉"。
+
+## 投影不一定是正交投影
+
+投影只要求 $P^2 = P$,并不要求垂直。例如
+
+$$
+P = \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix}
+$$
+
+它满足
+
+$$
+P^2 = \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix} \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix}
+= \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix} = P
+$$
+
+所以它是一个投影,但它**不对称**($P^T \neq P$):对 $x = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$ 有 $Px = \begin{pmatrix} 2 \\ 0 \end{pmatrix}$,对 $x = \begin{pmatrix} 0 \\ 1 \end{pmatrix}$ 有 $Px = \begin{pmatrix} 1 \\ 0 \end{pmatrix}$。它把向量沿 $(1,-1)$ 方向斜斜地"刮"到 $x$ 轴上,而不是垂直落下去。这种投影叫做**斜投影(oblique projection)**。
+
+## 正交投影
+
+如果进一步要求投影算子对称:
+
+$$
+P = P^T
+$$
+
+结合 $P^2 = P$,就得到对称幂等矩阵
+
+$$
+P = P^2 = P^T
+$$
+
+这样的投影叫做**正交投影(orthogonal projection)**。此时像与零空间互相垂直:
+
+$$
+\operatorname{im}(P) \perp \ker(P)
+$$
+
+最简单也最重要的例子:投影到直线 $\operatorname{span}\{u\}$ 上。投影矩阵是
+
+$$
+P = \frac{u u^T}{u^T u}
+$$
+
+例如 $u = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$,则
+
+$$
+P = \frac{1}{2} \begin{pmatrix} 1 & 1 \\ 1 & 1 \end{pmatrix}
+$$
+
+对 $x = \begin{pmatrix} 3 \\ 1 \end{pmatrix}$ 有
+
+$$
+Px = \begin{pmatrix} 2 \\ 2 \end{pmatrix}, \qquad
+x - Px = \begin{pmatrix} 1 \\ -1 \end{pmatrix}
+$$
+
+而 $(x - Px) \cdot u = 1 - 1 = 0$,即残差方向与 $u$ 垂直——这正是"正交"投影的含义。
+
+## 投影矩阵的性质
+
+对任意投影矩阵 $P$(幂等矩阵)成立:
+
+- **特征值只有 $0$ 和 $1$**:由 $P^2 = P$ 得 $\lambda^2 = \lambda$,故 $\lambda \in \{0, 1\}$。
+- **可对角化**:幂等矩阵必可对角化($\operatorname{im}(P)$ 对应特征值 $1$,$\ker(P)$ 对应特征值 $0$)。
+- **秩等于迹**:
+
+$$
+\operatorname{rank}(P) = \operatorname{tr}(P)
+$$
+
+因为迹等于特征值之和,而特征值只有 $0$ 和 $1$,特征值之和恰为特征值 $1$ 的个数,即 $\operatorname{rank}(P)$。
+
+- **$I - P$ 也是投影**:
+
+$$
+(I - P)^2 = I - 2P + P^2 = I - P
+$$
+
+并且
+
+$$
+\operatorname{im}(I - P) = \ker(P), \qquad \ker(I - P) = \operatorname{im}(P)
+$$
+
+这正好呼应直和分解:两个投影互为"另一面",一个留下,一个消掉。
+
+## 最小二乘:正交投影的用武之地
+
+最小二乘问题
+
+$$
+\min_x \lVert b - Ax \rVert^2
+$$
+
+的解,几何上就是把 $b$ **正交投影**到 $A$ 的列空间 $\operatorname{col}(A)$ 上。当 $A$ 列满秩时,投影矩阵为
+
+$$
+P = A (A^T A)^{-1} A^T
+$$
+
+而投影后的向量 $Ax = Pb$ 满足残差 $b - Ax$ 与 $\operatorname{col}(A)$ 垂直,即
+
+$$
+A^T (b - Ax) = 0
+$$
+
+整理得到正规方程
+
+$$
+A^T A x = A^T b
+$$
+
+例如
+
+$$
+A = \begin{pmatrix} 1 & 1 \\ 1 & 2 \\ 1 & 3 \end{pmatrix}, \qquad
+b = \begin{pmatrix} 1 \\ 2 \\ 2 \end{pmatrix}
+$$
+
+则
+
+$$
+A^T A = \begin{pmatrix} 3 & 6 \\ 6 & 14 \end{pmatrix}, \qquad
+A^T b = \begin{pmatrix} 5 \\ 11 \end{pmatrix}
+$$
+
+解正规方程得
+
+$$
+x = \begin{pmatrix} \tfrac{2}{3} \\ \tfrac{1}{2} \end{pmatrix}
+$$
+
+即在这三个点上的最佳拟合直线是 $y = \tfrac{2}{3} + \tfrac{1}{2} t$。整个过程的每一步,都只是"把 $b$ 投影到列空间"这一个动作。
+
+> 投影 = 幂等($P^2 = P$)+ 直和分解($V = \operatorname{im}(P) \oplus \ker(P)$);再加上对称($P = P^T$),就得到正交投影。图形学里的投影矩阵,以及最小二乘、正规方程,本质都是这一件事。
