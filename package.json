@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=26.2.0"
   },
   "scripts": {
     "dev": "astro dev",
@@ -11,8 +11,12 @@
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "validate": "pnpm typecheck && pnpm lint && pnpm format:check",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.2",
@@ -32,7 +36,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/typography": "^0.5.20",
+    "@types/node": "^26.2.0",
     "@types/three": "^0.185.4",
     "eslint": "^10.8.1",
     "eslint-plugin-astro": "^3.1.0",

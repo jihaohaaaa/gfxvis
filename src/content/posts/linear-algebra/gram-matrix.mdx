@@ -1,0 +1,176 @@
+---
+title: "Gram 矩阵与几何体积"
+description: "Gram 矩阵 G_ij = ⟨v_i, v_j⟩（即 G = AᵀA）刻画了一组向量的内积关系与空间几何特征。本文从内积定义、Gram 行列式计算平行多面体体积、半正定性与秩、到最小二乘投影、Gram-Schmidt 正交化以及图形学参量曲面度规张量（第一基本形式）展开。"
+date: 2026-08-13
+tags:
+  [
+    "linear-algebra",
+    "gram-matrix",
+    "inner-product",
+    "determinant",
+    "projection",
+    "metric-tensor",
+  ]
+draft: false
+---
+
+import GramMatrixDemo from "../../../components/visualization/GramMatrixDemo";
+
+# Gram 矩阵与几何体积
+
+在向量空间中，一组向量两两之间的内积构成了 **Gram 矩阵（Gram matrix，格拉姆矩阵）**。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 **度规张量（metric tensor）** 的核心桥梁。
+
+---
+
+## 1. 代数定义与矩阵形式
+
+设 $V$ 为一个内积空间，给定一组向量 $v_1, v_2, \dots, v_k \in V$。这组向量的 **Gram 矩阵** $G$ 定义为一个 $k \times k$ 的对称方阵，其第 $i$ 行第 $j$ 列的元素为向量 $v_i$ 与 $v_j$ 的内积：
+
+$$
+G_{ij} = \langle v_i, v_j \rangle
+$$
+
+展开形式为：
+
+$$
+G = \begin{pmatrix}
+\langle v_1, v_1 \rangle & \langle v_1, v_2 \rangle & \dots & \langle v_1, v_k \rangle \\
+\langle v_2, v_1 \rangle & \langle v_2, v_2 \rangle & \dots & \langle v_2, v_k \rangle \\
+\vdots & \vdots & \ddots & \vdots \\
+\langle v_k, v_1 \rangle & \langle v_k, v_2 \rangle & \dots & \langle v_k, v_k \rangle
+\end{pmatrix}
+$$
+
+当向量处于标准欧氏空间 $\mathbb{R}^n$ 中（采用标准点积）时，若我们将向量按列拼成一个 $n \times k$ 的矩阵：
+
+$$
+A = \begin{pmatrix} v_1 & v_2 & \dots & v_k \end{pmatrix}
+$$
+
+则 Gram 矩阵可以直接写成矩阵转置乘积的形式：
+
+$$
+G = A^T A
+$$
+
+这正是在正规方程和投影矩阵推导中频繁出现的 $A^T A$！
+
+---
+
+## 2. 几何意义与 Gram 行列式
+
+Gram 矩阵最引人入胜的几何性质在于：**它的行列式蕴含了向量组在空间中张成的平行多面体的体积（Volume）**。
+
+### 二维与三维直观
+
+对于二维平面上的两个向量 $u, v$，它们张成的平行四边形面积为 $S = \|u\| \|v\| \sin\theta$。此时 Gram 矩阵为：
+
+$$
+G = \begin{pmatrix}
+\|u\|^2 & u \cdot v \\
+u \cdot v & \|v\|^2
+\end{pmatrix}
+$$
+
+其行列式为：
+
+$$
+\det(G) = \|u\|^2 \|v\|^2 - (u \cdot v)^2 = \|u\|^2 \|v\|^2 (1 - \cos^2\theta) = \|u\|^2 \|v\|^2 \sin^2\theta = S^2
+$$
+
+因此，平行四边形的面积恰好等于 **Gram 行列式（Gram determinant）** 的平方根：
+
+$$
+\text{Area} = \sqrt{\det(G)}
+$$
+
+同理，在高维空间中，由 $k$ 个向量张成的 $k$ 维平行多面体（parallelotope）的体积满足：
+
+$$
+\text{Volume}_k = \sqrt{\det(A^T A)} = \sqrt{\det(G)}
+$$
+
+### 交互可视化： Gram 矩阵与平行四边形退化
+
+下面的交互演示展示了二维向量 $u, v$ 张成的平行四边形及其对应的 Gram 矩阵与行列式。你可以拖动向量端点，观察当向量接近共线（线性相关）时，$\det(G) \to 0$ 的退化过程：
+
+<GramMatrixDemo client:visible />
+
+---
+
+## 3. 核心代数性质
+
+Gram 矩阵具备许多极佳的线性代数性质：
+
+1. **对称性（Symmetric）**：由于内积满足对称性 $\langle v_i, v_j \rangle = \langle v_j, v_i \rangle$，因此 $G = G^T$。
+2. **半正定性（Positive Semi-Definite）**：对任意非零向量 $x \in \mathbb{R}^k$，有：
+   $$
+   x^T G x = x^T A^T A x = (Ax)^T (Ax) = \|Ax\|^2 \ge 0
+   $$
+   因此 $G \succeq 0$。
+3. **秩与可逆性（Rank and Invertibility）**：
+   $$
+   \text{rank}(A^T A) = \text{rank}(A)
+   $$
+   当且仅当向量组 $v_1, \dots, v_k$ **线性无关（linearly independent）** 时，$A$ 满列秩，Gram 矩阵 $G$ 严格正定（$G \succ 0$）且可逆 ($\det(G) > 0$)。若向量组线性相关，则 $\det(G) = 0$。
+
+---
+
+## 4. 核心应用场景
+
+### 4.1 正规方程与正交投影算子
+
+在最小二乘法与子空间投影中，我们要将向量 $b$ 投影到由矩阵 $A$ 的列空间 $\text{im}(A)$ 上。求解正规方程（Normal Equations）：
+
+$$
+A^T A x = A^T b
+$$
+
+其中的系数矩阵恰好就是 Gram 矩阵 $G = A^T A$。正交投影算子的显式表达式为：
+
+$$
+P = A (A^T A)^{-1} A^T = A G^{-1} A^T
+$$
+
+当列向量线性无关时，$G$ 严格正定可逆，保证了投影算子 $P$ 的唯一存在性。详见 [投影算子](/posts/linear-algebra/projection-operators) 一文中的完整推导。
+
+---
+
+### 4.2 Gram-Schmidt 正交化过程
+
+**Gram-Schmidt 正交化** 的目标是将一组线性无关基 $v_1, \dots, v_k$ 转换为正交基 $u_1, \dots, u_k$。从矩阵对角化的视角看：
+
+- 原始基的内积矩阵 $G$ 是一个一般的满秩对称正定矩阵；
+- 正交化过程相当于寻找一个上三角可逆变换矩阵 $R$，使得正交基的内积矩阵化为对角矩阵（若归一化则为单位矩阵 $I$）：
+  $$
+  R^T G R = I
+  $$
+  这正是矩阵的 $QR$ 分解在内积结构上的体现。
+
+---
+
+### 4.3 计算机图形学与微分几何：度规张量 (Metric Tensor)
+
+在计算机图形学、3D 曲面建模与渲染中，参量曲面通常表示为 $r(u, v) \in \mathbb{R}^3$。
+
+曲面在点 $(u, v)$ 处的切平面由偏导向量 $r_u = \frac{\partial r}{\partial u}$ 与 $r_v = \frac{\partial r}{\partial v}$ 张成。这两个切向量构成的 Gram 矩阵在微分几何中被称为 **第一基本形式（First Fundamental Form）** 或 **度规张量（Metric Tensor）**：
+
+$$
+g = \begin{pmatrix} E & F \\ F & G_{\text{surf}} \end{pmatrix} = \begin{pmatrix} r_u \cdot r_u & r_u \cdot r_v \\ r_v \cdot r_u & r_v \cdot r_v \end{pmatrix}
+$$
+
+利用 Gram 行列式，曲面上的微元面积 $\mathrm{d}A$ 可以优雅地写成：
+
+$$
+\mathrm{d}A = \|r_u \times r_v\| \, \mathrm{d}u \mathrm{d}v = \sqrt{\det(g)} \, \mathrm{d}u \mathrm{d}v = \sqrt{EG_{\text{surf}} - F^2} \, \mathrm{d}u \mathrm{d}v
+$$
+
+这种用度规张量的 Gram 行列式计算积分面积元的方法，是纹理映射（Texture Mapping）、保角/保面积曲面展开以及物理模拟中不可或缺的基础。
+
+---
+
+## 总结
+
+- **Gram 矩阵** $G_{ij} = \langle v_i, v_j \rangle = A^T A$ 刻画了一组向量的内在结构；
+- **Gram 行列式** $\sqrt{\det(G)}$ 在几何上度量了向量组张成的平行多面体体积；
+- 从最小二乘投影 $P = A(A^T A)^{-1}A^T$ 到曲面渲染中的度规张量 $\mathrm{d}A = \sqrt{\det g} \, \mathrm{d}u\mathrm{d}v$，Gram 矩阵深刻贯穿了代数与几何的融会贯通。

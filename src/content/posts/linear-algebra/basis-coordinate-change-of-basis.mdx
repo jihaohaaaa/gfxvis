@@ -1,0 +1,168 @@
+---
+title: "基、坐标表示与基变换"
+description: "基是给向量空间命名坐标的参照系；同一向量在不同基下坐标不同，基变换矩阵负责换算；同一线性映射在不同基下表现为相似矩阵。"
+date: 2026-08-13
+tags: ["linear-algebra", "matrix", "basis", "coordinate", "change-of-basis"]
+draft: false
+---
+
+# 基、坐标表示与基变换
+
+同一个向量，在不同的“参照系”下，写出来的坐标完全不同。矩阵也一样：同一个线性映射，在不同的基下，纸面上的矩阵长得不一样。理解这件事的关键，是三个环环相扣的概念：**基(basis)、坐标表示(coordinate representation)、基变换(change of basis)**。
+
+## 什么是基
+
+先回忆一个铺垫：一组向量**线性无关**，指的是只有全零组合才能得到零向量，也就是每个向量都带来一个真正的新方向（详见[《线性组合、线性相关与线性无关》](/posts/linear-algebra/linear-combination-independence)）。
+
+设 $V$ 是一个 $n$ 维向量空间。$V$ 的一组**基(basis)** $\mathcal{B} = \{b_1, b_2, \ldots, b_n\}$ 是一组**线性无关且张成 $V$** 的向量：
+
+$$
+\boxed{\text{basis = linearly independent + spans the whole space}}
+$$
+
+“张成”保证空间里的每个向量都能由这组基表示，“线性无关”保证表示方式是唯一的。
+
+最省事的基是**标准基(standard basis)**：$\mathbb{R}^n$ 的标准基是
+
+$$
+e_1 = (1,0,\ldots,0), \quad e_2 = (0,1,\ldots,0), \quad \ldots, \quad e_n = (0,\ldots,0,1)
+$$
+
+但它只是“默认参照系”。$\mathbb{R}^2$ 还有别的基，例如
+
+$$
+\mathcal{B}' = \{ (1,1),\; (1,-1) \}
+$$
+
+这两个向量不共线，线性无关，也能张成整个平面。基的作用，就是给空间里每个点“命名坐标”——换一组基，名字就变了。
+
+## 坐标表示
+
+设 $\mathcal{B} = \{b_1, \ldots, b_n\}$ 是 $V$ 的一组基。由于基张成 $V$，任何 $v \in V$ 都能唯一写成
+
+$$
+v = c_1 b_1 + c_2 b_2 + \cdots + c_n b_n
+$$
+
+这组数 $(c_1, c_2, \ldots, c_n)$ 叫做 $v$ 在基 $\mathcal{B}$ 下的**坐标(coordinates)**，记作
+
+$$
+\boxed{[v]_{\mathcal{B}} = \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_n \end{pmatrix}}
+$$
+
+**同一个向量，在不同基下坐标不同**。看 $\mathbb{R}^2$ 的例子：$v = (3,2)$。在标准基下，它的坐标就是 $(3,2)$。在基 $\mathcal{B}' = \{(1,1), (1,-1)\}$ 下呢？解
+
+$$
+(3,2) = c_1(1,1) + c_2(1,-1) = (c_1 + c_2,\; c_1 - c_2)
+$$
+
+得 $c_1 = \tfrac52,\; c_2 = \tfrac12$，所以
+
+$$
+[v]_{\mathcal{B}'} = \begin{pmatrix} \tfrac52 \\ \tfrac12 \end{pmatrix}
+$$
+
+坐标是“相对这个参照系的地址”，不是向量本身：向量还是那个 $(3,2)$，只是换个参照系，地址就从 $\binom{3}{2}$ 变成了 $\binom{5/2}{1/2}$。
+
+这里其实藏着两个不同的对象：**抽象向量(abstract vector)** 与**坐标向量(coordinate vector)**。
+
+- **抽象向量** $v \in V$：不依赖任何基，就是那个几何对象本身——平面里的一个箭头、空间中的一个点；
+- **坐标向量** $[v]_{\mathcal{B}} \in \mathbb{R}^n$：是 $v$ 在选定基 $\mathcal{B}$ 下的一串数，**依赖基**。
+
+“取坐标”定义了一个映射
+
+$$
+\boxed{\Phi_{\mathcal{B}}: V \to \mathbb{R}^n, \qquad v \mapsto [v]_{\mathcal{B}} = \begin{pmatrix} c_1 \\ \vdots \\ c_n \end{pmatrix}}
+$$
+
+它是一个**同构(isomorphism)**：既单又满，还保持加法和数乘。但关键一点——**这个同构依赖基**：换一组基 $\mathcal{B}'$，$v$ 还是那个 $v$，坐标向量却从 $[v]_{\mathcal{B}}$ 变成了 $[v]_{\mathcal{B}'}$。所以“向量”与“它的坐标”绝不能混为一谈：坐标只是向量在某个参照系下的**快照**。
+
+## 基变换矩阵
+
+现在有两组基 $\mathcal{B}$ 与 $\mathcal{B}'$。要把坐标从 $\mathcal{B}'$ 换算到 $\mathcal{B}$，做法是：把 $\mathcal{B}'$ 的每个基向量写成 $\mathcal{B}$ 的坐标，按列排成矩阵 $P$：
+
+$$
+\boxed{P = \begin{pmatrix} | & | & & | \\ [b'_1]_{\mathcal{B}} & [b'_2]_{\mathcal{B}} & \cdots & [b'_n]_{\mathcal{B}} \\ | & | & & | \end{pmatrix}}
+$$
+
+$P$ 叫**基变换矩阵 / 过渡矩阵(change-of-basis matrix)**，它的作用就是“把 $\mathcal{B}'$ 的坐标翻译成 $\mathcal{B}$ 的坐标”：
+
+$$
+\boxed{[v]_{\mathcal{B}} = P\,[v]_{\mathcal{B}'}, \qquad [v]_{\mathcal{B}'} = P^{-1}[v]_{\mathcal{B}}}
+$$
+
+接着上面的例子：$\mathcal{B}$ 取标准基，$\mathcal{B}' = \{(1,1),(1,-1)\}$。$\mathcal{B}'$ 的两个基向量在标准基下就是 $(1,1)$ 与 $(1,-1)$，所以
+
+$$
+P = \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}
+$$
+
+验证 $[v]_{\mathcal{B}} = P[v]_{\mathcal{B}'}$：右边
+
+$$
+\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} \begin{pmatrix} \tfrac52 \\ \tfrac12 \end{pmatrix} = \begin{pmatrix} 3 \\ 2 \end{pmatrix}
+$$
+
+正好是 $v$ 在标准基下的坐标 $(3,2)$。反过来，$[v]_{\mathcal{B}'} = P^{-1}[v]_{\mathcal{B}}$，其中
+
+$$
+P^{-1} = \begin{pmatrix} \tfrac12 & \tfrac12 \\ \tfrac12 & -\tfrac12 \end{pmatrix}
+$$
+
+于是
+
+$$
+P^{-1} \begin{pmatrix} 3 \\ 2 \end{pmatrix} = \begin{pmatrix} \tfrac52 \\ \tfrac12 \end{pmatrix}
+$$
+
+坐标换算完成。
+
+## 线性映射在不同基下的矩阵
+
+设 $T: V \to V$ 是一个线性映射。**矩阵本身就是 $T$ 的坐标表示**：$T$ 在基 $\mathcal{B} = \{b_1, \ldots, b_n\}$ 下的矩阵 $[T]_{\mathcal{B}}$，其**第 $j$ 列是第 $j$ 个基向量 $b_j$ 的像 $T(b_j)$ 写成 $\mathcal{B}$ 的坐标**：
+
+$$
+\boxed{[T]_{\mathcal{B}} = \Big( [T(b_1)]_{\mathcal{B}} \;\; [T(b_2)]_{\mathcal{B}} \;\; \cdots \;\; [T(b_n)]_{\mathcal{B}} \Big)}
+$$
+
+这和“第 $j$ 列 = $e_j$ 的像”（见[《矩阵的秩、列空间与行空间》](/posts/linear-algebra/matrix-rank-column-row-space)）一脉相承：每一列都记录“一个输入基向量被映射到了哪里”。于是在选定基下，$T(x)$ 的坐标就等于矩阵乘 $x$ 的坐标：
+
+$$
+[T(x)]_{\mathcal{B}} = [T]_{\mathcal{B}}\,[x]_{\mathcal{B}}
+$$
+
+同一个 $T$，换一组基 $\mathcal{B}'$，矩阵就变成另一张名片——两张名片由相似关系相连：
+
+$$
+\boxed{[T]_{\mathcal{B}'} = P^{-1}[T]_{\mathcal{B}}\,P}
+$$
+
+直觉：先把坐标从 $\mathcal{B}'$ 换成 $\mathcal{B}$（乘以 $P$），再用 $\mathcal{B}$ 下的矩阵作用($[T]_{\mathcal{B}}$)，最后把结果换回 $\mathcal{B}'$（乘以 $P^{-1}$）。
+
+**矩阵长什么样，取决于你用什么基看它。** 看一个例子：设 $T$ 是“沿 $(1,1)$ 方向拉伸 2 倍、沿 $(1,-1)$ 方向不动”的线性变换。在标准基下，$T(x,y) = \left( \tfrac{3x+y}{2},\, \tfrac{x+3y}{2} \right)$，所以矩阵是
+
+$$
+[T]_{\mathcal{B}} = \begin{pmatrix} \tfrac32 & \tfrac12 \\ \tfrac12 & \tfrac32 \end{pmatrix}
+$$
+
+但在基 $\mathcal{B}' = \{(1,1),(1,-1)\}$ 下，两个基向量正好是 $T$ 的两个“特征方向”：$T(1,1) = 2(1,1)$、$T(1,-1) = (1,-1)$，所以
+
+$$
+[T]_{\mathcal{B}'} = \begin{pmatrix} 2 & 0 \\ 0 & 1 \end{pmatrix}
+$$
+
+一张不好看的稠密矩阵，换到合适的基下就变成对角矩阵。验证相似关系：
+
+$$
+P^{-1}[T]_{\mathcal{B}}P = \begin{pmatrix} \tfrac12 & \tfrac12 \\ \tfrac12 & -\tfrac12 \end{pmatrix} \begin{pmatrix} \tfrac32 & \tfrac12 \\ \tfrac12 & \tfrac32 \end{pmatrix} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 1 \end{pmatrix}
+$$
+
+（上面讨论的是 $T: V \to V$、输入输出共用一组基的情形。更一般地，$T: V \to W$ 时可以为输入与输出**各选一组基** $\mathcal{B}$、$\mathcal{C}$，矩阵 $[T]_{\mathcal{C},\mathcal{B}}$ 的第 $j$ 列 = $[T(b_j)]_{\mathcal{C}}$，此时矩阵形状为 $\dim W \times \dim V$，不必是方阵。）
+
+“找一组好基让矩阵变简单”正是**特征向量**与**对角化**的故事：选特征向量作基，线性映射的矩阵就变成对角矩阵（这也是特征值的意义所在，后续文章再展开）。
+
+## 收尾
+
+> 基 = 给空间命名坐标的参照系（线性无关 + 张成）；坐标 = 向量在参照系里的“地址”；基变换矩阵 $P$ = 换参照系的翻译官($[v]_{\mathcal{B}} = P[v]_{\mathcal{B}'}$)；相似矩阵 $P^{-1}AP$ = 同一个线性映射在不同参照系下的两张名片。
+
+相关阅读：[《线性组合、线性相关与线性无关》](/posts/linear-algebra/linear-combination-independence)（基的铺垫）、[《矩阵的秩、列空间与行空间》](/posts/linear-algebra/matrix-rank-column-row-space)（“第 $j$ 列 = $e_j$ 的像”正是“列 = 基向量的像”这一思想）、[《投影算子》](/posts/linear-algebra/projection-operators)（投影矩阵的秩与特征值）。

@@ -1,6 +1,6 @@
 ---
 title: "导数、梯度与雅可比"
-description: "导数、梯度与雅可比其实是同一件事:在某点附近,输入的微小变化 ΔX 会引起输出怎样的一阶变化 ΔY。"
+description: "导数、梯度与雅可比其实是同一件事：在某点附近，输入的微小变化 ΔX 会引起输出怎样的一阶变化 ΔY。"
 date: 2026-08-11
 tags: ["calculus", "derivative", "gradient", "jacobian", "multivariable"]
 draft: false
@@ -8,11 +8,11 @@ draft: false
 
 # 导数、梯度与雅可比
 
-**导数(derivative)、梯度(gradient)与雅可比(Jacobian)其实都在回答同一个问题:**
+**导数(derivative)、梯度(gradient)与雅可比(Jacobian)其实都在回答同一个问题：**
 
-> 在点 $X$ 附近,如果输入变化了 $\Delta X$,输出会怎样变化?
+> 在点 $X$ 附近，如果输入变化了 $\Delta X$，输出会怎样变化？
 
-更精确地说,它们都给出输出的一阶近似:
+更精确地说，它们都给出输出的一阶近似：
 
 $$
 \Delta Y \approx Df(X)\,\Delta X
@@ -20,7 +20,7 @@ $$
 
 其中 $Df(X)$ 就是 $f$ 在 $X$ 处的**导数 / 微分**。导数、梯度、雅可比只是这个统一思想在不同输入/输出维度下的三种表现形式。
 
-## 一元函数:导数是一个数
+## 一元函数：导数是一个数
 
 最简单的情形是
 
@@ -28,15 +28,15 @@ $$
 y = f(x), \qquad x, y \in \mathbb{R}
 $$
 
-即 $f: \mathbb{R} \to \mathbb{R}$。输入变化 $\Delta x$ 引起输出变化 $\Delta y$,一阶近似为
+即 $f: \mathbb{R} \to \mathbb{R}$。输入变化 $\Delta x$ 引起输出变化 $\Delta y$，一阶近似为
 
 $$
 \Delta y \approx f'(x)\,\Delta x
 $$
 
-这里 $f'(x)$ 是一个**数**:它告诉你输入改变 1 个单位时,输出在当前位置附近大约改变多少。
+这里 $f'(x)$ 是一个**数**：它告诉你输入改变 1 个单位时，输出在当前位置附近大约改变多少。
 
-例如 $f(x) = x^2$,则 $f'(x) = 2x$。在 $x = 2$ 处,$f'(2) = 4$;若 $\Delta x = 0.1$,一阶近似给出
+例如 $f(x) = x^2$，则 $f'(x) = 2x$。在 $x = 2$ 处，$f'(2) = 4$；若 $\Delta x = 0.1$，一阶近似给出
 
 $$
 \Delta y \approx f'(2)\,\Delta x = 4 \times 0.1 = 0.4
@@ -48,11 +48,11 @@ $$
 f(2.1) - f(2) = 4.41 - 4 = 0.41
 $$
 
-两者非常接近,差距正是 $\Delta x$ 的高阶小量。
+两者非常接近，差距正是 $\Delta x$ 的高阶小量。
 
-## 标量场:梯度出现了
+## 标量场：梯度出现了
 
-现在输入变成向量:
+现在输入变成向量：
 
 $$
 X = \begin{pmatrix} x \\ y \end{pmatrix}, \qquad Y = z
@@ -64,7 +64,7 @@ $$
 \Delta X = \begin{pmatrix} \Delta x \\ \Delta y \end{pmatrix}
 $$
 
-输出变化 $\Delta Y = \Delta z$ 是标量,一阶近似为
+输出变化 $\Delta Y = \Delta z$ 是标量，一阶近似为
 
 $$
 \Delta z \approx \nabla f(X) \cdot \Delta X
@@ -76,9 +76,9 @@ $$
 \nabla f = \begin{pmatrix} f_x \\ f_y \end{pmatrix}
 $$
 
-所以**梯度本质上就是标量场的导数,只不过用向量表示**——它同时给出了方向和大小。
+所以**梯度本质上就是标量场的导数，只不过用向量表示**——它同时给出了方向和大小。
 
-例如 $f(x,y) = x^2 + y^2$,则 $\nabla f = (2x, 2y)$。在 $(1, 2)$ 处,$\nabla f(1,2) = (2, 4)$。若 $\Delta X = (0.1, 0.1)$,一阶近似给出
+例如 $f(x,y) = x^2 + y^2$，则 $\nabla f = (2x, 2y)$。在 $(1, 2)$ 处，$\nabla f(1,2) = (2, 4)$。若 $\Delta X = (0.1, 0.1)$，一阶近似给出
 
 $$
 \Delta z \approx (2, 4) \cdot (0.1, 0.1) = 2 \times 0.1 + 4 \times 0.1 = 0.6
@@ -90,11 +90,11 @@ $$
 f(1.1, 2.1) - f(1, 2) = (1.21 + 4.41) - 5 = 0.62
 $$
 
-两者很接近。另外,梯度 $(2,4)$ 同时给出方向(指向增长最快的方向)和大小($\lVert\nabla f\rVert = \sqrt{20} \approx 4.47$ 正是最大方向导数)。
+两者很接近。另外，梯度 $(2,4)$ 同时给出方向（指向增长最快的方向）和大小（$\lVert\nabla f\rVert = \sqrt{20} \approx 4.47$ 正是最大方向导数）。
 
-## 向量值函数:雅可比矩阵
+## 向量值函数：雅可比矩阵
 
-输入和输出都是向量:
+输入和输出都是向量：
 
 $$
 \mathbf X = \begin{pmatrix} x \\ y \\ z \end{pmatrix}, \qquad
@@ -114,7 +114,7 @@ $$
 \Delta\mathbf Y \approx J_{\mathbf F}(\mathbf X)\,\Delta\mathbf X
 $$
 
-这里导数不再是一个数,而是一个**矩阵**——雅可比矩阵:
+这里导数不再是一个数，而是一个**矩阵**——雅可比矩阵：
 
 $$
 J_{\mathbf F} =
@@ -125,9 +125,9 @@ J_{\mathbf F} =
 \end{pmatrix}
 $$
 
-要深刻理解这个矩阵,可以这样看:输出 $\mathbf Y = (F_x, F_y, F_z)$ 的三个分量 $F_x, F_y, F_z$ **各自都是一个标量场**——它们都把 $\mathbb{R}^3$ 中的每个点映射成一个数。向量值函数 $\mathbf F$ 只是把三个标量场"叠"成一个向量。
+要深刻理解这个矩阵，可以这样看：输出 $\mathbf Y = (F_x, F_y, F_z)$ 的三个分量 $F_x, F_y, F_z$ **各自都是一个标量场**——它们都把 $\mathbb{R}^3$ 中的每个点映射成一个数。向量值函数 $\mathbf F$ 只是把三个标量场“叠”成一个向量。
 
-既然是标量场,每个分量都有自己的梯度:
+既然是标量场，每个分量都有自己的梯度：
 
 $$
 \nabla F_x = \left(\frac{\partial F_x}{\partial x},\, \frac{\partial F_x}{\partial y},\, \frac{\partial F_x}{\partial z}\right), \qquad
@@ -135,7 +135,7 @@ $$
 \nabla F_z = \left(\frac{\partial F_z}{\partial x},\, \frac{\partial F_z}{\partial y},\, \frac{\partial F_z}{\partial z}\right)
 $$
 
-于是**雅可比矩阵的每一行,正好就是对应分量标量场的梯度**:
+于是**雅可比矩阵的每一行，正好就是对应分量标量场的梯度**：
 
 $$
 J_{\mathbf F} =
@@ -144,7 +144,7 @@ J_{\mathbf F} =
 \end{pmatrix}
 $$
 
-每个分量与偏导的对应关系如下表:
+每个分量与偏导的对应关系如下表：
 
 | 分量标量场   | 对 $x$ 的偏导                      | 对 $y$ 的偏导                      | 对 $z$ 的偏导                      |
 | ------------ | ---------------------------------- | ---------------------------------- | ---------------------------------- |
@@ -152,7 +152,7 @@ $$
 | $F_y(x,y,z)$ | $\dfrac{\partial F_y}{\partial x}$ | $\dfrac{\partial F_y}{\partial y}$ | $\dfrac{\partial F_y}{\partial z}$ |
 | $F_z(x,y,z)$ | $\dfrac{\partial F_z}{\partial x}$ | $\dfrac{\partial F_z}{\partial y}$ | $\dfrac{\partial F_z}{\partial z}$ |
 
-相应地,$\Delta\mathbf Y \approx J\,\Delta\mathbf X$ 逐行读出来,就是每个输出分量的一阶变化等于它自己梯度的点积:
+相应地，$\Delta\mathbf Y \approx J\,\Delta\mathbf X$ 逐行读出来，就是每个输出分量的一阶变化等于它自己梯度的点积：
 
 $$
 \Delta F_x \approx \nabla F_x \cdot \Delta\mathbf X, \qquad
@@ -160,9 +160,9 @@ $$
 \Delta F_z \approx \nabla F_z \cdot \Delta\mathbf X
 $$
 
-这把"每个分量的变化"又拉回到上一节的梯度(以及方向导数)视角。
+这把“每个分量的变化”又拉回到上一节的梯度（以及方向导数）视角。
 
-例如取 $\mathbf F(x,y,z) = (x^2+y,\, yz,\, xz^2)$。三个分量都是标量场,逐行求偏导:
+例如取 $\mathbf F(x,y,z) = (x^2+y,\, yz,\, xz^2)$。三个分量都是标量场，逐行求偏导：
 
 $$
 \nabla F_x = (2x,\, 1,\, 0), \qquad
@@ -170,7 +170,7 @@ $$
 \nabla F_z = (z^2,\, 0,\, 2xz)
 $$
 
-在 $\mathbf X = (1, 2, 3)$ 处:
+在 $\mathbf X = (1, 2, 3)$ 处：
 
 $$
 J_{\mathbf F}(1,2,3) =
@@ -181,23 +181,23 @@ J_{\mathbf F}(1,2,3) =
 \end{pmatrix}
 $$
 
-若 $\Delta\mathbf X = (0.1, 0.1, 0.1)$,一阶近似
+若 $\Delta\mathbf X = (0.1, 0.1, 0.1)$，一阶近似
 
 $$
 \Delta\mathbf Y \approx J\,\Delta\mathbf X = (0.3,\, 0.5,\, 1.5)
 $$
 
-真实变化是 $\mathbf F(1.1, 2.1, 3.1) - \mathbf F(1,2,3) = (0.31,\, 0.51,\, 1.571)$,与一阶近似很接近。
+真实变化是 $\mathbf F(1.1, 2.1, 3.1) - \mathbf F(1,2,3) = (0.31,\, 0.51,\, 1.571)$，与一阶近似很接近。
 
 ## 统一视角
 
-| 输入 → 输出                     | 导数形式                    | 名字   |
-| ------------------------------- | --------------------------- | ------ |
-| $\mathbb{R} \to \mathbb{R}$     | $f'(X)$,一个数              | 导数   |
-| $\mathbb{R}^2 \to \mathbb{R}$   | $\nabla f(X)$,一个向量      | 梯度   |
-| $\mathbb{R}^3 \to \mathbb{R}^3$ | $J_{\mathbf F}(X)$,一个矩阵 | 雅可比 |
+| 输入 → 输出                     | 导数形式                     | 名字   |
+| ------------------------------- | ---------------------------- | ------ |
+| $\mathbb{R} \to \mathbb{R}$     | $f'(X)$，一个数              | 导数   |
+| $\mathbb{R}^2 \to \mathbb{R}$   | $\nabla f(X)$，一个向量      | 梯度   |
+| $\mathbb{R}^3 \to \mathbb{R}^3$ | $J_{\mathbf F}(X)$，一个矩阵 | 雅可比 |
 
-无论哪种,$Df(X)$ 都是"把输入变化 $\Delta X$ 线性映射成输出变化 $\Delta Y$"的对象:
+无论哪种，$Df(X)$ 都是“把输入变化 $\Delta X$ 线性映射成输出变化 $\Delta Y$”的对象：
 
 $$
 \Delta Y \approx Df(X)\,\Delta X
@@ -205,32 +205,32 @@ $$
 
 它是 $f$ 在 $X$ 附近最好的**线性近似**。
 
-## 呼应:曲面参数化的切平面
+## 呼应：曲面参数化的切平面
 
-把"梯度即导数"落到几何上。曲面 $z = f(x,y)$ 的参数化是
+把“梯度即导数”落到几何上。曲面 $z = f(x,y)$ 的参数化是
 
 $$
 \mathbf r(x,y) = (x,\, y,\, f(x,y))
 $$
 
-固定一个变量、对另一个求偏导,得到曲面上两个自然的切向量:
+固定一个变量、对另一个求偏导，得到曲面上两个自然的切向量：
 
 $$
 \mathbf r_x = (1, 0, f_x), \qquad \mathbf r_y = (0, 1, f_y)
 $$
 
-它们张成切平面:
+它们张成切平面：
 
 $$
 T_pS = \operatorname{span}\{\mathbf r_x,\, \mathbf r_y\}
 $$
 
-在 $xy$ 平面移动 $\Delta\mathbf p = (\Delta x, \Delta y)$,曲面上位移的 $z$ 分量近似为
+在 $xy$ 平面移动 $\Delta\mathbf p = (\Delta x, \Delta y)$，曲面上位移的 $z$ 分量近似为
 
 $$
 \Delta z \approx \nabla f \cdot \Delta\mathbf p = f_x \Delta x + f_y \Delta y
 $$
 
-这正是上面"标量场的梯度即导数"的几何版本——与《偏导数、切平面与法线》《曲线与曲面定义》里的切平面、方向导数一脉相承。
+这正是上面“标量场的梯度即导数”的几何版本——与《偏导数、切平面与法线》《曲线与曲面定义》里的切平面、方向导数一脉相承。
 
-> 导数、梯度、雅可比,都是在说同一件事:在一点附近,输入动一点,输出动多少。
+> 导数、梯度、雅可比，都是在说同一件事：在一点附近，输入动一点，输出动多少。

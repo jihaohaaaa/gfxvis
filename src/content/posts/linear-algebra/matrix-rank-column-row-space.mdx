@@ -1,0 +1,269 @@
+---
+title: "矩阵的秩、列空间与行空间"
+description: "矩阵 m×n 即映射 Rⁿ→Rᵐ；秩 = 实际产生的独立维度数，rank(A) ≤ min(m,n)；列空间 = 所有可能输出，行空间与核正交。"
+date: 2026-08-13
+tags:
+  [
+    "linear-algebra",
+    "matrix",
+    "rank",
+    "column-space",
+    "row-space",
+    "null-space",
+  ]
+draft: false
+---
+
+# 矩阵的秩、列空间与行空间
+
+设 $A \in \mathbb{R}^{m \times n}$，也就是
+
+$$
+A: \mathbb{R}^n \to \mathbb{R}^m
+$$
+
+它是一个把 $n$ 维输入映射成 $m$ 维输出的线性映射。这篇文章围绕它展开五个问题：**矩阵的维度到底意味着什么、列空间是什么、为什么 $\operatorname{rank}(A) \le \min(m,n)$、秩的本质是什么、行空间又是干嘛的**。
+
+## 矩阵的维度：一张表 = 一个线性映射
+
+$A \in \mathbb{R}^{m \times n}$ 表示 $A$ 有 $m$ 行、$n$ 列：
+
+$$
+A =
+\begin{bmatrix}
+a_{11} & a_{12} & \cdots & a_{1n} \\
+a_{21} & a_{22} & \cdots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mn}
+\end{bmatrix}
+$$
+
+输入是 $n$ 维向量 $x \in \mathbb{R}^n$，输出 $Ax \in \mathbb{R}^m$ 是 $m$ 维向量。**行数 $m$ 决定输出维数，列数 $n$ 决定输入维数**——这不是记法上的巧合，而是矩阵作为线性映射的本质。
+
+一方面，**列数 $n$ = 输入维数**。线性映射完全由它在基上的行为决定：输入空间 $\mathbb{R}^n$ 的标准基是 $e_1, \ldots, e_n$，而第 $j$ 列正好就是 $e_j$ 的像：
+
+$$
+A e_j = \text{the } j\text{-th column}
+$$
+
+每个列向量 $a_j \in \mathbb{R}^m$ 告诉我们“第 $j$ 个输入方向被映射到了输出空间里的哪里”。
+
+另一方面，**行数 $m$ = 输出维数**。输出 $Ax$ 的第 $i$ 个坐标是第 $i$ 行与 $x$ 的点积：
+
+$$
+(Ax)_i = a_{i1}x_1 + a_{i2}x_2 + \cdots + a_{in}x_n
+$$
+
+所以每一行都是一台“从输入里提取一个标量”的机器，第 $i$ 行负责生产输出的第 $i$ 个坐标。
+
+看一个 $2 \times 3$ 的小例子：
+
+$$
+A = \begin{pmatrix} 1 & 2 & 0 \\ 0 & 1 & 3 \end{pmatrix}, \qquad
+A \begin{pmatrix} x \\ y \\ z \end{pmatrix} = \begin{pmatrix} x + 2y \\ y + 3z \end{pmatrix}
+$$
+
+输入是三维的 $(x,y,z)$，输出是二维的 $(x+2y,\; y+3z)$。第一列 $\binom{1}{0}$ 是 $e_1$ 的像，第二列 $\binom{2}{1}$ 是 $e_2$ 的像，第三列 $\binom{0}{3}$ 是 $e_3$ 的像。
+
+由此立刻得到两个重要的“归属”：
+
+$$
+\boxed{\operatorname{Col}(A) \subseteq \mathbb{R}^m, \qquad \operatorname{Row}(A) \subseteq \mathbb{R}^n}
+$$
+
+**每一列是输出空间里的向量，每一行是输入空间里的向量。** 列空间住在输出端，行空间住在输入端——这是后面理解两者区别的关键。
+
+## 列空间：输出能到哪里
+
+矩阵的 $n$ 个列向量张成的空间，叫**列空间(column space)**:
+
+$$
+\boxed{\operatorname{Col}(A) = \operatorname{span}\{a_1, a_2, \ldots, a_n\} = \{Ax : x \in \mathbb{R}^n\} = \operatorname{Im}(A)}
+$$
+
+它有三种等价的看法：
+
+- 由所有列向量的线性组合组成；
+- 等于 $Ax$ 的所有可能取值，也就是映射的**像(image)**;
+- 是输出空间 $\mathbb{R}^m$ 里的一个子空间。
+
+直观上：列向量是“基底”，列空间回答的是**输出能到哪里**——输入 $x$ 无论怎么选，输出 $Ax$ 都只能落在列空间里；反过来说，列空间里的每个向量都能被某个 $x$ 打到。
+
+这就给出线性方程组可解性的判据：
+
+$$
+\boxed{Ax = b \text{ has a solution } \iff b \in \operatorname{Col}(A)}
+$$
+
+因为 $Ax$ 能取到的值正好就是列空间：$b$ 在列空间里，方程有解；$b$ 在列空间外，方程无解。
+
+例：一个 $3 \times 2$ 矩阵 $A \in \mathbb{R}^{3 \times 2}$ 只有两个列向量，它们张成的列空间至多是 $\mathbb{R}^3$ 里的一个平面——输出虽然有三个坐标，却只能落在一个平面里。再看 $1000 \times 1000$ 的全 1 矩阵，所有列都是同一个向量，列空间只是一条直线。
+
+## 为什么 rank(A) ≤ min(m,n)
+
+**秩(rank)** 的定义之一就是列空间的维数：
+
+$$
+\operatorname{rank}(A) = \dim(\operatorname{Col}(A)) = \dim(\operatorname{Im} A)
+$$
+
+从两个方向看它为什么被 $\min(m,n)$ 卡住：
+
+- **从列看：$\operatorname{rank}(A) \le n$**。列空间是 $n$ 个列向量张成的，最多只能有 $n$ 个线性无关的向量：
+
+$$
+\boxed{\operatorname{rank}(A) \le n}
+$$
+
+- **从输出空间看：$\operatorname{rank}(A) \le m$**。$\operatorname{Im}(A)$ 是 $\mathbb{R}^m$ 的子空间，一个 $m$ 维空间的子空间最多 $m$ 维：
+
+$$
+\boxed{\operatorname{rank}(A) \le m}
+$$
+
+两个上限同时成立，于是
+
+$$
+\boxed{\operatorname{rank}(A) \le \min(m,n)}
+$$
+
+几个尺寸：
+
+- $3 \times 2$：$\operatorname{rank} \le 2$。输出空间是 $\mathbb{R}^3$，但只有两个列，最多产生一个二维平面；也可能两列线性相关，rank = 1。
+- $2 \times 3$：$\operatorname{rank} \le 2$。有三个列，但每个列都是二维向量，二维空间里最多两个线性无关，第三列必然是前两列的线性组合。
+- $5 \times 3$：$\operatorname{rank} \le 3$。输出有 5 个维度，但 3 维输入最多携带 3 个独立方向，像至多是 $\mathbb{R}^5$ 里的一个 3 维子空间。
+- $3 \times 5$：$\operatorname{rank} \le 3$。反过来，输入有 5 维，输出只有 3 维，至少丢掉 $5-3=2$ 个输入维度。
+
+## rank 的本质：独立维度的数量
+
+如果只保留一个最本质的理解：
+
+$$
+\boxed{\text{rank = the number of independent dimensions a linear map can actually produce}}
+$$
+
+也就是
+
+$$
+\operatorname{rank}(A) = \dim(\operatorname{Im} A)
+$$
+
+rank 说的**不是**矩阵有几行、几列，而是“真正产生了多少个独立方向”。
+
+看 $A: \mathbb{R}^3 \to \mathbb{R}^3$：
+
+$$
+A = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 0 \end{pmatrix}, \qquad
+A \begin{pmatrix} x \\ y \\ z \end{pmatrix} = \begin{pmatrix} x \\ y \\ 0 \end{pmatrix}
+$$
+
+虽然输入输出都是三维，但输出永远落在 $xy$ 平面上，所以 $\operatorname{rank}(A) = 2$——它实际只能产生 2 个独立的输出维度。
+
+甚至一个 $1000 \times 1000$ 的矩阵，完全可能 rank = 1：比如全 1 矩阵，所有列都是同一个向量，列空间只是一条线。
+
+从列的方向看也一样：设 $a_1, a_2, a_3$ 是三列，如果
+
+$$
+a_3 = 2a_1 + 5a_2
+$$
+
+那么第三列没有带来新方向，真正独立的只有两个：
+
+$$
+\operatorname{rank}(A) = 2
+$$
+
+于是 rank 也可以读成：**列向量中真正提供了多少个独立方向**。
+
+丢掉的方向被谁接走了？这引出**秩-零化度定理(rank-nullity theorem)**:
+
+$$
+\boxed{\dim(\ker A) = n - \operatorname{rank}(A)}
+$$
+
+输入有 $n$ 个独立维度，其中 rank 个被保留下来进入输出，剩下的 $n - \operatorname{rank}$ 个被映射到零，构成核（零空间）。例如上面 $\mathbb{R}^3 \to \mathbb{R}^3$、rank = 2 的矩阵，$\dim(\ker A) = 3 - 2 = 1$，也就是 $z$ 轴方向被压扁成零。
+
+## 行空间是干嘛的
+
+行空间比列空间更容易让人疑惑，核心区别是：
+
+$$
+\boxed{\text{column space: where outputs can go} \quad \text{row space: which input combinations actually matter}}
+$$
+
+把 $A$ 按行写：
+
+$$
+A =
+\begin{bmatrix}
+\text{--- } r_1 \text{ ---} \\
+\text{--- } r_2 \text{ ---} \\
+\vdots \\
+\text{--- } r_m \text{ ---}
+\end{bmatrix}
+$$
+
+则
+
+$$
+Ax =
+\begin{bmatrix}
+r_1 \cdot x \\
+r_2 \cdot x \\
+\vdots \\
+r_m \cdot x
+\end{bmatrix}
+$$
+
+每一行都是一个从输入 $x$ 中提取一个标量的**线性泛函(linear functional)**。例如
+
+$$
+A = \begin{pmatrix} 1 & 2 & 0 \\ 0 & 1 & 3 \end{pmatrix}
+$$
+
+第一行 $[1,2,0]$ 计算 $x + 2y$，第二行 $[0,1,3]$ 计算 $y + 3z$。
+
+行空间定义为所有行的张成：
+
+$$
+\operatorname{Row}(A) = \operatorname{span}\{r_1, r_2, \ldots, r_m\}
+$$
+
+由于每一行都属于 $\mathbb{R}^n$，所以
+
+$$
+\boxed{\operatorname{Row}(A) \subseteq \mathbb{R}^n}
+$$
+
+**行空间和输入空间在同一个空间里**，而列空间在输出空间里($\operatorname{Col}(A) \subseteq \mathbb{R}^m$)。
+
+行空间最重要的用途是刻画**核**。因为
+
+$$
+Ax = 0 \iff r_1 \cdot x = 0,\; r_2 \cdot x = 0,\; \ldots
+$$
+
+$x$ 落在核里，当且仅当 $x$ 与每一行都正交，也就是与整个行空间正交：
+
+$$
+\boxed{\ker(A) = \operatorname{Row}(A)^\perp}
+$$
+
+这给出一个漂亮的几何图景：输入空间 $\mathbb{R}^n$ 被分成两个互相正交的部分——行空间（真正参与输出的方向）与核（被映射成零的方向），它们的维数加起来正好是 $n$。这就是秩-零化度定理的几何版本：
+
+$$
+\dim(\operatorname{Row} A) + \dim(\ker A) = n
+$$
+
+（因为 $\dim(\operatorname{Row} A) = \operatorname{rank} A$。）
+
+## 四个基本子空间
+
+把输入端和输出端合起来看，一个矩阵自然划出四个基本子空间：
+
+- **列空间** $\operatorname{Col}(A) \subseteq \mathbb{R}^m$：输出能到哪里，维数 = rank;
+- **核** $\ker(A) \subseteq \mathbb{R}^n$：被压成零的输入，维数 = $n - \operatorname{rank}$;
+- **行空间** $\operatorname{Row}(A) \subseteq \mathbb{R}^n$：参与输出的输入方向，维数 = rank，且与核正交；
+- **左核** $\ker(A^\top) \subseteq \mathbb{R}^m$：输出空间里与列空间正交的部分，维数 = $m - \operatorname{rank}$。
+
+> 秩 = 一个线性映射实际产生的独立维度数；它同时被输入维数 $n$ 与输出维数 $m$ 卡住（$\operatorname{rank} \le \min(m,n)$）；列空间是输出端“能到哪里”，行空间是输入端“哪些方向参与”，两者维数相等，核与行空间正交。更完整的正交直和分解与 SVD / 伪逆结构解析见[《四大基本子空间与正交直和分解》](/posts/linear-algebra/four-fundamental-subspaces)，最小二乘与投影矩阵本质见[《投影算子》](/posts/linear-algebra/projection-operators)。
