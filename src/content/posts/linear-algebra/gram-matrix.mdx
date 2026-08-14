@@ -18,13 +18,13 @@ import GramMatrixDemo from "../../../components/visualization/GramMatrixDemo";
 
 # Gram 矩阵与几何体积
 
-在向量空间中，一组向量两两之间的内积构成了 **Gram 矩阵（Gram matrix，格拉姆矩阵）**。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 **度规张量（metric tensor）** 的核心桥梁。
+在向量空间中，一组向量两两之间的内积构成了 **Gram 矩阵（Gram matrix，格拉姆矩阵）**。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 **度规张量（metric tensor）** 的核心桥梁。关于内积公理、加权内积与函数空间内积的完整推导，详见 [《内积空间：从欧氏点积到函数空间与希尔伯特空间》](/posts/linear-algebra/inner-product-spaces)。
 
 ---
 
 ## 1. 代数定义与矩阵形式
 
-设 $V$ 为一个内积空间，给定一组向量 $v_1, v_2, \dots, v_k \in V$。这组向量的 **Gram 矩阵** $G$ 定义为一个 $k \times k$ 的对称方阵，其第 $i$ 行第 $j$ 列的元素为向量 $v_i$ 与 $v_j$ 的内积：
+设 $V$ 为一个[内积空间](/posts/linear-algebra/inner-product-spaces)，给定一组向量 $v_1, v_2, \dots, v_k \in V$。这组向量的 **Gram 矩阵** $G$ 定义为一个 $k \times k$ 的对称方阵，其第 $i$ 行第 $j$ 列的元素为向量 $v_i$ 与 $v_j$ 的内积：
 
 $$
 G_{ij} = \langle v_i, v_j \rangle

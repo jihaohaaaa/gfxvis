@@ -1,15 +1,18 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Gram Matrix 文章与 GramMatrixDemo 可视化组件 E2E 测试", () => {
-  const consoleErrors: string[] = [];
+  let consoleErrors: string[] = [];
 
   test.beforeEach(async ({ page }) => {
-    consoleErrors.length = 0;
+    consoleErrors = [];
+
+    // 拦截页面控制台 Error 与全局未捕获异常
     page.on("console", (msg) => {
       if (msg.type() === "error") {
         consoleErrors.push(msg.text());
       }
     });
+
     page.on("pageerror", (err) => {
       consoleErrors.push(err.message);
     });
@@ -29,7 +32,7 @@ test.describe("Gram Matrix 文章与 GramMatrixDemo 可视化组件 E2E 测试",
     await expect(page).toHaveTitle(/Gram 矩阵与几何体积/);
 
     // 2. H1 标题断言
-    const heading = page.locator("h1").first();
+    const heading = page.locator("article h1").first();
     await expect(heading).toContainText("Gram 矩阵与几何体积");
 
     // 3. KaTeX 公式节点数量断言
@@ -57,7 +60,7 @@ test.describe("Gram Matrix 文章与 GramMatrixDemo 可视化组件 E2E 测试",
     await collinearBtn.scrollIntoViewIfNeeded();
     await expect(collinearBtn).toBeVisible();
 
-    const warningText = page.locator("p", { hasText: "向量线性相关" });
+    const warningText = page.getByText("向量线性相关").first();
 
     // 2. 点击“共线 (退化 0°)”，断言退化警示文字出现
     await collinearBtn.click({ force: true });
@@ -77,9 +80,10 @@ test.describe("Gram Matrix 文章与 GramMatrixDemo 可视化组件 E2E 测试",
   test("文章交叉超链接有效性断言", async ({ page }) => {
     await page.goto("/posts/linear-algebra/gram-matrix");
 
-    const projLink = page
+    // 验证指向 /posts/linear-algebra/projection-operators 的关联阅读超链接
+    const link = page
       .locator('a[href="/posts/linear-algebra/projection-operators"]')
       .first();
-    await expect(projLink).toBeVisible();
+    await expect(link).toBeVisible();
   });
 });
