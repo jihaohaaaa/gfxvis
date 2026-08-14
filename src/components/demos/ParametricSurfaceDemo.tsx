@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   PARAMETRIC_SURFACES,
   createParametricSurfaceScene,
@@ -29,27 +29,16 @@ export default function ParametricSurfaceDemo({ height }: { height?: string }) {
   const [dux, duy, duz] = surface.du(u, v);
   const [dvx, dvy, dvz] = surface.dv(u, v);
 
-  const { containerRef, apiRef, viewerRef } = useViewer3D(
+  const { containerRef } = useViewer3D(
     () => createParametricSurfaceScene(),
-    ({ api, viewer }) => {
+    ({ api }) => {
       api.setSurface(surfaceId);
       api.setParams(u, v);
       api.setAxesVisible(showAxes);
       api.setTangentsVisible(tangentsVisible);
-      viewer.render();
     },
+    [surfaceId, u, v, showAxes, tangentsVisible],
   );
-
-  useEffect(() => {
-    const api = apiRef.current;
-    const viewer = viewerRef.current;
-    if (!api || !viewer) return;
-    api.setSurface(surfaceId);
-    api.setParams(u, v);
-    api.setAxesVisible(showAxes);
-    api.setTangentsVisible(tangentsVisible);
-    viewer.render();
-  }, [surfaceId, u, v, showAxes, tangentsVisible]);
 
   const handleSurfaceChange = (id: SurfaceId): void => {
     setSurfaceId(id);

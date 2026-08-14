@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import * as THREE from "three";
 import { clamp } from "../../visualizations/core/common/math";
 import { attachDrag3D } from "../../visualizations/core/3d/drag3d";
@@ -39,12 +39,12 @@ export default function PartialDerivativesDemo({
   modeRef.current = mode;
   fixedRef.current = fixed;
 
-  const { containerRef, apiRef, viewerRef } = useViewer3D(
+  const { containerRef } = useViewer3D(
     () => createPartialDerivScene(),
     ({ api, viewer }) => {
       api.setState(mode, fixed, free);
       api.setAxesVisible(showAxes);
-      viewer.render();
+      api.setSurfaceTransparent(surfaceTransparent);
 
       return attachDrag3D({
         domElement: viewer.renderer.domElement,
@@ -61,9 +61,6 @@ export default function PartialDerivativesDemo({
         },
         onDrag(hit, event) {
           if (gestureRef.current === "marker") {
-            // Follow the pointer along the slicing plane (world x = fixed, or
-            // world z = -fixed), so the marker tracks even on fast drags instead
-            // of depending on hitting the small sphere.
             const rect = viewer.renderer.domElement.getBoundingClientRect();
             const ndc = new THREE.Vector2(
               ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -78,16 +75,12 @@ export default function PartialDerivativesDemo({
             );
             const world = new THREE.Vector3();
             if (raycasterRef.current.ray.intersectPlane(slice, world)) {
-              // Invert mathToWorld: math x = world x, math y = -world z.
               const value = modeRef.current === "x" ? -world.z : world.x;
               setFree(clamp(value, -DOMAIN, DOMAIN));
             }
             return;
           }
           if (gestureRef.current !== "plane") return;
-          // Plane drag: intersect the pointer ray with a horizontal plane at the
-          // grab height, so the fixed coordinate follows the pointer even though
-          // the slicing plane itself stays at the (moving) fixed coordinate.
           const rect = viewer.renderer.domElement.getBoundingClientRect();
           const ndc = new THREE.Vector2(
             ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -106,17 +99,8 @@ export default function PartialDerivativesDemo({
         },
       });
     },
+    [mode, fixed, free, showAxes, surfaceTransparent],
   );
-
-  useEffect(() => {
-    const api = apiRef.current;
-    const viewer = viewerRef.current;
-    if (!api || !viewer) return;
-    api.setState(mode, fixed, free);
-    api.setAxesVisible(showAxes);
-    api.setSurfaceTransparent(surfaceTransparent);
-    viewer.render();
-  }, [mode, fixed, free, showAxes, surfaceTransparent]);
 
   const value = SURFACE_FN.f(fixed, free);
   const slope =

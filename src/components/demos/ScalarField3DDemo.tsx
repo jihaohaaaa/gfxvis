@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { colormapGradient } from "../../visualizations/core/common/colormap";
 import {
   GRID_DEFAULT,
@@ -22,23 +22,16 @@ export default function ScalarField3DDemo({ height }: { height?: string }) {
   const showAxes = true;
   const [arrowsVisible, setArrowsVisible] = useState(true);
 
-  const { containerRef, apiRef, viewerRef } = useViewer3D(
+  const { containerRef } = useViewer3D(
     () => createCloudScene(),
-    ({ api, viewer }) => {
+    ({ api }) => {
       setStats(api.getStats());
-      viewer.render();
+      api.setDensity(density);
+      api.setAxesVisible(showAxes);
+      api.setArrowsVisible(arrowsVisible);
     },
+    [density, showAxes, arrowsVisible],
   );
-
-  useEffect(() => {
-    const api = apiRef.current;
-    const viewer = viewerRef.current;
-    if (!api || !viewer) return;
-    api.setDensity(density);
-    api.setAxesVisible(showAxes);
-    api.setArrowsVisible(arrowsVisible);
-    viewer.render();
-  }, [density, showAxes, arrowsVisible]);
 
   return (
     <ExpandableDemo height={height}>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   SPACE_CURVES,
   createCurve3DScene,
@@ -25,25 +25,15 @@ export default function ParametricCurve3DDemo({ height }: { height?: string }) {
   const curve = SPACE_CURVES[curveId];
   const [x, y, z] = curve.point(t);
 
-  const { containerRef, apiRef, viewerRef } = useViewer3D(
+  const { containerRef } = useViewer3D(
     () => createCurve3DScene(),
-    ({ api, viewer }) => {
+    ({ api }) => {
       api.setCurve(curveId);
       api.setT(t);
       api.setAxesVisible(showAxes);
-      viewer.render();
     },
+    [curveId, t, showAxes],
   );
-
-  useEffect(() => {
-    const api = apiRef.current;
-    const viewer = viewerRef.current;
-    if (!api || !viewer) return;
-    api.setCurve(curveId);
-    api.setT(t);
-    api.setAxesVisible(showAxes);
-    viewer.render();
-  }, [curveId, t, showAxes]);
 
   const handleCurveChange = (id: SpaceCurveId): void => {
     setCurveId(id);

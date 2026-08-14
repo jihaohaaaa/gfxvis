@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   PROJECTION3D_TARGETS,
   createProjection3DScene,
@@ -33,27 +33,16 @@ export default function Projection3DDemo({ height }: { height?: string }) {
     label: m.label,
   }));
 
-  const { containerRef, apiRef, viewerRef } = useViewer3D(
+  const { containerRef } = useViewer3D(
     () => createProjection3DScene(),
-    ({ api, viewer }) => {
+    ({ api }) => {
       api.setTarget(targetId);
       api.setMode(modeId);
       api.setVector(vector.x, vector.y, vector.z);
       api.setAxesVisible(showAxes);
-      viewer.render();
     },
+    [vector, targetId, modeId, showAxes],
   );
-
-  useEffect(() => {
-    const api = apiRef.current;
-    const viewer = viewerRef.current;
-    if (!api || !viewer) return;
-    api.setTarget(targetId);
-    api.setMode(modeId);
-    api.setVector(vector.x, vector.y, vector.z);
-    api.setAxesVisible(showAxes);
-    viewer.render();
-  }, [vector, targetId, modeId, showAxes]);
 
   const [px, py, pz] = mode.project(vector.x, vector.y, vector.z);
   const [rx, ry, rz] = mode.residual(vector.x, vector.y, vector.z);

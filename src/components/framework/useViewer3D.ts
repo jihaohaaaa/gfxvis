@@ -24,15 +24,16 @@ export interface UseViewer3DResult<T> {
  */
 export function useViewer3D<T extends { scene: Scene; dispose(): void }>(
   factory: () => T,
-  setup?: (ctx: UseViewer3DSetup<T>) => (() => void) | void,
+  onUpdate?: (ctx: UseViewer3DSetup<T>) => (() => void) | void,
+  deps?: unknown[],
 ): UseViewer3DResult<T> {
   const containerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<T | null>(null);
   const viewerRef = useRef<Viewer3D | null>(null);
   const factoryRef = useRef(factory);
   factoryRef.current = factory;
-  const setupRef = useRef(setup);
-  setupRef.current = setup;
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -41,7 +42,7 @@ export function useViewer3D<T extends { scene: Scene; dispose(): void }>(
     const viewer = createViewer3D(container, api.scene);
     apiRef.current = api;
     viewerRef.current = viewer;
-    const detach = setupRef.current?.({ api, viewer });
+    const detach = onUpdateRef.current?.({ api, viewer });
     return () => {
       detach?.();
       viewer.dispose();
@@ -50,6 +51,13 @@ export function useViewer3D<T extends { scene: Scene; dispose(): void }>(
       viewerRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (deps && apiRef.current && viewerRef.current) {
+      onUpdateRef.current?.({ api: apiRef.current, viewer: viewerRef.current });
+      viewerRef.current.render();
+    }
+  }, deps ?? []);
 
   return { containerRef, apiRef, viewerRef };
 }

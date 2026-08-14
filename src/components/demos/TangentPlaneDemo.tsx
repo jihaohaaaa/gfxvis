@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { clamp } from "../../visualizations/core/common/math";
 import { attachDrag3D } from "../../visualizations/core/3d/drag3d";
 import {
@@ -16,12 +16,13 @@ export default function TangentPlaneDemo({ height }: { height?: string }) {
   const showAxes = true;
   const [surfaceTransparent, setSurfaceTransparent] = useState(true);
 
-  const { containerRef, apiRef, viewerRef } = useViewer3D(
+  const { containerRef } = useViewer3D(
     () => createSurfaceScene(),
     ({ api, viewer }) => {
       api.setPoint(point.x, point.y);
       api.setAxesVisible(showAxes);
-      viewer.render();
+      api.setSurfaceTransparent(surfaceTransparent);
+
       return attachDrag3D({
         domElement: viewer.renderer.domElement,
         camera: viewer.camera,
@@ -29,25 +30,15 @@ export default function TangentPlaneDemo({ height }: { height?: string }) {
         targets: [api.surface],
         onDrag(hit) {
           if (!hit) return;
-          // Invert mathToWorld: math x = world x, math y = -world z.
           const nx = clamp(hit.point.x, -DOMAIN, DOMAIN);
           const ny = clamp(-hit.point.z, -DOMAIN, DOMAIN);
           setPoint({ x: nx, y: ny });
           api.setPoint(nx, ny);
-          viewer.render();
         },
       });
     },
+    [point, showAxes, surfaceTransparent],
   );
-
-  useEffect(() => {
-    const api = apiRef.current;
-    const viewer = viewerRef.current;
-    if (!api || !viewer) return;
-    api.setAxesVisible(showAxes);
-    api.setSurfaceTransparent(surfaceTransparent);
-    viewer.render();
-  }, [showAxes, surfaceTransparent]);
 
   const { x, y } = point;
   const z = SURFACE_FN.f(x, y);
