@@ -21,7 +21,10 @@ export interface UseCanvas2DResult {
  * state in refs and call `redraw()` to repaint. SSR-safe: DOM work happens
  * only inside the effect.
  */
-export function useCanvas2D(options: Canvas2DOptions): UseCanvas2DResult {
+export function useCanvas2D(
+  options: Canvas2DOptions,
+  deps?: unknown[],
+): UseCanvas2DResult {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controllerRef = useRef<Canvas2DController | null>(null);
@@ -43,6 +46,12 @@ export function useCanvas2D(options: Canvas2DOptions): UseCanvas2DResult {
   const redraw = useCallback(() => {
     controllerRef.current?.redraw();
   }, []);
+
+  useEffect(() => {
+    if (deps && controllerRef.current) {
+      controllerRef.current.redraw();
+    }
+  }, deps ?? []);
 
   const setBounds = useCallback((bounds: Bounds2) => {
     controllerRef.current?.setBounds(bounds);

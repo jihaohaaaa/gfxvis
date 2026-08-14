@@ -5,12 +5,11 @@ import {
   type ProjectionTargetId,
 } from "../../visualizations/demos/projection/projection3d";
 import type { ProjectionModeId } from "../../visualizations/demos/projection/projection2d";
-import AxesToggle from "./AxesToggle";
-import CapsuleTabs from "./CapsuleTabs";
-import ExpandableDemo from "./ExpandableDemo";
-import InlineMath from "./InlineMath";
-import ParamSlider from "./ParamSlider";
-import { useViewer3D } from "./useViewer3D";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import ParamSlider from "../framework/ParamSlider";
+import { useViewer3D } from "../framework/useViewer3D";
 
 const TARGET_OPTIONS: { id: ProjectionTargetId; label: string }[] = [
   { id: "xy-plane", label: "xy 平面" },
@@ -21,11 +20,11 @@ const SLIDER_MIN = -2.5;
 const SLIDER_MAX = 2.5;
 
 /** 3D projection explorer: sliders set x = (x, y, z); pick target plane + mode. */
-export default function Projection3DDemo() {
+export default function Projection3DDemo({ height }: { height?: string }) {
   const [vector, setVector] = useState({ x: 2, y: 1.5, z: 1 });
   const [targetId, setTargetId] = useState<ProjectionTargetId>("xy-plane");
   const [modeId, setModeId] = useState<ProjectionModeId>("orthogonal");
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
 
   const target = PROJECTION3D_TARGETS[targetId];
   const mode = target.modes[modeId];
@@ -60,7 +59,7 @@ export default function Projection3DDemo() {
   const [rx, ry, rz] = mode.residual(vector.x, vector.y, vector.z);
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
@@ -107,7 +106,6 @@ export default function Projection3DDemo() {
               widthClass="w-32"
             />
           </div>
-          <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
           <p>

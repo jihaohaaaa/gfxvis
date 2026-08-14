@@ -12,17 +12,14 @@ import {
   Float32BufferAttribute,
   DoubleSide,
 } from "three";
-import ExpandableDemo from "./ExpandableDemo";
-import AxesToggle from "./AxesToggle";
-import CapsuleTabs from "./CapsuleTabs";
-import ParamSlider from "./ParamSlider";
-import InlineMath from "./InlineMath";
-import { useCanvas2D } from "./useCanvas2D";
-import { useViewer3D } from "./useViewer3D";
-import {
-  readThemeColors,
-  type Bounds2,
-} from "../../visualizations/core/plot2d";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import ParamSlider from "../framework/ParamSlider";
+import InlineMath from "../framework/InlineMath";
+import PresetSelector from "../framework/PresetSelector";
+import { useCanvas2D } from "../framework/useCanvas2D";
+import { useViewer3D } from "../framework/useViewer3D";
+import { drawAxes, type Bounds2 } from "../../visualizations/core/plot2d";
 import {
   addStandardLights,
   addGroundGrid,
@@ -221,83 +218,51 @@ function View2D({ showAxes }: { showAxes: boolean }) {
 
   const { containerRef, canvasRef, redraw } = useCanvas2D({
     initialBounds: BOUNDS_2D,
-    onLeftDown(e) {
+    onLeftDown(e, plot) {
       const canvas = canvasRef.current;
       if (!canvas) return false;
       isDraggingRef.current = true;
       const rect = canvas.getBoundingClientRect();
-      updateVectorFromMouse(
-        e.clientX - rect.left,
-        e.clientY - rect.top,
-        canvas.width,
-        canvas.height,
-      );
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const wx = Math.max(-3.0, Math.min(3.0, plot.toWorldX(px)));
+      const wy = Math.max(-3.0, Math.min(3.0, plot.toWorldY(py)));
+      setVVec({ x: wx, y: wy });
       return true;
     },
-    onLeftMove(e) {
+    onLeftMove(e, plot) {
       if (!isDraggingRef.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      updateVectorFromMouse(
-        e.clientX - rect.left,
-        e.clientY - rect.top,
-        canvas.width,
-        canvas.height,
-      );
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const wx = Math.max(-3.0, Math.min(3.0, plot.toWorldX(px)));
+      const wy = Math.max(-3.0, Math.min(3.0, plot.toWorldY(py)));
+      setVVec({ x: wx, y: wy });
     },
     onLeftUp() {
       isDraggingRef.current = false;
     },
-    draw(ctx) {
-      const width = ctx.canvas.width;
-      const height = ctx.canvas.height;
+    draw(ctx, plot, theme) {
+      const { width, height } = plot;
       ctx.clearRect(0, 0, width, height);
-      const theme = readThemeColors();
       const st = stateRef.current;
 
-      const center = { x: width / 2, y: height / 2 };
-      const scale = Math.min(width, height) / 7.5;
-
       const toCanvas = (wx: number, wy: number) => ({
-        x: center.x + wx * scale,
-        y: center.y - wy * scale,
+        x: plot.toScreenX(wx),
+        y: plot.toScreenY(wy),
       });
 
       // 1. Standard Reference Axes & Grid
       if (st.showAxes) {
-        ctx.save();
-        ctx.strokeStyle = theme.border;
-        ctx.lineWidth = 1;
-        ctx.setLineDash([2, 3]);
-        for (let x = -3; x <= 3; x++) {
-          if (x === 0) continue;
-          const p = toCanvas(x, 0);
-          ctx.beginPath();
-          ctx.moveTo(p.x, 0);
-          ctx.lineTo(p.x, height);
-          ctx.stroke();
-        }
-        for (let y = -3; y <= 3; y++) {
-          if (y === 0) continue;
-          const p = toCanvas(0, y);
-          ctx.beginPath();
-          ctx.moveTo(0, p.y);
-          ctx.lineTo(width, p.y);
-          ctx.stroke();
-        }
-        ctx.setLineDash([]);
-        ctx.strokeStyle = theme.muted;
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(0, center.y);
-        ctx.lineTo(width, center.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(center.x, 0);
-        ctx.lineTo(center.x, height);
-        ctx.stroke();
-        ctx.restore();
+        drawAxes(
+          ctx,
+          plot,
+          theme,
+          [-3, -2, -1, 1, 2, 3],
+          [-3, -2, -1, 1, 2, 3],
+        );
       }
 
       // 2. Deformed Grid of Basis C
@@ -378,43 +343,19 @@ function View2D({ showAxes }: { showAxes: boolean }) {
     redraw();
   }, [presetKey, showAxes, vVec, redraw]);
 
-  const updateVectorFromMouse = (
-    px: number,
-    py: number,
-    width: number,
-    height: number,
-  ) => {
-    const scale = Math.min(width, height) / 7.5;
-    const center = { x: width / 2, y: height / 2 };
-    const wx = (px - center.x) / scale;
-    const wy = (center.y - py) / scale;
-    setVVec({
-      x: Math.max(-3.0, Math.min(3.0, wx)),
-      y: Math.max(-3.0, Math.min(3.0, wy)),
-    });
-  };
-
   return (
     <div className="space-y-4">
       {/* 2D Presets */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-muted font-medium">
-          新基 <InlineMath tex="\mathcal{C}" /> 预设:
-        </span>
-        {(Object.keys(PRESETS_2D) as Preset2D[]).map((key) => (
-          <button
-            key={key}
-            onClick={() => setPresetKey(key)}
-            className={`rounded px-2.5 py-1 font-medium transition-colors ${
-              presetKey === key
-                ? "bg-accent text-accent-foreground"
-                : "bg-surface-hover text-foreground hover:bg-border"
-            }`}
-          >
-            {PRESETS_2D[key].name}
-          </button>
-        ))}
-      </div>
+      <PresetSelector
+        label={
+          <>
+            新基 <InlineMath tex="\mathcal{C}" /> 预设:
+          </>
+        }
+        options={PRESETS_2D}
+        value={presetKey}
+        onChange={setPresetKey}
+      />
 
       {/* 2D Canvas Container */}
       <div
@@ -831,22 +772,12 @@ function View3D({ showAxes }: { showAxes: boolean }) {
     <div className="space-y-4">
       {/* 3D Presets & Model Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-muted font-medium">典型姿态预设:</span>
-          {(Object.keys(PRESETS_3D) as Preset3D[]).map((key) => (
-            <button
-              key={key}
-              onClick={() => applyPreset(key)}
-              className={`rounded px-2.5 py-1 font-medium transition-colors ${
-                presetKey === key
-                  ? "bg-accent text-accent-foreground"
-                  : "bg-surface-hover text-foreground hover:bg-border"
-              }`}
-            >
-              {PRESETS_3D[key].name}
-            </button>
-          ))}
-        </div>
+        <PresetSelector<string>
+          label="典型姿态预设:"
+          options={PRESETS_3D}
+          value={presetKey}
+          onChange={(key) => applyPreset(key as Preset3D)}
+        />
 
         <div className="flex items-center gap-2">
           <button
@@ -1000,12 +931,12 @@ function View3D({ showAxes }: { showAxes: boolean }) {
   );
 }
 
-export default function ChangeOfBasisDemo() {
+export default function ChangeOfBasisDemo({ height }: { height?: string }) {
   const [demoMode, setDemoMode] = useState<DemoMode>("2d");
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-4">
         {/* Header Mode Switch & Axes Controls */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1014,7 +945,6 @@ export default function ChangeOfBasisDemo() {
             value={demoMode}
             onChange={(val) => setDemoMode(val as DemoMode)}
           />
-          <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>
 
         {/* View content based on mode */}

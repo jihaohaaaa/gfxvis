@@ -29,8 +29,9 @@ pnpm format    # Prettier 格式化
 
 ## 3D 示例
 
-- `src/visualizations/core/`:Three.js 封装(Renderer / Camera / Controls)
-- `src/visualizations/demos/<name>/`:每个 demo 的场景创建
-- `src/components/visualization/`:对应的 React 组件
+- `src/visualizations/core/`: Three.js / Canvas 2D 核心算法与绘制封装
+- `src/visualizations/demos/<name>/`: 每个 Demo 的数学与场景配置
+- `src/components/framework/`: 框架 UI 控件与 Hook 基础设施 (ExpandableDemo / PresetSelector / useCanvas2D / useVectorDrag 等)
+- `src/components/demos/`: 可视化 Demo React Islands
 
 模型文件放在 `public/models/`(如 `bunny.glb`、`helmet.glb`)。

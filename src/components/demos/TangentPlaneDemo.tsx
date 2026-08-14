@@ -6,15 +6,14 @@ import {
   SURFACE_FN,
   createSurfaceScene,
 } from "../../visualizations/demos/bivariate/surface";
-import AxesToggle from "./AxesToggle";
-import Checkbox from "./Checkbox";
-import ExpandableDemo from "./ExpandableDemo";
-import InlineMath from "./InlineMath";
-import { useViewer3D } from "./useViewer3D";
+import Checkbox from "../framework/Checkbox";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import { useViewer3D } from "../framework/useViewer3D";
 
-export default function TangentPlaneDemo() {
+export default function TangentPlaneDemo({ height }: { height?: string }) {
   const [point, setPoint] = useState({ x: 0.8, y: 0.6 });
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
   const [surfaceTransparent, setSurfaceTransparent] = useState(true);
 
   const { containerRef, apiRef, viewerRef } = useViewer3D(
@@ -56,7 +55,7 @@ export default function TangentPlaneDemo() {
   const fy = SURFACE_FN.fy(x, y);
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
@@ -87,7 +86,6 @@ export default function TangentPlaneDemo() {
               checked={surfaceTransparent}
               onChange={setSurfaceTransparent}
             />
-            <AxesToggle checked={showAxes} onChange={setShowAxes} />
           </div>
         </div>
         <p className="text-xs text-muted">

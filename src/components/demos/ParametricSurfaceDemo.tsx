@@ -4,13 +4,12 @@ import {
   createParametricSurfaceScene,
   type SurfaceId,
 } from "../../visualizations/demos/parametric/surface3d";
-import AxesToggle from "./AxesToggle";
-import CapsuleTabs from "./CapsuleTabs";
-import Checkbox from "./Checkbox";
-import ExpandableDemo from "./ExpandableDemo";
-import InlineMath from "./InlineMath";
-import ParamSlider from "./ParamSlider";
-import { useViewer3D } from "./useViewer3D";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import Checkbox from "../framework/Checkbox";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import ParamSlider from "../framework/ParamSlider";
+import { useViewer3D } from "../framework/useViewer3D";
 
 const SURFACE_OPTIONS: { id: SurfaceId; label: string }[] = [
   { id: "sphere", label: "球面" },
@@ -18,11 +17,11 @@ const SURFACE_OPTIONS: { id: SurfaceId; label: string }[] = [
 ];
 
 /** 3D parametric surface: u/v sliders, parameter grid, highlighted curves. */
-export default function ParametricSurfaceDemo() {
+export default function ParametricSurfaceDemo({ height }: { height?: string }) {
   const [surfaceId, setSurfaceId] = useState<SurfaceId>("sphere");
   const [u, setU] = useState(1.2);
   const [v, setV] = useState(1.5);
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
   const [tangentsVisible, setTangentsVisible] = useState(true);
 
   const surface = PARAMETRIC_SURFACES[surfaceId];
@@ -60,7 +59,7 @@ export default function ParametricSurfaceDemo() {
   };
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
@@ -98,7 +97,6 @@ export default function ParametricSurfaceDemo() {
               checked={tangentsVisible}
               onChange={setTangentsVisible}
             />
-            <AxesToggle checked={showAxes} onChange={setShowAxes} />
           </div>
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">

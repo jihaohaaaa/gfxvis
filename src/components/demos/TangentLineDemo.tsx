@@ -14,18 +14,17 @@ import {
   secantSlope,
   tangentLineAt,
 } from "../../visualizations/demos/univariate/tangent";
-import AxesToggle from "./AxesToggle";
-import ExpandableDemo from "./ExpandableDemo";
-import InlineMath from "./InlineMath";
-import { useCanvas2D } from "./useCanvas2D";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import { useCanvas2D } from "../framework/useCanvas2D";
 
 const BOUNDS: Bounds2 = { xMin: -4.5, xMax: 4.5, yMin: -1.8, yMax: 1.8 };
 const MARGIN = 30;
 
-export default function TangentLineDemo() {
+export default function TangentLineDemo({ height }: { height?: string }) {
   const [a, setA] = useState(0.9);
   const [b, setB] = useState(2.4);
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
   const stateRef = useRef({ a: 0.9, b: 2.4 });
   const dragRef = useRef<"a" | "b" | null>(null);
   const axesRef = useRef(true);
@@ -105,7 +104,7 @@ export default function TangentLineDemo() {
   const secant = secantSlope(a, b);
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
@@ -136,7 +135,6 @@ export default function TangentLineDemo() {
               />
             </p>
           </div>
-          <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>
         <p className="text-xs text-muted">
           拖动两个圆点(实心=切点,空心=割线另一端);滚轮缩放,中键平移。

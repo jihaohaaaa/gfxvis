@@ -10,12 +10,11 @@ import {
   CURVES2D,
   type Curve2DId,
 } from "../../visualizations/demos/parametric/curve2d";
-import AxesToggle from "./AxesToggle";
-import CapsuleTabs from "./CapsuleTabs";
-import ExpandableDemo from "./ExpandableDemo";
-import InlineMath from "./InlineMath";
-import ParamSlider from "./ParamSlider";
-import { useCanvas2D } from "./useCanvas2D";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import ParamSlider from "../framework/ParamSlider";
+import { useCanvas2D } from "../framework/useCanvas2D";
 
 const MARGIN = 30;
 const CURVE_OPTIONS: { id: Curve2DId; label: string }[] = [
@@ -24,10 +23,10 @@ const CURVE_OPTIONS: { id: Curve2DId; label: string }[] = [
 ];
 
 /** 2D parametric curve explorer: circle / parabola, t slider + drag, tangent. */
-export default function ParametricCurveDemo() {
+export default function ParametricCurveDemo({ height }: { height?: string }) {
   const [curveId, setCurveId] = useState<Curve2DId>("circle");
   const [t, setT] = useState(1.0);
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
   const stateRef = useRef({ curve: "circle" as Curve2DId, t: 1.0 });
   const axesRef = useRef(true);
 
@@ -94,7 +93,7 @@ export default function ParametricCurveDemo() {
   const [tx, ty] = curve.tangent(t);
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
@@ -122,7 +121,6 @@ export default function ParametricCurveDemo() {
               widthClass="w-44"
             />
           </div>
-          <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
           <p>

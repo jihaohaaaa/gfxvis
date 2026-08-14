@@ -6,21 +6,20 @@ import {
   GRID_MIN,
   createCloudScene,
 } from "../../visualizations/demos/scalar-field-3d/cloud";
-import AxesToggle from "./AxesToggle";
-import Checkbox from "./Checkbox";
-import ExpandableDemo from "./ExpandableDemo";
-import ParamSlider from "./ParamSlider";
-import { useViewer3D } from "./useViewer3D";
+import Checkbox from "../framework/Checkbox";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import ParamSlider from "../framework/ParamSlider";
+import { useViewer3D } from "../framework/useViewer3D";
 
 /**
  * 3D scalar field shown as a discrete point cloud (color = value) with
  * gradient arrows at a subset of points (direction = nabla phi). The density
  * slider rebuilds the lattice (points per axis) on the fly.
  */
-export default function ScalarField3DDemo() {
+export default function ScalarField3DDemo({ height }: { height?: string }) {
   const [stats, setStats] = useState({ min: -4, max: 8 });
   const [density, setDensity] = useState(GRID_DEFAULT);
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
   const [arrowsVisible, setArrowsVisible] = useState(true);
 
   const { containerRef, apiRef, viewerRef } = useViewer3D(
@@ -42,7 +41,7 @@ export default function ScalarField3DDemo() {
   }, [density, showAxes, arrowsVisible]);
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
@@ -75,7 +74,6 @@ export default function ScalarField3DDemo() {
               checked={arrowsVisible}
               onChange={setArrowsVisible}
             />
-            <AxesToggle checked={showAxes} onChange={setShowAxes} />
           </div>
         </div>
         <p className="text-xs text-muted">

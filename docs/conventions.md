@@ -21,8 +21,8 @@
 ## 记号与命名
 
 - 记号:标量场 φ(x, y);向量场 F = (P, Q);函数 f 及其偏导 f_x、f_y;微分算子用 ∇(grad / div / curl)。
-- 目录与文件:demo 场景放 `src/visualizations/demos/<kebab-name>/`;React island 放 `src/components/visualization/<PascalCase>.tsx`;共享工具放 `src/visualizations/core/`(math / colormap / plot2d / coords);预设场 id 用 kebab-case。
-- 框架与共享层:Three 工具集中在 `core/three-utils.ts`(灯光 / 网格 / 标记 / 曲面材质与透明度 / `disposeObject` / `buildColoredGrid`),2D 绘制辅助在 `core/plot2d.ts`(`drawAxes` / `drawPolyline` / `drawPoint` / `drawSegment` / `drawArrow`),数值与网格采样在 `core/math.ts`(`sampleGrid` / `forEachCube`);React 侧复用 `useCanvas2D` / `useViewer3D` hooks 与 `CapsuleTabs` / `ParamSlider` / `Checkbox` / `AxesToggle` 原子组件;预设场唯一来源是 `demos/scalar-field/field.ts` 的 `FIELDS2D`(圆族 / 抛物线族自带可选 `levelCurve`)。
+- 目录与文件:demo 场景放 `src/visualizations/demos/<kebab-name>/`;框架基础设施组件/Hook 放 `src/components/framework/<PascalCase>.tsx`;React island Demos 放 `src/components/demos/<PascalCase>.tsx`;共享工具放 `src/visualizations/core/`(math / colormap / plot2d / coords);预设场 id 用 kebab-case。
+- 框架与共享层:Three 工具集中在 `core/three-utils.ts`(灯光 / 网格 / 标记 / 曲面材质与透明度 / `disposeObject` / `buildColoredGrid`),2D 绘制辅助在 `core/plot2d.ts`(`drawAxes` / `drawPolyline` / `drawPoint` / `drawSegment` / `drawArrow`),数值与网格采样在 `core/math.ts`(`sampleGrid` / `forEachCube`);React 侧复用 `components/framework/` 下的 `useCanvas2D` / `useViewer3D` / `useVectorDrag` hooks 与 `ExpandableDemo` / `PresetSelector` / `CapsuleTabs` / `ParamSlider` / `Checkbox` / `InlineMath` 组件;预设场唯一来源是 `demos/scalar-field/field.ts` 的 `FIELDS2D`(圆族 / 抛物线族自带可选 `levelCurve`)。
 - 文章放 `src/content/posts/<category>/<slug>.mdx`,frontmatter 沿用现有 schema。
 - MDX 排版(CommonMark 加粗与中文):`**...**` 的边界不要紧贴中文。闭合 `**` 后紧跟中文会被 CommonMark 误配(同一段有多个加粗时更严重),渲染成字面 `**` 或加粗错位;开头 `**` 后紧跟中文引号则无法开启加粗。正确写法:**两侧都加空格、保持对称**,如 `落到 **线性组合(linear combination)** 上`(紧贴一侧时至少让闭合 `**` 后接空格或标点);不要把中文引号包进 `**` 内侧(写 `**输出能到哪里**`,不要写 `**"输出能到哪里"**`)。
 - 文章标点:中文语句一律用**全角标点**(`,` `;` `:` `?` `!` → `，` `；` `：` `？` `！`;中文引号用 `“ ”` 成对,不用 ASCII `"`;包中文内容的括号用 `（）`)。公式、代码(含 MDX 顶部 `import` 与 JSX)、Markdown 链接 `[文字](url)`、英文术语与数字内部,一律保持英文标点(如 `(linear combination)`、`(x,y)`、`rank(A)` 不变)。

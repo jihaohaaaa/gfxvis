@@ -21,14 +21,13 @@ import {
   createScalarFieldSurfaceScene,
   type GradientArrowMode,
 } from "../../visualizations/demos/scalar-field/surface";
-import AxesToggle from "./AxesToggle";
-import CapsuleTabs from "./CapsuleTabs";
-import Checkbox from "./Checkbox";
-import ExpandableDemo from "./ExpandableDemo";
-import InlineMath from "./InlineMath";
-import ParamSlider from "./ParamSlider";
-import { useCanvas2D } from "./useCanvas2D";
-import { useViewer3D } from "./useViewer3D";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import Checkbox from "../framework/Checkbox";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import ParamSlider from "../framework/ParamSlider";
+import { useCanvas2D } from "../framework/useCanvas2D";
+import { useViewer3D } from "../framework/useViewer3D";
 
 const NX = 180;
 const NY = 140;
@@ -79,11 +78,11 @@ const INITIAL_HEAT: HeatData = {
  * (sin x cos y / circle family / parabola family) and the level constant c
  * adjusts the zero level set.
  */
-export default function ScalarFieldDemo() {
+export default function ScalarFieldDemo({ height }: { height?: string }) {
   const [fieldId, setFieldId] = useState<Field2DId>("sincos");
   const [c, setC] = useState(0);
   const [probe, setProbe] = useState({ x: 0.6, y: 0.6 });
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
   const [gradientMode, setGradientMode] =
     useState<GradientArrowMode>("horizontal");
   const [surfaceTransparent, setSurfaceTransparent] = useState(true);
@@ -327,7 +326,7 @@ export default function ScalarFieldDemo() {
   const gy = field.gradY(probe.x, probe.y);
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div className="grid gap-3 sm:h-[var(--demo-height,24rem)] sm:grid-cols-2">
           <div
@@ -377,7 +376,6 @@ export default function ScalarFieldDemo() {
               checked={surfaceTransparent}
               onChange={setSurfaceTransparent}
             />
-            <AxesToggle checked={showAxes} onChange={setShowAxes} />
           </div>
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">

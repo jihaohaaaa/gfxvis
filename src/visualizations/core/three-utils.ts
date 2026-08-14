@@ -51,6 +51,24 @@ export function addGroundGrid(
   scene.add(new GridHelper(size, divisions, 0x64748b, 0x475569));
 }
 
+export interface StandardScene3DOptions {
+  size?: number;
+  divisions?: number;
+  addGrid?: boolean;
+}
+
+/** Create a standard 3D Scene initialized with standard lights and optional ground grid. */
+export function createStandardScene3D(
+  options: StandardScene3DOptions = {},
+): Scene {
+  const scene = new Scene();
+  addStandardLights(scene);
+  if (options.addGrid ?? true) {
+    addGroundGrid(scene, options.size ?? 16, options.divisions ?? 16);
+  }
+  return scene;
+}
+
 export interface SurfaceMaterialOptions {
   /** Transparent-by-default (depthWrite off) so overlays stay visible. */
   transparent?: boolean;

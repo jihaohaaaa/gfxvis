@@ -10,23 +10,26 @@ import {
   createPartialDerivScene,
   type FixMode,
 } from "../../visualizations/demos/bivariate/partials";
-import AxesToggle from "./AxesToggle";
-import CapsuleTabs from "./CapsuleTabs";
-import Checkbox from "./Checkbox";
-import ExpandableDemo from "./ExpandableDemo";
-import InlineMath from "./InlineMath";
-import { useViewer3D } from "./useViewer3D";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import Checkbox from "../framework/Checkbox";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import { useViewer3D } from "../framework/useViewer3D";
 
 const MODE_OPTIONS: { id: FixMode; label: string }[] = [
   { id: "x", label: "固定 x" },
   { id: "y", label: "固定 y" },
 ];
 
-export default function PartialDerivativesDemo() {
+export default function PartialDerivativesDemo({
+  height,
+}: {
+  height?: string;
+}) {
   const [mode, setMode] = useState<FixMode>("x");
   const [fixed, setFixed] = useState(0.5);
   const [free, setFree] = useState(0.8);
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
   const [surfaceTransparent, setSurfaceTransparent] = useState(true);
   const modeRef = useRef<FixMode>("x");
   const fixedRef = useRef(0.5);
@@ -120,7 +123,7 @@ export default function PartialDerivativesDemo() {
     mode === "x" ? SURFACE_FN.fy(fixed, free) : SURFACE_FN.fx(free, fixed);
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
@@ -141,7 +144,6 @@ export default function PartialDerivativesDemo() {
               checked={surfaceTransparent}
               onChange={setSurfaceTransparent}
             />
-            <AxesToggle checked={showAxes} onChange={setShowAxes} />
           </div>
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">

@@ -1,14 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useCanvas2D } from "./useCanvas2D";
-import ExpandableDemo from "./ExpandableDemo";
-import AxesToggle from "./AxesToggle";
-import InlineMath from "./InlineMath";
-import CapsuleTabs from "./CapsuleTabs";
-import ParamSlider from "./ParamSlider";
-import {
-  readThemeColors,
-  type Bounds2,
-} from "../../visualizations/core/plot2d";
+import { useCanvas2D } from "../framework/useCanvas2D";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import ParamSlider from "../framework/ParamSlider";
+import { type Bounds2 } from "../../visualizations/core/plot2d";
 
 type ModeType = "weighted" | "func" | "theorems";
 
@@ -103,9 +99,11 @@ function drawPixelPoint(
   ctx.restore();
 }
 
-export const InnerProductSpaceDemo: React.FC = () => {
+export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
+  height,
+}) => {
   const [mode, setMode] = useState<ModeType>("weighted");
-  const [showAxes, setShowAxes] = useState<boolean>(true);
+  const showAxes = true;
 
   // Mode 1: Weighted inner product parameters
   const [w11, setW11] = useState<number>(1.5);
@@ -205,7 +203,7 @@ export const InnerProductSpaceDemo: React.FC = () => {
 
   const { containerRef, canvasRef, redraw } = useCanvas2D({
     initialBounds: BOUNDS,
-    onLeftDown(e) {
+    onLeftDown(e, plot) {
       const canvas = canvasRef.current;
       if (!canvas) return false;
       const rect = canvas.getBoundingClientRect();
@@ -215,11 +213,11 @@ export const InnerProductSpaceDemo: React.FC = () => {
       const st = stateRef.current;
       if (st.mode === "weighted") {
         dragTargetRef.current = "uVec";
-        updateVectorFromMouse(px, py, canvas.width, canvas.height, "uVec");
+        updateVectorFromMouse(px, py, plot.width, plot.height, "uVec");
         return true;
       } else if (st.mode === "theorems") {
-        const center = { x: canvas.width / 2, y: canvas.height / 2 };
-        const scale = Math.min(canvas.width, canvas.height) / 8;
+        const center = { x: plot.width / 2, y: plot.height / 2 };
+        const scale = Math.min(plot.width, plot.height) / 8;
         const pU = {
           x: center.x + st.uThem.x * scale,
           y: center.y - st.uThem.y * scale,
@@ -242,7 +240,7 @@ export const InnerProductSpaceDemo: React.FC = () => {
       }
       return false;
     },
-    onLeftMove(e) {
+    onLeftMove(e, plot) {
       if (!dragTargetRef.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -252,20 +250,18 @@ export const InnerProductSpaceDemo: React.FC = () => {
       updateVectorFromMouse(
         px,
         py,
-        canvas.width,
-        canvas.height,
+        plot.width,
+        plot.height,
         dragTargetRef.current,
       );
     },
     onLeftUp() {
       dragTargetRef.current = null;
     },
-    draw(ctx) {
-      const width = ctx.canvas.width;
-      const height = ctx.canvas.height;
+    draw(ctx, plot, theme) {
+      const { width, height } = plot;
 
       ctx.clearRect(0, 0, width, height);
-      const theme = readThemeColors();
       const st = stateRef.current;
 
       const center = { x: width / 2, y: height / 2 };
@@ -558,7 +554,7 @@ export const InnerProductSpaceDemo: React.FC = () => {
   };
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-4">
         {/* Mode Selector Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -567,7 +563,6 @@ export const InnerProductSpaceDemo: React.FC = () => {
             value={mode}
             onChange={(val) => setMode(val as ModeType)}
           />
-          <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>
 
         {/* Canvas Display */}

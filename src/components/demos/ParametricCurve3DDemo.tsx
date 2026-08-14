@@ -4,12 +4,11 @@ import {
   createCurve3DScene,
   type SpaceCurveId,
 } from "../../visualizations/demos/parametric/curve3d";
-import AxesToggle from "./AxesToggle";
-import CapsuleTabs from "./CapsuleTabs";
-import ExpandableDemo from "./ExpandableDemo";
-import InlineMath from "./InlineMath";
-import ParamSlider from "./ParamSlider";
-import { useViewer3D } from "./useViewer3D";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import ParamSlider from "../framework/ParamSlider";
+import { useViewer3D } from "../framework/useViewer3D";
 
 const CURVE_OPTIONS: { id: SpaceCurveId; label: string }[] = [
   { id: "circle", label: "圆" },
@@ -18,10 +17,10 @@ const CURVE_OPTIONS: { id: SpaceCurveId; label: string }[] = [
 ];
 
 /** 3D space-curve explorer: circle / helix / trefoil knot with a t slider. */
-export default function ParametricCurve3DDemo() {
+export default function ParametricCurve3DDemo({ height }: { height?: string }) {
   const [curveId, setCurveId] = useState<SpaceCurveId>("circle");
   const [t, setT] = useState(1.0);
-  const [showAxes, setShowAxes] = useState(true);
+  const showAxes = true;
 
   const curve = SPACE_CURVES[curveId];
   const [x, y, z] = curve.point(t);
@@ -52,7 +51,7 @@ export default function ParametricCurve3DDemo() {
   };
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
@@ -75,7 +74,6 @@ export default function ParametricCurve3DDemo() {
               widthClass="w-44"
             />
           </div>
-          <AxesToggle checked={showAxes} onChange={setShowAxes} />
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
           <p>

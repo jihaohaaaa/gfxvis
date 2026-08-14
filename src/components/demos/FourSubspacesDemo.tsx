@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useCanvas2D } from "./useCanvas2D";
-import ExpandableDemo from "./ExpandableDemo";
-import AxesToggle from "./AxesToggle";
-import InlineMath from "./InlineMath";
-import {
-  readThemeColors,
-  type Bounds2,
-} from "../../visualizations/core/plot2d";
+import { useCanvas2D } from "../framework/useCanvas2D";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import PresetSelector from "../framework/PresetSelector";
+import { type Bounds2 } from "../../visualizations/core/plot2d";
 
 type PresetType = "rank1" | "proj" | "full" | "shear";
 
@@ -93,9 +90,11 @@ function drawPixelPoint(
   ctx.restore();
 }
 
-export const FourSubspacesDemo: React.FC = () => {
+export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
+  height,
+}) => {
   const [preset, setPreset] = useState<PresetType>("rank1");
-  const [showAxes, setShowAxes] = useState<boolean>(true);
+  const showAxes = true;
   const [xVec, setXVec] = useState<{ x: number; y: number }>({
     x: 1.2,
     y: 1.0,
@@ -174,38 +173,36 @@ export const FourSubspacesDemo: React.FC = () => {
 
   const { containerRef, canvasRef, redraw } = useCanvas2D({
     initialBounds: BOUNDS,
-    onLeftDown(e) {
+    onLeftDown(e, plot) {
       const canvas = canvasRef.current;
       if (!canvas) return false;
       const rect = canvas.getBoundingClientRect();
       const px = e.clientX - rect.left;
       const py = e.clientY - rect.top;
-      const halfW = canvas.width / 2;
+      const halfW = plot.width / 2;
       if (px < halfW) {
         isDraggingRef.current = true;
-        updateVectorFromMouse(px, py, canvas.width, canvas.height);
+        updateVectorFromMouse(px, py, plot.width, plot.height);
         return true;
       }
       return false;
     },
-    onLeftMove(e) {
+    onLeftMove(e, plot) {
       if (!isDraggingRef.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const px = e.clientX - rect.left;
       const py = e.clientY - rect.top;
-      updateVectorFromMouse(px, py, canvas.width, canvas.height);
+      updateVectorFromMouse(px, py, plot.width, plot.height);
     },
     onLeftUp() {
       isDraggingRef.current = false;
     },
-    draw(ctx) {
-      const width = ctx.canvas.width;
-      const height = ctx.canvas.height;
+    draw(ctx, plot, theme) {
+      const { width, height } = plot;
 
       ctx.clearRect(0, 0, width, height);
-      const theme = readThemeColors();
 
       const st = stateRef.current;
       const halfW = width / 2;
@@ -515,7 +512,7 @@ export const FourSubspacesDemo: React.FC = () => {
   };
 
   return (
-    <ExpandableDemo>
+    <ExpandableDemo height={height}>
       <div className="space-y-4">
         <div
           ref={containerRef}
@@ -527,26 +524,13 @@ export const FourSubspacesDemo: React.FC = () => {
           />
         </div>
 
-        {/* Preset & Toggle Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-muted font-medium">预设矩阵 A:</span>
-            {(Object.keys(PRESETS) as PresetType[]).map((key) => (
-              <button
-                key={key}
-                onClick={() => setPreset(key)}
-                className={`rounded px-2.5 py-1 font-medium transition-colors ${
-                  preset === key
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-surface-hover text-foreground hover:bg-border"
-                }`}
-              >
-                {PRESETS[key].name}
-              </button>
-            ))}
-          </div>
-          <AxesToggle checked={showAxes} onChange={setShowAxes} />
-        </div>
+        {/* Preset Controls */}
+        <PresetSelector
+          label="预设矩阵 A:"
+          options={PRESETS}
+          value={preset}
+          onChange={setPreset}
+        />
 
         {/* Description & Matrix Formula Panel */}
         <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
