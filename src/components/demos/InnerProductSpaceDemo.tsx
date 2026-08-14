@@ -4,7 +4,7 @@ import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ParamSlider from "../framework/ParamSlider";
-import { type Bounds2 } from "../../visualizations/core/plot2d";
+import { type Bounds2 } from "../../visualizations/core/2d/plot2d";
 
 type ModeType = "weighted" | "func" | "theorems";
 

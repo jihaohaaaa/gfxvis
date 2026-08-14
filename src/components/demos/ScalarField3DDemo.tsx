@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { colormapGradient } from "../../visualizations/core/colormap";
+import { colormapGradient } from "../../visualizations/core/common/colormap";
 import {
   GRID_DEFAULT,
   GRID_MAX,
   GRID_MIN,
   createCloudScene,
-} from "../../visualizations/demos/scalar-field-3d/cloud";
+} from "../../visualizations/scenes/calculus/scalar-field-3d";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import ParamSlider from "../framework/ParamSlider";

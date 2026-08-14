@@ -19,13 +19,13 @@ import InlineMath from "../framework/InlineMath";
 import PresetSelector from "../framework/PresetSelector";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useViewer3D } from "../framework/useViewer3D";
-import { drawAxes, type Bounds2 } from "../../visualizations/core/plot2d";
+import { drawAxes, type Bounds2 } from "../../visualizations/core/2d/plot2d";
 import {
   addStandardLights,
   addGroundGrid,
   disposeObject,
-} from "../../visualizations/core/three-utils";
-import { mathToWorld } from "../../visualizations/core/coords";
+} from "../../visualizations/core/3d/three-utils";
+import { mathToWorld } from "../../visualizations/core/3d/coords";
 
 type DemoMode = "2d" | "3d";
 type Preset2D = "standard" | "rot45" | "shear" | "general";

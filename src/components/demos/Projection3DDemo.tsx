@@ -3,8 +3,8 @@ import {
   PROJECTION3D_TARGETS,
   createProjection3DScene,
   type ProjectionTargetId,
-} from "../../visualizations/demos/projection/projection3d";
-import type { ProjectionModeId } from "../../visualizations/demos/projection/projection2d";
+} from "../../visualizations/scenes/linear-algebra/projection3d";
+import type { ProjectionModeId } from "../../visualizations/scenes/linear-algebra/projection2d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";

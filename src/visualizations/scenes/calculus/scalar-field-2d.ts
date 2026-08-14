@@ -1,6 +1,6 @@
-import { coolwarm, valueToT } from "../../core/colormap";
-import { lerp, sampleGrid } from "../../core/math";
-import type { Bounds2 } from "../../core/plot2d";
+import { coolwarm, valueToT } from "../../core/common/colormap";
+import { lerp, sampleGrid } from "../../core/common/math";
+import type { Bounds2 } from "../../core/2d/plot2d";
 
 export type Field2DId = "sincos" | "circle" | "parabola";
 

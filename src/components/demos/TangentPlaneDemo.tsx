@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { clamp } from "../../visualizations/core/math";
-import { attachDrag3D } from "../../visualizations/core/drag3d";
+import { clamp } from "../../visualizations/core/common/math";
+import { attachDrag3D } from "../../visualizations/core/3d/drag3d";
 import {
   DOMAIN,
   SURFACE_FN,
   createSurfaceScene,
-} from "../../visualizations/demos/bivariate/surface";
+} from "../../visualizations/scenes/calculus/bivariate-surface";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";

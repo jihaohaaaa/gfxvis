@@ -15,11 +15,11 @@ import {
   SRGBColorSpace,
   Vector3,
 } from "three";
-import { createAxesGroup } from "../../core/axes3d";
-import { coolwarm, valueToT } from "../../core/colormap";
-import { mathToWorld } from "../../core/coords";
-import { clamp, forEachCube } from "../../core/math";
-import { disposeObject } from "../../core/three-utils";
+import { createAxesGroup } from "../../core/3d/axes3d";
+import { coolwarm, valueToT } from "../../core/common/colormap";
+import { mathToWorld } from "../../core/3d/coords";
+import { clamp, forEachCube } from "../../core/common/math";
+import { disposeObject } from "../../core/3d/three-utils";
 
 export const FIELD3D = {
   f: (x: number, y: number, z: number) => x * x + y * y - z * z,

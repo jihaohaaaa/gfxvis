@@ -3,8 +3,8 @@ import {
   createCanvas2D,
   type Canvas2DController,
   type Canvas2DOptions,
-} from "../../visualizations/core/canvas2d";
-import type { Bounds2 } from "../../visualizations/core/plot2d";
+} from "../../visualizations/core/2d/canvas2d";
+import type { Bounds2 } from "../../visualizations/core/2d/plot2d";
 
 export interface UseCanvas2DResult {
   containerRef: RefObject<HTMLDivElement | null>;

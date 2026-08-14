@@ -3,7 +3,7 @@ import {
   SPACE_CURVES,
   createCurve3DScene,
   type SpaceCurveId,
-} from "../../visualizations/demos/parametric/curve3d";
+} from "../../visualizations/scenes/calculus/parametric-curve3d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";

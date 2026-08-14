@@ -10,8 +10,8 @@ import {
   Scene,
   Vector3,
 } from "three";
-import { createAxesGroup } from "../../core/axes3d";
-import { mathToWorld } from "../../core/coords";
+import { createAxesGroup } from "../../core/3d/axes3d";
+import { mathToWorld } from "../../core/3d/coords";
 import {
   addGroundGrid,
   addStandardLights,
@@ -19,8 +19,8 @@ import {
   createMarker,
   createSurfaceMaterial,
   disposeObject,
-} from "../../core/three-utils";
-import { buildSurfaceGeometry, DOMAIN, SURFACE_FN } from "./surface";
+} from "../../core/3d/three-utils";
+import { buildSurfaceGeometry, DOMAIN, SURFACE_FN } from "./bivariate-surface";
 
 export type FixMode = "x" | "y";
 

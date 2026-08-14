@@ -1,4 +1,4 @@
-import { clamp } from "./math";
+import { clamp } from "../common/math";
 import {
   clearCanvas,
   createPlot2D,

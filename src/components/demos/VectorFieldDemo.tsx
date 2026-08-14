@@ -1,21 +1,25 @@
 import { useState } from "react";
-import { rgbCss, viridis, valueToT } from "../../visualizations/core/colormap";
+import {
+  rgbCss,
+  viridis,
+  valueToT,
+} from "../../visualizations/core/common/colormap";
 import {
   clamp,
   numericCurl2,
   numericDivergence2,
-} from "../../visualizations/core/math";
+} from "../../visualizations/core/common/math";
 import {
   drawArrow,
   drawAxes,
   drawPoint,
   type Bounds2,
-} from "../../visualizations/core/plot2d";
+} from "../../visualizations/core/2d/plot2d";
 import {
   VECTOR_PRESETS,
   sampleVectorGrid,
   type FieldPresetId,
-} from "../../visualizations/demos/vector-field/field";
+} from "../../visualizations/scenes/calculus/vector-field-2d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";

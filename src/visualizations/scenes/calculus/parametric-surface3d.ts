@@ -13,9 +13,9 @@ import {
   Scene,
   Vector3,
 } from "three";
-import { createAxesGroup } from "../../core/axes3d";
-import { mathToWorld } from "../../core/coords";
-import { clamp } from "../../core/math";
+import { createAxesGroup } from "../../core/3d/axes3d";
+import { mathToWorld } from "../../core/3d/coords";
+import { clamp } from "../../core/common/math";
 import {
   addGroundGrid,
   addStandardLights,
@@ -23,7 +23,7 @@ import {
   createMarker,
   createSurfaceMaterial,
   disposeObject,
-} from "../../core/three-utils";
+} from "../../core/3d/three-utils";
 
 export type SurfaceId = "sphere" | "graph";
 

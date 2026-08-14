@@ -1,5 +1,5 @@
-import { clamp } from "../../core/math";
-import type { Bounds2 } from "../../core/plot2d";
+import { clamp } from "../../core/common/math";
+import type { Bounds2 } from "../../core/2d/plot2d";
 
 export type Curve2DId = "circle" | "parabola";
 

@@ -11,9 +11,9 @@ import {
   TorusGeometry,
   Vector3,
 } from "three";
-import { createAxesGroup } from "../../core/axes3d";
-import { mathToWorld } from "../../core/coords";
-import { addGroundGrid, disposeObject } from "../../core/three-utils";
+import { createAxesGroup } from "../../core/3d/axes3d";
+import { mathToWorld } from "../../core/3d/coords";
+import { addGroundGrid, disposeObject } from "../../core/3d/three-utils";
 import type { ProjectionModeId } from "./projection2d";
 
 export type ProjectionTargetId = "xy-plane" | "plane-xyz";

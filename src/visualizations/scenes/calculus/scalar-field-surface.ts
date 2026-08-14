@@ -9,8 +9,8 @@ import {
   Scene,
   Vector3,
 } from "three";
-import { createAxesGroup } from "../../core/axes3d";
-import { mathToWorld } from "../../core/coords";
+import { createAxesGroup } from "../../core/3d/axes3d";
+import { mathToWorld } from "../../core/3d/coords";
 import {
   addGroundGrid,
   addStandardLights,
@@ -19,13 +19,13 @@ import {
   createMarker,
   createSurfaceMaterial,
   disposeObject,
-} from "../../core/three-utils";
+} from "../../core/3d/three-utils";
 import {
   contourLevels,
   marchingSquares,
   sampleField,
   type Field2D,
-} from "./field";
+} from "./scalar-field-2d";
 
 /** How the 3D gradient arrow is oriented: the 2D gradient (z = 0) or the
  * steepest-ascent tangent along the surface. */

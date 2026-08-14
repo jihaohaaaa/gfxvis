@@ -3,7 +3,7 @@ import {
   PARAMETRIC_SURFACES,
   createParametricSurfaceScene,
   type SurfaceId,
-} from "../../visualizations/demos/parametric/surface3d";
+} from "../../visualizations/scenes/calculus/parametric-surface3d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";

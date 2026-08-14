@@ -1,6 +1,6 @@
 import { useRef } from "react";
-import type { Plot2D, Bounds2 } from "../../visualizations/core/plot2d";
-import { clamp } from "../../visualizations/core/math";
+import type { Plot2D, Bounds2 } from "../../visualizations/core/2d/plot2d";
+import { clamp } from "../../visualizations/core/common/math";
 
 export interface DragTarget<T extends string = string> {
   id: T;

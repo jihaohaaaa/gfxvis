@@ -4,7 +4,7 @@ import {
   drawAxes,
   drawPoint,
   drawSegment,
-} from "../../visualizations/core/plot2d";
+} from "../../visualizations/core/2d/plot2d";
 import {
   DEFAULT_X,
   PROBE_CLAMP,
@@ -12,12 +12,12 @@ import {
   PROJECTION_TARGETS,
   type ProjectionModeId,
   type ProjectionTargetId,
-} from "../../visualizations/demos/projection/projection2d";
+} from "../../visualizations/scenes/linear-algebra/projection2d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import ParamSlider from "../framework/ParamSlider";
-import { clamp } from "../../visualizations/core/math";
+import { clamp } from "../../visualizations/core/common/math";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useVectorDrag } from "../framework/useVectorDrag";
 

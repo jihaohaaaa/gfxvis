@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { clamp } from "../../visualizations/core/math";
+import { clamp } from "../../visualizations/core/common/math";
 import {
   drawArrow,
   drawAxes,
   drawPoint,
   type Bounds2,
-} from "../../visualizations/core/plot2d";
-import { attachDrag3D } from "../../visualizations/core/drag3d";
+} from "../../visualizations/core/2d/plot2d";
+import { attachDrag3D } from "../../visualizations/core/3d/drag3d";
 import {
   FIELDS2D,
   buildFieldImage,
@@ -16,11 +16,11 @@ import {
   type Field2DId,
   type FieldSample,
   type Segment,
-} from "../../visualizations/demos/scalar-field/field";
+} from "../../visualizations/scenes/calculus/scalar-field-2d";
 import {
   createScalarFieldSurfaceScene,
   type GradientArrowMode,
-} from "../../visualizations/demos/scalar-field/surface";
+} from "../../visualizations/scenes/calculus/scalar-field-surface";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";

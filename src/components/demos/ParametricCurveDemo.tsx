@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { clamp } from "../../visualizations/core/math";
+import { clamp } from "../../visualizations/core/common/math";
 import {
   drawArrow,
   drawAxes,
   drawPoint,
   drawPolyline,
-} from "../../visualizations/core/plot2d";
+} from "../../visualizations/core/2d/plot2d";
 import {
   CURVES2D,
   type Curve2DId,
-} from "../../visualizations/demos/parametric/curve2d";
+} from "../../visualizations/scenes/calculus/parametric-curve2d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";

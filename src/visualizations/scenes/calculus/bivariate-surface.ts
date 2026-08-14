@@ -10,8 +10,8 @@ import {
   Scene,
   Vector3,
 } from "three";
-import { createAxesGroup } from "../../core/axes3d";
-import { mathToWorld } from "../../core/coords";
+import { createAxesGroup } from "../../core/3d/axes3d";
+import { mathToWorld } from "../../core/3d/coords";
 import {
   addGroundGrid,
   addStandardLights,
@@ -20,7 +20,7 @@ import {
   createMarker,
   createSurfaceMaterial,
   disposeObject,
-} from "../../core/three-utils";
+} from "../../core/3d/three-utils";
 
 export const SURFACE_FN = {
   f: (x: number, y: number) => (x * x - y * y) / 2,

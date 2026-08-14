@@ -12,7 +12,7 @@ import {
   Scene,
   SphereGeometry,
 } from "three";
-import { coolwarm, valueToT } from "./colormap";
+import { coolwarm, valueToT } from "../common/colormap";
 
 /**
  * Recursively dispose geometry / material(s) on an object subtree. Shared by

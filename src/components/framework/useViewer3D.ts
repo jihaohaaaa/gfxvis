@@ -3,7 +3,7 @@ import type { Scene } from "three";
 import {
   createViewer3D,
   type Viewer3D,
-} from "../../visualizations/core/viewer3d";
+} from "../../visualizations/core/3d/viewer3d";
 
 export interface UseViewer3DSetup<T> {
   api: T;

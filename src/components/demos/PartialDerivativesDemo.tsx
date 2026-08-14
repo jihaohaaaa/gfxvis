@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { clamp } from "../../visualizations/core/math";
-import { attachDrag3D } from "../../visualizations/core/drag3d";
+import { clamp } from "../../visualizations/core/common/math";
+import { attachDrag3D } from "../../visualizations/core/3d/drag3d";
 import {
   DOMAIN,
   SURFACE_FN,
-} from "../../visualizations/demos/bivariate/surface";
+} from "../../visualizations/scenes/calculus/bivariate-surface";
 import {
   createPartialDerivScene,
   type FixMode,
-} from "../../visualizations/demos/bivariate/partials";
+} from "../../visualizations/scenes/calculus/bivariate-partials";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";

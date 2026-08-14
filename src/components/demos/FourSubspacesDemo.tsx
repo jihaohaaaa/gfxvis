@@ -3,7 +3,7 @@ import { useCanvas2D } from "../framework/useCanvas2D";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import PresetSelector from "../framework/PresetSelector";
-import { type Bounds2 } from "../../visualizations/core/plot2d";
+import { type Bounds2 } from "../../visualizations/core/2d/plot2d";
 
 type PresetType = "rank1" | "proj" | "full" | "shear";
 

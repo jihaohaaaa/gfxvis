@@ -2,8 +2,8 @@ import { useState } from "react";
 import {
   FIELDS2D,
   type Field2DId,
-} from "../../visualizations/demos/scalar-field/field";
-import { drawAxes, drawPolyline } from "../../visualizations/core/plot2d";
+} from "../../visualizations/scenes/calculus/scalar-field-2d";
+import { drawAxes, drawPolyline } from "../../visualizations/core/2d/plot2d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";

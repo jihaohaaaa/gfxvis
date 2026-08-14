@@ -1,4 +1,4 @@
-import type { Bounds2 } from "../../core/plot2d";
+import type { Bounds2 } from "../../core/2d/plot2d";
 
 export type FieldPresetId = "rotation" | "radial" | "shear";
 

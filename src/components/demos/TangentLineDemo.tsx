@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { clamp } from "../../visualizations/core/math";
+import { clamp } from "../../visualizations/core/common/math";
 import {
   drawAxes,
   drawPoint,
   drawPolyline,
   drawSegment,
   type Bounds2,
-} from "../../visualizations/core/plot2d";
+} from "../../visualizations/core/2d/plot2d";
 import {
   f,
   fprime,
   sampleCurve,
   secantSlope,
   tangentLineAt,
-} from "../../visualizations/demos/univariate/tangent";
+} from "../../visualizations/scenes/calculus/tangent2d";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import { useCanvas2D } from "../framework/useCanvas2D";
