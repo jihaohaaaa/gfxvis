@@ -16,6 +16,9 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
 
     await page.goto("/posts/linear-algebra/basis-coordinate-change-of-basis");
     await page.waitForLoadState("domcontentloaded");
+    const demoHeading = page.getByRole("heading", { name: /交互演示/ });
+    await demoHeading.scrollIntoViewIfNeeded();
+    await page.waitForLoadState("networkidle");
   });
 
   test.afterEach(() => {
@@ -48,22 +51,27 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
   test("ChangeOfBasisDemo 2D 模式预设切换与坐标换算测试", async ({ page }) => {
     const demoHeading = page.getByRole("heading", { name: /交互演示/ });
     await demoHeading.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(600);
 
     // 1. 断言默认在 2D 基变换模式
     await expect(
       page.getByText("同一向量在两组基下的坐标快照").first(),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10000 });
 
     // 2. 切换到“水平剪切基”预设
     const shearBtn = page.getByRole("button", { name: "水平剪切基" });
-    await shearBtn.click({ force: true });
-    await expect(page.getByText("保持 x 轴基底不变").first()).toBeVisible();
+    await shearBtn.scrollIntoViewIfNeeded();
+    await shearBtn.click();
+    await expect(page.getByText("保持 x 轴基底不变").first()).toBeVisible({
+      timeout: 10000,
+    });
 
     // 3. 切换到“一般非正交基”预设
     const generalBtn = page.getByRole("button", { name: "一般非正交基" });
-    await generalBtn.click({ force: true });
-    await expect(page.getByText("非正交且不同模长").first()).toBeVisible();
+    await generalBtn.scrollIntoViewIfNeeded();
+    await generalBtn.click();
+    await expect(page.getByText("非正交且不同模长").first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("ChangeOfBasisDemo 3D 模式切换与 3×3 矩阵列对应断言", async ({
@@ -71,23 +79,21 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
   }) => {
     const demoHeading = page.getByRole("heading", { name: /交互演示/ });
     await demoHeading.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(800);
 
     // 1. 切换到 3D 模式
     const tab3D = page.getByRole("button", {
       name: /3D 图形学矩阵与局部坐标系/,
     });
     await tab3D.scrollIntoViewIfNeeded();
-    await tab3D.click({ force: true });
-    await page.waitForTimeout(800);
+    await tab3D.click();
 
     // 2. 断言 3D 滑块、预设与两行矩阵分解面板呈现
     await expect(
       page.getByText("偏航角 Yaw (Z轴 / 垂直向上)").first(),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10000 });
     await expect(
       page.getByText("3×3 旋转矩阵复合公式与实时数值分解").first(),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10000 });
     await expect(
       page.getByText("第一行（三角符号公式）：").first(),
     ).toBeVisible();
@@ -105,18 +111,20 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
 
     // 3. 切换姿态预设（纯偏航）
     const yawPreset = page.getByRole("button", { name: "纯偏航 (Yaw 45°)" });
-    await yawPreset.click({ force: true });
+    await yawPreset.scrollIntoViewIfNeeded();
+    await yawPreset.click();
     await expect(
       page.getByText("绕垂直 Z 轴（Up）逆时针旋转 45°").first(),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10000 });
 
     // 4. 切换几何模型（默认基向量立方体 -> 切换为相机视锥台）
     const modelToggle = page.getByRole("button", {
       name: "切换为相机视锥台",
     });
-    await modelToggle.click({ force: true });
+    await modelToggle.scrollIntoViewIfNeeded();
+    await modelToggle.click();
     await expect(
       page.getByRole("button", { name: "切换为基向量立方体" }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10000 });
   });
 });

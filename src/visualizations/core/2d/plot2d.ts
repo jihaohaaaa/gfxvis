@@ -38,6 +38,56 @@ export function createPlot2D(
   return { width, height, margin, toScreenX, toScreenY, toWorldX, toWorldY };
 }
 
+/** Return the world-space bounding box currently visible in the plot. */
+export function getVisibleBounds(plot: Plot2D): Bounds2 {
+  const x0 = plot.toWorldX(0);
+  const x1 = plot.toWorldX(plot.width);
+  const y0 = plot.toWorldY(plot.height);
+  const y1 = plot.toWorldY(0);
+  return {
+    xMin: Math.min(x0, x1),
+    xMax: Math.max(x0, x1),
+    yMin: Math.min(y0, y1),
+    yMax: Math.max(y0, y1),
+  };
+}
+
+/**
+ * Compute clean, human-readable tick values aligned to 1, 2, 5 * 10^k
+ * covering the range [min, max].
+ */
+export function computeNiceTicks(
+  min: number,
+  max: number,
+  maxTicks = 7,
+): number[] {
+  const span = max - min;
+  if (span <= 0 || !Number.isFinite(span)) return [0];
+
+  const rawStep = span / Math.max(2, maxTicks);
+  const power = Math.floor(Math.log10(rawStep));
+  const fraction = rawStep / Math.pow(10, power);
+
+  let niceFraction: number;
+  if (fraction < 1.5) niceFraction = 1;
+  else if (fraction < 3) niceFraction = 2;
+  else if (fraction < 7) niceFraction = 5;
+  else niceFraction = 10;
+
+  const step = niceFraction * Math.pow(10, power);
+  const firstTick = Math.ceil(min / step) * step;
+  const ticks: number[] = [];
+
+  const precision = Math.max(0, -power + 2);
+
+  for (let t = firstTick; t <= max + step * 0.001; t += step) {
+    const val = Number(t.toFixed(precision));
+    ticks.push(val);
+  }
+
+  return ticks;
+}
+
 export interface ThemeColors {
   bg: string;
   ink: string;
@@ -224,6 +274,124 @@ export function drawAxes(
   ctx.font = "bold 12px ui-sans-serif, system-ui, sans-serif";
   ctx.fillText(xLabel, right + 14, sy0 - 8);
   ctx.fillText(yLabel, sx0 + 10, top - 12);
+}
+
+/** Draw automatically calculated adaptive axes with dynamic nice ticks and grid. */
+export function drawAdaptiveAxes(
+  ctx: CanvasRenderingContext2D,
+  plot: Plot2D,
+  theme: ThemeColors,
+  xLabel = "x",
+  yLabel = "y",
+): void {
+  const bounds = getVisibleBounds(plot);
+  const xTicks = computeNiceTicks(
+    bounds.xMin,
+    bounds.xMax,
+    Math.max(4, Math.floor(plot.width / 80)),
+  );
+  const yTicks = computeNiceTicks(
+    bounds.yMin,
+    bounds.yMax,
+    Math.max(4, Math.floor(plot.height / 80)),
+  );
+  drawAxes(ctx, plot, theme, xTicks, yTicks, xLabel, yLabel);
+}
+
+export interface FunctionSampleOptions {
+  stepPx?: number;
+  domainMin?: number;
+  domainMax?: number;
+  maxDerivativeThreshold?: number;
+}
+
+/**
+ * Dynamically sample a 1D scalar function y = f(x) across the currently visible
+ * viewport with pixel-level resolution, handling asymptotes and domain bounds.
+ */
+export function sampleVisibleFunction1D(
+  fn: (x: number) => number,
+  plot: Plot2D,
+  options: FunctionSampleOptions = {},
+): Array<Array<[number, number]>> {
+  const {
+    stepPx = 2,
+    domainMin = -Infinity,
+    domainMax = Infinity,
+    maxDerivativeThreshold = 500,
+  } = options;
+
+  const bounds = getVisibleBounds(plot);
+  const startX = Math.max(bounds.xMin, domainMin);
+  const endX = Math.min(bounds.xMax, domainMax);
+  if (startX >= endX) return [];
+
+  const startPx = plot.toScreenX(startX);
+  const endPx = plot.toScreenX(endX);
+  const minPx = Math.min(startPx, endPx);
+  const maxPx = Math.max(startPx, endPx);
+
+  const segments: Array<Array<[number, number]>> = [];
+  let currentSegment: Array<[number, number]> = [];
+  let prevY: number | null = null;
+  let prevX: number | null = null;
+
+  for (let px = minPx; px <= maxPx; px += stepPx) {
+    const wx = plot.toWorldX(px);
+    if (wx < startX || wx > endX) continue;
+
+    let wy: number;
+    try {
+      wy = fn(wx);
+    } catch {
+      wy = NaN;
+    }
+
+    if (!Number.isFinite(wy)) {
+      if (currentSegment.length > 0) {
+        segments.push(currentSegment);
+        currentSegment = [];
+      }
+      prevY = null;
+      prevX = null;
+      continue;
+    }
+
+    // Detect vertical asymptotes / severe discontinuities
+    if (prevY !== null && prevX !== null) {
+      const dx = Math.abs(wx - prevX);
+      const dy = Math.abs(wy - prevY);
+      if (dx > 1e-7 && dy / dx > maxDerivativeThreshold) {
+        if (currentSegment.length > 0) {
+          segments.push(currentSegment);
+          currentSegment = [];
+        }
+      }
+    }
+
+    currentSegment.push([wx, wy]);
+    prevX = wx;
+    prevY = wy;
+  }
+
+  if (currentSegment.length > 0) {
+    segments.push(currentSegment);
+  }
+
+  return segments;
+}
+
+/** Draw a 1D scalar function y = f(x) dynamically sampled over the visible viewport. */
+export function drawAdaptiveFunction(
+  ctx: CanvasRenderingContext2D,
+  plot: Plot2D,
+  fn: (x: number) => number,
+  style: PolylineStyle & FunctionSampleOptions = {},
+): void {
+  const segments = sampleVisibleFunction1D(fn, plot, style);
+  for (const seg of segments) {
+    drawPolyline(ctx, plot, seg, style);
+  }
 }
 
 export interface PolylineStyle {

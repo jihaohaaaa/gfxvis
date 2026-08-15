@@ -55,21 +55,24 @@ test.describe("Inner Product Spaces 文章与 InnerProductSpaceDemo 可视化组
     const funcTab = page.getByRole("button", {
       name: "函数空间积分内积 ⟨f,g⟩",
     });
-    await funcTab.click({ force: true });
+    await funcTab.scrollIntoViewIfNeeded();
+    await funcTab.click();
     await expect(page.getByText("积分内积结果").first()).toBeVisible();
 
     // 点击基函数预设“x 与 x²”
     const presetBtn = page.getByRole("button", {
       name: "x 与 x² (奇次与偶次多项式正交)",
     });
-    await presetBtn.click({ force: true });
+    await presetBtn.scrollIntoViewIfNeeded();
+    await presetBtn.click();
     await expect(page.getByText("正交函数对 ⟨f,g⟩ = 0").first()).toBeVisible();
 
     // 3. 切换到“柯西-施瓦茨与平行四边形恒等式”模式
     const theoremTab = page.getByRole("button", {
       name: "柯西-施瓦茨与平行四边形恒等式",
     });
-    await theoremTab.click({ force: true });
+    await theoremTab.scrollIntoViewIfNeeded();
+    await theoremTab.click();
     await expect(page.getByText("柯西-施瓦茨不等式").first()).toBeVisible();
     await expect(page.getByText("✓ 不等式成立").first()).toBeVisible();
     await expect(page.getByText("✓ 恒等式精确相等").first()).toBeVisible();

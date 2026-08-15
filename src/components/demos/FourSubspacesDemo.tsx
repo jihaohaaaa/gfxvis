@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useCanvas2D } from "../framework/useCanvas2D";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import PresetSelector from "../framework/PresetSelector";
@@ -512,12 +513,13 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
   };
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="four-subspaces" height={height}>
       <div className="space-y-4">
         <div
           ref={containerRef}
           className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
         >
+          <CanvasToolbar />
           <canvas
             ref={canvasRef}
             className="absolute inset-0 h-full w-full cursor-crosshair"

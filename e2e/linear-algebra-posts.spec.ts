@@ -60,4 +60,62 @@ test.describe("线性代数板块 (Linear Algebra) 补充文章与可视化组�
     const canvases = page.locator("canvas");
     expect(await canvases.count()).toBeGreaterThanOrEqual(1);
   });
+
+  test("4. 矩阵的迹与行列式 (/posts/linear-algebra/trace-and-determinant)", async ({
+    page,
+  }) => {
+    await page.goto("/posts/linear-algebra/trace-and-determinant");
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect(page).toHaveTitle(/矩阵的迹与行列式/);
+    const h1 = page.locator("article h1").first();
+    await expect(h1).toBeVisible();
+
+    const mathNodes = page.locator(".katex");
+    expect(await mathNodes.count()).toBeGreaterThan(15);
+
+    const canvas = page.locator("canvas").first();
+    await canvas.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(400);
+    await expect(canvas).toBeVisible();
+
+    // 交互测试：切换到连续流动模式与相似不变性模式
+    const flowTab = page.getByRole("button", { name: /连续流动/ });
+    await flowTab.scrollIntoViewIfNeeded();
+    await flowTab.click();
+    await expect(page.getByText("Jacobi 体积展开").first()).toBeVisible();
+
+    const simTab = page.getByRole("button", { name: /基变换/ });
+    await simTab.click({ force: true });
+    await expect(page.getByText("新基底下的").first()).toBeVisible();
+  });
+
+  test("5. 特征值与特征向量 (/posts/linear-algebra/eigenvalues-and-eigenvectors)", async ({
+    page,
+  }) => {
+    await page.goto("/posts/linear-algebra/eigenvalues-and-eigenvectors");
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect(page).toHaveTitle(/特征值与特征向量/);
+    const h1 = page.locator("article h1").first();
+    await expect(h1).toBeVisible();
+
+    const mathNodes = page.locator(".katex");
+    expect(await mathNodes.count()).toBeGreaterThan(15);
+
+    const canvas = page.locator("canvas").first();
+    await canvas.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(400);
+    await expect(canvas).toBeVisible();
+
+    // 交互测试：切换模式与预设
+    const ellipseTab = page.getByRole("button", { name: /主轴椭圆/ });
+    await ellipseTab.scrollIntoViewIfNeeded();
+    await ellipseTab.click();
+    await expect(canvas).toBeVisible();
+
+    const diagTab = page.getByRole("button", { name: /对角化/ });
+    await diagTab.click();
+    await expect(canvas).toBeVisible();
+  });
 });

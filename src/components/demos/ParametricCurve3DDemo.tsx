@@ -5,6 +5,7 @@ import {
   type SpaceCurveId,
 } from "../../visualizations/scenes/calculus/parametric-curve3d";
 import CapsuleTabs from "../framework/CapsuleTabs";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import ParamSlider from "../framework/ParamSlider";
@@ -41,12 +42,14 @@ export default function ParametricCurve3DDemo({ height }: { height?: string }) {
   };
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="parametric-curve-3d" height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
-          className="h-[var(--demo-height,24rem)] w-full overflow-hidden rounded-xl border border-border"
-        />
+          className="relative h-[var(--demo-height,24rem)] w-full overflow-hidden rounded-xl border border-border"
+        >
+          <CanvasToolbar />
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <CapsuleTabs

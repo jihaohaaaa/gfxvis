@@ -13,6 +13,8 @@ export interface UseCanvas2DResult {
   redraw(): void;
   /** Reset the viewport to new world-space bounds (e.g. switching curves). */
   setBounds(bounds: Bounds2): void;
+  /** Reset viewport back to the initial bounds. */
+  resetBounds(): void;
 }
 
 /**
@@ -35,7 +37,38 @@ export function useCanvas2D(
     const container = containerRef.current;
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
-    const controller = createCanvas2D(container, canvas, optionsRef.current);
+    const controller = createCanvas2D(container, canvas, {
+      get initialBounds() {
+        return optionsRef.current.initialBounds;
+      },
+      draw(ctx, plot, theme) {
+        optionsRef.current.draw(ctx, plot, theme);
+      },
+      get margin() {
+        return optionsRef.current.margin;
+      },
+      get minZoom() {
+        return optionsRef.current.minZoom;
+      },
+      get maxZoom() {
+        return optionsRef.current.maxZoom;
+      },
+      get equalScale() {
+        return optionsRef.current.equalScale;
+      },
+      onLeftDown(e, plot) {
+        return optionsRef.current.onLeftDown?.(e, plot) ?? false;
+      },
+      onLeftMove(e, plot) {
+        optionsRef.current.onLeftMove?.(e, plot);
+      },
+      onLeftUp(e) {
+        optionsRef.current.onLeftUp?.(e);
+      },
+      onHover(e, plot) {
+        optionsRef.current.onHover?.(e, plot);
+      },
+    });
     controllerRef.current = controller;
     return () => {
       controller.dispose();
@@ -57,5 +90,9 @@ export function useCanvas2D(
     controllerRef.current?.setBounds(bounds);
   }, []);
 
-  return { containerRef, canvasRef, redraw, setBounds };
+  const resetBounds = useCallback(() => {
+    controllerRef.current?.resetBounds();
+  }, []);
+
+  return { containerRef, canvasRef, redraw, setBounds, resetBounds };
 }

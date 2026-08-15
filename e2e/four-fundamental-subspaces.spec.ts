@@ -56,19 +56,22 @@ test.describe("Four Fundamental Subspaces 文章与 FourSubspacesDemo 可视化�
 
     // 2. 测试“正交投影矩阵”预设点击
     const projBtn = page.getByRole("button", { name: "正交投影矩阵" });
-    await projBtn.click({ force: true });
+    await projBtn.scrollIntoViewIfNeeded();
+    await projBtn.click();
     await expect(page.getByText("正交投影到方向 (2, 1)").first()).toBeVisible();
 
     // 3. 测试“满秩 (2×2 可逆)”预设点击
     const fullBtn = page.getByRole("button", { name: "满秩 (2×2 可逆)" });
-    await fullBtn.click({ force: true });
+    await fullBtn.scrollIntoViewIfNeeded();
+    await fullBtn.click();
     await expect(
       page.getByText("rank(A) = 2 (满秩可逆)").first(),
     ).toBeVisible();
 
     // 4. 测试“秩-1 (退化 1D)”预设点击
     const rank1Btn = page.getByRole("button", { name: "秩-1 (退化 1D)" });
-    await rank1Btn.click({ force: true });
+    await rank1Btn.scrollIntoViewIfNeeded();
+    await rank1Btn.click();
     await expect(
       page.getByText("rank(A) = 1 (秩亏退化)").first(),
     ).toBeVisible();

@@ -31,13 +31,20 @@ export function useVectorDrag<T extends string = string>({
   const activeTargetRef = useRef<T | null>(null);
   const targetsRef = useRef(targets);
   targetsRef.current = targets;
+  const onDragRef = useRef(onDrag);
+  onDragRef.current = onDrag;
+  const onDragStartRef = useRef(onDragStart);
+  onDragStartRef.current = onDragStart;
+  const onDragEndRef = useRef(onDragEnd);
+  onDragEndRef.current = onDragEnd;
 
   return {
     activeTargetRef,
     onLeftDown(e: PointerEvent, plot: Plot2D): boolean {
-      const rect = (
-        e.currentTarget as HTMLElement | null
-      )?.getBoundingClientRect();
+      const el =
+        (e.currentTarget as HTMLElement | null) ??
+        (e.target as HTMLElement | null);
+      const rect = el?.getBoundingClientRect();
       if (!rect) return false;
       const px = e.clientX - rect.left;
       const py = e.clientY - rect.top;
@@ -58,7 +65,7 @@ export function useVectorDrag<T extends string = string>({
 
       if (closestId !== null) {
         activeTargetRef.current = closestId;
-        onDragStart?.(closestId);
+        onDragStartRef.current?.(closestId);
         return true;
       }
       return false;
@@ -66,9 +73,10 @@ export function useVectorDrag<T extends string = string>({
     onLeftMove(e: PointerEvent, plot: Plot2D) {
       const activeId = activeTargetRef.current;
       if (!activeId) return;
-      const rect = (
-        e.currentTarget as HTMLElement | null
-      )?.getBoundingClientRect();
+      const el =
+        (e.currentTarget as HTMLElement | null) ??
+        (e.target as HTMLElement | null);
+      const rect = el?.getBoundingClientRect();
       if (!rect) return;
 
       const px = e.clientX - rect.left;
@@ -83,12 +91,12 @@ export function useVectorDrag<T extends string = string>({
         wy = clamp(wy, target.bounds.yMin, target.bounds.yMax);
       }
 
-      onDrag(activeId, { x: wx, y: wy });
+      onDragRef.current?.(activeId, { x: wx, y: wy });
     },
     onLeftUp() {
       if (activeTargetRef.current) {
         activeTargetRef.current = null;
-        onDragEnd?.();
+        onDragEndRef.current?.();
       }
     },
   };

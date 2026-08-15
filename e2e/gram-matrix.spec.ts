@@ -63,17 +63,19 @@ test.describe("Gram Matrix 文章与 GramMatrixDemo 可视化组件 E2E 测试",
     const warningText = page.getByText("向量线性相关").first();
 
     // 2. 点击“共线 (退化 0°)”，断言退化警示文字出现
-    await collinearBtn.click({ force: true });
+    await collinearBtn.click();
     await expect(warningText).toBeVisible({ timeout: 5000 });
 
     // 3. 点击“正交 (90°)”，断言退化警示文字消失
     const orthoBtn = page.getByRole("button", { name: "正交 (90°)" });
-    await orthoBtn.click({ force: true });
+    await orthoBtn.scrollIntoViewIfNeeded();
+    await orthoBtn.click();
     await expect(warningText).not.toBeVisible();
 
     // 4. 点击“一般独立”，断言退化警示文字依然保持隐藏
     const generalBtn = page.getByRole("button", { name: "一般独立" });
-    await generalBtn.click({ force: true });
+    await generalBtn.scrollIntoViewIfNeeded();
+    await generalBtn.click();
     await expect(warningText).not.toBeVisible();
   });
 

@@ -14,12 +14,17 @@ import {
 } from "three";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import CapsuleTabs from "../framework/CapsuleTabs";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import ParamSlider from "../framework/ParamSlider";
 import InlineMath from "../framework/InlineMath";
 import PresetSelector from "../framework/PresetSelector";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useViewer3D } from "../framework/useViewer3D";
-import { drawAxes, type Bounds2 } from "../../visualizations/core/2d/plot2d";
+import {
+  drawAdaptiveAxes,
+  getVisibleBounds,
+  type Bounds2,
+} from "../../visualizations/core/2d/plot2d";
 import {
   addStandardLights,
   addGroundGrid,
@@ -209,139 +214,156 @@ function View2D({ showAxes }: { showAxes: boolean }) {
     vVec,
     vC,
   });
-
-  useEffect(() => {
-    stateRef.current = { showAxes, c1, c2, vVec, vC };
-  }, [showAxes, c1, c2, vVec, vC]);
+  stateRef.current = { showAxes, c1, c2, vVec, vC };
 
   const isDraggingRef = useRef(false);
 
-  const { containerRef, canvasRef, redraw } = useCanvas2D({
-    initialBounds: BOUNDS_2D,
-    onLeftDown(e, plot) {
-      const canvas = canvasRef.current;
-      if (!canvas) return false;
-      isDraggingRef.current = true;
-      const rect = canvas.getBoundingClientRect();
-      const px = e.clientX - rect.left;
-      const py = e.clientY - rect.top;
-      const wx = Math.max(-3.0, Math.min(3.0, plot.toWorldX(px)));
-      const wy = Math.max(-3.0, Math.min(3.0, plot.toWorldY(py)));
-      setVVec({ x: wx, y: wy });
-      return true;
-    },
-    onLeftMove(e, plot) {
-      if (!isDraggingRef.current) return;
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const px = e.clientX - rect.left;
-      const py = e.clientY - rect.top;
-      const wx = Math.max(-3.0, Math.min(3.0, plot.toWorldX(px)));
-      const wy = Math.max(-3.0, Math.min(3.0, plot.toWorldY(py)));
-      setVVec({ x: wx, y: wy });
-    },
-    onLeftUp() {
-      isDraggingRef.current = false;
-    },
-    draw(ctx, plot, theme) {
-      const { width, height } = plot;
-      ctx.clearRect(0, 0, width, height);
-      const st = stateRef.current;
+  const { containerRef, canvasRef, resetBounds } = useCanvas2D(
+    {
+      initialBounds: BOUNDS_2D,
+      onLeftDown(e, plot) {
+        const canvas = canvasRef.current;
+        if (!canvas) return false;
+        isDraggingRef.current = true;
+        const rect = canvas.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const py = e.clientY - rect.top;
+        const wx = plot.toWorldX(px);
+        const wy = plot.toWorldY(py);
+        setVVec({ x: wx, y: wy });
+        return true;
+      },
+      onLeftMove(e, plot) {
+        if (!isDraggingRef.current) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const py = e.clientY - rect.top;
+        const wx = plot.toWorldX(px);
+        const wy = plot.toWorldY(py);
+        setVVec({ x: wx, y: wy });
+      },
+      onLeftUp() {
+        isDraggingRef.current = false;
+      },
+      draw(ctx, plot, theme) {
+        const { width, height } = plot;
+        ctx.clearRect(0, 0, width, height);
+        const st = stateRef.current;
 
-      const toCanvas = (wx: number, wy: number) => ({
-        x: plot.toScreenX(wx),
-        y: plot.toScreenY(wy),
-      });
+        const toCanvas = (wx: number, wy: number) => ({
+          x: plot.toScreenX(wx),
+          y: plot.toScreenY(wy),
+        });
 
-      // 1. Standard Reference Axes & Grid
-      if (st.showAxes) {
-        drawAxes(
+        // 1. Standard Reference Axes & Grid
+        if (st.showAxes) {
+          drawAdaptiveAxes(ctx, plot, theme);
+        }
+
+        // 2. Deformed Grid of Basis C (dynamically scaled to viewport)
+        const visible = getVisibleBounds(plot);
+        const maxExtent =
+          Math.max(
+            Math.abs(visible.xMin),
+            Math.abs(visible.xMax),
+            Math.abs(visible.yMin),
+            Math.abs(visible.yMax),
+          ) + 2;
+        const gridLines = Math.min(18, Math.ceil(maxExtent));
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(59, 130, 246, 0.25)"; // blue-500
+        ctx.lineWidth = 1;
+        for (let i = -gridLines; i <= gridLines; i++) {
+          const span = gridLines * 1.5;
+          const start1 = toCanvas(
+            i * st.c1.x - span * st.c2.x,
+            i * st.c1.y - span * st.c2.y,
+          );
+          const end1 = toCanvas(
+            i * st.c1.x + span * st.c2.x,
+            i * st.c1.y + span * st.c2.y,
+          );
+          ctx.beginPath();
+          ctx.moveTo(start1.x, start1.y);
+          ctx.lineTo(end1.x, end1.y);
+          ctx.stroke();
+
+          const start2 = toCanvas(
+            -span * st.c1.x + i * st.c2.x,
+            -span * st.c1.y + i * st.c2.y,
+          );
+          const end2 = toCanvas(
+            span * st.c1.x + i * st.c2.x,
+            span * st.c1.y + i * st.c2.y,
+          );
+          ctx.beginPath();
+          ctx.moveTo(start2.x, start2.y);
+          ctx.lineTo(end2.x, end2.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        const pOrigin = toCanvas(0, 0);
+        const pC1 = toCanvas(st.c1.x, st.c1.y);
+        const pC2 = toCanvas(st.c2.x, st.c2.y);
+        const pV = toCanvas(st.vVec.x, st.vVec.y);
+
+        // 3. Basis vectors c1, c2
+        drawPixelSegment(
           ctx,
-          plot,
-          theme,
-          [-3, -2, -1, 1, 2, 3],
-          [-3, -2, -1, 1, 2, 3],
+          pOrigin.x,
+          pOrigin.y,
+          pC1.x,
+          pC1.y,
+          "#2563eb",
+          2.5,
         );
-      }
-
-      // 2. Deformed Grid of Basis C
-      ctx.save();
-      ctx.strokeStyle = "rgba(59, 130, 246, 0.25)"; // blue-500
-      ctx.lineWidth = 1;
-      for (let i = -3; i <= 3; i++) {
-        const start1 = toCanvas(
-          i * st.c1.x - 3.5 * st.c2.x,
-          i * st.c1.y - 3.5 * st.c2.y,
+        drawPixelPoint(ctx, pC1.x, pC1.y, "#2563eb", 5);
+        ctx.save();
+        ctx.font = "bold 12px system-ui, sans-serif";
+        ctx.fillStyle = "#2563eb";
+        ctx.fillText(
+          `c₁ (${st.c1.x.toFixed(2)}, ${st.c1.y.toFixed(2)})`,
+          pC1.x + 8,
+          pC1.y - 6,
         );
-        const end1 = toCanvas(
-          i * st.c1.x + 3.5 * st.c2.x,
-          i * st.c1.y + 3.5 * st.c2.y,
+        ctx.restore();
+
+        drawPixelSegment(
+          ctx,
+          pOrigin.x,
+          pOrigin.y,
+          pC2.x,
+          pC2.y,
+          "#06b6d4",
+          2.5,
         );
-        ctx.beginPath();
-        ctx.moveTo(start1.x, start1.y);
-        ctx.lineTo(end1.x, end1.y);
-        ctx.stroke();
-
-        const start2 = toCanvas(
-          -3.5 * st.c1.x + i * st.c2.x,
-          -3.5 * st.c1.y + i * st.c2.y,
+        drawPixelPoint(ctx, pC2.x, pC2.y, "#06b6d4", 5);
+        ctx.save();
+        ctx.font = "bold 12px system-ui, sans-serif";
+        ctx.fillStyle = "#06b6d4";
+        ctx.fillText(
+          `c₂ (${st.c2.x.toFixed(2)}, ${st.c2.y.toFixed(2)})`,
+          pC2.x + 8,
+          pC2.y - 6,
         );
-        const end2 = toCanvas(
-          3.5 * st.c1.x + i * st.c2.x,
-          3.5 * st.c1.y + i * st.c2.y,
-        );
-        ctx.beginPath();
-        ctx.moveTo(start2.x, start2.y);
-        ctx.lineTo(end2.x, end2.y);
-        ctx.stroke();
-      }
-      ctx.restore();
+        ctx.restore();
 
-      const pOrigin = toCanvas(0, 0);
-      const pC1 = toCanvas(st.c1.x, st.c1.y);
-      const pC2 = toCanvas(st.c2.x, st.c2.y);
-      const pV = toCanvas(st.vVec.x, st.vVec.y);
-
-      // 3. Basis vectors c1, c2
-      drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pC1.x, pC1.y, "#2563eb", 2.5);
-      drawPixelPoint(ctx, pC1.x, pC1.y, "#2563eb", 5);
-      ctx.save();
-      ctx.font = "bold 12px system-ui, sans-serif";
-      ctx.fillStyle = "#2563eb";
-      ctx.fillText(
-        `c₁ (${st.c1.x.toFixed(2)}, ${st.c1.y.toFixed(2)})`,
-        pC1.x + 8,
-        pC1.y - 6,
-      );
-      ctx.restore();
-
-      drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pC2.x, pC2.y, "#06b6d4", 2.5);
-      drawPixelPoint(ctx, pC2.x, pC2.y, "#06b6d4", 5);
-      ctx.save();
-      ctx.font = "bold 12px system-ui, sans-serif";
-      ctx.fillStyle = "#06b6d4";
-      ctx.fillText(
-        `c₂ (${st.c2.x.toFixed(2)}, ${st.c2.y.toFixed(2)})`,
-        pC2.x + 8,
-        pC2.y - 6,
-      );
-      ctx.restore();
-
-      // 4. Interactive Vector v (Amber)
-      drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pV.x, pV.y, "#d97706", 3.5);
-      drawPixelPoint(ctx, pV.x, pV.y, "#d97706", 7);
-      ctx.save();
-      ctx.font = "bold 13px system-ui, sans-serif";
-      ctx.fillStyle = "#d97706";
-      ctx.fillText(`向量 v`, pV.x + 10, pV.y - 8);
-      ctx.restore();
+        // 4. Interactive Vector v (Amber)
+        drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pV.x, pV.y, "#d97706", 3.5);
+        drawPixelPoint(ctx, pV.x, pV.y, "#d97706", 7);
+        ctx.save();
+        ctx.font = "bold 13px system-ui, sans-serif";
+        ctx.fillStyle = "#d97706";
+        ctx.fillText(`向量 v`, pV.x + 10, pV.y - 8);
+        ctx.restore();
+      },
     },
-  });
-
-  useEffect(() => {
-    redraw();
-  }, [presetKey, showAxes, vVec, redraw]);
+    [presetKey, showAxes, vVec],
+  );
 
   return (
     <div className="space-y-4">
@@ -362,6 +384,7 @@ function View2D({ showAxes }: { showAxes: boolean }) {
         ref={containerRef}
         className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
       >
+        <CanvasToolbar onReset={resetBounds} />
         <canvas
           ref={canvasRef}
           className="absolute inset-0 h-full w-full cursor-crosshair"
@@ -830,7 +853,9 @@ function View3D({ showAxes }: { showAxes: boolean }) {
       <div
         ref={containerRef}
         className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
-      />
+      >
+        <CanvasToolbar />
+      </div>
 
       {/* Full-width 2-Line Matrix Breakdown */}
       <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm space-y-3">
@@ -936,7 +961,7 @@ export default function ChangeOfBasisDemo({ height }: { height?: string }) {
   const showAxes = true;
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="change-of-basis" height={height}>
       <div className="space-y-4">
         {/* Header Mode Switch & Axes Controls */}
         <div className="flex flex-wrap items-center justify-between gap-3">

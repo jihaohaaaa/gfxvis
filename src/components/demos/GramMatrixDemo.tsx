@@ -1,17 +1,23 @@
 import { useState } from "react";
 import {
-  drawAxes,
+  drawAdaptiveAxes,
   drawPoint,
   drawSegment,
   type Bounds2,
 } from "../../visualizations/core/2d/plot2d";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import PresetSelector from "../framework/PresetSelector";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useVectorDrag } from "../framework/useVectorDrag";
 
-const BOUNDS: Bounds2 = { xMin: -3.5, xMax: 3.5, yMin: -3.5, yMax: 3.5 };
+const INITIAL_BOUNDS: Bounds2 = {
+  xMin: -3.5,
+  xMax: 3.5,
+  yMin: -3.5,
+  yMax: 3.5,
+};
 const MARGIN = 30;
 
 const PRESETS = [
@@ -27,8 +33,8 @@ export default function GramMatrixDemo({ height }: { height?: string }) {
 
   const dragHandlers = useVectorDrag<"u" | "v">({
     targets: [
-      { id: "u", x: u.x, y: u.y, bounds: BOUNDS },
-      { id: "v", x: v.x, y: v.y, bounds: BOUNDS },
+      { id: "u", x: u.x, y: u.y },
+      { id: "v", x: v.x, y: v.y },
     ],
     onDrag(id, pos) {
       if (id === "u") setU(pos);
@@ -36,18 +42,12 @@ export default function GramMatrixDemo({ height }: { height?: string }) {
     },
   });
 
-  const { containerRef, canvasRef } = useCanvas2D(
+  const { containerRef, canvasRef, resetBounds } = useCanvas2D(
     {
-      initialBounds: BOUNDS,
+      initialBounds: INITIAL_BOUNDS,
       margin: MARGIN,
       draw(ctx, plot, theme) {
-        drawAxes(
-          ctx,
-          plot,
-          theme,
-          [-3, -2, -1, 1, 2, 3],
-          [-3, -2, -1, 1, 2, 3],
-        );
+        drawAdaptiveAxes(ctx, plot, theme);
 
         const originX = plot.toScreenX(0);
         const originY = plot.toScreenY(0);
@@ -129,12 +129,13 @@ export default function GramMatrixDemo({ height }: { height?: string }) {
   const isDegenerate = detG < 1e-4;
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="gram-matrix" height={height}>
       <div className="space-y-4">
         <div
           ref={containerRef}
           className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
         >
+          <CanvasToolbar onReset={resetBounds} />
           <canvas
             ref={canvasRef}
             className="absolute inset-0 h-full w-full cursor-crosshair"

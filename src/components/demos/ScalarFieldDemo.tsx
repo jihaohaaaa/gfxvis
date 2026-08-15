@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { clamp } from "../../visualizations/core/common/math";
 import {
+  drawAdaptiveAxes,
   drawArrow,
-  drawAxes,
   drawPoint,
   type Bounds2,
 } from "../../visualizations/core/2d/plot2d";
@@ -22,6 +22,7 @@ import {
   type GradientArrowMode,
 } from "../../visualizations/scenes/calculus/scalar-field-surface";
 import CapsuleTabs from "../framework/CapsuleTabs";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
@@ -99,6 +100,7 @@ export default function ScalarFieldDemo({ height }: { height?: string }) {
     canvasRef,
     redraw: redraw2d,
     setBounds: setBounds2d,
+    resetBounds: resetBounds2d,
   } = useCanvas2D({
     initialBounds: FIELDS2D.sincos.bounds,
     margin: MARGIN,
@@ -106,7 +108,7 @@ export default function ScalarFieldDemo({ height }: { height?: string }) {
       const f = FIELDS2D[fieldIdRef.current];
       const pc = cRef.current;
       const { image, contourSegments, bounds, sample } = heatRef.current;
-      if (axesRef.current) drawAxes(ctx, plot, theme, f.ticksX, f.ticksY);
+      if (axesRef.current) drawAdaptiveAxes(ctx, plot, theme);
       if (!image) return;
 
       // Heatmap anchored to its world rect (so zoom/pan keep it correct).
@@ -326,13 +328,14 @@ export default function ScalarFieldDemo({ height }: { height?: string }) {
   const gy = field.gradY(probe.x, probe.y);
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="scalar-field-2d" height={height}>
       <div className="space-y-3">
         <div className="grid gap-3 sm:h-[var(--demo-height,24rem)] sm:grid-cols-2">
           <div
             ref={container2dRef}
             className="relative h-64 overflow-hidden rounded-xl border border-border sm:h-full"
           >
+            <CanvasToolbar onReset={resetBounds2d} />
             <canvas
               ref={canvasRef}
               className="absolute inset-0 h-full w-full cursor-crosshair"

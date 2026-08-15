@@ -46,7 +46,7 @@ export function createSurfaceScene(): SurfaceScene {
   addStandardLights(scene);
 
   // Ground grid on the math z = 0 plane (Three XZ plane).
-  addGroundGrid(scene, 2 * DOMAIN);
+  addGroundGrid(scene, 30, 30);
 
   // Math axes (x red, y green, z blue) via mathToWorld; toggleable.
   const axesGroup = createAxesGroup(3);

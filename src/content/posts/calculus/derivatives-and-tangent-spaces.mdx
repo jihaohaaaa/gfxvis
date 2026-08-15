@@ -1,0 +1,205 @@
+---
+title: "导数、偏导数与切空间：从一元切线到多元切平面与法线"
+description: "从一维差商极限到高维切空间：一元切线、二元偏导数切片、切平面方程，以及曲面法向量与图形学法线矩阵的全景解析。"
+date: 2026-08-10
+tags: ["calculus", "derivative", "single-variable", "multivariable", "geometry"]
+draft: false
+---
+
+import TangentLineDemo from "../../../components/demos/TangentLineDemo";
+import PartialDerivativesDemo from "../../../components/demos/PartialDerivativesDemo";
+import TangentPlaneDemo from "../../../components/demos/TangentPlaneDemo";
+
+# 导数、偏导数与切空间：从一元切线到多元切平面与法线
+
+微积分最根本的几何任务之一，是在弯曲的非线性世界中寻找**局部的线性平坦逼近**：
+
+- 在一维曲线中，这种线性逼近是**切线（Tangent Line）**；
+- 在多维曲面中，这种逼近升级为由各个方向的偏导数所张成的**切平面（Tangent Plane）**；
+- 而与切平面处处垂直的正交方向，则构成了三维图形学与光照着色的命脉——**法线（Normal）**。
+
+---
+
+## 一、一元微积分的几何起点：从割线到切线
+
+### 1.1 差商与割线斜率
+
+设 $f(x)$ 是一元光滑函数。在函数图像上取定基准点 $(a, f(a))$ 与邻近点 $(b, f(b))$，连接两点的直线被称为 **割线（Secant Line）**。其斜率即为区间 $[a, b]$ 上的平均变化率（**差商**）：
+
+$$
+k_{\text{secant}} = \frac{f(b) - f(a)}{b - a}
+$$
+
+### 1.2 导数：割线的极限状态
+
+当动点 $b$ 无限逼近 $a$（令 $h = b - a \to 0$）时，割线将收敛到一条唯一的极限直线——**切线（Tangent Line）**。该极限值定义了函数在 $x=a$ 处的 **导数（Derivative）**：
+
+$$
+f'(a) = \lim_{h \to 0} \frac{f(a+h) - f(a)}{h}
+$$
+
+导数 $f'(a)$ 是函数在 $x=a$ 处的**瞬时变化率**，几何上精确等于切线的斜率。
+
+### 1.3 切线方程与一阶线性逼近
+
+过切点 $(a, f(a))$ 且斜率为 $f'(a)$ 的切线方程为：
+
+$$
+y = f(a) + f'(a)(x - a)
+$$
+
+在点 $a$ 的微小邻域内，切线是原函数 $f(x)$ 的 **最佳一阶线性逼近**（Taylor 一阶展开）：当 $x \to a$ 时，原函数与切线之间的逼近误差是 $(x-a)$ 的高阶小量 $o(|x-a|)$。
+
+### 1.4 交互实验：割线逼近切线
+
+在下方实验中，红色实心点为切点 $a$，空心圆点为割线另一端 $b$。拖动空心圆点使 $b$ 靠近 $a$，观察割线是如何平滑收敛到切线的：
+
+<TangentLineDemo client:visible />
+
+---
+
+## 二、向高维进发：偏导数与切片曲线
+
+当函数从一元 $y = f(x)$ 拓展到二元曲面 $z = f(x, y)$ 时，输入点可以在二维平面内的任意方向自由移动。
+
+### 2.1 偏导数的定义
+
+为了分析函数在特定坐标方向上的变化率，我们可以固定其余自变量：
+
+- **关于 $x$ 的偏导数**：固定 $y = b$，只让 $x$ 在 $a$ 附近变化：
+  $$
+  \frac{\partial f}{\partial x}(a,b) = \lim_{h \to 0} \frac{f(a+h, b) - f(a,b)}{h}
+  $$
+- **关于 $y$ 的偏导数**：固定 $x = a$，只让 $y$ 在 $b$ 附近变化：
+  $$
+  \frac{\partial f}{\partial y}(a,b) = \lim_{h \to 0} \frac{f(a, b+h) - f(a,b)}{h}
+  $$
+
+### 2.2 几何视角：切片平面上的切线斜率
+
+几何上，固定 $y = b$ 相当于用一个垂直于 $y$ 轴的垂直平面去**切割**三维曲面，在切面上截出一条一维曲线 $C_x$。偏导数 $\frac{\partial f}{\partial x}(a,b)$ 恰好就是截面曲线 $C_x$ 在该点的一元切线斜率。
+
+在下方实验中，切换“固定 x”或“固定 y”，三维曲面上会显示半透明的切片平面与截面曲线（黄色），拖动红色切点可实时观察切线段（青色）的斜率：
+
+<PartialDerivativesDemo client:visible />
+
+---
+
+## 三、切平面与多元一阶线性逼近
+
+### 3.1 切平面方程的构建
+
+一元切线在二元曲面中升级为一个二维平面——**切平面（Tangent Plane）**。该平面由沿 $x$ 轴与 $y$ 轴方向的两个切线斜率共同张成：
+
+$$
+z = f(a,b) + \frac{\partial f}{\partial x}(a,b)(x-a) + \frac{\partial f}{\partial y}(a,b)(y-b)
+$$
+
+### 3.2 梯度向量（Gradient）
+
+将两个偏导数排成一个向量，即得到二元函数的 **梯度向量 $\nabla f$**：
+
+$$
+\nabla f(a, b) = \left( \frac{\partial f}{\partial x}(a, b),\; \frac{\partial f}{\partial y}(a, b) \right)^\top
+$$
+
+切平面方程可以极其优美地写为向量点积形式：
+
+$$
+z - f(a, b) = \nabla f(a, b) \cdot \begin{pmatrix} x - a \\ y - b \end{pmatrix}
+$$
+
+---
+
+## 四、法向量与叉积：从切空间到法线
+
+在计算机图形学与三维渲染中，决定光照反射的关键不是切平面本身，而是垂直于切平面的 **曲面法向量（Surface Normal Vector）**。
+
+### 4.1 切向量张成切空间
+
+将曲面写成空间参数矢量形式：$\mathbf r(x, y) = (x,\; y,\; f(x, y))^\top$。在切点 $(a, b)$ 处对参数分别求导，得到张成切平面的两个基底切向量：
+
+$$
+\mathbf r_x = \frac{\partial \mathbf r}{\partial x} = \left( 1,\; 0,\; \frac{\partial f}{\partial x} \right)^\top, \qquad
+\mathbf r_y = \frac{\partial \mathbf r}{\partial y} = \left( 0,\; 1,\; \frac{\partial f}{\partial y} \right)^\top
+$$
+
+### 4.2 叉积求法向量
+
+法向量 $\mathbf n$ 必须同时垂直于切平面内的所有切向量。利用三维空间向量叉积：
+
+$$
+\mathbf n = \mathbf r_x \times \mathbf r_y = \begin{vmatrix}
+\mathbf i & \mathbf j & \mathbf k \\
+1 & 0 & f_x \\
+0 & 1 & f_y
+\end{vmatrix} = \left( -\frac{\partial f}{\partial x},\; -\frac{\partial f}{\partial y},\; 1 \right)^\top
+$$
+
+**正交性验证**：
+
+$$
+\mathbf n \cdot \mathbf r_x = (-f_x) \cdot 1 + (-f_y) \cdot 0 + 1 \cdot f_x = 0
+$$
+
+$$
+\mathbf n \cdot \mathbf r_y = (-f_x) \cdot 0 + (-f_y) \cdot 1 + 1 \cdot f_y = 0
+$$
+
+### 4.3 隐式方程与单位法向量
+
+若将曲面视为隐式方程 $F(x, y, z) = f(x, y) - z = 0$ 的零等值面，则梯度 $\nabla F = (f_x, f_y, -1)^\top$。取反即得朝上的法向量 $\mathbf n = (-f_x, -f_y, 1)^\top$。
+
+单位法向量（Unit Normal）归一化公式为：
+
+$$
+\hat{\mathbf n} = \frac{\mathbf n}{\|\mathbf n\|} = \frac{(-f_x,\; -f_y,\; 1)^\top}{\sqrt{f_x^2 + f_y^2 + 1}}
+$$
+
+---
+
+## 五、图形学渲染应用：法线矩阵（Normal Matrix）的逆转置法则
+
+在三维渲染管线中，当物体经历模型变换矩阵 $M$（包含旋转、平移和非均匀缩放）时，**顶点的切向量 $\mathbf t$ 随模型一起变换**：$\mathbf t' = M \mathbf t$。
+
+如果直接用 $M$ 变换法向量 $\mathbf n$（即令 $\mathbf n' = M \mathbf n$），在遇到**非均匀缩放**时，法线与切向量的正交性将被严重破坏（$\mathbf n' \cdot \mathbf t' \neq 0$）。
+
+### 严格推导法线矩阵
+
+设变换后的法线矩阵为 $N$，即 $\mathbf n' = N \mathbf n$。为了保证变换后法线仍然垂直于切向量，必须恒有：
+
+$$
+(\mathbf n')^\top \mathbf t' = 0 \implies (N \mathbf n)^\top (M \mathbf t) = 0 \implies \mathbf n^\top (N^\top M) \mathbf t = 0
+$$
+
+由于在原模型空间中已知 $\mathbf n^\top \mathbf t = 0$，上式对任意切向量成立的充要条件是：
+
+$$
+N^\top M = I \implies N^\top = M^{-1} \implies N = (M^{-1})^\top
+$$
+
+> **图形学黄金法则**：法线矩阵必须是模型变换矩阵的**逆转置矩阵（Inverse Transpose Matrix）**，以确保切空间与法线正交性在几何变换下严格守恒。
+
+---
+
+## 六、交互实验：三维切平面与曲面法向量
+
+在下方三维交互实验中，拖动曲面上的切点探针：
+
+- **蓝色半透明面**：三维切平面；
+- **红/绿色切线段**：沿坐标轴方向的切向量 $\mathbf r_x$ 与 $\mathbf r_y$；
+- **蓝色箭头**：通过叉积实时计算的曲面法向量 $\mathbf n$。
+
+<TangentPlaneDemo client:visible />
+
+---
+
+## 七、全景总结
+
+| 维度           | 一元微积分（曲线）                            | 二元微积分（曲面）                                                                |
+| :------------- | :-------------------------------------------- | :-------------------------------------------------------------------------------- |
+| **基础对象**   | 曲线 $y = f(x)$                               | 曲面 $z = f(x, y)$                                                                |
+| **局部变化率** | 导数 $f'(a) = \lim \frac{\Delta f}{\Delta x}$ | 偏导数 $f_x = \frac{\partial f}{\partial x}, f_y = \frac{\partial f}{\partial y}$ |
+| **一阶切空间** | 切线 $y = f(a) + f'(a)(x-a)$                  | 切平面 $z = f(a,b) + f_x(x-a) + f_y(y-b)$                                         |
+| **正交法向**   | 法线斜率 $k_n = -\frac{1}{f'(a)}$             | 法向量 $\mathbf n = \mathbf r_x \times \mathbf r_y = (-f_x, -f_y, 1)^\top$        |
+| **图形学核心** | 曲线切向与加速度                              | 表面法线贴图与法线矩阵 $N = (M^{-1})^\top$                                        |

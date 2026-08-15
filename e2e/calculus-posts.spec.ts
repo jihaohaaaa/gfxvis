@@ -47,57 +47,49 @@ test.describe("微积分板块 (Calculus) 所有文章与可视化组件 E2E 测
     expect(await mathNodes.count()).toBeGreaterThan(10);
   });
 
-  test("3. 偏导数与切平面 (/posts/calculus/partial-derivatives)", async ({
+  test("3. 导数、偏导数与切空间 (/posts/calculus/derivatives-and-tangent-spaces)", async ({
     page,
   }) => {
-    await page.goto("/posts/calculus/partial-derivatives");
+    await page.goto("/posts/calculus/derivatives-and-tangent-spaces");
     await page.waitForLoadState("domcontentloaded");
 
-    await expect(page).toHaveTitle(/偏导数/);
+    await expect(page).toHaveTitle(/导数、偏导数与切空间/);
     const h1 = page.locator("article h1").first();
     await expect(h1).toBeVisible();
 
     const mathNodes = page.locator(".katex");
-    expect(await mathNodes.count()).toBeGreaterThan(10);
+    expect(await mathNodes.count()).toBeGreaterThan(15);
+
+    const canvas = page.locator("canvas").first();
+    await canvas.scrollIntoViewIfNeeded();
+    await expect(canvas).toBeVisible();
   });
 
-  test("4. 标量场与梯度 (/posts/calculus/scalar-field-gradient)", async ({
+  test("4. 场论基础：标量场、向量场与微分算子 (/posts/calculus/fields-and-operators)", async ({
     page,
   }) => {
-    await page.goto("/posts/calculus/scalar-field-gradient");
+    await page.goto("/posts/calculus/fields-and-operators");
     await page.waitForLoadState("domcontentloaded");
 
-    await expect(page).toHaveTitle(/标量场与梯度/);
+    await expect(page).toHaveTitle(/场论基础/);
     const h1 = page.locator("article h1").first();
     await expect(h1).toBeVisible();
 
     const mathNodes = page.locator(".katex");
-    expect(await mathNodes.count()).toBeGreaterThan(10);
-  });
+    expect(await mathNodes.count()).toBeGreaterThan(15);
 
-  test("5. 一元函数与切线 (/posts/calculus/tangent-line)", async ({ page }) => {
-    await page.goto("/posts/calculus/tangent-line");
-    await page.waitForLoadState("domcontentloaded");
+    // 交互测试：向量场预设切换与探针
+    const radialBtn = page.getByRole("button", { name: /径向场/ });
+    await radialBtn.scrollIntoViewIfNeeded();
+    await radialBtn.click({ force: true });
+    await expect(page.getByText("解析 2.0").first()).toBeVisible();
 
-    await expect(page).toHaveTitle(/一元函数与切线/);
-    const h1 = page.locator("article h1").first();
-    await expect(h1).toBeVisible();
+    const rotBtn = page.getByRole("button", { name: /旋转场/ });
+    await rotBtn.click({ force: true });
+    await expect(page.getByText("解析 2.0").first()).toBeVisible();
 
-    const canvas = page.locator("canvas").first();
-    await expect(canvas).toBeVisible();
-  });
-
-  test("6. 向量场与微分算子 (/posts/calculus/vector-field-operators)", async ({
-    page,
-  }) => {
-    await page.goto("/posts/calculus/vector-field-operators");
-    await page.waitForLoadState("domcontentloaded");
-
-    await expect(page).toHaveTitle(/向量场与微分算子/);
-    const h1 = page.locator("article h1").first();
-    await expect(h1).toBeVisible();
-
-    const canvas = page.locator("canvas").first();
-    await expect(canvas).toBeVisible();
+    // 断言 Canvas 挂载正常
+    const canvases = page.locator("canvas");
+    await expect(canvases.first()).toBeVisible();
   });
 });

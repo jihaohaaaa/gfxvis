@@ -40,6 +40,8 @@ export interface Canvas2DController {
   redraw(): void;
   /** Reset the viewport to a new world-space bounds (e.g. switching curves). */
   setBounds(bounds: Bounds2): void;
+  /** Reset viewport back to the initial bounds. */
+  resetBounds(): void;
   dispose(): void;
 }
 
@@ -285,6 +287,22 @@ export function createCanvas2D(
         }
       } else {
         bounds = { ...next };
+      }
+      draw();
+    },
+    resetBounds() {
+      requestedBounds = { ...initial };
+      if (equalScale) {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width >= 40 && rect.height >= 40) {
+          const size = { w: rect.width, h: rect.height };
+          bounds = fitBounds(initial, size, margin);
+          pxPerUnit = fitScale(initial, size, margin);
+        } else {
+          bounds = { ...initial };
+        }
+      } else {
+        bounds = { ...initial };
       }
       draw();
     },

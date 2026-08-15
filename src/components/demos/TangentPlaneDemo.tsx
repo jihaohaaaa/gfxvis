@@ -6,6 +6,7 @@ import {
   SURFACE_FN,
   createSurfaceScene,
 } from "../../visualizations/scenes/calculus/bivariate-surface";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
@@ -46,12 +47,14 @@ export default function TangentPlaneDemo({ height }: { height?: string }) {
   const fy = SURFACE_FN.fy(x, y);
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="tangent-plane" height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
-          className="h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
-        />
+          className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
+        >
+          <CanvasToolbar />
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
             <p>

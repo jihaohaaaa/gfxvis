@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useCanvas2D } from "../framework/useCanvas2D";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import CapsuleTabs from "../framework/CapsuleTabs";
@@ -554,7 +555,7 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
   };
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="inner-product-space" height={height}>
       <div className="space-y-4">
         {/* Mode Selector Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -570,6 +571,7 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
           ref={containerRef}
           className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
         >
+          <CanvasToolbar />
           <canvas
             ref={canvasRef}
             className="absolute inset-0 h-full w-full cursor-crosshair"

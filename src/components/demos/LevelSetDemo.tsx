@@ -3,8 +3,12 @@ import {
   FIELDS2D,
   type Field2DId,
 } from "../../visualizations/scenes/calculus/scalar-field-2d";
-import { drawAxes, drawPolyline } from "../../visualizations/core/2d/plot2d";
+import {
+  drawAdaptiveAxes,
+  drawPolyline,
+} from "../../visualizations/core/2d/plot2d";
 import CapsuleTabs from "../framework/CapsuleTabs";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import ParamSlider from "../framework/ParamSlider";
@@ -27,18 +31,18 @@ export default function LevelSetDemo({ height }: { height?: string }) {
 
   const field = FIELDS2D[fieldId];
 
-  const { containerRef, canvasRef, setBounds } = useCanvas2D(
+  const { containerRef, canvasRef, setBounds, resetBounds } = useCanvas2D(
     {
       initialBounds: FIELDS2D.circle.bounds,
       margin: MARGIN,
       draw(ctx, plot, theme) {
         const f = FIELDS2D[fieldId];
-        drawAxes(ctx, plot, theme, f.ticksX, f.ticksY);
+        drawAdaptiveAxes(ctx, plot, theme);
 
         // A few reference level curves of the family (dashed).
         for (let k = 1; k <= REF_COUNT; k++) {
           const ck = f.cMin + ((f.cMax - f.cMin) * k) / (REF_COUNT + 1);
-          drawPolyline(ctx, plot, f.levelCurve?.(ck, 120) ?? [], {
+          drawPolyline(ctx, plot, f.levelCurve?.(ck, 160) ?? [], {
             color: theme.border,
             width: 1.2,
             dash: [4, 4],
@@ -47,7 +51,7 @@ export default function LevelSetDemo({ height }: { height?: string }) {
         }
 
         // The current level curve F = c (solid accent).
-        drawPolyline(ctx, plot, f.levelCurve?.(c, 160) ?? [], {
+        drawPolyline(ctx, plot, f.levelCurve?.(c, 240) ?? [], {
           color: theme.accent,
           width: 2.2,
         });
@@ -64,34 +68,33 @@ export default function LevelSetDemo({ height }: { height?: string }) {
   };
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="level-set" height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
           className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
         >
+          <CanvasToolbar onReset={resetBounds} />
           <canvas
             ref={canvasRef}
             className="absolute inset-0 h-full w-full cursor-crosshair"
           />
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <CapsuleTabs
-              options={FIELD_OPTIONS}
-              value={fieldId}
-              onChange={handleFieldChange}
-            />
-            <ParamSlider
-              label={<InlineMath tex="c" />}
-              min={field.cMin}
-              max={field.cMax}
-              step={0.01}
-              value={c}
-              onChange={setC}
-              widthClass="w-44"
-            />
-          </div>
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <CapsuleTabs
+            options={FIELD_OPTIONS}
+            value={fieldId}
+            onChange={handleFieldChange}
+          />
+          <ParamSlider
+            label={<InlineMath tex="c" />}
+            min={field.cMin}
+            max={field.cMax}
+            step={0.01}
+            value={c}
+            onChange={setC}
+            widthClass="w-44"
+          />
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
           <p>

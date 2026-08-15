@@ -64,7 +64,7 @@ export function createStandardScene3D(
   const scene = new Scene();
   addStandardLights(scene);
   if (options.addGrid ?? true) {
-    addGroundGrid(scene, options.size ?? 16, options.divisions ?? 16);
+    addGroundGrid(scene, options.size ?? 30, options.divisions ?? 30);
   }
   return scene;
 }

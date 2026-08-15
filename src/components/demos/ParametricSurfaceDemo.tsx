@@ -5,6 +5,7 @@ import {
   type SurfaceId,
 } from "../../visualizations/scenes/calculus/parametric-surface3d";
 import CapsuleTabs from "../framework/CapsuleTabs";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
@@ -48,12 +49,14 @@ export default function ParametricSurfaceDemo({ height }: { height?: string }) {
   };
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="parametric-surface-3d" height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
-          className="h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
-        />
+          className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
+        >
+          <CanvasToolbar />
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <CapsuleTabs

@@ -7,6 +7,7 @@ import {
   createCloudScene,
 } from "../../visualizations/scenes/calculus/scalar-field-3d";
 import Checkbox from "../framework/Checkbox";
+import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import ParamSlider from "../framework/ParamSlider";
 import { useViewer3D } from "../framework/useViewer3D";
@@ -34,12 +35,14 @@ export default function ScalarField3DDemo({ height }: { height?: string }) {
   );
 
   return (
-    <ExpandableDemo height={height}>
+    <ExpandableDemo id="scalar-field-3d" height={height}>
       <div className="space-y-3">
         <div
           ref={containerRef}
-          className="h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
-        />
+          className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
+        >
+          <CanvasToolbar />
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-xs text-muted">
