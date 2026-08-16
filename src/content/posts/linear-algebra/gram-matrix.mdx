@@ -18,7 +18,7 @@ import GramMatrixDemo from "../../../components/demos/GramMatrixDemo";
 
 # Gram 矩阵与几何体积
 
-在向量空间中，一组向量两两之间的内积构成了 **Gram 矩阵（Gram matrix，格拉姆矩阵）**。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 **度规张量（metric tensor）** 的核心桥梁。关于内积公理、加权内积与函数空间内积的完整推导，详见 [《内积空间：从欧氏点积到函数空间与希尔伯特空间》](/posts/linear-algebra/inner-product-spaces)。
+在向量空间中，一组向量两两之间的内积构成了 **Gram 矩阵（Gram matrix，格拉姆矩阵）**。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 **度规张量(metric tensor)** 的核心桥梁。关于内积公理、加权内积与函数空间内积的完整推导，详见 [《内积空间：从欧氏点积到函数空间与希尔伯特空间》](/posts/linear-algebra/inner-product-spaces)。
 
 ---
 
@@ -59,7 +59,7 @@ $$
 
 ## 2. 几何意义与 Gram 行列式
 
-Gram 矩阵最引人入胜的几何性质在于：**它的行列式蕴含了向量组在空间中张成的平行多面体的体积（Volume）**。
+Gram 矩阵最引人入胜的几何性质在于：**它的行列式蕴含了向量组在空间中张成的平行多面体的体积(Volume)**。
 
 ### 二维与三维直观
 
@@ -78,13 +78,13 @@ $$
 \det(G) = \|u\|^2 \|v\|^2 - (u \cdot v)^2 = \|u\|^2 \|v\|^2 (1 - \cos^2\theta) = \|u\|^2 \|v\|^2 \sin^2\theta = S^2
 $$
 
-因此，平行四边形的面积恰好等于 **Gram 行列式（Gram determinant）** 的平方根：
+因此，平行四边形的面积恰好等于 **Gram 行列式(Gram determinant)** 的平方根：
 
 $$
 \text{Area} = \sqrt{\det(G)}
 $$
 
-同理，在高维空间中，由 $k$ 个向量张成的 $k$ 维平行多面体（parallelotope）的体积满足：
+同理，在高维空间中，由 $k$ 个向量张成的 $k$ 维平行多面体(parallelotope)的体积满足：
 
 $$
 \text{Volume}_k = \sqrt{\det(A^T A)} = \sqrt{\det(G)}
@@ -102,17 +102,17 @@ $$
 
 Gram 矩阵具备许多极佳的线性代数性质：
 
-1. **对称性（Symmetric）**：由于内积满足对称性 $\langle v_i, v_j \rangle = \langle v_j, v_i \rangle$，因此 $G = G^T$。
-2. **半正定性（Positive Semi-Definite）**：对任意非零向量 $x \in \mathbb{R}^k$，有：
+1. **对称性(Symmetric)**：由于内积满足对称性 $\langle v_i, v_j \rangle = \langle v_j, v_i \rangle$，因此 $G = G^T$。
+2. **半正定性(Positive Semi-Definite)**：对任意非零向量 $x \in \mathbb{R}^k$，有：
    $$
    x^T G x = x^T A^T A x = (Ax)^T (Ax) = \|Ax\|^2 \ge 0
    $$
    因此 $G \succeq 0$。
-3. **秩与可逆性（Rank and Invertibility）**：
+3. **秩与可逆性(Rank and Invertibility)**：
    $$
    \text{rank}(A^T A) = \text{rank}(A)
    $$
-   当且仅当向量组 $v_1, \dots, v_k$ **线性无关（linearly independent）** 时，$A$ 满列秩，Gram 矩阵 $G$ 严格正定（$G \succ 0$）且可逆 ($\det(G) > 0$)。若向量组线性相关，则 $\det(G) = 0$。
+   当且仅当向量组 $v_1, \dots, v_k$ **线性无关(linearly independent)** 时，$A$ 满列秩，Gram 矩阵 $G$ 严格正定($G \succ 0$)且可逆 ($\det(G) > 0$)。若向量组线性相关，则 $\det(G) = 0$。
 
 ---
 
@@ -120,7 +120,7 @@ Gram 矩阵具备许多极佳的线性代数性质：
 
 ### 4.1 正规方程与正交投影算子
 
-在最小二乘法与子空间投影中，我们要将向量 $b$ 投影到由矩阵 $A$ 的列空间 $\text{im}(A)$ 上。求解正规方程（Normal Equations）：
+在最小二乘法与子空间投影中，我们要将向量 $b$ 投影到由矩阵 $A$ 的列空间 $\text{im}(A)$ 上。求解正规方程(Normal Equations)：
 
 $$
 A^T A x = A^T b
@@ -153,7 +153,7 @@ $$
 
 在计算机图形学、3D 曲面建模与渲染中，参量曲面通常表示为 $r(u, v) \in \mathbb{R}^3$。
 
-曲面在点 $(u, v)$ 处的切平面由偏导向量 $r_u = \frac{\partial r}{\partial u}$ 与 $r_v = \frac{\partial r}{\partial v}$ 张成。这两个切向量构成的 Gram 矩阵在微分几何中被称为 **第一基本形式（First Fundamental Form）** 或 **度规张量（Metric Tensor）**：
+曲面在点 $(u, v)$ 处的切平面由偏导向量 $r_u = \frac{\partial r}{\partial u}$ 与 $r_v = \frac{\partial r}{\partial v}$ 张成。这两个切向量构成的 Gram 矩阵在微分几何中被称为 **第一基本形式(First Fundamental Form)** 或 **度规张量(Metric Tensor)**：
 
 $$
 g = \begin{pmatrix} E & F \\ F & G_{\text{surf}} \end{pmatrix} = \begin{pmatrix} r_u \cdot r_u & r_u \cdot r_v \\ r_v \cdot r_u & r_v \cdot r_v \end{pmatrix}
@@ -165,7 +165,7 @@ $$
 \mathrm{d}A = \|r_u \times r_v\| \, \mathrm{d}u \mathrm{d}v = \sqrt{\det(g)} \, \mathrm{d}u \mathrm{d}v = \sqrt{EG_{\text{surf}} - F^2} \, \mathrm{d}u \mathrm{d}v
 $$
 
-这种用度规张量的 Gram 行列式计算积分面积元的方法，是纹理映射（Texture Mapping）、保角/保面积曲面展开以及物理模拟中不可或缺的基础。
+这种用度规张量的 Gram 行列式计算积分面积元的方法，是纹理映射(Texture Mapping)、保角/保面积曲面展开以及物理模拟中不可或缺的基础。
 
 ---
 

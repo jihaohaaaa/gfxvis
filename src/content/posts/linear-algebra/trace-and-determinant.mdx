@@ -10,20 +10,20 @@ import TraceDeterminantDemo from "../../../components/demos/TraceDeterminantDemo
 
 # 矩阵的迹与行列式：线性变换的固有不变量与几何体积
 
-当我们用矩阵 $A$ 来描述一个线性变换时，矩阵中的具体数值实际上严重依赖于我们所选取的**坐标基底**（Coordinate Basis）。如果我们将观察坐标轴旋转或倾斜，同一个线性变换所对应的矩阵数字会面目全非。
+当我们用矩阵 $A$ 来描述一个线性变换时，矩阵中的具体数值实际上严重依赖于我们所选取的**坐标基底**(Coordinate Basis)。如果我们将观察坐标轴旋转或倾斜，同一个线性变换所对应的矩阵数字会面目全非。
 
-然而，在线性代数中有两个极其非凡的数值——**迹（Trace）** 与 **行列式（Determinant）**。无论你选择多么奇异的坐标系，它们的值都**恒定不变**。它们是线性变换与生俱来的“固有几何指纹”：
+然而，在线性代数中有两个极其非凡的数值——**迹(Trace)** 与 **行列式(Determinant)**。无论你选择多么奇异的坐标系，它们的值都**恒定不变**。它们是线性变换与生俱来的“固有几何指纹”：
 
-- **行列式 $\det(A)$**：是**乘法不变量**，刻画了空间体积在变换前后的**静态倍率缩放**与定向（Orientation）；
+- **行列式 $\det(A)$**：是**乘法不变量**，刻画了空间体积在变换前后的**静态倍率缩放**与定向(Orientation)；
 - **迹 $\operatorname{tr}(A)$**：是**加法不变量**，刻画了空间微元在连续流动演化中的**一阶瞬时体积膨胀率**（Jacobi 膨胀率）。
 
 ---
 
 ## 一、代数定义与核心性质
 
-### 1.1 矩阵的迹（Trace）
+### 1.1 矩阵的迹(Trace)
 
-对于 $n \times n$ 方阵 $A = (a_{ij})$，其 **迹（Trace）** 定义为主对角线所有元素之和：
+对于 $n \times n$ 方阵 $A = (a_{ij})$，其 **迹(Trace)** 定义为主对角线所有元素之和：
 
 $$
 \operatorname{tr}(A) = \sum_{i=1}^n a_{ii} = a_{11} + a_{22} + \dots + a_{nn}
@@ -36,7 +36,7 @@ $$
    \operatorname{tr}(A + B) = \operatorname{tr}(A) + \operatorname{tr}(B), \qquad \operatorname{tr}(c A) = c \operatorname{tr}(A)
    $$
 2. **转置不变性**：$\operatorname{tr}(A^\top) = \operatorname{tr}(A)$。
-3. **循环置换性质（Cyclic Permutation）**：
+3. **循环置换性质(Cyclic Permutation)**：
    $$
    \operatorname{tr}(AB) = \operatorname{tr}(BA)
    $$
@@ -46,7 +46,7 @@ $$
    $$
    > **注意**：非循环置换一般不成立（例如 $\operatorname{tr}(ABC) \neq \operatorname{tr}(BAC)$）。
 
-### 1.2 行列式（Determinant）
+### 1.2 行列式(Determinant)
 
 对于方阵 $A$，**行列式 $\det(A)$** 是唯一的具有多重线性、交错性且满足 $\det(I) = 1$ 的标量函数：
 
@@ -87,13 +87,13 @@ $$
 
 ## 三、特征多项式与谱关系
 
-迹与行列式也是矩阵**特征值（Eigenvalues）** 的宏观浓缩。方阵 $A$ 的特征多项式为：
+迹与行列式也是矩阵**特征值(Eigenvalues)** 的宏观浓缩。方阵 $A$ 的特征多项式为：
 
 $$
 p(\lambda) = \det(\lambda I - A) = \lambda^n - c_1 \lambda^{n-1} + c_2 \lambda^{n-2} - \dots + (-1)^n c_n
 $$
 
-由韦达定理（Vieta's formulas）可精确证明：
+由韦达定理(Vieta's formulas)可精确证明：
 
 - 最高阶项之后的首个系数恰为矩阵的**迹**：$c_1 = \operatorname{tr}(A) = \sum_{i=1}^n \lambda_i$；
 - 常数项恰为矩阵的**行列式**：$c_n = \det(A) = \prod_{i=1}^n \lambda_i$。
@@ -115,7 +115,7 @@ $$
 在几何上，矩阵的列向量 $a_1, a_2, \dots, a_n$ 构成了一个平行多面体：
 
 - **面积/体积绝对值**：$|\det(A)|$ 精确给出了单位超立方体在变换 $A$ 作用后的**体积缩放因子**；
-- **符号**：$\operatorname{sgn}(\det(A))$ 决定了空间**定向（Orientation）** 是否保持：
+- **符号**：$\operatorname{sgn}(\det(A))$ 决定了空间**定向(Orientation)** 是否保持：
   - $\det(A) > 0$：定向保持（如旋转、等比缩放）；
   - $\det(A) < 0$：定向翻转（如镜面反射、手性翻转）；
   - $\det(A) = 0$：空间降维坍缩（退化为平面、直线或点，不可逆）。

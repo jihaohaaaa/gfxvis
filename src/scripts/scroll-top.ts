@@ -79,11 +79,6 @@ export function smoothScrollTo(targetY: number, customDuration?: number): void {
 }
 
 export function setupScrollTop(): void {
-  // Prevent browser default abrupt scroll jumping on history popstate
-  if ("scrollRestoration" in window.history) {
-    window.history.scrollRestoration = "manual";
-  }
-
   const btn = document.getElementById("back-to-top");
   if (!btn) return;
 

@@ -26,24 +26,24 @@ $$
 A \mathbf v = \lambda \mathbf v \quad (\mathbf v \neq \mathbf 0)
 $$
 
-这些特殊的方向向量 $\mathbf v$ 被称为 **特征向量（Eigenvector）**，对应的缩放倍率 $\lambda$ 被称为 **特征值（Eigenvalue）**。
+这些特殊的方向向量 $\mathbf v$ 被称为 **特征向量(Eigenvector)**，对应的缩放倍率 $\lambda$ 被称为 **特征值(Eigenvalue)**。
 
 ---
 
 ## 一、几何直觉：线性变换的不变直线
 
-### 1.1 不变直线（Invariant Lines）
+### 1.1 不变直线(Invariant Lines)
 
 从几何视角来看，特征向量张成的直线 $L = \{c \mathbf v \mid c \in \mathbb{R}\}$ 是一条 **不变子空间直线**：
 
 - 如果初始向量 $\mathbf x$ 位于直线 $L$ 上，那么变换后的向量 $A \mathbf x = \lambda \mathbf x$ 仍然严格停留在该直线上；
-- **当 $\lambda > 0$ 时**：向量沿直线同向拉伸（$\lambda > 1$）或压缩（$0 < \lambda < 1$）；
+- **当 $\lambda > 0$ 时**：向量沿直线同向拉伸($\lambda > 1$)或压缩($0 < \lambda < 1$)；
 - **当 $\lambda < 0$ 时**：向量发生沿直线的 $180^\circ$ 翻转与缩放；
 - **当 $\lambda = 0$ 时**：该方向上的所有向量被坍缩为原点零向量（即 $\mathbf v \in \ker(A)$，属于矩阵的零空间）。
 
 ### 1.2 为什么旋转变换没有实特征向量？
 
-若一个矩阵是平面纯旋转变换 $R_\theta$（$\theta \neq k\pi$），则空间中的每一个非零向量都会被强制旋转一个角度 $\theta$，没有任何一条实直线能够保持方向不变。因此纯旋转矩阵在实数域内没有实特征值与实特征向量（其特征值为共轭复数 $e^{\pm i\theta}$）。
+若一个矩阵是平面纯旋转变换 $R_\theta$($\theta \neq k\pi$)，则空间中的每一个非零向量都会被强制旋转一个角度 $\theta$，没有任何一条实直线能够保持方向不变。因此纯旋转矩阵在实数域内没有实特征值与实特征向量（其特征值为共轭复数 $e^{\pm i\theta}$）。
 
 ---
 
@@ -63,7 +63,7 @@ $$
 p(\lambda) = \det(\lambda I - A) = 0
 $$
 
-这个关于 $\lambda$ 的多项式方程被称为 **特征方程（Characteristic Equation）**，$p(\lambda)$ 称为 **特征多项式（Characteristic Polynomial）**。
+这个关于 $\lambda$ 的多项式方程被称为 **特征方程(Characteristic Equation)**，$p(\lambda)$ 称为 **特征多项式(Characteristic Polynomial)**。
 
 ### 2.2 串联上篇：迹与行列式的代数统一
 
@@ -102,13 +102,13 @@ $$
 
 对于求得的每一个特征值 $\lambda_i$：
 
-- **代数重数（Algebraic Multiplicity, AM）**：$\lambda_i$ 作为特征多项式根的重数；
-- **几何重数（Geometric Multiplicity, GM）**：特征子空间 $E(\lambda_i) = \ker(\lambda_i I - A)$ 的维度，即属于该特征值的**线性无关特征向量的最大数量**。
+- **代数重数(Algebraic Multiplicity, AM)**：$\lambda_i$ 作为特征多项式根的重数；
+- **几何重数(Geometric Multiplicity, GM)**：特征子空间 $E(\lambda_i) = \ker(\lambda_i I - A)$ 的维度，即属于该特征值的**线性无关特征向量的最大数量**。
 
 **基本定理**：对任意特征值，总有 $1 \le \operatorname{GM}(\lambda_i) \le \operatorname{AM}(\lambda_i)$。
 
 - 若所有特征值的 $\operatorname{GM} = \operatorname{AM}$，则矩阵拥有完整的特征基底，**可以对角化**；
-- 若存在 $\operatorname{GM} < \operatorname{AM}$（例如剪切矩阵 $\begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$，$\lambda=1$ 重数为 2 但只有 1 个特征向量），则称矩阵是**亏损的（Defective）**，无法完全对角化。
+- 若存在 $\operatorname{GM} < \operatorname{AM}$（例如剪切矩阵 $\begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$，$\lambda=1$ 重数为 2 但只有 1 个特征向量），则称矩阵是**亏损的(Defective)**，无法完全对角化。
 
 ---
 
@@ -120,7 +120,7 @@ $$
 A P = A (\mathbf v_1, \mathbf v_2, \dots, \mathbf v_n) = (\lambda_1 \mathbf v_1, \lambda_2 \mathbf v_2, \dots, \lambda_n \mathbf v_n) = P \begin{pmatrix} \lambda_1 & & 0 \\ & \ddots & \\ 0 & & \lambda_n \end{pmatrix} = P \Lambda
 $$
 
-两边左乘 $P^{-1}$，即得经典的 **矩阵对角化公式（Diagonalization）**：
+两边左乘 $P^{-1}$，即得经典的 **矩阵对角化公式(Diagonalization)**：
 
 $$
 A = P \Lambda P^{-1} \iff \Lambda = P^{-1} A P
@@ -132,16 +132,16 @@ $$
 
 ---
 
-## 五、对称矩阵与谱定理（Spectral Theorem）
+## 五、对称矩阵与谱定理(Spectral Theorem)
 
-在计算机图形学、物理学与几何处理中，**实对称矩阵（$A = A^\top$）** 具有无与伦比的优雅性质。
+在计算机图形学、物理学与几何处理中，**实对称矩阵($A = A^\top$)** 具有无与伦比的优雅性质。
 
-### 谱定理（Spectral Theorem）
+### 谱定理(Spectral Theorem)
 
 若 $A$ 为实对称矩阵，则：
 
 1. $A$ 的所有特征值都是**纯实数**；
-2. 属于不同特征值的特征向量**彼此严格正交**（$\mathbf v_i \perp \mathbf v_j$）；
+2. 属于不同特征值的特征向量**彼此严格正交**($\mathbf v_i \perp \mathbf v_j$)；
 3. $A$ 可以被**正交对角化**：$A = Q \Lambda Q^\top$（其中 $Q$ 为正交矩阵，$Q^\top Q = I$）。
 
 ### 几何主轴定理：单位圆到椭圆的映射
@@ -153,23 +153,91 @@ $$
 
 ---
 
-## 六、交互实验：特征向量探测、主轴椭圆与对角化
+## 六、正定矩阵、二次型与能量椭球 (Positive Definite Matrices & Quadratic Forms)
+
+当实对称矩阵的所有特征值不仅为实数，而且**严格大于零**时，它便升华成了线性代数与图形学中最为核心的算子——**对称正定矩阵 (Symmetric Positive Definite, 简称 SPD)**。
+
+### 6.1 二次型能量函数 (Quadratic Form)
+
+对于任意实对称矩阵 $A \in \mathbb{R}^{n \times n}$，定义其诱导的标量二次型（能量函数）为：
+
+$$
+f(\mathbf x) = \mathbf x^\top A \mathbf x = \sum_{i=1}^n \sum_{j=1}^n a_{ij} x_i x_j
+$$
+
+若对任意非零向量 $\mathbf x \neq \mathbf 0$，其二次型恒严格大于零：
+
+$$
+\mathbf x^\top A \mathbf x > 0 \quad (\forall \mathbf x \in \mathbb{R}^n, \mathbf x \neq \mathbf 0)
+$$
+
+则称矩阵 $A$ 为 **对称正定矩阵** ，记作 $A \succ 0$。若条件放宽为 $\mathbf x^\top A \mathbf x \ge 0$，则称为 **半正定矩阵 (Positive Semi-Definite)** ，记作 $A \succeq 0$。
+
+### 6.2 正定矩阵的 5 大等价判定
+
+在线性代数中，一个实对称矩阵 $A$ 是正定的，当且仅当满足以下 5 大等价判据之一：
+
+1. **特征值判据 (All Eigenvalues Positive)** ：
+   - $A$ 的所有特征值严格为正：$\lambda_1, \lambda_2, \dots, \lambda_n > 0$。
+2. **二次型能量判据 (Energy Positivity)** ：
+   - 对任意非零向量 $\mathbf x \neq \mathbf 0$，恒有能量 $\mathbf x^\top A \mathbf x > 0$。
+3. **顺序主子式判据 (Sylvester Criterion)** ：
+   - $A$ 的所有 $k$ 阶前导顺序主子式严格大于零：$\det(A_k) > 0$ ($k = 1, 2, \dots, n$)。
+4. **消元主元判据 (Positive Pivots)** ：
+   - 在高斯消元法中，无需行交换，所有对角主元严格为正：$d_1, d_2, \dots, d_n > 0$。
+5. **Cholesky 分解判据 (Cholesky Factorization)** ：
+   - 存在唯一的对角元全为正数的下三角矩阵 $L$，使得 $A = L L^\top$（矩阵的“算术平方根”分解）。
+
+### 6.3 谱定理下的二次型对角化与能量椭球
+
+利用谱定理的正交对角化 $A = Q \Lambda Q^\top$（其中 $Q = (\mathbf q_1, \dots, \mathbf q_n)$ 为正交特征向量矩阵），在正交特征坐标系 $\mathbf y = Q^\top \mathbf x$（即 $\mathbf x = Q \mathbf y = \sum_{i=1}^n y_i \mathbf q_i$）下，二次型中的交叉项被完全消去：
+
+$$
+\mathbf x^\top A \mathbf x = (Q \mathbf y)^\top A (Q \mathbf y) = \mathbf y^\top (Q^\top A Q) \mathbf y = \mathbf y^\top \Lambda \mathbf y = \sum_{i=1}^n \lambda_i y_i^2
+$$
+
+- **能量曲面 (Energy Surface)** ：三维函数图像 $z = \mathbf x^\top A \mathbf x$ 是一个开口向上、以原点为唯一定域极小值点的**碗状椭圆抛物面**；
+- **等值线能量椭球 (Energy Ellipsoid)** ：令二次型能量等于常数 $1$（$\mathbf x^\top A \mathbf x = 1$），展开即得标准椭球方程：
+  $$
+  \sum_{i=1}^n \lambda_i y_i^2 = 1 \iff \sum_{i=1}^n \frac{y_i^2}{(1/\sqrt{\lambda_i})^2} = 1
+  $$
+  - **椭球的主轴方向** ：严格沿着相互正交的特征向量 $\mathbf q_1, \dots, \mathbf q_n$ 方向；
+  - **椭球的半轴长度** ：恰好等于特征值的逆平方根 $\frac{1}{\sqrt{\lambda_i}}$。特征值 $\lambda_i$ 越大，该方向能量上升越陡峭，等能椭球在该轴上的截距越短。
+
+### 6.4 度规张量与微分几何应用 (Metric Tensor)
+
+正定矩阵不仅是一个代数算子，更在几何上天然定义了**空间距离与角度的测量标尺（度规）**：
+
+- **诱导广义内积** ：任何对称正定矩阵 $A \succ 0$ 均可诱导一个合法的内积 $\langle \mathbf u, \mathbf v \rangle_A = \mathbf u^\top A \mathbf v$ 与加权能量范数 $\|\mathbf v\|_A = \sqrt{\mathbf v^\top A \mathbf v}$；
+- **参数曲面的第一基本形式** ：在图形学与微分几何中，三维参数曲面 $\mathbf r(u, v)$ 的切平面度规张量（第一基本形式矩阵）为：
+  $$
+  I = \begin{pmatrix} E & F \\ F & G \end{pmatrix} = \begin{pmatrix} \mathbf r_u \cdot \mathbf r_u & \mathbf r_u \cdot \mathbf r_v \\ \mathbf r_v \cdot \mathbf r_u & \mathbf r_v \cdot \mathbf r_v \end{pmatrix} = J^\top J
+  $$
+  只要曲面无奇异自交折叠（参数导数线性无关），度规张量 $I$ 必然是**严格对称正定矩阵**。它精确衡量了参数空间微位移 $\mathrm{d}\mathbf u = (\mathrm{d}u, \mathrm{d}v)^\top$ 映射到曲面上的实际物理微弧长平方：
+  $$
+  \mathrm{d}s^2 = \mathrm{d}\mathbf u^\top I \, \mathrm{d}\mathbf u = E \, \mathrm{d}u^2 + 2F \, \mathrm{d}u \, \mathrm{d}v + G \, \mathrm{d}v^2 > 0
+  $$
+  正定性从根本上保证了只要参数发生移动（$\mathrm{d}\mathbf u \neq \mathbf 0$），曲面上的物理空间距离严格大于零。
+
+---
+
+## 七、交互实验：特征向量探测、主轴椭圆与对角化
 
 在下方的交互实验中，你可以直观探索特征几何的奇妙机制：
 
-1. **特征方向探测器**：拖动探测角度滑块 $\theta$ 旋转紫色向量 $\mathbf x$，实时观察变换后的向量 $A \mathbf x$。当 $\mathbf x$ 旋转到与 $A \mathbf x$ 共线时（高亮为绿色光晕），即找到了特征向量与特征轴！
-2. **谱定理与主轴椭圆**：直观观察虚线单位圆在矩阵 $A$ 作用下如何被拉伸为主轴椭圆，椭圆的对称主轴正是特征向量方向；
-3. **特征基底对角化**：观察在特征基底观察下，复杂的矩阵变换是如何还原为纯粹的独立拉伸。
+1. **特征方向探测器** ：拖动探测角度滑块 $\theta$ 旋转紫色向量 $\mathbf x$，实时观察变换后的向量 $A \mathbf x$。当 $\mathbf x$ 旋转到与 $A \mathbf x$ 共线时（高亮为绿色光晕），即找到了特征向量与特征轴！
+2. **谱定理与主轴椭圆** ：直观观察虚线单位圆在矩阵 $A$ 作用下如何被拉伸为主轴椭圆，椭圆的对称主轴正是特征向量方向；
+3. **特征基底对角化** ：观察在特征基底观察下，复杂的矩阵变换是如何还原为纯粹的独立拉伸。
 
 <EigenDemo client:visible />
 
 ---
 
-## 七、应用前瞻：矩阵幂与连续动力系统
+## 八、应用前瞻：矩阵幂与连续动力系统
 
 特征值与对角化是解决动态演化系统（离散迭代与微分方程）的核武器：
 
-### 7.1 矩阵幂的高速计算
+### 8.1 矩阵幂的高速计算
 
 由于 $\Lambda$ 是对角矩阵，其幂次只需将对角元素求幂：
 
@@ -179,22 +247,24 @@ $$
 
 这使得马尔可夫链稳态、斐波那契数列通项公式的求解在常数时间内即可完成。
 
-### 7.2 连续动力系统与相图稳定性
+### 8.2 连续动力系统与相图稳定性
 
 对于线性微分方程组 $\dot{\mathbf x} = A \mathbf x$：
 
-- **若所有 $\operatorname{Re}(\lambda_i) < 0$**：系统渐近稳定，所有轨迹最终收敛于原点（稳定节点/焦点）；
-- **若存在 $\operatorname{Re}(\lambda_i) > 0$**：系统发散失稳（不稳定节点/鞍点）；
-- **若 $\lambda_{1, 2} = \pm i \omega$（纯虚数，$\operatorname{tr}(A)=0, \det(A)>0$）**：系统轨迹为封闭同心椭圆轨道（简谐振子中心）。
+- **若所有 $\operatorname{Re}(\lambda_i) < 0$** ：系统渐近稳定，所有轨迹最终收敛于原点（稳定节点/焦点）；
+- **若存在 $\operatorname{Re}(\lambda_i) > 0$** ：系统发散失稳（不稳定节点/鞍点）；
+- **若 $\lambda_{1, 2} = \pm i \omega$（纯虚数，$\operatorname{tr}(A)=0, \det(A)>0$）** ：系统轨迹为封闭同心椭圆轨道（简谐振子中心）。
 
 ---
 
-## 八、全景总结
+## 九、全景总结
 
-| 概念                 | 代数表达                                                                  | 几何/物理本质                                      |
-| :------------------- | :------------------------------------------------------------------------ | :------------------------------------------------- |
-| **特征值与特征向量** | $A \mathbf v = \lambda \mathbf v$                                         | 线性变换中方向保持不变的主轴，$\lambda$ 为伸缩倍率 |
-| **特征多项式**       | $\det(\lambda I - A) = \lambda^2 - \operatorname{tr}(A)\lambda + \det(A)$ | 串联不变量（迹是特征值之和，行列式是特征值之积）   |
-| **矩阵对角化**       | $A = P \Lambda P^{-1}$                                                    | 选取特征向量为观察基底，将多维耦合变换彻底解耦     |
-| **实对称矩阵谱定理** | $A = Q \Lambda Q^\top$                                                    | 正交特征基，将单位球映射为主轴椭球                 |
-| **矩阵幂与动力系统** | $A^k = P \Lambda^k P^{-1}$                                                | 特征基底主导了长周期的系统渐近行为与稳定性         |
+| 概念                         | 代数表达                                                                                  | 几何/物理本质                                      |
+| :--------------------------- | :---------------------------------------------------------------------------------------- | :------------------------------------------------- |
+| **特征值与特征向量**         | $A \mathbf v = \lambda \mathbf v$                                                         | 线性变换中方向保持不变的主轴，$\lambda$ 为伸缩倍率 |
+| **特征多项式**               | $\det(\lambda I - A) = \lambda^2 - \operatorname{tr}(A)\lambda + \det(A)$                 | 串联不变量（迹是特征值之和，行列式是特征值之积）   |
+| **矩阵对角化**               | $A = P \Lambda P^{-1}$                                                                    | 选取特征向量为观察基底，将多维耦合变换彻底解耦     |
+| **实对称矩阵谱定理**         | $A = Q \Lambda Q^\top$                                                                    | 正交特征基，将单位球映射为主轴椭球                 |
+| **对称正定矩阵 (SPD)**       | $A \succ 0 \iff \lambda_i > 0 \iff \mathbf x^\top A \mathbf x > 0$                        | 能量二次型开口向上，等高线为正交主轴能量椭球       |
+| **度规张量 (Metric Tensor)** | $I = J^\top J \succ 0, \mathrm{d}s^2 = \mathrm{d}\mathbf u^\top I \, \mathrm{d}\mathbf u$ | 衡量弯曲曲面局部弧长与能量的对称正定微观标尺       |
+| **矩阵幂与动力系统**         | $A^k = P \Lambda^k P^{-1}$                                                                | 特征基底主导了长周期的系统渐近行为与稳定性         |

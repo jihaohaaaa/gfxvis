@@ -63,4 +63,22 @@ test.describe("文章标题锚点与深层链接复制 E2E 测试", () => {
     await expect(targetHeading).toBeVisible();
     await expect(targetHeading).toHaveClass(/heading-pulse/, { timeout: 3000 });
   });
+
+  test("带 Hash 刷新页面能够准确恢复至目标小节并处于视口范围内", async ({
+    page,
+  }) => {
+    await page.goto("/posts/linear-algebra/projection-operators#正交投影");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(500);
+
+    const targetHeading = page.locator("h2#正交投影");
+    await expect(targetHeading).toBeInViewport();
+
+    // 页面刷新 (Reload)
+    await page.reload();
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(500);
+
+    await expect(targetHeading).toBeInViewport();
+  });
 });

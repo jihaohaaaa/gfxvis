@@ -18,7 +18,7 @@ import ProjectionDemo from "../../../components/demos/ProjectionDemo";
 
 # 投影算子
 
-**投影算子（projection operator）** 把一个向量空间中的任意向量“投到”某个子空间上。它看上去是一个具体的几何动作，却可以只用一条代数性质刻画；而正交投影、投影矩阵、秩与特征值、最小二乘，全都从这条性质展开。
+**投影算子(projection operator)** 把一个向量空间中的任意向量“投到”某个子空间上。它看上去是一个具体的几何动作，却可以只用一条代数性质刻画；而正交投影、投影矩阵、秩与特征值、最小二乘，全都从这条性质展开。
 
 ## 先从直观说起
 
@@ -36,7 +36,7 @@ $$
 
 <ProjectionDemo client:visible />
 
-再把维度升到三维，目标换成 $xy$ 平面（$z = 0$），用滑块调整 $x = (x, y, z)$，同样可以切换正交与斜投影：
+再把维度升到三维，目标换成 $xy$ 平面($z = 0$)，用滑块调整 $x = (x, y, z)$，同样可以切换正交与斜投影：
 
 <Projection3DDemo client:visible />
 
@@ -66,7 +66,7 @@ $$
 
 > 投影两次 = 投影一次。
 
-也就是说，定义只要求 $P$ 是 **幂等的（idempotent）** ，并没有规定投影方向是否垂直。
+也就是说，定义只要求 $P$ 是 **幂等的(idempotent)** ，并没有规定投影方向是否垂直。
 
 ## 为什么 $P^2 = P$ 就是投影？
 
@@ -181,7 +181,7 @@ P^2 = \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix} \begin{pmatrix} 1 & 1 \\ 0 & 
 = \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix} = P
 $$
 
-所以它是一个投影，但它 **不对称** （$P^\top \neq P$）：对 $x = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$ 有 $Px = \begin{pmatrix} 2 \\ 0 \end{pmatrix}$，对 $x = \begin{pmatrix} 0 \\ 1 \end{pmatrix}$ 有 $Px = \begin{pmatrix} 1 \\ 0 \end{pmatrix}$。它把向量沿 $(1,-1)$ 方向斜斜地“刮”到 $x$ 轴上，而不是垂直落下去。这种投影叫做 **斜投影（oblique projection）** 。
+所以它是一个投影，但它 **不对称** ($P^\top \neq P$)：对 $x = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$ 有 $Px = \begin{pmatrix} 2 \\ 0 \end{pmatrix}$，对 $x = \begin{pmatrix} 0 \\ 1 \end{pmatrix}$ 有 $Px = \begin{pmatrix} 1 \\ 0 \end{pmatrix}$。它把向量沿 $(1,-1)$ 方向斜斜地“刮”到 $x$ 轴上，而不是垂直落下去。这种投影叫做 **斜投影(oblique projection)** 。
 
 ## 正交投影
 
@@ -191,52 +191,262 @@ $$
 P = P^\top
 $$
 
-结合 $P^2 = P$，就得到对称幂等矩阵
+结合幂等性 $P^2 = P$，就得到对称幂等矩阵(symmetric idempotent matrix)：
 
 $$
 P = P^2 = P^\top
 $$
 
-这样的投影叫做 **正交投影（orthogonal projection）** 。此时像与零空间互相垂直：
+这样的投影叫做 **正交投影(orthogonal projection)** 。
+
+### 为什么对称就意味着正交？
+
+正交投影的本质在于： **像空间与零空间彼此正交互补** 。
+
+对于任意向量 $u \in \operatorname{im}(P)$（即存在 $x$ 使得 $u = Px$）和任意向量 $v \in \ker(P)$（即 $Pv = 0$），利用矩阵对称性计算两者的内积：
 
 $$
-\operatorname{im}(P) \perp \ker(P)
+\langle u, v \rangle = u^\top v = (Px)^\top v = x^\top P^\top v = x^\top (Pv) = x^\top 0 = 0
 $$
 
-最简单也最重要的例子：投影到直线 $\operatorname{span}\{u\}$ 上。投影矩阵是
+这证明了只要 $P = P^\top$，则像空间与零空间必然严格垂直：
+
+$$
+\operatorname{im}(P) \perp \ker(P) \iff \ker(P) = \operatorname{im}(P)^\perp
+$$
+
+此时直和分解进一步升华成了 **正交直和分解(orthogonal direct sum decomposition)** ：
+
+$$
+V = \operatorname{im}(P) \oplus^\perp \ker(P)
+$$
+
+### 一维直线上的正交投影
+
+最简单也最基础的正交投影是投到非零向量 $u$ 张成的一维直线上：
 
 $$
 P = \frac{u u^\top}{u^\top u}
 $$
 
-例如 $u = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$，则
+例如 $u = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$，分母 $u^\top u = 2$，外积分子 $u u^\top = \begin{pmatrix} 1 & 1 \\ 1 & 1 \end{pmatrix}$，投影矩阵为：
 
 $$
 P = \frac{1}{2} \begin{pmatrix} 1 & 1 \\ 1 & 1 \end{pmatrix}
 $$
 
-对 $x = \begin{pmatrix} 3 \\ 1 \end{pmatrix}$ 有
+对任意向量 $x = \begin{pmatrix} 3 \\ 1 \end{pmatrix}$ 进行投影：
 
 $$
 Px = \begin{pmatrix} 2 \\ 2 \end{pmatrix}, \qquad
-x - Px = \begin{pmatrix} 1 \\ -1 \end{pmatrix}
+e = x - Px = \begin{pmatrix} 1 \\ -1 \end{pmatrix}
 $$
 
-而 $(x - Px) \cdot u = 1 - 1 = 0$，即残差方向与 $u$ 垂直——这正是“正交”投影的含义。
+检验误差向量 $e$ 与方向向量 $u$ 的内积：$e \cdot u = 1 \times 1 + (-1) \times 1 = 0$。残差方向垂直于目标直线，完整体现了正交性。
+
+### 多维子空间上的通用正交投影矩阵
+
+我们把一维直线推广到任意多维子空间。首先明确数学前提与各维度的对应关系：
+
+- **全空间(Ambient Space)** ：$V = \mathbb{R}^n$（$n$ 维欧氏空间，输入向量 $b \in \mathbb{R}^n$）；
+- **目标子空间(Subspace)** ：$W \subseteq \mathbb{R}^n$，其维度为 $k = \dim(W) \le n$；
+- **基矩阵(Basis Matrix)** ：$A = \begin{pmatrix} a_1 & a_2 & \cdots & a_k \end{pmatrix} \in \mathbb{R}^{n \times k}$，由子空间 $W$ 的 $k$ 个线性无关基向量按列拼成，列满秩 $\operatorname{rank}(A) = k$，满足 $\operatorname{col}(A) = W$；
+- **待求投影矩阵(Projection Matrix)** ：$P \in \mathbb{R}^{n \times n}$，作为线性算子 $P: \mathbb{R}^n \to \mathbb{R}^n$，把任意向量 $b \in \mathbb{R}^n$ 投到 $W$ 上的投影点 $p = Pb \in \mathbb{R}^n$；
+- **子空间坐标(Coordinates)** ：$\hat{x} \in \mathbb{R}^k$，表示投影点在基 $A$ 下的线性组合系数，即 $p = A\hat{x}$；
+- **误差向量(Residual Vector)** ：$e = b - p = b - A\hat{x} \in \mathbb{R}^n$。
+
+#### 几何正交性推导
+
+正交投影的几何要求是：误差向量 $e = b - A\hat{x}$ 必须垂直于目标子空间 $W$ 中的 **每一个基向量** $a_i$($i = 1, \dots, k$)：
+
+$$
+a_1^\top (b - A\hat{x}) = 0, \quad a_2^\top (b - A\hat{x}) = 0, \quad \dots, \quad a_k^\top (b - A\hat{x}) = 0
+$$
+
+把这 $k$ 个标量内积方程组合并为一个矩阵方程（注意 $A^\top \in \mathbb{R}^{k \times n}$）：
+
+$$
+A^\top (b - A\hat{x}) = 0 \implies A^\top A \hat{x} = A^\top b
+$$
+
+#### 正规方程求解与矩阵成型
+
+观察方程 $A^\top A \hat{x} = A^\top b$ 各部分的代数结构与几何含义：
+
+1. **左侧系数矩阵 $A^\top A \in \mathbb{R}^{k \times k}$（Gram 矩阵）** ：
+   - 将 $A = \begin{pmatrix} a_1 & \cdots & a_k \end{pmatrix}$ 代入，其内部元素正是基向量两两之间的内积：
+     $$
+     A^\top A = \begin{pmatrix} a_1^\top a_1 & a_1^\top a_2 & \cdots & a_1^\top a_k \\ a_2^\top a_1 & a_2^\top a_2 & \cdots & a_2^\top a_k \\ \vdots & \vdots & \ddots & \vdots \\ a_k^\top a_1 & a_k^\top a_2 & \cdots & a_k^\top a_k \end{pmatrix} \in \mathbb{R}^{k \times k}
+     $$
+   - 它完整记录了子空间基向量的模长平方（对角线元素 $\lVert a_i \rVert^2$）与相互夹角重叠度（非对角线元素 $\langle a_i, a_j \rangle$）。
+
+2. **为什么 $A^\top A$ 必然可逆（严格正定性证明）** ：
+   - 设任意非零向量 $v \in \mathbb{R}^k$ ($v \neq 0$)，考察其二次型：
+     $$
+     v^\top (A^\top A) v = (Av)^\top (Av) = \lVert Av \rVert^2 \ge 0
+     $$
+   - 因为基向量组线性无关（$A$ 列满秩），当 $v \neq 0$ 时必有 $Av \neq 0$（零空间 $\ker(A) = \{0\}$）；
+   - 故 $\lVert Av \rVert^2 > 0$，即 $v^\top (A^\top A) v > 0$ 恒成立。这证明了 $A^\top A$ 是 **严格对称正定矩阵 (Symmetric Positive Definite, SPD)** （关于正定矩阵的 5 大等价判定、二次型与能量椭球几何，详见 [《特征值与特征向量》](/posts/linear-algebra/eigenvalues-and-eigenvectors) 专篇），行列式 $\det(A^\top A) > 0$，逆矩阵 $(A^\top A)^{-1}$ 必然唯一存在。
+
+3. **右侧已知向量 $A^\top b \in \mathbb{R}^k$（内积测量向量）** ：
+   - 将 $A^\top$ 按行切片展开：
+     $$
+     A^\top b = \begin{pmatrix} a_1^\top \\ a_2^\top \\ \vdots \\ a_k^\top \end{pmatrix} b = \begin{pmatrix} a_1^\top b \\ a_2^\top b \\ \vdots \\ a_k^\top b \end{pmatrix} = \begin{pmatrix} \langle a_1, b \rangle \\ \langle a_2, b \rangle \\ \vdots \\ \langle a_k, b \rangle \end{pmatrix} \in \mathbb{R}^k
+     $$
+   - 它把高维空间中的向量 $b \in \mathbb{R}^n$ 分别与子空间的每一个基向量 $a_i$ 作内积测量，把 $n$ 维信号压缩为一个包含 $k$ 个标量内积测量的特征向量。
+
+4. **逆矩阵 $(A^\top A)^{-1}$ 的几何角色：消除基间非正交串扰** ：
+   - 若基向量组 $\{a_1, \dots, a_k\}$ 恰好是标准正交的（$A^\top A = I_k$），则无需任何校正，坐标直接就是内积测量值 $\hat{x} = A^\top b$；
+   - 但在任意斜基（非正交基）下，基向量之间存在重叠串扰，测量值 $A^\top b$ 混合了各基方向的交叉分量。乘上 $(A^\top A)^{-1}$ 正是解耦这种基间几何耦合、还原出无偏坐标系数 $\hat{x}$ 的关键逆变换：
+     $$
+     \hat{x} = (A^\top A)^{-1} A^\top b
+     $$
+
+将系数 $\hat{x}$ 代回投影向量 $p = A\hat{x} \in \mathbb{R}^n$：
+
+$$
+p = A \hat{x} = \underbrace{A (A^\top A)^{-1} A^\top}_{P} b
+$$
+
+由此得到作用于整个 $\mathbb{R}^n$ 空间的 $n \times n$ 阶通用正交投影矩阵：
+
+$$
+P = A (A^\top A)^{-1} A^\top \in \mathbb{R}^{n \times n}
+$$
+
+维度校核：
+
+$$
+\underbrace{P}_{n \times n} = \underbrace{A}_{n \times k} \underbrace{(A^\top A)^{-1}}_{k \times k} \underbrace{A^\top}_{k \times n}
+$$
+
+验证其代数性质：
+
+- **对称性** ：$P^\top = (A (A^\top A)^{-1} A^\top)^\top = A ((A^\top A)^{-1})^\top A^\top = A (A^\top A)^{-1} A^\top = P$；
+- **幂等性** ：$P^2 = \left( A (A^\top A)^{-1} A^\top \right) \left( A (A^\top A)^{-1} A^\top \right) = A (A^\top A)^{-1} (A^\top A) (A^\top A)^{-1} A^\top = A (A^\top A)^{-1} A^\top = P$。
+
+#### 标准正交基下的极简形式与外积展开
+
+通用投影矩阵 $P = A(A^\top A)^{-1}A^\top$ 中最昂贵的运算是求逆 $(A^\top A)^{-1}$。然而，当目标子空间 $W$ 的基向量组被选为一组 **标准正交基 (Orthonormal Basis)** 时，整个代数形式将产生极其优美的崩塌与化简。
+
+设基向量组 $\{q_1, q_2, \dots, q_k\} \subset \mathbb{R}^n$ 满足正交归一化条件：
+
+$$
+q_i^\top q_j = \langle q_i, q_j \rangle = \delta_{ij} = \begin{cases} 1, & i = j \\ 0, & i \neq j \end{cases}
+$$
+
+将它们按列拼成基矩阵 $Q = \begin{pmatrix} q_1 & q_2 & \cdots & q_k \end{pmatrix} \in \mathbb{R}^{n \times k}$。
+
+##### 1. Gram 矩阵塌缩为单位阵
+
+计算 $Q$ 的转置乘积 $Q^\top Q$：
+
+$$
+Q^\top Q = \begin{pmatrix} q_1^\top \\ q_2^\top \\ \vdots \\ q_k^\top \end{pmatrix} \begin{pmatrix} q_1 & q_2 & \cdots & q_k \end{pmatrix} = \begin{pmatrix} q_1^\top q_1 & q_1^\top q_2 & \cdots & q_1^\top q_k \\ q_2^\top q_1 & q_2^\top q_2 & \cdots & q_2^\top q_k \\ \vdots & \vdots & \ddots & \vdots \\ q_k^\top q_1 & q_k^\top q_2 & \cdots & q_k^\top q_k \end{pmatrix} = \begin{pmatrix} 1 & 0 & \cdots & 0 \\ 0 & 1 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & 1 \end{pmatrix} = I_k
+$$
+
+Gram 矩阵直接化简为了 $k$ 阶单位矩阵 $I_k$，其逆矩阵自然就是 $(Q^\top Q)^{-1} = (I_k)^{-1} = I_k$。
+
+##### 2. 投影矩阵的极简公式与外积分解
+
+将 $Q^\top Q = I_k$ 代回通用投影矩阵通式：
+
+$$
+P = Q (Q^\top Q)^{-1} Q^\top = Q I_k Q^\top = Q Q^\top \in \mathbb{R}^{n \times n}
+$$
+
+按照分块矩阵乘法（列-行乘积展开法则），可以将 $Q Q^\top$ 展开为 $k$ 个秩 1 外积矩阵之和：
+
+$$
+P = Q Q^\top = \begin{pmatrix} q_1 & q_2 & \cdots & q_k \end{pmatrix} \begin{pmatrix} q_1^\top \\ q_2^\top \\ \vdots \\ q_k^\top \end{pmatrix} = q_1 q_1^\top + q_2 q_2^\top + \cdots + q_k q_k^\top = \sum_{i=1}^k q_i q_i^\top
+$$
+
+观察每一项 $P_i = q_i q_i^\top$：因为基向量已归一化（$q_i^\top q_i = 1$），$P_i = \frac{q_i q_i^\top}{q_i^\top q_i}$ 正是**投向单个基向量 $q_i$ 所在一维直线的正交投影矩阵**！
+
+> **核心结论** ：在标准正交基下，**多维子空间的正交投影矩阵，等于各个基方向一维正交投影矩阵的直接线性相加**。基向量之间完全垂直独立，不存在任何交叉串扰项。
+
+##### 3. 作用于向量 $b$ 的逐步计算
+
+将投影矩阵 $P$ 作用于任意输入向量 $b \in \mathbb{R}^n$：
+
+$$
+p = Pb = \left( \sum_{i=1}^k q_i q_i^\top \right) b = \sum_{i=1}^k q_i (q_i^\top b) = \sum_{i=1}^k \underbrace{(q_i^\top b)}_{\hat{x}_i \text{ (标量坐标)}} q_i = \sum_{i=1}^k \langle q_i, b \rangle q_i
+$$
+
+投影计算的几何步骤被彻底解耦：
+
+1. **独立求坐标** ：每一维的坐标分量 $\hat{x}_i = \langle q_i, b \rangle$ 仅通过一次简单的向量内积（点积）即可求得，无需求解任何联立线性方程组；
+2. **直接线性合成** ：投影点 $p$ 就是以这组内积值为权重的基向量线性组合。
+
+##### 4. 一般基与标准正交基的全方位对比
+
+| 维度           | 一般线性无关基 $A$                                             | 标准正交基 $Q$                                     |
+| :------------- | :------------------------------------------------------------- | :------------------------------------------------- |
+| **Gram 矩阵**  | $A^\top A$（一般满秩稠密正定矩阵）                             | $Q^\top Q = I_k$（$k$ 阶单位矩阵）                 |
+| **系数坐标**   | $\hat{x} = (A^\top A)^{-1} A^\top b$（需矩阵求逆或解正规方程） | $\hat{x} = Q^\top b$（只需做 $k$ 次向量点积）      |
+| **投影矩阵**   | $P = A(A^\top A)^{-1}A^\top$                                   | $P = Q Q^\top = \sum_{i=1}^k q_i q_i^\top$         |
+| **基间关系**   | 基向量相互倾斜存在重叠，需 $(A^\top A)^{-1}$ 解耦              | 基向量严格正交无干扰，多维投影直接等于一维投影叠加 |
+| **计算复杂度** | $O(n k^2 + k^3)$                                               | $O(n k)$（极快且数值极度稳定）                     |
+
+这正是为什么在计算机图形学（如球谐光照 Spherical Harmonics、切线空间正交化）、信号处理（傅里叶级数 Fourier Series）以及数据科学（主成分分析 PCA、奇异值分解 SVD）中，第一步总是优先构造标准正交基的根本原因。
+
+### 最佳逼近定理(Best Approximation Theorem)
+
+为什么在工程与几何中正交投影如此重要？因为正交投影是子空间中 **距离原向量欧氏距离最近的唯一最优逼近** 。
+
+> **定理（最佳逼近）** ：设 $W$ 是 $\mathbb{R}^n$ 的子空间，$P$ 是到 $W$ 上的正交投影算子。对于任意向量 $x \in \mathbb{R}^n$ 和子空间 $W$ 中的任意向量 $w \in W$($w \neq Px$)，恒有：
+>
+> $$
+> \lVert x - Px \rVert < \lVert x - w \rVert
+> $$
+
+**证明** ：将向量 $x - w$ 拆解为残差项与子空间内偏差项：
+
+$$
+x - w = (x - Px) + (Px - w)
+$$
+
+注意到：
+
+1. 第一项 $x - Px \in \ker(P) = W^\perp$（残差垂直于子空间）；
+2. 第二项 $Px - w \in W$（两项都在子空间 $W$ 内，其差仍在 $W$ 内）。
+
+由两部分的正交性，应用 **毕达哥拉斯等式（勾股定理）** ：
+
+$$
+\lVert x - w \rVert^2 = \lVert (x - Px) + (Px - w) \rVert^2 = \lVert x - Px \rVert^2 + \lVert Px - w \rVert^2
+$$
+
+由于 $w \neq Px$，必有偏差长度 $\lVert Px - w \rVert^2 > 0$。因此：
+
+$$
+\lVert x - w \rVert^2 > \lVert x - Px \rVert^2 \implies \lVert x - w \rVert > \lVert x - Px \rVert
+$$
+
+证毕。这解释了为什么正交投影是最小二乘误差最小化的天然几何解答。
+
+### 正交投影的四大等价刻画
+
+在线性代数与泛函分析中，一个幂等算子 $P$($P^2 = P$)是正交投影，当且仅当满足以下任一等价条件：
+
+1. **代数刻画(Symmetric Idempotent)** ：$P = P^\top$ 且 $P^2 = P$。
+2. **正交分解刻画(Orthogonal Complement)** ：$\operatorname{im}(P) \perp \ker(P)$，即零空间恰为像空间的正交补 $\ker(P) = \operatorname{im}(P)^\perp$。
+3. **几何逼近刻画(Best Approximation)** ：对任意向量 $x$，落点 $Px$ 是子空间 $\operatorname{im}(P)$ 中距离 $x$ 最近的点。
+4. **算子范数刻画(Non-expansive Contraction)** ：对任意向量 $x$，$\lVert Px \rVert \le \lVert x \rVert$（投影绝不拉长向量）；当 $P \neq 0$ 时，算子范数严格为 $\lVert P \rVert = 1$。
 
 ## 投影矩阵的性质
 
 对任意投影矩阵 $P$（幂等矩阵）成立：
 
 - **特征值只有 $0$ 和 $1$** ：由 $P^2 = P$ 得 $\lambda^2 = \lambda$，故 $\lambda \in \{0, 1\}$。
-- **可对角化** ：幂等矩阵必可对角化（$\operatorname{im}(P)$ 对应特征值 $1$，$\ker(P)$ 对应特征值 $0$）。
+- **可对角化** ：幂等矩阵必可对角化（$\operatorname{im}(P)$ 对应特征值 $1$，$\ker(P)$ 对应特征值 $0$）。关于特征值几何与对角化，详见 [《特征值与特征向量》](/posts/linear-algebra/eigenvalues-and-eigenvectors) 专篇。
 - **秩等于迹** ：
 
 $$
 \operatorname{rank}(P) = \operatorname{tr}(P)
 $$
 
-因为迹等于特征值之和，而特征值只有 $0$ 和 $1$，特征值之和恰为特征值 $1$ 的个数，即 $\operatorname{rank}(P)$。
+因为迹等于特征值之和，而特征值只有 $0$ 和 $1$，特征值之和恰为特征值 $1$ 的个数，即 $\operatorname{rank}(P)$。关于迹在矩阵相似与基变换下的代数不变性，详见 [《矩阵的迹与行列式》](/posts/linear-algebra/trace-and-determinant) 专篇。
 
 - **$I - P$ 也是投影** ：
 
@@ -302,4 +512,4 @@ $$
 
 即在这三个点上的最佳拟合直线是 $y = \tfrac{2}{3} + \tfrac{1}{2} t$。整个过程的每一步，都只是“把 $b$ 投影到列空间”这一个动作。
 
-> 投影 = 幂等（$P^2 = P$）+ 直和分解（$V = \operatorname{im}(P) \oplus \ker(P)$）；再加上对称（$P = P^\top$），就得到正交投影。图形学里的投影矩阵，以及最小二乘、正规方程，本质都是这一件事。
+> 投影 = 幂等($P^2 = P$)+ 直和分解($V = \operatorname{im}(P) \oplus \ker(P)$)；再加上对称($P = P^\top$)，就得到正交投影。图形学里的投影矩阵，以及最小二乘、正规方程，本质都是这一件事。

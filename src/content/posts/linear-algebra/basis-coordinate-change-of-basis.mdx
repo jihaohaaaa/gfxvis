@@ -85,13 +85,13 @@ $$
 
 ### 1. 先固定所有符号
 
-设 $V$ 是一个 $n$ 维向量空间（vector space）。取两组基（basis）：
+设 $V$ 是一个 $n$ 维向量空间(vector space)。取两组基(basis)：
 
 $$
 \mathcal{B} = (b_1, b_2, \dots, b_n) \quad \text{和} \quad \mathcal{C} = (c_1, c_2, \dots, c_n)
 $$
 
-现在有同一个抽象向量（abstract vector）$v \in V$。它在 $\mathcal{B}$ 下的坐标（coordinates）定义为：
+现在有同一个抽象向量(abstract vector)$v \in V$。它在 $\mathcal{B}$ 下的坐标(coordinates)定义为：
 
 $$
 [v]_{\mathcal{B}} = \begin{pmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{pmatrix}
@@ -119,7 +119,7 @@ $$
 
 为了把上面的线性组合写成矩阵形式，我们先定义一个非常重要的东西。
 
-假设在某个固定的“参考坐标系（reference coordinate system）”中，$b_i, c_i$ 本身都有坐标列向量（coordinate column vector）。把 $\mathcal{B}$ 的基向量作为列排起来：
+假设在某个固定的“参考坐标系(reference coordinate system)”中，$b_i, c_i$ 本身都有坐标列向量(coordinate column vector)。把 $\mathcal{B}$ 的基向量作为列排起来：
 
 $$
 P_{\mathcal{B}} = \begin{pmatrix} | & | & & | \\ b_1 & b_2 & \dots & b_n \\ | & | & & | \end{pmatrix}
@@ -259,11 +259,11 @@ $$
 
 ## 线性映射在不同基下的矩阵
 
-彻底拆开“为什么一个抽象的线性变换（linear transformation）最后会变成一个矩阵”，不跳步。
+彻底拆开“为什么一个抽象的线性变换(linear transformation)最后会变成一个矩阵”，不跳步。
 
 ### 1. 先忘掉矩阵，只看 transformation
 
-设有两个向量空间 $V$ 和 $W$，以及一个线性变换（linear transformation）：
+设有两个向量空间 $V$ 和 $W$，以及一个线性变换(linear transformation)：
 
 $$
 T: V \longrightarrow W
@@ -273,7 +273,7 @@ $$
 v \in V \longmapsto T(v) \in W
 $$
 
-请注意：**此时还没有任何坐标，更没有矩阵**。$T$ 是一个数学上的映射（mapping）。
+请注意：**此时还没有任何坐标，更没有矩阵**。$T$ 是一个数学上的映射(mapping)。
 
 ### 2. 为什么只需要知道 basis vector 的去向？
 
@@ -349,7 +349,7 @@ $$
 \boxed{[T]_{\mathcal{C} \leftarrow \mathcal{B}} = \begin{pmatrix} | & | & & | \\ [T(b_1)]_{\mathcal{C}} & [T(b_2)]_{\mathcal{C}} & \dots & [T(b_n)]_{\mathcal{C}} \\ | & | & & | \end{pmatrix}}
 $$
 
-这就是变换 $T$ 的矩阵表示（matrix representation）。
+这就是变换 $T$ 的矩阵表示(matrix representation)。
 
 ### 5. 为什么偏偏是 “column”？
 
@@ -385,7 +385,7 @@ $$
 \boxed{[T(v)]_{\mathcal{C}} = [T]_{\mathcal{C} \leftarrow \mathcal{B}} [v]_{\mathcal{B}}}
 $$
 
-所以：**矩阵的第 $j$ 列，就是输入基向量 $b_j$ 经过 $T$ 后，在输出基 $\mathcal{C}$ 中的坐标**。这不是一个人为规定出来的巧合，矩阵乘法按列线性组合的结构（column-linear structure）恰好就是线性变换的定义。
+所以：**矩阵的第 $j$ 列，就是输入基向量 $b_j$ 经过 $T$ 后，在输出基 $\mathcal{C}$ 中的坐标**。这不是一个人为规定出来的巧合，矩阵乘法按列线性组合的结构(column-linear structure)恰好就是线性变换的定义。
 
 ### 6. 这时候 $y = Ax$ 就不神秘了
 
@@ -397,8 +397,8 @@ $$
 
 现在可以完整解释：
 
-- $x = [v]_{\mathcal{B}}$ 是输入向量的坐标（coordinates）；
-- $A = [T]_{\mathcal{C} \leftarrow \mathcal{B}}$ 是变换的矩阵表示（coordinate representation）；
+- $x = [v]_{\mathcal{B}}$ 是输入向量的坐标(coordinates)；
+- $A = [T]_{\mathcal{C} \leftarrow \mathcal{B}}$ 是变换的矩阵表示(coordinate representation)；
 - $y = [T(v)]_{\mathcal{C}}$ 是输出向量的坐标。
 
 所以 $y = A x$ 完整写出来就是：
@@ -437,11 +437,11 @@ $$
 - 第一次选择 $(\mathcal{B}, \mathcal{C})$，得到 $[T]_{\mathcal{C} \leftarrow \mathcal{B}} = A$；
 - 换一组基 $(\mathcal{B}', \mathcal{C}')$，得到 $[T]_{\mathcal{C}' \leftarrow \mathcal{B}'} = A'$。
 
-通常 $A' \neq A$，但是**映射 $T$ 没变**，变的是表示（representation）。
+通常 $A' \neq A$，但是**映射 $T$ 没变**，变的是表示(representation)。
 
 这就是为什么说：**矩阵不是变换本身，而是变换在指定基下的坐标表示**。
 
-### 9. 图形学实战：3×3 变换矩阵与相机坐标系（Vulkan / GLM）
+### 9. 图形学实战：3×3 变换矩阵与相机坐标系(Vulkan / GLM)
 
 这和我们在计算机图形学（如 Vulkan / WebGL / GLM）中每天处理的 3D 变换矩阵完全对应了起来！
 
@@ -451,7 +451,7 @@ $$
 p' = M p
 $$
 
-如果我们把 3D 空间的世界标准基（standard basis）作为输入基：
+如果我们把 3D 空间的世界标准基(standard basis)作为输入基：
 
 $$
 e_x = \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix}, \qquad e_y = \begin{pmatrix} 0 \\ 1 \\ 0 \end{pmatrix}, \qquad e_z = \begin{pmatrix} 0 \\ 0 \\ 1 \end{pmatrix}
@@ -487,7 +487,7 @@ $$
 R_y(\psi) = \begin{pmatrix} \cos\psi & 0 & \sin\psi \\ 0 & 1 & 0 \\ -\sin\psi & 0 & \cos\psi \end{pmatrix}, \qquad R_x(\theta) = \begin{pmatrix} 1 & 0 & 0 \\ 0 & \cos\theta & -\sin\theta \\ 0 & \sin\theta & \cos\theta \end{pmatrix}
 $$
 
-当物体或虚拟相机在 3D 世界中经历复合旋转 $R = R_y(\psi) R_x(\theta) R_z(\phi)$ 后，其局部坐标系（Local Frame）的三个正交主轴——右方向（Right $\mathbf{r}$）、上方向（Up $\mathbf{u}$）与前方向（Forward $\mathbf{f}$）——正好就是世界标准基经 $R$ 旋转后的像：
+当物体或虚拟相机在 3D 世界中经历复合旋转 $R = R_y(\psi) R_x(\theta) R_z(\phi)$ 后，其局部坐标系(Local Frame)的三个正交主轴——右方向(Right $\mathbf{r}$)、上方向(Up $\mathbf{u}$)与前方向(Forward $\mathbf{f}$)——正好就是世界标准基经 $R$ 旋转后的像：
 
 $$
 \boxed{R = \begin{pmatrix} | & | & | \\ R e_x & R e_y & R e_z \\ | & | & | \end{pmatrix} = \begin{pmatrix} | & | & | \\ \mathbf{r} & \mathbf{u} & \mathbf{f} \\ | & | & | \end{pmatrix}}
@@ -510,9 +510,9 @@ $$
 
 ## 收尾
 
-> - **基（Basis）**：给空间命名坐标的参照系（线性无关 + 张成）；
-> - **抽象向量（Abstract Vector）$v$**：不依赖坐标系的几何对象本身（满足恒等 $v = P_{\mathcal{B}}[v]_{\mathcal{B}} = P_{\mathcal{C}}[v]_{\mathcal{C}}$）；
-> - **坐标（Coordinates）$[v]_{\mathcal{B}}$**：抽象向量 $v$ 在特定基下的数字快照（随基的改变而改变）；
+> - **基(Basis)**：给空间命名坐标的参照系（线性无关 + 张成）；
+> - **抽象向量(Abstract Vector)$v$**：不依赖坐标系的几何对象本身（满足恒等 $v = P_{\mathcal{B}}[v]_{\mathcal{B}} = P_{\mathcal{C}}[v]_{\mathcal{C}}$）；
+> - **坐标(Coordinates)$[v]_{\mathcal{B}}$**：抽象向量 $v$ 在特定基下的数字快照（随基的改变而改变）；
 > - **基变换矩阵 $P_{\mathcal{C} \leftarrow \mathcal{B}}$**：换坐标参照系的桥梁（通过 $P_{\mathcal{B}}$ 还原到抽象向量 $v$，再由 $P_{\mathcal{C}}^{-1}$ 提取新坐标：$[v]_{\mathcal{C}} = P_{\mathcal{C}}^{-1} P_{\mathcal{B}} [v]_{\mathcal{B}}$）；
 > - **矩阵表示 $[T]_{\mathcal{C} \leftarrow \mathcal{B}}$**：抽象线性变换 $T$ 在指定基下的坐标映射快照（第 $j$ 列记录基向量变换后的坐标 $[T(b_j)]_{\mathcal{C}}$，实现 $[T(v)]_{\mathcal{C}} = [T]_{\mathcal{C} \leftarrow \mathcal{B}} [v]_{\mathcal{B}}$）。
 

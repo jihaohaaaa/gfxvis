@@ -14,9 +14,9 @@ import TangentPlaneDemo from "../../../components/demos/TangentPlaneDemo";
 
 微积分最根本的几何任务之一，是在弯曲的非线性世界中寻找**局部的线性平坦逼近**：
 
-- 在一维曲线中，这种线性逼近是**切线（Tangent Line）**；
-- 在多维曲面中，这种逼近升级为由各个方向的偏导数所张成的**切平面（Tangent Plane）**；
-- 而与切平面处处垂直的正交方向，则构成了三维图形学与光照着色的命脉——**法线（Normal）**。
+- 在一维曲线中，这种线性逼近是**切线(Tangent Line)**；
+- 在多维曲面中，这种逼近升级为由各个方向的偏导数所张成的**切平面(Tangent Plane)**；
+- 而与切平面处处垂直的正交方向，则构成了三维图形学与光照着色的命脉——**法线(Normal)**。
 
 ---
 
@@ -24,7 +24,7 @@ import TangentPlaneDemo from "../../../components/demos/TangentPlaneDemo";
 
 ### 1.1 差商与割线斜率
 
-设 $f(x)$ 是一元光滑函数。在函数图像上取定基准点 $(a, f(a))$ 与邻近点 $(b, f(b))$，连接两点的直线被称为 **割线（Secant Line）**。其斜率即为区间 $[a, b]$ 上的平均变化率（**差商**）：
+设 $f(x)$ 是一元光滑函数。在函数图像上取定基准点 $(a, f(a))$ 与邻近点 $(b, f(b))$，连接两点的直线被称为 **割线(Secant Line)**。其斜率即为区间 $[a, b]$ 上的平均变化率（**差商**）：
 
 $$
 k_{\text{secant}} = \frac{f(b) - f(a)}{b - a}
@@ -32,7 +32,7 @@ $$
 
 ### 1.2 导数：割线的极限状态
 
-当动点 $b$ 无限逼近 $a$（令 $h = b - a \to 0$）时，割线将收敛到一条唯一的极限直线——**切线（Tangent Line）**。该极限值定义了函数在 $x=a$ 处的 **导数（Derivative）**：
+当动点 $b$ 无限逼近 $a$（令 $h = b - a \to 0$）时，割线将收敛到一条唯一的极限直线——**切线(Tangent Line)**。该极限值定义了函数在 $x=a$ 处的 **导数(Derivative)**：
 
 $$
 f'(a) = \lim_{h \to 0} \frac{f(a+h) - f(a)}{h}
@@ -89,13 +89,13 @@ $$
 
 ### 3.1 切平面方程的构建
 
-一元切线在二元曲面中升级为一个二维平面——**切平面（Tangent Plane）**。该平面由沿 $x$ 轴与 $y$ 轴方向的两个切线斜率共同张成：
+一元切线在二元曲面中升级为一个二维平面——**切平面(Tangent Plane)**。该平面由沿 $x$ 轴与 $y$ 轴方向的两个切线斜率共同张成：
 
 $$
 z = f(a,b) + \frac{\partial f}{\partial x}(a,b)(x-a) + \frac{\partial f}{\partial y}(a,b)(y-b)
 $$
 
-### 3.2 梯度向量（Gradient）
+### 3.2 梯度向量(Gradient)
 
 将两个偏导数排成一个向量，即得到二元函数的 **梯度向量 $\nabla f$**：
 
@@ -113,7 +113,7 @@ $$
 
 ## 四、法向量与叉积：从切空间到法线
 
-在计算机图形学与三维渲染中，决定光照反射的关键不是切平面本身，而是垂直于切平面的 **曲面法向量（Surface Normal Vector）**。
+在计算机图形学与三维渲染中，决定光照反射的关键不是切平面本身，而是垂直于切平面的 **曲面法向量(Surface Normal Vector)**。
 
 ### 4.1 切向量张成切空间
 
@@ -150,7 +150,7 @@ $$
 
 若将曲面视为隐式方程 $F(x, y, z) = f(x, y) - z = 0$ 的零等值面，则梯度 $\nabla F = (f_x, f_y, -1)^\top$。取反即得朝上的法向量 $\mathbf n = (-f_x, -f_y, 1)^\top$。
 
-单位法向量（Unit Normal）归一化公式为：
+单位法向量(Unit Normal)归一化公式为：
 
 $$
 \hat{\mathbf n} = \frac{\mathbf n}{\|\mathbf n\|} = \frac{(-f_x,\; -f_y,\; 1)^\top}{\sqrt{f_x^2 + f_y^2 + 1}}
@@ -158,11 +158,11 @@ $$
 
 ---
 
-## 五、图形学渲染应用：法线矩阵（Normal Matrix）的逆转置法则
+## 五、图形学渲染应用：法线矩阵(Normal Matrix)的逆转置法则
 
 在三维渲染管线中，当物体经历模型变换矩阵 $M$（包含旋转、平移和非均匀缩放）时，**顶点的切向量 $\mathbf t$ 随模型一起变换**：$\mathbf t' = M \mathbf t$。
 
-如果直接用 $M$ 变换法向量 $\mathbf n$（即令 $\mathbf n' = M \mathbf n$），在遇到**非均匀缩放**时，法线与切向量的正交性将被严重破坏（$\mathbf n' \cdot \mathbf t' \neq 0$）。
+如果直接用 $M$ 变换法向量 $\mathbf n$（即令 $\mathbf n' = M \mathbf n$），在遇到**非均匀缩放**时，法线与切向量的正交性将被严重破坏($\mathbf n' \cdot \mathbf t' \neq 0$)。
 
 ### 严格推导法线矩阵
 
@@ -178,7 +178,7 @@ $$
 N^\top M = I \implies N^\top = M^{-1} \implies N = (M^{-1})^\top
 $$
 
-> **图形学黄金法则**：法线矩阵必须是模型变换矩阵的**逆转置矩阵（Inverse Transpose Matrix）**，以确保切空间与法线正交性在几何变换下严格守恒。
+> **图形学黄金法则**：法线矩阵必须是模型变换矩阵的**逆转置矩阵(Inverse Transpose Matrix)**，以确保切空间与法线正交性在几何变换下严格守恒。
 
 ---
 

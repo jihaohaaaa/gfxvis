@@ -20,12 +20,12 @@ import VectorFieldDemo from "../../../components/demos/VectorFieldDemo";
 
 # 场论基础：标量场、向量场与微分算子
 
-在物理与工程中，**场（Field）** 是用来描述物理量在空间中连续分布的核心数学工具。根据空间各点所赋予物理量属性的不同，场主要分为两大类：
+在物理与工程中，**场(Field)** 是用来描述物理量在空间中连续分布的核心数学工具。根据空间各点所赋予物理量属性的不同，场主要分为两大类：
 
-- **标量场（Scalar Field）**：为空间中的每个点赋予一个标量数值（如温度、气压、高度图、电势）；
-- **向量场（Vector Field）**：为空间中的每个点赋予一个具有大小和方向的向量（如风速、流体流速、引力场、电磁场）。
+- **标量场(Scalar Field)**：为空间中的每个点赋予一个标量数值（如温度、气压、高度图、电势）；
+- **向量场(Vector Field)**：为空间中的每个点赋予一个具有大小和方向的向量（如风速、流体流速、引力场、电磁场）。
 
-通过形式微分算子 $\nabla$（Nabla / Del），我们可以在标量场与向量场之间建立深刻的微分几何联系：**梯度（Gradient）** 把标量场变为向量场；**散度（Divergence）** 与 **旋度（Curl）** 则分别揭示了向量场的源汇通量与局部旋转特性。
+通过形式微分算子 $\nabla$(Nabla / Del)，我们可以在标量场与向量场之间建立深刻的微分几何联系：**梯度(Gradient)** 把标量场变为向量场；**散度(Divergence)** 与 **旋度(Curl)** 则分别揭示了向量场的源汇通量与局部旋转特性。
 
 ---
 
@@ -33,11 +33,11 @@ import VectorFieldDemo from "../../../components/demos/VectorFieldDemo";
 
 ### 1.1 标量场与等值线
 
-记二维平面上的标量场为 $\varphi(x, y)$。所有满足方程 $\varphi(x, y) = c$ 的点集所构成的曲线称为 **等值线（Equipotential / Contour Line）**，在地理与气象中常称为等高线或等压线。在同一条等值线上移动时，函数值保持恒定不变。
+记二维平面上的标量场为 $\varphi(x, y)$。所有满足方程 $\varphi(x, y) = c$ 的点集所构成的曲线称为 **等值线(Equipotential / Contour Line)**，在地理与气象中常称为等高线或等压线。在同一条等值线上移动时，函数值保持恒定不变。
 
 ### 1.2 梯度向量与方向导数
 
-标量场 $\varphi$ 的 **梯度（Gradient）** $\nabla \varphi$ 是由其各方向偏导数构成的向量场：
+标量场 $\varphi$ 的 **梯度(Gradient)** $\nabla \varphi$ 是由其各方向偏导数构成的向量场：
 
 $$
 \nabla \varphi = \left( \frac{\partial \varphi}{\partial x}, \frac{\partial \varphi}{\partial y} \right)
@@ -48,7 +48,7 @@ $$
 1. **正交性**：$\nabla \varphi \perp \text{等值线}$（梯度方向处处正交垂直于过该点的等值线切线）；
 2. **最陡上升性**：$\nabla \varphi$ 的方向指向场值 $\varphi$ **增长最快的方向**，其模长 $\lVert\nabla\varphi\rVert$ 给出了该点的最大变化率。
 
-这两个性质可以通过 **方向导数（Directional Derivative）** 得到严格证明。设 $\mathbf u = (u_1, u_2)$ 是一个平面单位方向向量（$\lVert\mathbf u\rVert = 1$），标量场 $\varphi$ 在点 $(a, b)$ 沿方向 $\mathbf u$ 的方向导数定义为：
+这两个性质可以通过 **方向导数(Directional Derivative)** 得到严格证明。设 $\mathbf u = (u_1, u_2)$ 是一个平面单位方向向量($\lVert\mathbf u\rVert = 1$)，标量场 $\varphi$ 在点 $(a, b)$ 沿方向 $\mathbf u$ 的方向导数定义为：
 
 $$
 D_{\mathbf u}\varphi(a, b) = \lim_{h \to 0} \frac{\varphi(a+hu_1, b+hu_2) - \varphi(a, b)}{h}
@@ -97,7 +97,7 @@ $$
 
 ## 四、向量场与微分算子（散度与旋度）
 
-### 4.1 $\nabla$（Nabla）算子的形式统一
+### 4.1 $\nabla$(Nabla)算子的形式统一
 
 在笛卡尔坐标系下，微分算子 $\nabla$ 可以被形式化地视作一个向量微分操作符：
 
@@ -107,7 +107,7 @@ $$
 
 当它作用于标量场 $\varphi$ 时，产生向量场 $\nabla \varphi$（梯度）；而当它作用于向量场 $\mathbf F = (P, Q, R)$ 时，通过 **点乘** 与 **叉乘** 可以分别导出 **散度** 与 **旋度**。
 
-### 4.2 散度（Divergence）：通量与源汇
+### 4.2 散度(Divergence)：通量与源汇
 
 对于平面向量场 $\mathbf F(x, y) = (P(x, y),\, Q(x, y))$，其 **散度** 定义为 $\nabla$ 与 $\mathbf F$ 的形式点积，是一个标量：
 
@@ -121,7 +121,7 @@ $$
 - **$\nabla \cdot \mathbf F < 0$（负散度，汇 Sink）**：该点附近有向量流净汇入，如同水池底部的排水口或负电荷吸引流线；
 - **$\nabla \cdot \mathbf F = 0$（零散度，无源场 / 螺线场 Solenoidal Field）**：流体不可压缩，流入无穷小邻域的通量等于流出的通量。
 
-### 4.3 旋度（Curl）：环量与局部旋转
+### 4.3 旋度(Curl)：环量与局部旋转
 
 在二维平面中，向量场 $\mathbf F = (P, Q)$ 的 **旋度** 是三维旋度向量 $\nabla \times \mathbf F$ 在 $z$ 轴上的投影标量：
 

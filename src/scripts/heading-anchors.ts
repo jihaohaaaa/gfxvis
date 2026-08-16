@@ -4,6 +4,8 @@
  * and displays toast notifications.
  */
 
+import { smoothScrollTo } from "./scroll-top";
+
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function showToast(message?: string): void {
@@ -24,6 +26,19 @@ export function showToast(message?: string): void {
     );
     toast.classList.add("opacity-0", "translate-y-3", "pointer-events-none");
   }, 2200);
+}
+
+function scrollToTargetHeading(target: HTMLElement, pulse = true): void {
+  const targetRect = target.getBoundingClientRect();
+  const absoluteY = targetRect.top + window.scrollY - 88; // 88px clearance below sticky header
+
+  smoothScrollTo(Math.max(0, absoluteY));
+
+  if (pulse) {
+    target.classList.remove("heading-pulse");
+    void target.offsetWidth; // trigger reflow
+    target.classList.add("heading-pulse");
+  }
 }
 
 export function setupHeadingAnchors(): void {
@@ -73,11 +88,7 @@ export function setupHeadingAnchors(): void {
         window.location.hash = heading.id;
       }
 
-      heading.scrollIntoView({ behavior: "smooth", block: "start" });
-
-      heading.classList.remove("heading-pulse");
-      void heading.offsetWidth; // trigger reflow
-      heading.classList.add("heading-pulse");
+      scrollToTargetHeading(heading, true);
 
       const cleanHeadingText = heading.textContent
         ? heading.textContent.trim()
@@ -97,12 +108,18 @@ export function handleInitialHash(): void {
     const target =
       document.getElementById(rawHash) || document.getElementById(decodedHash);
     if (target) {
-      setTimeout(() => {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-        target.classList.remove("heading-pulse");
-        void target.offsetWidth;
-        target.classList.add("heading-pulse");
-      }, 150);
+      // Execute after layout settles (fonts loaded / components mounted)
+      const performScroll = () => {
+        scrollToTargetHeading(target, true);
+      };
+
+      if (document.readyState === "complete") {
+        setTimeout(performScroll, 50);
+      } else {
+        window.addEventListener("load", () => setTimeout(performScroll, 50), {
+          once: true,
+        });
+      }
     }
   } catch {
     /* ignore decode errors */
