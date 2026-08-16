@@ -65,18 +65,3 @@ const nav = [
     </div>
   </div>
 </header>
-<script is:inline>
-  (function () {
-    const button = document.getElementById("theme-toggle");
-    if (!button) return;
-    button.addEventListener("click", function () {
-      const root = document.documentElement;
-      const dark = root.classList.toggle("dark");
-      try {
-        localStorage.setItem("gfxvis-theme", dark ? "dark" : "light");
-      } catch {
-        /* localStorage unavailable */
-      }
-    });
-  })();
-</script>

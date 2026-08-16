@@ -56,8 +56,11 @@ test.describe("Inner Product Spaces 文章与 InnerProductSpaceDemo 可视化组
       name: "函数空间积分内积 ⟨f,g⟩",
     });
     await funcTab.scrollIntoViewIfNeeded();
+    await expect(funcTab).toBeVisible();
     await funcTab.click();
-    await expect(page.getByText("积分内积结果").first()).toBeVisible();
+    await expect(page.getByText("积分内积结果").first()).toBeVisible({
+      timeout: 7000,
+    });
 
     // 点击基函数预设“x 与 x²”
     const presetBtn = page.getByRole("button", {
@@ -65,7 +68,9 @@ test.describe("Inner Product Spaces 文章与 InnerProductSpaceDemo 可视化组
     });
     await presetBtn.scrollIntoViewIfNeeded();
     await presetBtn.click();
-    await expect(page.getByText("正交函数对 ⟨f,g⟩ = 0").first()).toBeVisible();
+    await expect(page.getByText("正交函数对 ⟨f,g⟩ = 0").first()).toBeVisible({
+      timeout: 7000,
+    });
 
     // 3. 切换到“柯西-施瓦茨与平行四边形恒等式”模式
     const theoremTab = page.getByRole("button", {

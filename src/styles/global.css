@@ -66,3 +66,55 @@ html.dark .icon-sun {
 html.dark .icon-moon {
   display: block;
 }
+
+/* Heading anchors & deep-link pulse */
+.prose :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 5.5rem;
+  position: relative;
+}
+
+.heading-anchor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.4rem;
+  opacity: 0;
+  color: var(--gfx-muted);
+  text-decoration: none !important;
+  font-weight: 500;
+  font-size: 0.85em;
+  line-height: 1;
+  transition:
+    opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.15s ease,
+    transform 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.prose :is(h1, h2, h3, h4, h5, h6):hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+.heading-anchor:hover {
+  color: var(--gfx-accent);
+  transform: scale(1.18);
+}
+
+@keyframes headingPulseAnim {
+  0% {
+    background-color: rgba(37, 99, 235, 0.2);
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.heading-pulse {
+  animation: headingPulseAnim 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-radius: 0.375rem;
+}

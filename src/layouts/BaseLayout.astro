@@ -27,17 +27,7 @@ const {
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     <title>{title}</title>
-    <script is:inline>
-      (function () {
-        try {
-          if (localStorage.getItem("gfxvis-theme") === "dark") {
-            document.documentElement.classList.add("dark");
-          }
-        } catch {
-          /* localStorage unavailable */
-        }
-      })();
-    </script>
+    <script src="../scripts/theme.ts"></script>
   </head>
   <body>
     <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-6">
