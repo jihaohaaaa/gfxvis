@@ -59,6 +59,78 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function nodeToHtml(node: unknown, settings: RemarkKatexOptions): string {
+  if (!node || typeof node !== "object") return "";
+  const n = node as {
+    type?: string;
+    value?: string;
+    children?: unknown[];
+  };
+  if (n.type === "text") {
+    return escapeHtml(n.value ?? "");
+  }
+  if (n.type === "inlineMath" || n.type === "math") {
+    try {
+      return katex.renderToString(n.value ?? "", {
+        ...settings,
+        displayMode: false,
+        throwOnError: false,
+      });
+    } catch {
+      return escapeHtml(n.value ?? "");
+    }
+  }
+  if (n.type === "html") {
+    return n.value ?? "";
+  }
+  if (n.type === "inlineCode") {
+    return `<code>${escapeHtml(n.value ?? "")}</code>`;
+  }
+  if (n.type === "strong") {
+    const inner = (n.children ?? [])
+      .map((c) => nodeToHtml(c, settings))
+      .join("");
+    return `<strong>${inner}</strong>`;
+  }
+  if (n.type === "emphasis") {
+    const inner = (n.children ?? [])
+      .map((c) => nodeToHtml(c, settings))
+      .join("");
+    return `<em>${inner}</em>`;
+  }
+  if (n.type === "link") {
+    return (n.children ?? []).map((c) => nodeToHtml(c, settings)).join("");
+  }
+  if (Array.isArray(n.children)) {
+    return n.children.map((c) => nodeToHtml(c, settings)).join("");
+  }
+  return escapeHtml(n.value ?? "");
+}
+
+function collectHeadings(
+  tree: unknown,
+  settings: RemarkKatexOptions,
+): string[] {
+  const headings: string[] = [];
+  function scan(node: unknown): void {
+    if (!node || typeof node !== "object") return;
+    const n = node as { type?: string; children?: unknown[] };
+    if (n.type === "heading") {
+      const html = (n.children ?? [])
+        .map((c) => nodeToHtml(c, settings))
+        .join("");
+      headings.push(html);
+    }
+    if (Array.isArray(n.children)) {
+      for (const child of n.children) {
+        scan(child);
+      }
+    }
+  }
+  scan(tree);
+  return headings;
+}
+
 /**
  * Build-time KaTeX renderer for `remark-math` output.
  *
@@ -73,6 +145,24 @@ export default function remarkKatex(
   const settings = options;
 
   return (tree, file) => {
+    // 1. Collect rich HTML representations of all headings (with KaTeX formulas pre-rendered)
+    const headingHtmls = collectHeadings(tree, settings);
+    const fileData = file as {
+      data?: {
+        astro?: {
+          frontmatter?: Record<string, unknown>;
+        };
+      };
+      message?: (msg: string) => void;
+    };
+    if (fileData?.data) {
+      if (!fileData.data.astro) fileData.data.astro = {};
+      if (!fileData.data.astro.frontmatter)
+        fileData.data.astro.frontmatter = {};
+      fileData.data.astro.frontmatter.headingHtmls = headingHtmls;
+    }
+
+    // 2. Render all math nodes across the AST
     walk(tree, (node) => {
       const displayMode = node.type === "math";
       const value = node.value ?? "";
@@ -86,9 +176,7 @@ export default function remarkKatex(
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        (file as { message?: (msg: string) => void }).message?.(
-          `Could not render math with KaTeX: ${message}`,
-        );
+        fileData?.message?.(`Could not render math with KaTeX: ${message}`);
         try {
           html = katex.renderToString(value, {
             ...settings,

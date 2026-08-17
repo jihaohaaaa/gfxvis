@@ -5,11 +5,18 @@ import type { CollectionEntry } from "astro:content";
 interface Props {
   post: CollectionEntry<"posts">;
   headings?: Array<{ depth: number; slug: string; text: string }>;
+  headingHtmls?: string[];
 }
 
-const { post, headings = [] } = Astro.props;
+const { post, headings = [], headingHtmls = [] } = Astro.props;
 const { title, description, date, tags } = post.data;
-const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+
+const enrichedHeadings = headings.map((h, i) => ({
+  ...h,
+  html: headingHtmls[i] || h.text,
+}));
+
+const toc = enrichedHeadings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
 <BaseLayout title={`${title} · GFXVis`} description={description}>
@@ -140,9 +147,8 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
                           ? "pl-3 font-medium"
                           : "pl-6 text-xs",
                       ]}
-                    >
-                      {heading.text}
-                    </a>
+                      set:html={heading.html}
+                    />
                   </li>
                 ))}
               </ul>

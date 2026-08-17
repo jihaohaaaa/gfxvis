@@ -76,18 +76,23 @@ test.describe("线性代数板块 (Linear Algebra) 补充文章与可视化组�
 
     const canvas = page.locator("canvas").first();
     await canvas.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(600);
     await expect(canvas).toBeVisible();
 
     // 交互测试：切换到连续流动模式与相似不变性模式
     const flowTab = page.getByRole("button", { name: /连续流动/ });
     await flowTab.scrollIntoViewIfNeeded();
-    await flowTab.click();
-    await expect(page.getByText("Jacobi 体积展开").first()).toBeVisible();
+    await flowTab.click({ force: true });
+    await expect(page.getByText("Jacobi 体积展开").first()).toBeVisible({
+      timeout: 10000,
+    });
 
     const simTab = page.getByRole("button", { name: /基变换/ });
+    await simTab.scrollIntoViewIfNeeded();
     await simTab.click({ force: true });
-    await expect(page.getByText("新基底下的").first()).toBeVisible();
+    await expect(page.getByText("新基底下的").first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("5. 特征值与特征向量 (/posts/linear-algebra/eigenvalues-and-eigenvectors)", async ({

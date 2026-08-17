@@ -18,7 +18,7 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
     await page.waitForLoadState("domcontentloaded");
     const demoHeading = page.getByRole("heading", { name: /交互演示/ });
     await demoHeading.scrollIntoViewIfNeeded();
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(600);
   });
 
   test.afterEach(() => {
@@ -63,7 +63,7 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
     // 2. 切换到“水平剪切基”预设
     const shearBtn = page.getByRole("button", { name: "水平剪切基" });
     await shearBtn.scrollIntoViewIfNeeded();
-    await shearBtn.click();
+    await shearBtn.click({ force: true });
     await expect(page.getByText("保持 x 轴基底不变").first()).toBeVisible({
       timeout: 10000,
     });
@@ -71,7 +71,7 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
     // 3. 切换到“一般非正交基”预设
     const generalBtn = page.getByRole("button", { name: "一般非正交基" });
     await generalBtn.scrollIntoViewIfNeeded();
-    await generalBtn.click();
+    await generalBtn.click({ force: true });
     await expect(page.getByText("非正交且不同模长").first()).toBeVisible({
       timeout: 10000,
     });

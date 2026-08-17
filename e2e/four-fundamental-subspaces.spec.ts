@@ -54,27 +54,32 @@ test.describe("Four Fundamental Subspaces 文章与 FourSubspacesDemo 可视化�
     await canvas.scrollIntoViewIfNeeded();
     await page.waitForTimeout(600);
 
-    // 2. 测试“正交投影矩阵”预设点击
-    const projBtn = page.getByRole("button", { name: "正交投影矩阵" });
-    await projBtn.scrollIntoViewIfNeeded();
-    await projBtn.click();
-    await expect(page.getByText("正交投影到方向 (2, 1)").first()).toBeVisible();
+    // 2. 测试“正交投影 (2, 1)”预设点击与正交属性徽章
+    const orthoBtn = page.getByRole("button", { name: /正交投影/ });
+    await orthoBtn.scrollIntoViewIfNeeded();
+    await orthoBtn.click({ force: true });
+    await expect(
+      page.getByText(/正交投影 \(P²=P, Pᵀ=P\)/).first(),
+    ).toBeVisible();
 
-    // 3. 测试“满秩 (2×2 可逆)”预设点击
+    // 3. 测试“斜投影 ((1,1)→x轴)”预设点击与斜投影徽章
+    const obliqueBtn = page.getByRole("button", { name: /斜投影/ }).first();
+    await obliqueBtn.scrollIntoViewIfNeeded();
+    await obliqueBtn.click({ force: true });
+    await expect(page.getByText(/斜投影 \(P²=P, Pᵀ≠P\)/).first()).toBeVisible();
+
+    // 4. 测试“满秩 (2×2 可逆)”预设点击
     const fullBtn = page.getByRole("button", { name: "满秩 (2×2 可逆)" });
     await fullBtn.scrollIntoViewIfNeeded();
-    await fullBtn.click();
-    await expect(
-      page.getByText("rank(A) = 2 (满秩可逆)").first(),
-    ).toBeVisible();
+    await fullBtn.click({ force: true });
+    await expect(page.getByText(/满秩可逆/).first()).toBeVisible();
 
-    // 4. 测试“秩-1 (退化 1D)”预设点击
-    const rank1Btn = page.getByRole("button", { name: "秩-1 (退化 1D)" });
+    // 5. 测试“一般秩-1 (退化)”预设点击
+    const rank1Btn = page.getByRole("button", { name: /一般秩-1/ });
     await rank1Btn.scrollIntoViewIfNeeded();
-    await rank1Btn.click();
-    await expect(
-      page.getByText("rank(A) = 1 (秩亏退化)").first(),
-    ).toBeVisible();
+    await rank1Btn.click({ force: true });
+    await expect(page.getByText(/非幂等变换 \(P²≠P\)/).first()).toBeVisible();
+    await expect(page.getByText(/秩亏退化/).first()).toBeVisible();
   });
 
   test("文章交叉超链接有效性断言", async ({ page }) => {

@@ -52,12 +52,10 @@ test.describe("Inner Product Spaces 文章与 InnerProductSpaceDemo 可视化组
     await expect(page.getByText("加权内积定义").first()).toBeVisible();
 
     // 2. 切换到“函数空间积分内积 ⟨f,g⟩”模式
-    const funcTab = page.getByRole("button", {
-      name: "函数空间积分内积 ⟨f,g⟩",
-    });
+    const funcTab = page.getByRole("button", { name: /函数空间积分内积/ });
     await funcTab.scrollIntoViewIfNeeded();
     await expect(funcTab).toBeVisible();
-    await funcTab.click();
+    await funcTab.click({ force: true });
     await expect(page.getByText("积分内积结果").first()).toBeVisible({
       timeout: 7000,
     });

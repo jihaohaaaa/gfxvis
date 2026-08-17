@@ -465,11 +465,12 @@ export default function EigenDemo({ height }: { height?: string }) {
             <p className="mb-1 font-semibold text-foreground">
               当前矩阵 <InlineMath tex="A" />
             </p>
-            <div className="font-mono text-xs text-muted leading-relaxed">
-              <p>
-                A = [{a11.toFixed(2)}, {a12.toFixed(2)}; {a21.toFixed(2)},{" "}
-                {a22.toFixed(2)}]
-              </p>
+            <div className="text-xs text-muted leading-relaxed">
+              <div className="my-1.5 text-ink">
+                <InlineMath
+                  tex={`A = \\begin{pmatrix} ${a11.toFixed(2)} & ${a12.toFixed(2)} \\\\ ${a21.toFixed(2)} & ${a22.toFixed(2)} \\end{pmatrix}`}
+                />
+              </div>
               <p className="mt-1 text-ink">
                 <InlineMath
                   tex={`\\operatorname{tr}(A) = ${(a11 + a22).toFixed(2)}`}

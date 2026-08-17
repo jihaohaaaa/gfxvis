@@ -58,6 +58,7 @@ test.describe("Gram Matrix 文章与 GramMatrixDemo 可视化组件 E2E 测试",
 
     const collinearBtn = page.getByRole("button", { name: "共线 (退化 0°)" });
     await collinearBtn.scrollIntoViewIfNeeded();
+    await expect(canvas).toBeVisible();
     await expect(collinearBtn).toBeVisible();
 
     const warningText = page.getByText("向量线性相关").first();

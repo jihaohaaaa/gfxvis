@@ -63,4 +63,24 @@ test.describe("左侧书签高阈值静止悬停文章目录 (350ms Dwell TOC Dr
     await page.waitForTimeout(200);
     await expect(drawer).toHaveClass(/-translate-x-full/);
   });
+
+  test("TOC 目录中的数学公式应正确渲染为 KaTeX 元素而非原始 LaTeX 或乱码", async ({
+    page,
+  }) => {
+    await page.goto("/posts/linear-algebra/four-fundamental-subspaces");
+    await page.waitForLoadState("domcontentloaded");
+
+    const drawer = page.locator("#toc-drawer");
+
+    // 断言 TOC 中包含渲染好的 .katex 元素
+    const katexInToc = drawer.locator("a.toc-link .katex");
+    await expect(katexInToc.first()).toBeAttached();
+    const count = await katexInToc.count();
+    expect(count).toBeGreaterThan(0);
+
+    // 断言 TOC 中不应含有未解析的原始反斜杠 LaTeX 关键字字符串（如 \mathbb 或 \operatorname）
+    const allTocText = await drawer.innerText();
+    expect(allTocText).not.toContain("\\mathbb");
+    expect(allTocText).not.toContain("\\operatorname");
+  });
 });

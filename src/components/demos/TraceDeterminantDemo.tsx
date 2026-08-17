@@ -501,11 +501,12 @@ export default function TraceDeterminantDemo({ height }: { height?: string }) {
             <p className="mb-1 font-semibold text-foreground">
               当前矩阵 <InlineMath tex="A" />
             </p>
-            <div className="font-mono text-xs text-muted leading-relaxed">
-              <p>
-                A = [{a11.toFixed(1)}, {a12.toFixed(1)}; {a21.toFixed(1)},{" "}
-                {a22.toFixed(1)}]
-              </p>
+            <div className="text-xs text-muted leading-relaxed">
+              <div className="my-1.5 text-ink">
+                <InlineMath
+                  tex={`A = \\begin{pmatrix} ${a11.toFixed(1)} & ${a12.toFixed(1)} \\\\ ${a21.toFixed(1)} & ${a22.toFixed(1)} \\end{pmatrix}`}
+                />
+              </div>
               <p className="mt-1 text-ink">
                 列向量{" "}
                 <InlineMath
@@ -584,16 +585,21 @@ export default function TraceDeterminantDemo({ height }: { height?: string }) {
                 <p className="mb-1 font-semibold text-foreground">
                   新基底下的 <InlineMath tex="A' = P^{-1}AP" />
                 </p>
-                <div className="font-mono text-xs text-muted leading-relaxed">
-                  <p>
-                    A&apos; = [{simA11.toFixed(2)}, {simA12.toFixed(2)};{" "}
-                    {simA21.toFixed(2)}, {simA22.toFixed(2)}]
-                  </p>
+                <div className="text-xs text-muted leading-relaxed">
+                  <div className="my-1.5 text-ink">
+                    <InlineMath
+                      tex={`A' = \\begin{pmatrix} ${simA11.toFixed(2)} & ${simA12.toFixed(2)} \\\\ ${simA21.toFixed(2)} & ${simA22.toFixed(2)} \\end{pmatrix}`}
+                    />
+                  </div>
                   <p className="mt-1 font-semibold text-foreground">
-                    tr(A&apos;) = {simTr.toFixed(2)} ≡ {tr.toFixed(2)}
+                    <InlineMath
+                      tex={`\\operatorname{tr}(A') = ${simTr.toFixed(2)} \\equiv ${tr.toFixed(2)}`}
+                    />
                   </p>
                   <p className="font-semibold text-foreground">
-                    det(A&apos;) = {simDet.toFixed(2)} ≡ {det.toFixed(2)}
+                    <InlineMath
+                      tex={`\\det(A') = ${simDet.toFixed(2)} \\equiv ${det.toFixed(2)}`}
+                    />
                   </p>
                 </div>
               </>
