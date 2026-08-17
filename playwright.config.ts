@@ -9,15 +9,15 @@ export default defineConfig({
   reporter: "list",
 
   use: {
-    baseURL: "http://localhost:4321",
+    baseURL: "http://localhost:51730",
     trace: "on-first-retry",
     channel: "chrome",
     ...devices["Desktop Chrome"],
   },
 
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:4321",
+    command: "pnpm astro dev",
+    url: "http://localhost:51730",
     reuseExistingServer: true,
     timeout: 120 * 1000,
   },

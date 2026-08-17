@@ -13,9 +13,9 @@
 
 ```bash
 pnpm install   # 安装依赖
-pnpm dev       # 本地开发 http://localhost:4321
+pnpm dev       # 本地开发 http://localhost:51730
 pnpm build     # 静态构建到 dist/
-pnpm preview   # 预览构建产物
+pnpm preview   # 预览构建产物 http://localhost:51730
 pnpm lint      # ESLint 检查
 pnpm format    # Prettier 格式化
 ```

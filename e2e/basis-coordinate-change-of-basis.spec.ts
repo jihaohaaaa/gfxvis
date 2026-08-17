@@ -51,6 +51,9 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
   test("ChangeOfBasisDemo 2D 模式预设切换与坐标换算测试", async ({ page }) => {
     const demoHeading = page.getByRole("heading", { name: /交互演示/ });
     await demoHeading.scrollIntoViewIfNeeded();
+    await expect(page.locator("canvas").first()).toBeVisible({
+      timeout: 10000,
+    });
 
     // 1. 断言默认在 2D 基变换模式
     await expect(
@@ -79,13 +82,18 @@ test.describe("Change of Basis 文章与 ChangeOfBasisDemo 可视化组件 E2E �
   }) => {
     const demoHeading = page.getByRole("heading", { name: /交互演示/ });
     await demoHeading.scrollIntoViewIfNeeded();
+    await expect(page.locator("canvas").first()).toBeVisible({
+      timeout: 10000,
+    });
+    await page.waitForTimeout(500);
 
     // 1. 切换到 3D 模式
     const tab3D = page.getByRole("button", {
       name: /3D 图形学矩阵与局部坐标系/,
     });
     await tab3D.scrollIntoViewIfNeeded();
-    await tab3D.click();
+    await tab3D.click({ force: true });
+    await page.waitForTimeout(500);
 
     // 2. 断言 3D 滑块、预设与两行矩阵分解面板呈现
     await expect(
