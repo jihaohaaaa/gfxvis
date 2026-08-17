@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   drawAdaptiveAxes,
-  drawPoint,
+  drawDragGizmo,
   drawSegment,
   type Bounds2,
 } from "../../visualizations/core/2d/plot2d";
@@ -46,6 +46,11 @@ export default function GramMatrixDemo({ height }: { height?: string }) {
     {
       initialBounds: INITIAL_BOUNDS,
       margin: MARGIN,
+      onLeftDown: dragHandlers.onLeftDown,
+      onLeftMove: dragHandlers.onLeftMove,
+      onLeftUp: dragHandlers.onLeftUp,
+      onHover: dragHandlers.onHover,
+      onPointerLeave: dragHandlers.onPointerLeave,
       draw(ctx, plot, theme) {
         drawAdaptiveAxes(ctx, plot, theme);
 
@@ -80,29 +85,41 @@ export default function GramMatrixDemo({ height }: { height?: string }) {
           dash: [4, 4],
         });
 
-        // Draw vector u (blue accent)
+        // Draw vector u (blue accent) & 2D Transform Gizmo
         drawSegment(ctx, plot, 0, 0, u.x, u.y, {
           color: "#2563eb",
           width: 2.5,
         });
-        drawPoint(ctx, plot, u.x, u.y, { color: "#2563eb", radius: 6 });
+        drawDragGizmo(ctx, plot, u.x, u.y, {
+          color: "#2563eb",
+          isHoveredCenter: dragHandlers.isCenterHovered("u"),
+          isDraggingCenter: dragHandlers.isCenterDragging("u"),
+          hoveredArrowId: dragHandlers.getHoveredArrowId("u"),
+          draggingArrowId: dragHandlers.getDraggingArrowId("u"),
+          opacity: dragHandlers.getOpacity("u"),
+        });
 
-        // Draw vector v (emerald green)
+        // Draw vector v (emerald accent) & 2D Transform Gizmo
         drawSegment(ctx, plot, 0, 0, v.x, v.y, {
-          color: "#059669",
+          color: "#10b981",
           width: 2.5,
         });
-        drawPoint(ctx, plot, v.x, v.y, { color: "#059669", radius: 6 });
+        drawDragGizmo(ctx, plot, v.x, v.y, {
+          color: "#10b981",
+          isHoveredCenter: dragHandlers.isCenterHovered("v"),
+          isDraggingCenter: dragHandlers.isCenterDragging("v"),
+          hoveredArrowId: dragHandlers.getHoveredArrowId("v"),
+          draggingArrowId: dragHandlers.getDraggingArrowId("v"),
+          opacity: dragHandlers.getOpacity("v"),
+        });
 
         // Labels on vector tips
         ctx.font = "bold 13px ui-sans-serif, system-ui, sans-serif";
         ctx.fillStyle = "#2563eb";
         ctx.fillText("u", ux + 10, uy - 6);
-
         ctx.fillStyle = "#059669";
         ctx.fillText("v", vx + 10, vy - 6);
       },
-      ...dragHandlers,
     },
     [u, v],
   );
@@ -136,10 +153,7 @@ export default function GramMatrixDemo({ height }: { height?: string }) {
           className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
         >
           <CanvasToolbar onReset={resetBounds} />
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 h-full w-full cursor-crosshair"
-          />
+          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
         </div>
 
         {/* Preset Controls */}

@@ -88,6 +88,13 @@ test.describe("微积分板块 (Calculus) 所有文章与可视化组件 E2E 测
     await rotBtn.click({ force: true });
     await expect(page.getByText("解析 2.0").first()).toBeVisible();
 
+    // 交互测试：3D 标量场探针与预设
+    const saddleBtn = page.getByRole("button", { name: /鞍点原点/ });
+    await saddleBtn.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+    await saddleBtn.click({ force: true });
+    await expect(page.getByText("(0.00, 0.00, 0.00)").first()).toBeVisible();
+
     // 断言 Canvas 挂载正常
     const canvases = page.locator("canvas");
     await expect(canvases.first()).toBeVisible();

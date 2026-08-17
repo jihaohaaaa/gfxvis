@@ -19,9 +19,12 @@ import ParamSlider from "../framework/ParamSlider";
 import InlineMath from "../framework/InlineMath";
 import PresetSelector from "../framework/PresetSelector";
 import { useCanvas2D } from "../framework/useCanvas2D";
+import { useVectorDrag } from "../framework/useVectorDrag";
 import { useViewer3D } from "../framework/useViewer3D";
 import {
   drawAdaptiveAxes,
+  drawDragGizmo,
+  drawDragGuideTrack,
   getVisibleBounds,
   type Bounds2,
 } from "../../visualizations/core/2d/plot2d";
@@ -214,39 +217,47 @@ function View2D({ showAxes }: { showAxes: boolean }) {
     vVec,
     vC,
   });
-  stateRef.current = { showAxes, c1, c2, vVec, vC };
 
-  const isDraggingRef = useRef(false);
+  useEffect(() => {
+    stateRef.current = { showAxes, c1, c2, vVec, vC };
+  }, [showAxes, c1, c2, vVec, vC]);
+
+  const dragHandlers = useVectorDrag<"v">({
+    targets: [
+      {
+        id: "v",
+        x: vVec.x,
+        y: vVec.y,
+        hitRadius: 24,
+        arrows: [
+          {
+            id: "c1",
+            direction: c1,
+            label: "c₁",
+            color: "#3b82f6",
+          },
+          {
+            id: "c2",
+            direction: c2,
+            label: "c₂",
+            color: "#10b981",
+          },
+        ],
+      },
+    ],
+    onDrag(_id, newPos) {
+      setVVec(newPos);
+    },
+  });
 
   const { containerRef, canvasRef, resetBounds } = useCanvas2D(
     {
       initialBounds: BOUNDS_2D,
-      onLeftDown(e, plot) {
-        const canvas = canvasRef.current;
-        if (!canvas) return false;
-        isDraggingRef.current = true;
-        const rect = canvas.getBoundingClientRect();
-        const px = e.clientX - rect.left;
-        const py = e.clientY - rect.top;
-        const wx = plot.toWorldX(px);
-        const wy = plot.toWorldY(py);
-        setVVec({ x: wx, y: wy });
-        return true;
-      },
-      onLeftMove(e, plot) {
-        if (!isDraggingRef.current) return;
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
-        const px = e.clientX - rect.left;
-        const py = e.clientY - rect.top;
-        const wx = plot.toWorldX(px);
-        const wy = plot.toWorldY(py);
-        setVVec({ x: wx, y: wy });
-      },
-      onLeftUp() {
-        isDraggingRef.current = false;
-      },
+      onLeftDown: dragHandlers.onLeftDown,
+      onLeftMove: dragHandlers.onLeftMove,
+      onLeftUp: dragHandlers.onLeftUp,
+      onHover: dragHandlers.onHover,
+      onPointerLeave: dragHandlers.onPointerLeave,
       draw(ctx, plot, theme) {
         const { width, height } = plot;
         ctx.clearRect(0, 0, width, height);
@@ -277,31 +288,30 @@ function View2D({ showAxes }: { showAxes: boolean }) {
         ctx.strokeStyle = "rgba(59, 130, 246, 0.25)"; // blue-500
         ctx.lineWidth = 1;
         for (let i = -gridLines; i <= gridLines; i++) {
-          const span = gridLines * 1.5;
-          const start1 = toCanvas(
-            i * st.c1.x - span * st.c2.x,
-            i * st.c1.y - span * st.c2.y,
+          const l1Start = toCanvas(
+            i * st.c1.x - gridLines * st.c2.x,
+            i * st.c1.y - gridLines * st.c2.y,
           );
-          const end1 = toCanvas(
-            i * st.c1.x + span * st.c2.x,
-            i * st.c1.y + span * st.c2.y,
+          const l1End = toCanvas(
+            i * st.c1.x + gridLines * st.c2.x,
+            i * st.c1.y + gridLines * st.c2.y,
           );
           ctx.beginPath();
-          ctx.moveTo(start1.x, start1.y);
-          ctx.lineTo(end1.x, end1.y);
+          ctx.moveTo(l1Start.x, l1Start.y);
+          ctx.lineTo(l1End.x, l1End.y);
           ctx.stroke();
 
-          const start2 = toCanvas(
-            -span * st.c1.x + i * st.c2.x,
-            -span * st.c1.y + i * st.c2.y,
+          const l2Start = toCanvas(
+            -gridLines * st.c1.x + i * st.c2.x,
+            -gridLines * st.c1.y + i * st.c2.y,
           );
-          const end2 = toCanvas(
-            span * st.c1.x + i * st.c2.x,
-            span * st.c1.y + i * st.c2.y,
+          const l2End = toCanvas(
+            gridLines * st.c1.x + i * st.c2.x,
+            gridLines * st.c1.y + i * st.c2.y,
           );
           ctx.beginPath();
-          ctx.moveTo(start2.x, start2.y);
-          ctx.lineTo(end2.x, end2.y);
+          ctx.moveTo(l2Start.x, l2Start.y);
+          ctx.lineTo(l2End.x, l2End.y);
           ctx.stroke();
         }
         ctx.restore();
@@ -352,9 +362,26 @@ function View2D({ showAxes }: { showAxes: boolean }) {
         );
         ctx.restore();
 
-        // 4. Interactive Vector v (Amber)
+        // 4. Active Guide Track if dragging along basis direction
+        const track = dragHandlers.getActiveTrack();
+        if (track) {
+          drawDragGuideTrack(ctx, plot, track);
+        }
+
+        // 5. Interactive Vector v (Amber) & 2D Transform Gizmo
         drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pV.x, pV.y, "#d97706", 3.5);
-        drawPixelPoint(ctx, pV.x, pV.y, "#d97706", 7);
+        drawDragGizmo(ctx, plot, st.vVec.x, st.vVec.y, {
+          color: "#d97706",
+          isHoveredCenter: dragHandlers.isCenterHovered("v"),
+          isDraggingCenter: dragHandlers.isCenterDragging("v"),
+          hoveredArrowId: dragHandlers.getHoveredArrowId("v"),
+          draggingArrowId: dragHandlers.getDraggingArrowId("v"),
+          opacity: dragHandlers.getOpacity("v"),
+          arrows: [
+            { id: "c1", direction: st.c1, label: "c₁", color: "#3b82f6" },
+            { id: "c2", direction: st.c2, label: "c₂", color: "#10b981" },
+          ],
+        });
         ctx.save();
         ctx.font = "bold 13px system-ui, sans-serif";
         ctx.fillStyle = "#d97706";
@@ -385,10 +412,7 @@ function View2D({ showAxes }: { showAxes: boolean }) {
         className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
       >
         <CanvasToolbar onReset={resetBounds} />
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 h-full w-full cursor-crosshair"
-        />
+        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       </div>
 
       {/* 2D Coordinate & Matrix Panel */}

@@ -6,6 +6,7 @@ import InlineMath from "../framework/InlineMath";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import {
+  drawDragHandle,
   readThemeColors,
   type Bounds2,
 } from "../../visualizations/core/2d/plot2d";
@@ -178,21 +179,54 @@ function ViewTransform({ showAxes }: { showAxes: boolean }) {
   }, [showAxes, curM, vVec, curV, isSingular, progress]);
 
   const isDraggingRef = useRef(false);
+  const isHoveredRef = useRef(false);
 
   const { containerRef, canvasRef, redraw } = useCanvas2D({
     initialBounds: BOUNDS_2D,
+    onHover(e) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const st = stateRef.current;
+      const center = { x: canvas.width / 2, y: canvas.height / 2 };
+      const scale = Math.min(canvas.width, canvas.height) / 7.5;
+      const pCurV = {
+        x: center.x + st.curV.x * scale,
+        y: center.y - st.curV.y * scale,
+      };
+      const hit = Math.hypot(px - pCurV.x, py - pCurV.y) <= 24;
+      isHoveredRef.current = hit;
+      if (isDraggingRef.current) {
+        canvas.style.cursor = "grabbing";
+      } else if (hit) {
+        canvas.style.cursor = "grab";
+      } else {
+        canvas.style.cursor = "";
+      }
+    },
     onLeftDown(e) {
       const canvas = canvasRef.current;
       if (!canvas) return false;
-      isDraggingRef.current = true;
       const rect = canvas.getBoundingClientRect();
-      updateVectorFromMouse(
-        e.clientX - rect.left,
-        e.clientY - rect.top,
-        canvas.width,
-        canvas.height,
-      );
-      return true;
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const st = stateRef.current;
+      const center = { x: canvas.width / 2, y: canvas.height / 2 };
+      const scale = Math.min(canvas.width, canvas.height) / 7.5;
+      const pCurV = {
+        x: center.x + st.curV.x * scale,
+        y: center.y - st.curV.y * scale,
+      };
+      if (Math.hypot(px - pCurV.x, py - pCurV.y) <= 24) {
+        isDraggingRef.current = true;
+        isHoveredRef.current = true;
+        canvas.style.cursor = "grabbing";
+        updateVectorFromMouse(px, py, canvas.width, canvas.height);
+        return true;
+      }
+      return false;
     },
     onLeftMove(e) {
       if (!isDraggingRef.current) return;
@@ -208,6 +242,10 @@ function ViewTransform({ showAxes }: { showAxes: boolean }) {
     },
     onLeftUp() {
       isDraggingRef.current = false;
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.style.cursor = isHoveredRef.current ? "grab" : "";
+      }
     },
     draw(ctx) {
       const width = ctx.canvas.width;
@@ -348,7 +386,12 @@ function ViewTransform({ showAxes }: { showAxes: boolean }) {
         "#f59e0b",
         3.5,
       );
-      drawPixelPoint(ctx, pCurV.x, pCurV.y, "#f59e0b", 7);
+
+      drawDragHandle(ctx, pCurV.x, pCurV.y, {
+        color: "#f59e0b",
+        isHovered: isHoveredRef.current,
+        isDragging: isDraggingRef.current,
+      });
 
       ctx.save();
       ctx.font = "bold 12px system-ui, sans-serif";

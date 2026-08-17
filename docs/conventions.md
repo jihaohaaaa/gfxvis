@@ -31,15 +31,23 @@
 
 - 交互组件一律以 `client:visible` 挂载;SSR 无副作用(DOM 访问只发生在 `useEffect` 内)。
 - 交互手势统一:2D 画布 = 左键拖拽(探针 / 切点等自身交互)、滚轮 = 光标中心缩放、中键拖拽 = 平移(`core/canvas2d.ts`);3D = 左键/中键拖拽旋转、滚轮缩放、右键平移(`core/viewer3d.ts` + `core/controls.ts` 统一参数)。
+- **Transform Gizmo 拖拽体系 (2D & 3D 对偶规范)**:
+  - **核心层**: `src/visualizations/core/common/interaction.ts` 统一定义交互常数(`FADE_DELAY_MS = 1200`, `FADE_DURATION_MS = 500`, `FADE_EASE_EXPONENT = 1.2`)、淡出动画解算器 `computeFadeOpacity` 与零跳变(Zero-jump)相对位移约束投影。
+  - **视觉层级规范**:
+    - **基础物理/数学点常驻**: 2D 向量端点与 3D 空间探针点始终以 100% 不透明度常驻渲染，保留饱满的圆点与坐标标注;
+    - **Transform Gizmo 覆盖层智能呼出**: 鼠标悬停到点附近时平滑展开轴向与平面控件，鼠标移开后经 1.2s 常亮延时 + 0.5s 平滑淡出;
+    - **悬浮与聚焦明暗 (Focus & Dimming)**: 当前鼠标悬停或抓取的轴/平面/中心点强高亮(自发光 `1.0` / 亮金色 `#facc15` / 尺寸 `1.15x`)，其余未激活控件适度暗化，形成鲜明焦点。
+  - **2D Transform Gizmo**: 通过 `useVectorDrag` + `core/2d/plot2d.ts` 的 `drawDragGizmo` 实现，支持 `"free"`(自由平面拖动)、`"axes"`(XY 坐标轴双向箭头)与 `"directions"`(自定义子空间/切线方向箭头与 Badge)。
+  - **3D Transform Gizmo**: 通过 `core/3d/gizmo3d.ts` 的 `createTransformGizmo3D` + `attachGizmo3D` 实现，支持 `"volume"`(自由空间 3 轴箭头 + 3 平面色块 + 中心球体)与 `"surface"`(曲面约束点 + XY 平面色块 + $z=f(x,y)$ 自动吸附)。
 - 2D 画布默认等比例轴(`canvas2d` 的 `equalScale` 默认开启,无 UI 开关):视图恒为画布等比的居中矩形,xy 每单位像素相同,请求区域完整可见;缩放按同一系数作用于两轴,平移/尺寸变化保持比例。非等比(`equalScale: false`)仅作内部回退,当前无 demo 使用。
-- 3D 交互统一走共享层:`core/viewer3d.ts`(renderer/camera/controls/resize/主题/清理)与 `core/drag3d.ts`(raycast 拖拽,拖拽时禁用 controls);3D 场景的坐标由 `core/coords.ts` 的 `mathToWorld` 唯一映射。
-- 每个 demo 自带"坐标轴"开关(默认开启):2D 用 `drawAxes`(含刻度 / 网格),3D 用 `core/axes3d.ts` 的彩色轴线组(x 红 / y 绿 / z 蓝),scene API 提供 `setAxesVisible(v)`。
+- 3D 交互统一走共享层:`core/viewer3d.ts`(renderer/camera/controls/resize/主题/清理)与 `core/3d/gizmo3d.ts` / `core/3d/drag3d.ts`(raycast 拖拽,拖拽时禁用 controls);3D 场景的坐标由 `core/3d/coords.ts` 的 `mathToWorld` 唯一映射。
+- 每个 demo 自带"坐标轴"开关(默认开启):2D 用 `drawAxes`(含刻度 / 网格),3D 用 `core/3d/axes3d.ts` 的彩色轴线组(x 红 / y 绿 / z 蓝),scene API 提供 `setAxesVisible(v)`。
 - 交互区增强:每个 demo 由 `ExpandableDemo` 包裹,右上角"展开"进入伪全屏固定浮层(非 Fullscreen API),× 关闭恢复;同一实例状态保留;画布高度用 CSS 变量 `--demo-height`(默认 2D 20rem / 3D 28rem,展开 70vh)。
 - 3D 曲面默认半透明(opacity≈0.55、depthWrite=false)并带开关,保证箭头/标记可见;切换时同步 transparent/opacity/depthWrite。
 - 主题:2D 用 `watchTheme` 触发重绘;3D 监听 `html` 的 class 变化,重设 `setClearColor` 并重渲;颜色从 CSS 变量读取(`readThemeColors`),禁止硬编码。
-- 数值微分统一走 `core/math.ts`(中心差分:梯度 / 散度 / 旋度),默认步长 h = 1e-4。
+- 数值微分统一走 `core/common/math.ts`(中心差分:梯度 / 散度 / 旋度),默认步长 h = 1e-4。
 - 资源清理:Three 场景销毁时遍历 dispose 几何体 / 材质 / 纹理并移除 canvas;React effect cleanup 必须完整。
-- 禁止重复造轮子:不要复制 `disposeObject`、灯光 / 网格 / 曲面材质、顶点着色网格构建等代码,一律从 `core/three-utils.ts` 引入;2D 画布挂载走 `useCanvas2D`(组件内只调 `redraw()` / `setBounds()`),3D 场景挂载 / 清理走 `useViewer3D`(`setup` 里做初始状态与 `attachDrag3D`,清理由 hook 完成)。
+- 禁止重复造轮子:不要复制 `disposeObject`、灯光 / 网格 / 曲面材质、顶点着色网格构建等代码,一律从 `core/3d/three-utils.ts` 引入;2D 画布挂载走 `useCanvas2D`(组件内只调 `redraw()` / `setBounds()`),3D 场景挂载 / 清理走 `useViewer3D`(`setup` 里做初始状态与 `attachGizmo3D` / `attachDrag3D`,清理由 hook 完成)。
 
 ## 工程约定
 

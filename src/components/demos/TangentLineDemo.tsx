@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   drawAdaptiveAxes,
   drawAdaptiveFunction,
-  drawPoint,
+  drawDragGizmo,
   drawSegment,
   getVisibleBounds,
   type Bounds2,
@@ -16,7 +16,9 @@ import {
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
+import { clamp } from "../../visualizations/core/common/math";
 import { useCanvas2D } from "../framework/useCanvas2D";
+import { useVectorDrag } from "../framework/useVectorDrag";
 
 const INITIAL_BOUNDS: Bounds2 = {
   xMin: -4.5,
@@ -29,12 +31,43 @@ const MARGIN = 30;
 export default function TangentLineDemo({ height }: { height?: string }) {
   const [a, setA] = useState(0.9);
   const [b, setB] = useState(2.4);
-  const [dragTarget, setDragTarget] = useState<"a" | "b" | null>(null);
+
+  const dragHandlers = useVectorDrag<"a" | "b">({
+    targets: [
+      {
+        id: "a",
+        x: a,
+        y: f(a),
+        constraint: {
+          type: "custom",
+          project: (rawPos) => ({ x: rawPos.x, y: f(rawPos.x) }),
+        },
+      },
+      {
+        id: "b",
+        x: b,
+        y: f(b),
+        constraint: {
+          type: "custom",
+          project: (rawPos) => ({ x: rawPos.x, y: f(rawPos.x) }),
+        },
+      },
+    ],
+    onDrag(id, pos) {
+      if (id === "a") setA(clamp(pos.x, -4.5, 4.5));
+      if (id === "b") setB(clamp(pos.x, -4.5, 4.5));
+    },
+  });
 
   const { containerRef, canvasRef, resetBounds } = useCanvas2D(
     {
       initialBounds: INITIAL_BOUNDS,
       margin: MARGIN,
+      onLeftDown: dragHandlers.onLeftDown,
+      onLeftMove: dragHandlers.onLeftMove,
+      onLeftUp: dragHandlers.onLeftUp,
+      onHover: dragHandlers.onHover,
+      onPointerLeave: dragHandlers.onPointerLeave,
       draw(ctx, plot, theme) {
         drawAdaptiveAxes(ctx, plot, theme);
 
@@ -64,58 +97,28 @@ export default function TangentLineDemo({ height }: { height?: string }) {
           { color: "#ef4444", width: 2 },
         );
 
-        // Point A (tangent point)
-        drawPoint(ctx, plot, a, f(a), {
+        // Point A (tangent point) 2D Transform Gizmo
+        drawDragGizmo(ctx, plot, a, f(a), {
           color: "#ef4444",
-          filled: true,
-          radius: 6,
+          isHoveredCenter: dragHandlers.isCenterHovered("a"),
+          isDraggingCenter: dragHandlers.isCenterDragging("a"),
+          hoveredArrowId: dragHandlers.getHoveredArrowId("a"),
+          draggingArrowId: dragHandlers.getDraggingArrowId("a"),
+          opacity: dragHandlers.getOpacity("a"),
         });
-        // Point B (secant second point)
-        drawPoint(ctx, plot, b, f(b), {
+
+        // Point B (secant second point) 2D Transform Gizmo
+        drawDragGizmo(ctx, plot, b, f(b), {
           color: theme.accent,
-          filled: false,
-          radius: 6,
+          isHoveredCenter: dragHandlers.isCenterHovered("b"),
+          isDraggingCenter: dragHandlers.isCenterDragging("b"),
+          hoveredArrowId: dragHandlers.getHoveredArrowId("b"),
+          draggingArrowId: dragHandlers.getDraggingArrowId("b"),
+          opacity: dragHandlers.getOpacity("b"),
         });
-      },
-      onLeftDown(e, plot) {
-        const el =
-          (e.currentTarget as HTMLElement | null) ??
-          (e.target as HTMLElement | null);
-        const rect = el?.getBoundingClientRect();
-        if (!rect) return false;
-        const px = e.clientX - rect.left;
-        const py = e.clientY - rect.top;
-        const da = Math.hypot(
-          px - plot.toScreenX(a),
-          py - plot.toScreenY(f(a)),
-        );
-        const db = Math.hypot(
-          px - plot.toScreenX(b),
-          py - plot.toScreenY(f(b)),
-        );
-        const chosen = da <= db ? "a" : "b";
-        setDragTarget(chosen);
-        const x = plot.toWorldX(px);
-        if (chosen === "a") setA(x);
-        else setB(x);
-        return true;
-      },
-      onLeftMove(e, plot) {
-        if (!dragTarget) return;
-        const el =
-          (e.currentTarget as HTMLElement | null) ??
-          (e.target as HTMLElement | null);
-        const rect = el?.getBoundingClientRect();
-        if (!rect) return;
-        const x = plot.toWorldX(e.clientX - rect.left);
-        if (dragTarget === "a") setA(x);
-        else setB(x);
-      },
-      onLeftUp() {
-        setDragTarget(null);
       },
     },
-    [a, b, dragTarget],
+    [a, b],
   );
 
   const derivative = fprime(a);
@@ -129,10 +132,7 @@ export default function TangentLineDemo({ height }: { height?: string }) {
           className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
         >
           <CanvasToolbar onReset={resetBounds} />
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 h-full w-full cursor-crosshair"
-          />
+          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
         </div>
         <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
           <p>

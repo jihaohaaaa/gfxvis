@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
@@ -6,10 +6,13 @@ import InlineMath from "../framework/InlineMath";
 import PresetSelector from "../framework/PresetSelector";
 import {
   drawAdaptiveAxes,
+  drawDragGizmo,
+  drawDragGuideTrack,
   getVisibleBounds,
   type Bounds2,
-  type Plot2D,
 } from "../../visualizations/core/2d/plot2d";
+
+import { useVectorDrag } from "../framework/useVectorDrag";
 
 type PresetType =
   "ortho_21" | "oblique_x" | "oblique_diag" | "rank1" | "full" | "shear";
@@ -78,19 +81,21 @@ const BOUNDS: Bounds2 = { xMin: -3.5, xMax: 3.5, yMin: -3.5, yMax: 3.5 };
 
 function drawPixelSegment(
   ctx: CanvasRenderingContext2D,
-  x0: number,
-  y0: number,
   x1: number,
   y1: number,
+  x2: number,
+  y2: number,
   color: string,
-  width = 2,
+  width = 1.5,
+  dash: number[] = [],
 ) {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
+  ctx.setLineDash(dash);
   ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x1, y1);
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
   ctx.stroke();
   ctx.restore();
 }
@@ -204,49 +209,48 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
     leftNullDir,
   ]);
 
-  const isDraggingRef = useRef<boolean>(false);
+  const gizmoArrows = useMemo(() => {
+    if (!isRank1) return [];
+    return [
+      {
+        id: "row",
+        direction: rowDir,
+        color: "#2563eb",
+        label: "Row(A)",
+        lengthPx: 36,
+      },
+      {
+        id: "null",
+        direction: nullDir,
+        color: "#dc2626",
+        label: "Null(A)",
+        lengthPx: 36,
+      },
+    ];
+  }, [isRank1, rowDir, nullDir]);
 
-  const updateVectorFromMouse = (px: number, py: number, plot: Plot2D) => {
-    const wx = plot.toWorldX(px);
-    const wy = plot.toWorldY(py);
-    const visible = getVisibleBounds(plot);
-    const maxExtent =
-      Math.max(
-        Math.abs(visible.xMin),
-        Math.abs(visible.xMax),
-        Math.abs(visible.yMin),
-        Math.abs(visible.yMax),
-      ) * 1.5;
-    const clampedX = Math.max(-maxExtent, Math.min(maxExtent, wx));
-    const clampedY = Math.max(-maxExtent, Math.min(maxExtent, wy));
-    setXVec({ x: clampedX, y: clampedY });
-  };
+  const dragHandlers = useVectorDrag<"x">({
+    targets: [
+      {
+        id: "x",
+        x: xVec.x,
+        y: xVec.y,
+        arrows: gizmoArrows,
+      },
+    ],
+    onDrag(_id, newPos) {
+      setXVec(newPos);
+    },
+  });
 
   // 1. LEFT CANVAS (Input Space R^2)
   const leftCanvas = useCanvas2D({
     initialBounds: BOUNDS,
-    onLeftDown(e, plot) {
-      const canvas = leftCanvas.canvasRef.current;
-      if (!canvas) return false;
-      const rect = canvas.getBoundingClientRect();
-      const px = e.clientX - rect.left;
-      const py = e.clientY - rect.top;
-      isDraggingRef.current = true;
-      updateVectorFromMouse(px, py, plot);
-      return true;
-    },
-    onLeftMove(e, plot) {
-      if (!isDraggingRef.current) return;
-      const canvas = leftCanvas.canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const px = e.clientX - rect.left;
-      const py = e.clientY - rect.top;
-      updateVectorFromMouse(px, py, plot);
-    },
-    onLeftUp() {
-      isDraggingRef.current = false;
-    },
+    onLeftDown: dragHandlers.onLeftDown,
+    onLeftMove: dragHandlers.onLeftMove,
+    onLeftUp: dragHandlers.onLeftUp,
+    onHover: dragHandlers.onHover,
+    onPointerLeave: dragHandlers.onPointerLeave,
     draw(ctx, plot, theme) {
       const { width, height } = plot;
       ctx.clearRect(0, 0, width, height);
@@ -254,7 +258,12 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
       const st = stateRef.current;
       const visible = getVisibleBounds(plot);
 
-      // Adaptive Axes & Grid
+      // Active guide track if hovering or dragging a Gizmo arrow
+      const activeTrack = dragHandlers.getActiveTrack();
+      if (activeTrack) {
+        drawDragGuideTrack(ctx, plot, activeTrack);
+      }
+
       if (st.showAxes) {
         drawAdaptiveAxes(ctx, plot, theme);
       }
@@ -272,9 +281,7 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
           Math.abs(visible.yMax),
         ) * 2;
 
-      // Subspaces
       if (st.isRank1) {
-        // Row Space (Blue line)
         ctx.save();
         ctx.strokeStyle = "#2563eb";
         ctx.lineWidth = 2.5;
@@ -289,7 +296,6 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
         ctx.fillText("行空间 Row(A)", r2.x - 30, r2.y - 8);
         ctx.restore();
 
-        // Null Space (Red line)
         ctx.save();
         ctx.strokeStyle = "#dc2626";
         ctx.lineWidth = 2.5;
@@ -303,16 +309,6 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
         ctx.font = "bold 11px system-ui, sans-serif";
         ctx.fillText("零空间 Null(A)", n2.x + 8, n2.y);
         ctx.restore();
-      } else {
-        ctx.save();
-        ctx.fillStyle = "rgba(37, 99, 235, 0.05)";
-        ctx.fillRect(0, 0, width, height);
-        ctx.font = "11px system-ui, sans-serif";
-        ctx.fillStyle = "#2563eb";
-        ctx.fillText("行空间 Row(A) = ℝ²", 12, 56);
-        ctx.fillStyle = "#dc2626";
-        ctx.fillText("零空间 Null(A) = {0}", 12, 72);
-        ctx.restore();
       }
 
       const pX = toCanvas(st.xVec.x, st.xVec.y);
@@ -321,20 +317,26 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
       const pOrigin = toCanvas(0, 0);
 
       if (st.isRank1) {
-        // Projections
-        ctx.save();
-        ctx.strokeStyle = theme.muted;
-        ctx.lineWidth = 1;
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath();
-        ctx.moveTo(pX.x, pX.y);
-        ctx.lineTo(pRow.x, pRow.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(pX.x, pX.y);
-        ctx.lineTo(pNull.x, pNull.y);
-        ctx.stroke();
-        ctx.restore();
+        drawPixelSegment(
+          ctx,
+          pX.x,
+          pX.y,
+          pRow.x,
+          pRow.y,
+          theme.muted,
+          1,
+          [3, 3],
+        );
+        drawPixelSegment(
+          ctx,
+          pX.x,
+          pX.y,
+          pNull.x,
+          pNull.y,
+          theme.muted,
+          1,
+          [3, 3],
+        );
 
         drawPixelSegment(
           ctx,
@@ -358,9 +360,17 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
         drawPixelPoint(ctx, pNull.x, pNull.y, "#dc2626", 4);
       }
 
-      // x vector
       drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pX.x, pX.y, "#d97706", 3);
-      drawPixelPoint(ctx, pX.x, pX.y, "#d97706", 7);
+      drawPixelPoint(ctx, pX.x, pX.y, "#d97706", 5.5);
+      drawDragGizmo(ctx, plot, st.xVec.x, st.xVec.y, {
+        color: "#d97706",
+        isHoveredCenter: dragHandlers.isCenterHovered("x"),
+        isDraggingCenter: dragHandlers.isCenterDragging("x"),
+        hoveredArrowId: dragHandlers.getHoveredArrowId("x"),
+        draggingArrowId: dragHandlers.getDraggingArrowId("x"),
+        arrows: gizmoArrows,
+        opacity: dragHandlers.getOpacity("x"),
+      });
 
       ctx.save();
       ctx.font = "bold 12px system-ui, sans-serif";
@@ -484,7 +494,7 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
             <CanvasToolbar onReset={leftCanvas.resetBounds} />
             <canvas
               ref={leftCanvas.canvasRef}
-              className="absolute inset-0 h-full w-full cursor-crosshair"
+              className="absolute inset-0 h-full w-full"
             />
             <div className="pointer-events-none absolute top-3 left-3 flex flex-col gap-1 select-none">
               <span className="font-semibold text-xs text-foreground">
@@ -592,15 +602,12 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
         </div>
 
         <p className="text-xs text-muted">
-          提示：在左侧“输入空间 <InlineMath tex="\mathbb{R}^2" />
-          ”中拖拽橙色点 <InlineMath tex="x" />
-          ，观察其在行空间与零空间的正交分解 <InlineMath tex="x_{\text{row}}" />{" "}
-          与 <InlineMath tex="x_{\text{null}}" />
-          ；右侧“输出空间 <InlineMath tex="\mathbb{R}^2" />
-          ”中对应输出向量 <InlineMath tex="b = Ax" /> 始终落在列空间中，且完全由{" "}
-          <InlineMath tex="x_{\text{row}}" /> 决定（
-          <InlineMath tex="Ax_{\text{null}} = 0" />
-          ）。两个视口均支持独立的滚轮缩放与平移。
+          提示：拖动中心橙色圆点进行 2D 自由移动；拖动蓝色箭头沿{" "}
+          <InlineMath tex="\operatorname{Row}(A)" />{" "}
+          行空间定向滑动；拖动红色箭头沿{" "}
+          <InlineMath tex="\operatorname{Null}(A)" />{" "}
+          零空间定向滑动（观察右侧输出向量 <InlineMath tex="b = Ax" />{" "}
+          保持完全静止不变！）。两个视口均支持滚轮缩放与中键/右键平移。
         </p>
       </div>
     </ExpandableDemo>

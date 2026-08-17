@@ -1,11 +1,10 @@
-import { useState } from "react";
-import { clamp } from "../../visualizations/core/common/math";
-import { attachDrag3D } from "../../visualizations/core/3d/drag3d";
+import { useState, useRef } from "react";
 import {
   DOMAIN,
   SURFACE_FN,
   createSurfaceScene,
 } from "../../visualizations/scenes/calculus/bivariate-surface";
+import { attachGizmo3D } from "../../visualizations/core/3d/gizmo3d";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
@@ -17,28 +16,41 @@ export default function TangentPlaneDemo({ height }: { height?: string }) {
   const showAxes = true;
   const [surfaceTransparent, setSurfaceTransparent] = useState(true);
 
+  const pointRef = useRef(point);
+  pointRef.current = point;
+
   const { containerRef } = useViewer3D(
     () => createSurfaceScene(),
     ({ api, viewer }) => {
-      api.setPoint(point.x, point.y);
+      api.setPoint(pointRef.current.x, pointRef.current.y);
       api.setAxesVisible(showAxes);
       api.setSurfaceTransparent(surfaceTransparent);
 
-      return attachDrag3D({
+      return attachGizmo3D({
         domElement: viewer.renderer.domElement,
         camera: viewer.camera,
         controls: viewer.controls,
-        targets: [api.surface],
-        onDrag(hit) {
-          if (!hit) return;
-          const nx = clamp(hit.point.x, -DOMAIN, DOMAIN);
-          const ny = clamp(-hit.point.z, -DOMAIN, DOMAIN);
-          setPoint({ x: nx, y: ny });
-          api.setPoint(nx, ny);
+        gizmo: api.gizmo,
+        bounds: {
+          xMin: -DOMAIN,
+          xMax: DOMAIN,
+          yMin: -DOMAIN,
+          yMax: DOMAIN,
         },
+        surfaceFunc: (x, y) => SURFACE_FN.f(x, y),
+        getPosition: () => ({
+          x: pointRef.current.x,
+          y: pointRef.current.y,
+          z: SURFACE_FN.f(pointRef.current.x, pointRef.current.y),
+        }),
+        onPositionChange: (pos) => {
+          setPoint({ x: pos.x, y: pos.y });
+          api.setPoint(pos.x, pos.y);
+        },
+        render: () => viewer.render(),
       });
     },
-    [point, showAxes, surfaceTransparent],
+    [showAxes, surfaceTransparent],
   );
 
   const { x, y } = point;

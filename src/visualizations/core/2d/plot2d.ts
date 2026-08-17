@@ -453,6 +453,22 @@ export function drawPoint(
   ctx.stroke();
 }
 
+/** Draw a small solid dot in screen pixel coordinates. */
+export function drawPixelPoint(
+  ctx: CanvasRenderingContext2D,
+  px: number,
+  py: number,
+  color: string,
+  radius = 5,
+): void {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(px, py, radius, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
 export interface SegmentStyle {
   color?: string;
   width?: number;
@@ -478,4 +494,323 @@ export function drawSegment(
   ctx.lineTo(plot.toScreenX(x1), plot.toScreenY(y1));
   ctx.stroke();
   ctx.setLineDash([]);
+}
+
+export interface DragHandleOptions {
+  color: string;
+  isHovered?: boolean;
+  isDragging?: boolean;
+  radius?: number;
+  strokeColor?: string;
+  alwaysVisible?: boolean;
+  opacity?: number;
+}
+
+/**
+ * Standardized 2D draggable point handle.
+ * Hidden by default in idle state; smoothly reveals on hover or drag with optional opacity fade.
+ */
+export function drawDragHandle(
+  ctx: CanvasRenderingContext2D,
+  sx: number,
+  sy: number,
+  options: DragHandleOptions,
+): void {
+  const {
+    color,
+    isHovered = false,
+    isDragging = false,
+    radius = 6,
+    strokeColor = "#ffffff",
+    alwaysVisible = false,
+    opacity,
+  } = options;
+
+  if (opacity !== undefined) {
+    if (opacity <= 0.001) {
+      return;
+    }
+  } else {
+    if (!isHovered && !isDragging && !alwaysVisible) {
+      return;
+    }
+  }
+
+  const alpha = opacity ?? 1.0;
+  const haloRadius = isDragging
+    ? radius + 9
+    : isHovered
+      ? radius + 7
+      : radius + 4;
+  const haloAlpha = isDragging ? "66" : isHovered ? "40" : "1e";
+
+  ctx.save();
+  if (alpha < 0.999) {
+    ctx.globalAlpha *= alpha;
+  }
+
+  // 1. Halo / interaction ring
+  ctx.beginPath();
+  ctx.arc(sx, sy, haloRadius, 0, Math.PI * 2);
+  ctx.fillStyle =
+    color.startsWith("#") && color.length === 7
+      ? color + haloAlpha
+      : "rgba(100, 116, 139, 0.2)";
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = isHovered || isDragging ? 2.5 : 1.5;
+  ctx.stroke();
+
+  // 2. Core point
+  ctx.beginPath();
+  ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+  ctx.restore();
+}
+
+export interface DragGuideTrackOptions {
+  origin?: { x: number; y: number };
+  direction: { x: number; y: number };
+  color?: string;
+  label?: string;
+  width?: number;
+  dash?: number[];
+  opacity?: number;
+}
+
+/**
+ * Draws an extended directional guide line across the visible viewport for constrained dragging.
+ */
+export function drawDragGuideTrack(
+  ctx: CanvasRenderingContext2D,
+  plot: Plot2D,
+  options: DragGuideTrackOptions,
+): void {
+  const {
+    origin = { x: 0, y: 0 },
+    direction,
+    color = "#3b82f6",
+    label,
+    width = 1.5,
+    dash = [5, 4],
+    opacity = 1.0,
+  } = options;
+
+  if (opacity <= 0.001) return;
+
+  const len = Math.hypot(direction.x, direction.y);
+  if (len < 1e-6) return;
+  const dx = direction.x / len;
+  const dy = direction.y / len;
+
+  const visible = getVisibleBounds(plot);
+  const diag = Math.hypot(
+    visible.xMax - visible.xMin,
+    visible.yMax - visible.yMin,
+  );
+  const span = diag * 1.5;
+
+  const p0 = { x: origin.x - dx * span, y: origin.y - dy * span };
+  const p1 = { x: origin.x + dx * span, y: origin.y + dy * span };
+
+  const s0x = plot.toScreenX(p0.x);
+  const s0y = plot.toScreenY(p0.y);
+  const s1x = plot.toScreenX(p1.x);
+  const s1y = plot.toScreenY(p1.y);
+
+  ctx.save();
+  if (opacity < 0.999) {
+    ctx.globalAlpha *= opacity;
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.setLineDash(dash);
+  ctx.beginPath();
+  ctx.moveTo(s0x, s0y);
+  ctx.lineTo(s1x, s1y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw arrowheads at viewport edges
+  ctx.fillStyle = color;
+  arrowHead(ctx, s1x, s1y, dx, -dy, 6);
+  arrowHead(ctx, s0x, s0y, -dx, dy, 6);
+
+  if (label) {
+    const originSx = plot.toScreenX(origin.x);
+    const originSy = plot.toScreenY(origin.y);
+    ctx.font = "bold 11px system-ui, sans-serif";
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(label, (originSx + s1x) / 2, (originSy + s1y) / 2 - 6);
+  }
+
+  ctx.restore();
+}
+
+export interface GizmoArrowVisual {
+  id: string;
+  direction: { x: number; y: number };
+  color?: string;
+  label?: string;
+  lengthPx?: number;
+}
+
+export interface DragGizmoOptions {
+  color: string;
+  isHoveredCenter?: boolean;
+  isDraggingCenter?: boolean;
+  hoveredArrowId?: string | null;
+  draggingArrowId?: string | null;
+  radius?: number;
+  arrows?: GizmoArrowVisual[];
+  alwaysVisible?: boolean;
+  opacity?: number;
+}
+
+/**
+ * Standardized 2D Transform Gizmo handle widget:
+ * Center point for 2D free dragging + extending arrows for directional 1D constrained dragging.
+ * Hidden by default in idle state; smoothly reveals on hover or drag with optional opacity fade.
+ */
+export function drawDragGizmo(
+  ctx: CanvasRenderingContext2D,
+  plot: Plot2D,
+  x: number,
+  y: number,
+  options: DragGizmoOptions,
+): void {
+  const {
+    color,
+    isHoveredCenter = false,
+    isDraggingCenter = false,
+    hoveredArrowId = null,
+    draggingArrowId = null,
+    radius = 6,
+    arrows = [],
+    alwaysVisible = false,
+    opacity,
+  } = options;
+
+  const sx = plot.toScreenX(x);
+  const sy = plot.toScreenY(y);
+
+  // 1. Permanent core point (always 100% visible)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+  ctx.fillStyle = isHoveredCenter || isDraggingCenter ? "#facc15" : color;
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. Determine overlay opacity
+  const alpha =
+    opacity !== undefined
+      ? opacity
+      : isHoveredCenter ||
+          isDraggingCenter ||
+          hoveredArrowId !== null ||
+          draggingArrowId !== null ||
+          alwaysVisible
+        ? 1.0
+        : 0.0;
+
+  if (alpha <= 0.001) {
+    return;
+  }
+
+  ctx.save();
+  if (alpha < 0.999) {
+    ctx.globalAlpha *= alpha;
+  }
+
+  const hasActiveArrow = hoveredArrowId !== null || draggingArrowId !== null;
+
+  // 3. Draw Directional Gizmo Arrows extending from center
+  for (const arr of arrows) {
+    const len = Math.hypot(arr.direction.x, arr.direction.y);
+    if (len < 1e-6) continue;
+
+    // Convert direction vector to screen space delta
+    const sDx = plot.toScreenX(arr.direction.x) - plot.toScreenX(0);
+    const sDy = plot.toScreenY(arr.direction.y) - plot.toScreenY(0);
+    const sLen = Math.hypot(sDx, sDy) || 1;
+    const ux = sDx / sLen;
+    const uy = sDy / sLen;
+
+    const shaftLen = arr.lengthPx ?? 32;
+    const isArrActive = draggingArrowId === arr.id;
+    const isArrHovered = hoveredArrowId === arr.id;
+    const isMatch = isArrActive || isArrHovered;
+    const arrowColor = isMatch ? "#facc15" : (arr.color ?? color);
+
+    const startX = sx + ux * (radius + 2);
+    const startY = sy + uy * (radius + 2);
+    const tipX = sx + ux * shaftLen;
+    const tipY = sy + uy * shaftLen;
+
+    ctx.save();
+    if (hasActiveArrow && !isMatch) {
+      ctx.globalAlpha *= 0.35;
+    }
+
+    // Arrow hover / active glow ring at tip
+    if (isMatch) {
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, isArrActive ? 14 : 12, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(250, 204, 21, 0.35)";
+      ctx.fill();
+      ctx.strokeStyle = "#facc15";
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+    }
+
+    // Arrow line shaft
+    ctx.strokeStyle = arrowColor;
+    ctx.lineWidth = isMatch ? 2.8 : 1.8;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(tipX, tipY);
+    ctx.stroke();
+
+    // Arrow head
+    ctx.fillStyle = arrowColor;
+    arrowHead(ctx, tipX, tipY, ux, uy, isMatch ? 8 : 6);
+
+    // Optional label badge
+    if (arr.label) {
+      const labelDist = shaftLen + 14;
+      const labelX = sx + ux * labelDist;
+      const labelY = sy + uy * labelDist;
+      ctx.font = isMatch
+        ? "bold 11px ui-sans-serif, system-ui, sans-serif"
+        : "bold 10px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillStyle = arrowColor;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(arr.label, labelX, labelY);
+    }
+    ctx.restore();
+  }
+
+  // 4. Draw Center Point Outer Halo when hovered or dragging
+  if (isHoveredCenter || isDraggingCenter) {
+    ctx.beginPath();
+    ctx.arc(sx, sy, radius + 8, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(250, 204, 21, 0.28)";
+    ctx.fill();
+    ctx.strokeStyle = "#facc15";
+    ctx.lineWidth = 2.0;
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }

@@ -15,3 +15,16 @@ export function mathToWorld(
 ): [number, number, number] {
   return [x, z, -y];
 }
+
+/**
+ * Inverse mapping from Three.js world coordinates back to right-handed z-up math coordinates:
+ *
+ *   (x, y, z)_world -> (x, -z, y)_math
+ */
+export function worldToMath(
+  wx: number,
+  wy: number,
+  wz: number,
+): [number, number, number] {
+  return [wx, -wz, wy];
+}

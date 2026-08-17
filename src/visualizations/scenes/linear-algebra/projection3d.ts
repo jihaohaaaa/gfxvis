@@ -13,7 +13,15 @@ import {
 } from "three";
 import { createAxesGroup } from "../../core/3d/axes3d";
 import { mathToWorld } from "../../core/3d/coords";
-import { addGroundGrid, disposeObject } from "../../core/3d/three-utils";
+import {
+  addGroundGrid,
+  addStandardLights,
+  disposeObject,
+} from "../../core/3d/three-utils";
+import {
+  createTransformGizmo3D,
+  type TransformGizmo3D,
+} from "../../core/3d/gizmo3d";
 import type { ProjectionModeId } from "./projection2d";
 
 export type ProjectionTargetId = "xy-plane" | "plane-xyz";
@@ -39,6 +47,16 @@ export interface Projection3DTarget {
   /** Plane normal in math coordinates. */
   normal: [number, number, number];
   modes: Record<ProjectionModeId, Projection3DMode>;
+}
+
+export interface Projection3DScene {
+  scene: Scene;
+  gizmo: TransformGizmo3D;
+  setVector(x: number, y: number, z: number): void;
+  setMode(mode: ProjectionModeId): void;
+  setTarget(target: ProjectionTargetId): void;
+  setAxesVisible(visible: boolean): void;
+  dispose(): void;
 }
 
 /**
@@ -98,105 +116,109 @@ export const PROJECTION3D_TARGETS: Record<
       },
       oblique: {
         id: "oblique",
-        label: "斜投影(沿 (1,0,0))",
-        tex: "\\begin{pmatrix}0&-1&-1\\\\0&1&0\\\\0&0&1\\end{pmatrix}",
-        texPx: "(-(y+z),\\,y,\\,z)",
-        texResidual: "(x+y+z,\\,0,\\,0)",
-        project: (x, y, z) => [-(y + z), y, z],
-        residual: (x, y, z) => [x + y + z, 0, 0],
+        label: "斜投影(沿 (1,1,-1))",
+        tex: "\\frac{1}{3}\\begin{pmatrix}2&-1&1\\\\-1&2&1\\\\1&1&2\\end{pmatrix}",
+        texPx: "(x-\\tfrac{d}{3},\\,y-\\tfrac{d}{3},\\,z+\\tfrac{d}{3})",
+        texResidual: "(\\tfrac{d}{3},\\,\\tfrac{d}{3},\\,-\\tfrac{d}{3})",
+        project: (x, y, z) => {
+          const d = x + y - z;
+          return [x - d / 3, y - d / 3, z + d / 3];
+        },
+        residual: (x, y, z) => {
+          const d = x + y - z;
+          return [d / 3, d / 3, -d / 3];
+        },
       },
     },
   },
 };
 
-export interface Projection3DScene {
-  scene: Scene;
-  setVector(x: number, y: number, z: number): void;
-  setMode(mode: ProjectionModeId): void;
-  setTarget(target: ProjectionTargetId): void;
-  setAxesVisible(visible: boolean): void;
-  dispose(): void;
-}
-
-const ORIGIN = new Vector3();
-const X_COLOR = 0x64748b;
-const PX_COLOR = 0x3b82f6;
+const ORIGIN = new Vector3(0, 0, 0);
 
 function applyArrow(
   arrow: ArrowHelper,
-  from: Vector3,
-  to: Vector3,
-  headLength: number,
+  origin: Vector3,
+  target: Vector3,
+  headLen: number,
   headWidth: number,
 ): void {
-  const len = from.distanceTo(to);
+  const dir = target.clone().sub(origin);
+  const len = dir.length();
   if (len < 1e-4) {
     arrow.visible = false;
     return;
   }
   arrow.visible = true;
-  arrow.position.copy(from);
-  arrow.setDirection(to.clone().sub(from).normalize());
-  arrow.setLength(
-    len,
-    Math.min(headLength, len * 0.3),
-    Math.min(headWidth, len * 0.18),
-  );
+  arrow.position.copy(origin);
+  arrow.setDirection(dir.normalize());
+  arrow.setLength(len, headLen, headWidth);
 }
 
-/**
- * 3D projection demo: vector x (arrow), its projection Px onto the selected
- * target plane, the residual (I - P)x (dashed), and a ring at Px showing
- * P^2 x = Px. The target plane (xy-plane or x + y + z = 0) and the projection
- * mode (orthogonal / oblique) are switchable.
- */
 export function createProjection3DScene(): Projection3DScene {
   const scene = new Scene();
+  addStandardLights(scene);
 
-  // Ground grid marks the math z = 0 (world y = 0) plane as a reference.
-  addGroundGrid(scene, 6);
+  const axesGroup = createAxesGroup(3);
+  scene.add(axesGroup);
+  addGroundGrid(scene, 6, 12);
 
-  // Translucent target plane, re-oriented when the target changes.
   const targetPlane = new Mesh(
     new PlaneGeometry(6, 6),
     new MeshBasicMaterial({
-      color: 0x4cc2ff,
+      color: 0x38bdf8,
       transparent: true,
-      opacity: 0.12,
+      opacity: 0.18,
       side: DoubleSide,
       depthWrite: false,
     }),
   );
-  targetPlane.renderOrder = 1;
   scene.add(targetPlane);
 
-  const axesGroup = createAxesGroup(3.0);
-  scene.add(axesGroup);
+  const vector = { x: 2, y: 1.5, z: 1 };
+  let currentTarget: ProjectionTargetId = "xy-plane";
+  let currentMode: ProjectionModeId = "orthogonal";
 
-  const xArrow = new ArrowHelper(new Vector3(1, 0, 0), ORIGIN, 1, X_COLOR);
-  const pxArrow = new ArrowHelper(new Vector3(1, 0, 0), ORIGIN, 1, PX_COLOR);
-  scene.add(xArrow, pxArrow);
+  const xArrow = new ArrowHelper(
+    new Vector3(1, 0, 0),
+    ORIGIN,
+    1,
+    0xd97706,
+    0.22,
+    0.12,
+  );
+  const pxArrow = new ArrowHelper(
+    new Vector3(1, 0, 0),
+    ORIGIN,
+    1,
+    0x2563eb,
+    0.2,
+    0.11,
+  );
+  scene.add(xArrow);
+  scene.add(pxArrow);
 
   const residualLine = new Line(
     new BufferGeometry(),
     new LineDashedMaterial({
-      color: 0x94a3b8,
-      dashSize: 0.12,
-      gapSize: 0.08,
+      color: 0xd97706,
+      dashSize: 0.15,
+      gapSize: 0.1,
+      transparent: true,
+      opacity: 0.8,
     }),
   );
   scene.add(residualLine);
 
   const ring = new Mesh(
-    new TorusGeometry(0.1, 0.025, 8, 24),
-    new MeshBasicMaterial({ color: PX_COLOR }),
+    new TorusGeometry(0.12, 0.02, 12, 24),
+    new MeshBasicMaterial({ color: 0x2563eb }),
   );
-  ring.renderOrder = 2;
+  ring.rotation.x = Math.PI / 2;
   scene.add(ring);
 
-  let currentTarget: ProjectionTargetId = "xy-plane";
-  let currentMode: ProjectionModeId = "orthogonal";
-  const vector = { x: 2, y: 1.5, z: 1 };
+  // 3D Transform Gizmo at vector tip x
+  const { gizmo } = createTransformGizmo3D(vector);
+  scene.add(gizmo.group);
 
   function orientTargetPlane(): void {
     const [nx, ny, nz] = PROJECTION3D_TARGETS[currentTarget].normal;
@@ -221,6 +243,7 @@ export function createProjection3DScene(): Projection3DScene {
     residualLine.computeLineDistances();
 
     ring.position.copy(ptip);
+    gizmo.setPosition(x, y, z);
   }
 
   function setVector(x: number, y: number, z: number): void {
@@ -247,8 +270,17 @@ export function createProjection3DScene(): Projection3DScene {
 
   function dispose(): void {
     disposeObject(scene);
+    gizmo.dispose();
   }
 
   setTarget("xy-plane");
-  return { scene, setVector, setMode, setTarget, setAxesVisible, dispose };
+  return {
+    scene,
+    gizmo,
+    setVector,
+    setMode,
+    setTarget,
+    setAxesVisible,
+    dispose,
+  };
 }

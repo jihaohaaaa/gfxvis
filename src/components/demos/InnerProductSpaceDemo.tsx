@@ -5,7 +5,10 @@ import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ParamSlider from "../framework/ParamSlider";
-import { type Bounds2 } from "../../visualizations/core/2d/plot2d";
+import {
+  drawDragHandle,
+  type Bounds2,
+} from "../../visualizations/core/2d/plot2d";
 
 type ModeType = "weighted" | "func" | "theorems";
 
@@ -201,9 +204,56 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
   ]);
 
   const dragTargetRef = useRef<"uVec" | "uThem" | "vThem" | null>(null);
+  const hoveredTargetRef = useRef<"uVec" | "uThem" | "vThem" | null>(null);
 
   const { containerRef, canvasRef, redraw } = useCanvas2D({
     initialBounds: BOUNDS,
+    onHover(e, plot) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const st = stateRef.current;
+      const center = { x: plot.width / 2, y: plot.height / 2 };
+      const scale = Math.min(plot.width, plot.height) / 8;
+
+      if (st.mode === "weighted") {
+        const pU = {
+          x: center.x + st.uVec.x * scale,
+          y: center.y - st.uVec.y * scale,
+        };
+        const distU = Math.hypot(px - pU.x, py - pU.y);
+        if (distU <= 24) {
+          hoveredTargetRef.current = "uVec";
+          canvas.style.cursor = dragTargetRef.current ? "grabbing" : "grab";
+          return;
+        }
+      } else if (st.mode === "theorems") {
+        const pU = {
+          x: center.x + st.uThem.x * scale,
+          y: center.y - st.uThem.y * scale,
+        };
+        const pV = {
+          x: center.x + st.vThem.x * scale,
+          y: center.y - st.vThem.y * scale,
+        };
+        const distU = Math.hypot(px - pU.x, py - pU.y);
+        const distV = Math.hypot(px - pV.x, py - pV.y);
+        if (distU <= 24) {
+          hoveredTargetRef.current = "uThem";
+          canvas.style.cursor = dragTargetRef.current ? "grabbing" : "grab";
+          return;
+        }
+        if (distV <= 24) {
+          hoveredTargetRef.current = "vThem";
+          canvas.style.cursor = dragTargetRef.current ? "grabbing" : "grab";
+          return;
+        }
+      }
+      hoveredTargetRef.current = null;
+      if (!dragTargetRef.current) canvas.style.cursor = "";
+    },
     onLeftDown(e, plot) {
       const canvas = canvasRef.current;
       if (!canvas) return false;
@@ -212,13 +262,22 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
       const py = e.clientY - rect.top;
 
       const st = stateRef.current;
+      const center = { x: plot.width / 2, y: plot.height / 2 };
+      const scale = Math.min(plot.width, plot.height) / 8;
+
       if (st.mode === "weighted") {
-        dragTargetRef.current = "uVec";
-        updateVectorFromMouse(px, py, plot.width, plot.height, "uVec");
-        return true;
+        const pU = {
+          x: center.x + st.uVec.x * scale,
+          y: center.y - st.uVec.y * scale,
+        };
+        const distU = Math.hypot(px - pU.x, py - pU.y);
+        if (distU <= 24) {
+          dragTargetRef.current = "uVec";
+          hoveredTargetRef.current = "uVec";
+          canvas.style.cursor = "grabbing";
+          return true;
+        }
       } else if (st.mode === "theorems") {
-        const center = { x: plot.width / 2, y: plot.height / 2 };
-        const scale = Math.min(plot.width, plot.height) / 8;
         const pU = {
           x: center.x + st.uThem.x * scale,
           y: center.y - st.uThem.y * scale,
@@ -231,11 +290,15 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
         const distU = Math.hypot(px - pU.x, py - pU.y);
         const distV = Math.hypot(px - pV.x, py - pV.y);
 
-        if (distU < 20) {
+        if (distU <= 24 && distU <= distV) {
           dragTargetRef.current = "uThem";
+          hoveredTargetRef.current = "uThem";
+          canvas.style.cursor = "grabbing";
           return true;
-        } else if (distV < 20) {
+        } else if (distV <= 24) {
           dragTargetRef.current = "vThem";
+          hoveredTargetRef.current = "vThem";
+          canvas.style.cursor = "grabbing";
           return true;
         }
       }
@@ -258,6 +321,10 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
     },
     onLeftUp() {
       dragTargetRef.current = null;
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.style.cursor = hoveredTargetRef.current ? "grab" : "";
+      }
     },
     draw(ctx, plot, theme) {
       const { width, height } = plot;
@@ -337,9 +404,13 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
         const pU = toCanvas(st.uVec.x, st.uVec.y);
         const pV = toCanvas(st.vWeighted.x, st.vWeighted.y);
 
-        // Vector u (Amber)
+        // Vector u (Amber) & handle
         drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pU.x, pU.y, "#d97706", 3);
-        drawPixelPoint(ctx, pU.x, pU.y, "#d97706", 7);
+        drawDragHandle(ctx, pU.x, pU.y, {
+          color: "#d97706",
+          isHovered: hoveredTargetRef.current === "uVec",
+          isDragging: dragTargetRef.current === "uVec",
+        });
 
         ctx.save();
         ctx.font = "bold 12px system-ui, sans-serif";
@@ -495,9 +566,18 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
         );
         ctx.restore();
 
-        // Vector u (Blue)
+        const isHoveredU = hoveredTargetRef.current === "uThem";
+        const isDraggingU = dragTargetRef.current === "uThem";
+        const isHoveredV = hoveredTargetRef.current === "vThem";
+        const isDraggingV = dragTargetRef.current === "vThem";
+
+        // Vector u (Blue) & handle
         drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pU.x, pU.y, "#2563eb", 3);
-        drawPixelPoint(ctx, pU.x, pU.y, "#2563eb", 7);
+        drawDragHandle(ctx, pU.x, pU.y, {
+          color: "#2563eb",
+          isHovered: isHoveredU,
+          isDragging: isDraggingU,
+        });
 
         ctx.save();
         ctx.font = "bold 12px system-ui, sans-serif";
@@ -509,9 +589,13 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
         );
         ctx.restore();
 
-        // Vector v (Purple)
+        // Vector v (Purple) & handle
         drawPixelSegment(ctx, pOrigin.x, pOrigin.y, pV.x, pV.y, "#9333ea", 3);
-        drawPixelPoint(ctx, pV.x, pV.y, "#9333ea", 7);
+        drawDragHandle(ctx, pV.x, pV.y, {
+          color: "#9333ea",
+          isHovered: isHoveredV,
+          isDragging: isDraggingV,
+        });
 
         ctx.save();
         ctx.font = "bold 12px system-ui, sans-serif";

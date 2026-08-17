@@ -65,8 +65,11 @@ export function useCanvas2D(
       onLeftUp(e) {
         optionsRef.current.onLeftUp?.(e);
       },
-      onHover(e, plot) {
-        optionsRef.current.onHover?.(e, plot);
+      onHover(e, plot, redraw) {
+        optionsRef.current.onHover?.(e, plot, redraw);
+      },
+      onPointerLeave(e, plot, redraw) {
+        optionsRef.current.onPointerLeave?.(e, plot, redraw);
       },
     });
     controllerRef.current = controller;

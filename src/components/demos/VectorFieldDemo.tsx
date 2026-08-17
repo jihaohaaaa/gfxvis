@@ -11,7 +11,7 @@ import {
 import {
   drawAdaptiveAxes,
   drawArrow,
-  drawPoint,
+  drawDragGizmo,
   getVisibleBounds,
   type Bounds2,
 } from "../../visualizations/core/2d/plot2d";
@@ -96,16 +96,14 @@ export default function VectorFieldDemo({ height }: { height?: string }) {
           );
         }
 
-        drawPoint(ctx, plot, probe.x, probe.y, {
+        // Interactive probe point with 2D Transform Gizmo
+        drawDragGizmo(ctx, plot, probe.x, probe.y, {
           color: theme.accent,
-          filled: true,
-          radius: 5,
-        });
-        drawPoint(ctx, plot, probe.x, probe.y, {
-          color: theme.accent,
-          filled: false,
-          radius: 9,
-          width: 1.8,
+          isHoveredCenter: dragHandlers.isCenterHovered("probe"),
+          isDraggingCenter: dragHandlers.isCenterDragging("probe"),
+          hoveredArrowId: dragHandlers.getHoveredArrowId("probe"),
+          draggingArrowId: dragHandlers.getDraggingArrowId("probe"),
+          opacity: dragHandlers.getOpacity("probe"),
         });
       },
       onHover(e, plot) {

@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   drawAdaptiveAxes,
   drawArrow,
+  drawDragGizmo,
+  drawDragGuideTrack,
   drawPoint,
   drawSegment,
   getVisibleBounds,
@@ -80,8 +82,40 @@ export default function ProjectionDemo({ height }: { height?: string }) {
 
   const mode = PROJECTION_TARGETS[targetId].modes[modeId];
 
+  const gizmoArrows = useMemo(() => {
+    const dirSubspace = targetId === "x-axis" ? { x: 1, y: 0 } : { x: 1, y: 1 };
+    let dirResidual = { x: 0, y: 1 };
+    if (targetId === "line-yx") {
+      dirResidual = modeId === "orthogonal" ? { x: -1, y: 1 } : { x: 0, y: 1 };
+    }
+    return [
+      {
+        id: "subspace",
+        direction: dirSubspace,
+        color: "#2563eb",
+        label: "L",
+        lengthPx: 34,
+      },
+      {
+        id: "residual",
+        direction: dirResidual,
+        color: "#64748b",
+        label: "L^⊥",
+        lengthPx: 34,
+      },
+    ];
+  }, [targetId, modeId]);
+
   const dragHandlers = useVectorDrag<"probe">({
-    targets: [{ id: "probe", x: probe.x, y: probe.y }],
+    targets: [
+      {
+        id: "probe",
+        x: probe.x,
+        y: probe.y,
+        bounds: PROBE_CLAMP,
+        arrows: gizmoArrows,
+      },
+    ],
     onDrag(_, pos) {
       setProbe({
         x: clamp(pos.x, PROBE_CLAMP.xMin, PROBE_CLAMP.xMax),
@@ -94,10 +128,20 @@ export default function ProjectionDemo({ height }: { height?: string }) {
     {
       initialBounds: PROJECTION_BOUNDS,
       margin: MARGIN,
+      onLeftDown: dragHandlers.onLeftDown,
+      onLeftMove: dragHandlers.onLeftMove,
+      onLeftUp: dragHandlers.onLeftUp,
+      onHover: dragHandlers.onHover,
+      onPointerLeave: dragHandlers.onPointerLeave,
       draw(ctx, plot, theme) {
         const target = PROJECTION_TARGETS[targetId];
         const m = target.modes[modeId];
         drawAdaptiveAxes(ctx, plot, theme);
+
+        const activeTrack = dragHandlers.getActiveTrack();
+        if (activeTrack) {
+          drawDragGuideTrack(ctx, plot, activeTrack);
+        }
 
         const { x, y } = probe;
         const [px, py] = m.project(x, y);
@@ -192,16 +236,16 @@ export default function ProjectionDemo({ height }: { height?: string }) {
           width: 2,
         });
 
-        // Glowing interactive grab handle at tip x
-        ctx.save();
-        ctx.fillStyle = theme.ink;
-        ctx.beginPath();
-        ctx.arc(xTipX, xTipY, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.restore();
+        // Interactive Transform Gizmo at tip x
+        drawDragGizmo(ctx, plot, x, y, {
+          color: theme.ink,
+          isHoveredCenter: dragHandlers.isCenterHovered("probe"),
+          isDraggingCenter: dragHandlers.isCenterDragging("probe"),
+          hoveredArrowId: dragHandlers.getHoveredArrowId("probe"),
+          draggingArrowId: dragHandlers.getDraggingArrowId("probe"),
+          arrows: gizmoArrows,
+          opacity: dragHandlers.getOpacity("probe"),
+        });
 
         // 1. Badge for input vector x: x = (x, y)
         const angleX = Math.atan2(xTipY - oy, xTipX - ox);
@@ -243,15 +287,14 @@ export default function ProjectionDemo({ height }: { height?: string }) {
           ctx,
           midResX + perpX * resBadgeDist,
           midResY + perpY * resBadgeDist,
-          `(I - P)x = (${rx.toFixed(2)}, ${ry.toFixed(2)})`,
+          `e = (${rx.toFixed(2)}, ${ry.toFixed(2)})`,
           "rgba(100, 116, 139, 0.9)",
           "#ffffff",
           "rgba(255, 255, 255, 0.2)",
         );
       },
-      ...dragHandlers,
     },
-    [targetId, modeId, probe],
+    [probe, targetId, modeId],
   );
 
   const [px, py] = mode.project(probe.x, probe.y);
@@ -266,10 +309,7 @@ export default function ProjectionDemo({ height }: { height?: string }) {
           className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
         >
           <CanvasToolbar onReset={resetBounds} />
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 h-full w-full cursor-crosshair"
-          />
+          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
         </div>
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <CapsuleTabs
@@ -328,8 +368,10 @@ export default function ProjectionDemo({ height }: { height?: string }) {
           </p>
         </div>
         <p className="text-xs text-muted">
-          用 x/y 滑块调整向量,选择目标直线(x 轴或
-          y=x)与投影方式(正交/斜);空心圈表示再投影一次仍是同一落点;滚轮缩放,中键平移。
+          提示：拖动端点黑心圆点进行 2D 自由移动；拖动蓝色箭头沿子空间{" "}
+          <InlineMath tex="L" /> 滑动；拖动灰色箭头沿残差法向{" "}
+          <InlineMath tex="L^\perp" /> 滑动（落点 <InlineMath tex="Px" />{" "}
+          保持恒定不变！）。支持滚轮缩放与中键/右键平移。
         </p>
       </div>
     </ExpandableDemo>

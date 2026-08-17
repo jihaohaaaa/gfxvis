@@ -21,6 +21,10 @@ import {
   createSurfaceMaterial,
   disposeObject,
 } from "../../core/3d/three-utils";
+import {
+  createTransformGizmo3D,
+  type TransformGizmo3D,
+} from "../../core/3d/gizmo3d";
 
 export const SURFACE_FN = {
   f: (x: number, y: number) => (x * x - y * y) / 2,
@@ -33,6 +37,7 @@ export const DOMAIN = 2.4;
 export interface SurfaceScene {
   scene: Scene;
   surface: Mesh;
+  gizmo: TransformGizmo3D;
   setPoint(x: number, y: number): void;
   getPoint(): { x: number; y: number };
   setAxesVisible(visible: boolean): void;
@@ -89,6 +94,13 @@ export function createSurfaceScene(): SurfaceScene {
 
   const point = { x: 0.8, y: 0.6 };
 
+  // Surface mode 3D Transform Gizmo
+  const { gizmo } = createTransformGizmo3D({
+    initialPos: { x: point.x, y: point.y, z: SURFACE_FN.f(point.x, point.y) },
+    mode: "surface",
+  });
+  scene.add(gizmo.group);
+
   function update(): void {
     const x = point.x;
     const y = point.y;
@@ -120,6 +132,7 @@ export function createSurfaceScene(): SurfaceScene {
 
     normalArrow.position.copy(base);
     normalArrow.setDirection(normal);
+    gizmo.setPosition(x, y, z);
   }
 
   function setPoint(x: number, y: number): void {
@@ -142,12 +155,14 @@ export function createSurfaceScene(): SurfaceScene {
 
   function dispose(): void {
     disposeObject(scene);
+    gizmo.dispose();
   }
 
   update();
   return {
     scene,
     surface,
+    gizmo,
     setPoint,
     getPoint,
     setAxesVisible,

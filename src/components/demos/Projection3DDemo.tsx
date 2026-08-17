@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Vector3 } from "three";
 import {
   PROJECTION3D_TARGETS,
@@ -7,6 +7,7 @@ import {
 } from "../../visualizations/scenes/linear-algebra/projection3d";
 import type { ProjectionModeId } from "../../visualizations/scenes/linear-algebra/projection2d";
 import { mathToWorld } from "../../visualizations/core/3d/coords";
+import { attachGizmo3D } from "../../visualizations/core/3d/gizmo3d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
@@ -29,6 +30,9 @@ export default function Projection3DDemo({ height }: { height?: string }) {
   const [modeId, setModeId] = useState<ProjectionModeId>("orthogonal");
   const showAxes = true;
 
+  const vectorRef = useRef(vector);
+  vectorRef.current = vector;
+
   const [screenPos, setScreenPos] = useState<{
     xTip: { x: number; y: number; visible: boolean };
     pxTip: { x: number; y: number; visible: boolean };
@@ -48,13 +52,38 @@ export default function Projection3DDemo({ height }: { height?: string }) {
 
   const { containerRef, viewerRef } = useViewer3D(
     () => createProjection3DScene(),
-    ({ api }) => {
+    ({ api, viewer }) => {
       api.setTarget(targetId);
       api.setMode(modeId);
-      api.setVector(vector.x, vector.y, vector.z);
+      api.setVector(
+        vectorRef.current.x,
+        vectorRef.current.y,
+        vectorRef.current.z,
+      );
       api.setAxesVisible(showAxes);
+
+      return attachGizmo3D({
+        domElement: viewer.renderer.domElement,
+        camera: viewer.camera,
+        controls: viewer.controls,
+        gizmo: api.gizmo,
+        bounds: {
+          xMin: SLIDER_MIN,
+          xMax: SLIDER_MAX,
+          yMin: SLIDER_MIN,
+          yMax: SLIDER_MAX,
+          zMin: SLIDER_MIN,
+          zMax: SLIDER_MAX,
+        },
+        getPosition: () => vectorRef.current,
+        onPositionChange: (pos) => {
+          setVector(pos);
+          api.setVector(pos.x, pos.y, pos.z);
+        },
+        render: () => viewer.render(),
+      });
     },
-    [vector, targetId, modeId, showAxes],
+    [targetId, modeId, showAxes],
   );
 
   const [px, py, pz] = mode.project(vector.x, vector.y, vector.z);

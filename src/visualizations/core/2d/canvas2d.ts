@@ -16,7 +16,8 @@ export interface Canvas2DHandlers {
   onLeftMove?(e: PointerEvent, plot: Plot2D): void;
   onLeftUp?(e: PointerEvent): void;
   /** Hover (pointer move without buttons): e.g. follow a probe. */
-  onHover?(e: PointerEvent, plot: Plot2D): void;
+  onHover?(e: PointerEvent, plot: Plot2D, redraw?: () => void): void;
+  onPointerLeave?(e: PointerEvent, plot: Plot2D, redraw?: () => void): void;
 }
 
 export interface Canvas2DOptions extends Canvas2DHandlers {
@@ -208,7 +209,8 @@ export function createCanvas2D(
   };
 
   const onPointerDown = (e: PointerEvent) => {
-    if (e.button === 1) {
+    // Middle click (button 1) or Right click (button 2) for 2D panning
+    if (e.button === 1 || e.button === 2) {
       e.preventDefault();
       panning = true;
       lastX = e.clientX;
@@ -216,6 +218,7 @@ export function createCanvas2D(
       canvas.setPointerCapture(e.pointerId);
       return;
     }
+    // Left click (button 0): dedicated to object interaction (must return true from onLeftDown)
     if (e.button === 0) {
       const rect = canvas.getBoundingClientRect();
       const plot = createPlot2D(bounds, rect.width, rect.height, margin);
@@ -250,7 +253,15 @@ export function createCanvas2D(
       options.onLeftMove?.(e, plot);
       return;
     }
-    options.onHover?.(e, plot);
+    options.onHover?.(e, plot, draw);
+  };
+
+  const onPointerLeave = (e: PointerEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const plot = createPlot2D(bounds, rect.width, rect.height, margin);
+    options.onHover?.(e, plot, draw);
+    options.onPointerLeave?.(e, plot, draw);
   };
 
   const onPointerUp = (e: PointerEvent) => {
@@ -261,11 +272,17 @@ export function createCanvas2D(
     }
   };
 
+  const onContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+  };
+
   canvas.addEventListener("wheel", onWheel, { passive: false });
   canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointerleave", onPointerLeave);
   canvas.addEventListener("pointerup", onPointerUp);
   canvas.addEventListener("pointercancel", onPointerUp);
+  canvas.addEventListener("contextmenu", onContextMenu);
 
   const stopThemeWatch = watchTheme(draw);
   const resizeObserver = new ResizeObserver(draw);
@@ -310,6 +327,7 @@ export function createCanvas2D(
       canvas.removeEventListener("wheel", onWheel);
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerleave", onPointerLeave);
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerUp);
       stopThemeWatch();

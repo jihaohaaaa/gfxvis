@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { worldToMath } from "./coords";
+import { clamp } from "../common/math";
 
 export interface Drag3DOptions {
   domElement: HTMLElement;
@@ -91,4 +93,92 @@ export function attachDrag3D(options: Drag3DOptions): () => void {
     domElement.removeEventListener("pointerup", onPointerUp);
     domElement.removeEventListener("pointercancel", onPointerUp);
   };
+}
+
+export interface PlaneBounds3D {
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  zMin: number;
+  zMax: number;
+}
+
+export interface AttachPlaneDrag3DOptions {
+  domElement: HTMLElement;
+  camera: THREE.Camera;
+  controls: OrbitControls;
+  target: THREE.Object3D;
+  onPositionChange: (pos: { x: number; y: number; z: number }) => void;
+  bounds?: PlaneBounds3D;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
+  onHover?: (isHovered: boolean) => void;
+}
+
+/**
+ * Higher-level abstraction for free 3D point dragging over a dynamic camera-facing plane.
+ * Automatically manages raycasting, camera-plane projection, world-to-math conversion,
+ * coordinate clamping, cursor styling, and OrbitControls locking.
+ */
+export function attachPlaneDrag3D(
+  options: AttachPlaneDrag3DOptions,
+): () => void {
+  const {
+    domElement,
+    camera,
+    controls,
+    target,
+    onPositionChange,
+    bounds,
+    onDragStart,
+    onHover,
+  } = options;
+
+  const dragPlane = new THREE.Plane();
+  const cameraDir = new THREE.Vector3();
+  const planeIntersection = new THREE.Vector3();
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  return attachDrag3D({
+    domElement,
+    camera,
+    controls,
+    targets: [target],
+    onDragStart(hit) {
+      camera.getWorldDirection(cameraDir);
+      cameraDir.negate();
+      dragPlane.setFromNormalAndCoplanarPoint(cameraDir, hit.point);
+      domElement.style.cursor = "grabbing";
+      onDragStart?.();
+    },
+    onDrag(_hit, e) {
+      const rect = domElement.getBoundingClientRect();
+      pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+
+      if (raycaster.ray.intersectPlane(dragPlane, planeIntersection)) {
+        const [mx, my, mz] = worldToMath(
+          planeIntersection.x,
+          planeIntersection.y,
+          planeIntersection.z,
+        );
+        let x = mx;
+        let y = my;
+        let z = mz;
+        if (bounds) {
+          x = clamp(x, bounds.xMin, bounds.xMax);
+          y = clamp(y, bounds.yMin, bounds.yMax);
+          z = clamp(z, bounds.zMin, bounds.zMax);
+        }
+        onPositionChange({ x, y, z });
+      }
+    },
+    onHover(hit) {
+      domElement.style.cursor = hit ? "grab" : "";
+      onHover?.(hit !== null);
+    },
+  });
 }

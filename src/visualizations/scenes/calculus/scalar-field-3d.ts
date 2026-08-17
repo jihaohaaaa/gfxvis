@@ -19,7 +19,11 @@ import { createAxesGroup } from "../../core/3d/axes3d";
 import { coolwarm, valueToT } from "../../core/common/colormap";
 import { mathToWorld } from "../../core/3d/coords";
 import { clamp, forEachCube } from "../../core/common/math";
-import { disposeObject } from "../../core/3d/three-utils";
+import { addStandardLights, disposeObject } from "../../core/3d/three-utils";
+import {
+  createTransformGizmo3D,
+  type TransformGizmo3D,
+} from "../../core/3d/gizmo3d";
 
 export const FIELD3D = {
   f: (x: number, y: number, z: number) => x * x + y * y - z * z,
@@ -36,10 +40,13 @@ export const GRID_DEFAULT = 8;
 
 export interface CloudScene {
   scene: Scene;
+  gizmo: TransformGizmo3D;
   getStats(): { min: number; max: number };
   setDensity(n: number): void;
   setAxesVisible(visible: boolean): void;
   setArrowsVisible(visible: boolean): void;
+  setProbe(x: number, y: number, z: number): void;
+  setProbeVisible(visible: boolean): void;
   dispose(): void;
 }
 
@@ -145,13 +152,15 @@ function computeStats(): { min: number; max: number } {
 
 /**
  * 3D scalar field as a discrete point cloud (color = value) plus gradient
- * arrows (direction = nabla phi). Density (points per axis) is adjustable and
- * rebuilds the cloud and arrows on demand.
+ * arrows (direction = nabla phi) and an interactive 3D Transform Gizmo probe.
  */
 export function createCloudScene(): CloudScene {
   const scene = new Scene();
   const stats = computeStats();
   const sprite = makePointSprite();
+
+  // Add lights for shaded probe sphere
+  addStandardLights(scene);
 
   // Bounding box edges.
   const box = new LineSegments(
@@ -165,6 +174,26 @@ export function createCloudScene(): CloudScene {
   // Math axes (x red, y green, z blue), toggleable.
   const axesGroup = createAxesGroup(2.6);
   scene.add(axesGroup);
+
+  // Interactive 3D Transform Translation Gizmo
+  const { gizmo } = createTransformGizmo3D({ x: 1.0, y: 0.8, z: 0.5 });
+  scene.add(gizmo.group);
+
+  // Probe Auxiliary Group (Gradient arrow + Drop projection lines)
+  const probeAuxGroup = new Group();
+
+  let probeArrow: ArrowHelper | null = null;
+
+  const dropLineGeom = new BufferGeometry();
+  const dropLineMat = new LineBasicMaterial({
+    color: 0xf59e0b,
+    transparent: true,
+    opacity: 0.6,
+  });
+  const dropLines = new LineSegments(dropLineGeom, dropLineMat);
+  probeAuxGroup.add(dropLines);
+
+  scene.add(probeAuxGroup);
 
   let currentN = GRID_DEFAULT;
   let arrowsVisible = true;
@@ -208,18 +237,92 @@ export function createCloudScene(): CloudScene {
     if (arrowGroup) arrowGroup.visible = visible;
   }
 
+  function setProbe(x: number, y: number, z: number): void {
+    gizmo.setPosition(x, y, z);
+    const [wx, wy, wz] = mathToWorld(x, y, z);
+
+    // Update gradient arrow
+    if (probeArrow) {
+      probeAuxGroup.remove(probeArrow);
+      disposeObject(probeArrow);
+      probeArrow = null;
+    }
+    const gx = FIELD3D.gradX(x);
+    const gy = FIELD3D.gradY(y);
+    const gz = FIELD3D.gradZ(z);
+    const mag = Math.hypot(gx, gy, gz);
+    if (mag > 1e-4) {
+      const [gdx, gdy, gdz] = mathToWorld(gx, gy, gz);
+      const dir = new Vector3(gdx, gdy, gdz).normalize();
+      const length = clamp(0.25 * mag, 0.4, 1.4);
+      probeArrow = new ArrowHelper(
+        dir,
+        new Vector3(wx, wy, wz),
+        length,
+        0xf59e0b,
+        length * 0.25,
+        length * 0.16,
+      );
+      probeAuxGroup.add(probeArrow);
+    }
+
+    // Update drop lines
+    const [floorX, floorY, floorZ] = mathToWorld(x, y, -CUBE_HALF);
+    const [backX, backY, backZ] = mathToWorld(x, -CUBE_HALF, -CUBE_HALF);
+    const [leftX, leftY, leftZ] = mathToWorld(-CUBE_HALF, y, -CUBE_HALF);
+    const positions = new Float32Array([
+      // Vertical drop line to floor: (x,y,z) -> (x,y,-2)
+      wx,
+      wy,
+      wz,
+      floorX,
+      floorY,
+      floorZ,
+      // Floor line to back: (x,y,-2) -> (x,-2,-2)
+      floorX,
+      floorY,
+      floorZ,
+      backX,
+      backY,
+      backZ,
+      // Floor line to left: (x,y,-2) -> (-2,y,-2)
+      floorX,
+      floorY,
+      floorZ,
+      leftX,
+      leftY,
+      leftZ,
+    ]);
+    dropLineGeom.setAttribute(
+      "position",
+      new Float32BufferAttribute(positions, 3),
+    );
+    dropLineGeom.computeBoundingSphere();
+  }
+
+  function setProbeVisible(visible: boolean): void {
+    gizmo.group.visible = visible;
+    probeAuxGroup.visible = visible;
+  }
+
   function dispose(): void {
     disposeObject(scene);
+    gizmo.dispose();
     sprite.dispose();
   }
 
   rebuild(currentN);
+  setProbe(1.0, 0.8, 0.5);
+
   return {
     scene,
+    gizmo,
     getStats: () => stats,
     setDensity,
     setAxesVisible,
     setArrowsVisible,
+    setProbe,
+    setProbeVisible,
     dispose,
   };
 }
