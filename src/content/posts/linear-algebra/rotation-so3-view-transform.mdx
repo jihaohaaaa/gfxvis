@@ -1,0 +1,299 @@
+---
+title: "三维旋转、正交群 SO(3) 与图形学 View 变换"
+description: "从保距保角的正交群 O(3) 与特殊正交群 SO(3) 出发，推导正交归一基变换逆等于转置、罗德里格斯旋转公式，并完整解构图形学相机 LookAt View 矩阵的数学推导与双视口联动。"
+date: 2026-08-18
+tags:
+  [
+    "linear-algebra",
+    "graphics",
+    "matrix",
+    "rotation",
+    "so3",
+    "orthonormal",
+    "change-of-basis",
+    "view-matrix",
+  ]
+draft: false
+---
+
+import RotationViewDemo from "../../../components/demos/RotationViewDemo";
+import CameraLookAtDiagram from "../../../components/diagrams/CameraLookAtDiagram";
+import OrthogonalGroupDiagram from "../../../components/diagrams/OrthogonalGroupDiagram";
+
+# 三维旋转、正交群 SO(3) 与图形学 View 变换
+
+在 3D 游戏引擎、渲染器和图形学着色管线中，我们无时无刻不在与两件事打交道：**物体的旋转运动**与**观察相机的视角变换（View Transformation）**。
+
+为什么旋转矩阵的逆矩阵永远**等于它的转置矩阵**（$R^{-1} = R^\top$）？为什么由正交基构成的相机矩阵不仅算力开销为零，还能完美保持物体的几何形状不发生畸变？为什么经典的相机 `LookAt` 矩阵能够把整个世界空间一键搬进相机的眼帘？
+
+理解这一切的钥匙，正是现代几何与代数中最优雅的结构——**正交群（Orthogonal Group $O(3)$）**、**特殊正交群（Special Orthogonal Group $SO(3)$）** 以及 **正交归一基变换（Orthonormal Change of Basis）**。
+
+---
+
+## 一、从刚体运动说起：什么是正交矩阵？
+
+### 1. 刚体运动的本质：保长与保角
+
+在三维空间中，如果一个物体在运动过程中**自身形状和尺寸完全不发生任何拉伸、压扁或形变**，这种运动就称为**刚体运动（Rigid-body Motion）**。
+
+设空间中任意两个点构成的位移向量为 $\mathbf{u}$ 和 $\mathbf{v}$。一个线性变换 $Q: \mathbb{R}^3 \to \mathbb{R}^3$ 是保距变换（Isometry），当且仅当它保持**向量的欧几里得范数（长度）不变**：
+
+$$
+\|Q \mathbf{v}\| = \|\mathbf{v}\|, \qquad \forall \mathbf{v} \in \mathbb{R}^3
+$$
+
+根据极化恒等式（Polarization Identity），保持长度不变等价于**保持任意两向量的内积（点积）不变**：
+
+$$
+\langle Q \mathbf{u}, Q \mathbf{v} \rangle = \langle \mathbf{u}, \mathbf{v} \rangle
+$$
+
+利用矩阵转置的内积代数性质 $\langle Q \mathbf{u}, Q \mathbf{v} \rangle = (Q\mathbf{u})^\top (Q\mathbf{v}) = \mathbf{u}^\top (Q^\top Q) \mathbf{v}$，我们得到：
+
+$$
+\mathbf{u}^\top (Q^\top Q) \mathbf{v} = \mathbf{u}^\top I \mathbf{v} \quad \implies \quad \boxed{Q^\top Q = I}
+$$
+
+满足 $Q^\top Q = I$ 的实方阵称为 **正交矩阵（Orthogonal Matrix）**。
+
+### 2. 正交矩阵的列向量：标准正交基
+
+将 $n \times n$ 正交矩阵 $Q$ 按列分块展开：$Q = \begin{pmatrix} \mathbf{q}_1 & \mathbf{q}_2 & \dots & \mathbf{q}_n \end{pmatrix}$。
+
+根据矩阵乘法定义：
+
+$$
+Q^\top Q = \begin{pmatrix} \mathbf{q}_1^\top \\ \mathbf{q}_2^\top \\ \vdots \\ \mathbf{q}_n^\top \end{pmatrix} \begin{pmatrix} \mathbf{q}_1 & \mathbf{q}_2 & \dots & \mathbf{q}_n \end{pmatrix} = \begin{pmatrix} \mathbf{q}_1^\top \mathbf{q}_1 & \mathbf{q}_1^\top \mathbf{q}_2 & \dots \\ \mathbf{q}_2^\top \mathbf{q}_1 & \mathbf{q}_2^\top \mathbf{q}_2 & \dots \\ \vdots & \vdots & \ddots \end{pmatrix} = \begin{pmatrix} 1 & 0 & \dots \\ 0 & 1 & \dots \\ \vdots & \vdots & 1 \end{pmatrix}
+$$
+
+这揭示了一个基本几何事实：
+
+- 对角线元素 $\mathbf{q}_i^\top \mathbf{q}_i = \|\mathbf{q}_i\|^2 = 1$，说明**每一列都是单位向量**（模长为 1）；
+- 非对角线元素 $\mathbf{q}_i^\top \mathbf{q}_j = 0 \; (i \neq j)$，说明**任意两列互相垂直垂直正交**。
+
+> 💡 **正交矩阵的真面目**：正交矩阵的每一列，共同构成了三维欧氏空间的一组 **标准正交基（Orthonormal Basis）**！
+
+---
+
+## 二、群论视角：$O(3)$ 与特殊正交群 $SO(3)$
+
+所有 $3 \times 3$ 正交矩阵在矩阵乘法下构成一个代数群，称为 **三维正交群 $O(3)$**。
+
+对 $Q^\top Q = I$ 两边同时取行列式：
+
+$$
+\det(Q^\top Q) = \det(Q^\top)\det(Q) = (\det Q)^2 = \det(I) = 1 \quad \implies \quad \boxed{\det(Q) = \pm 1}
+$$
+
+行列式的正负决定了变换的几何本质：
+
+<OrthogonalGroupDiagram />
+
+1. **$\det(Q) = -1$（反射）**：例如镜像对称矩阵 $M_x = \operatorname{diag}(-1, 1, 1)$。它虽然保持物体的尺寸与角度不变，但把右手坐标系镜像翻转成了左手坐标系。
+2. **$\det(Q) = +1$（纯旋转）**：所有行列式严格为 $+1$ 的正交矩阵构成了 $O(3)$ 的正规子群，称为 **特殊正交群 $SO(3)$（Special Orthogonal Group）**。
+
+在刚体动力学与计算机图形学中，**三维空间的任意连续物理旋转，都一一对应于 $SO(3)$ 中的一个矩阵元素**。
+
+---
+
+## 三、正交归一基变换：为什么逆等于转置？
+
+在前面的文章 [《基、坐标表示与基变换》](/posts/linear-algebra/basis-coordinate-change-of-basis) 中我们学到：对于一般的基矩阵 $P$，将标准坐标转换为新基坐标需要求解逆矩阵 $P^{-1}$。在常规情况下求逆需要消耗高斯-约旦消元法（$O(n^3)$ 计算量）。
+
+但当基底是一组**标准正交基** $\mathcal{B} = (\mathbf{q}_1, \mathbf{q}_2, \mathbf{q}_3)$ 时，由于 $Q = \begin{pmatrix} \mathbf{q}_1 & \mathbf{q}_2 & \mathbf{q}_3 \end{pmatrix}$ 满足 $Q^\top Q = I$，两边右乘 $Q^{-1}$ 即可得到：
+
+$$
+\boxed{Q^{-1} = Q^\top}
+$$
+
+### 几何直观解释
+
+设任意向量 $\mathbf{v} \in \mathbb{R}^3$，我们要计算它在正交基 $\mathcal{B}$ 下的坐标分量 $(c_1, c_2, c_3)^\top$：
+
+$$
+\mathbf{v} = c_1 \mathbf{q}_1 + c_2 \mathbf{q}_2 + c_3 \mathbf{q}_3
+$$
+
+两边分别与基向量 $\mathbf{q}_1, \mathbf{q}_2, \mathbf{q}_3$ 作点积。由于正交归一性（$\mathbf{q}_i^\top \mathbf{q}_j = \delta_{ij}$），所有交叉项全部为 0：
+
+$$
+\langle \mathbf{q}_1, \mathbf{v} \rangle = c_1 \langle \mathbf{q}_1, \mathbf{q}_1 \rangle + 0 + 0 = c_1 \cdot 1 = c_1
+$$
+
+因此，每个坐标分量**仅仅是向量在对应基向量上的投影点积**：
+
+$$
+[\mathbf{v}]_{\mathcal{B}} = \begin{pmatrix} c_1 \\ c_2 \\ c_3 \end{pmatrix} = \begin{pmatrix} \mathbf{q}_1^\top \mathbf{v} \\ \mathbf{q}_2^\top \mathbf{v} \\ \mathbf{q}_3^\top \mathbf{v} \end{pmatrix} = \begin{pmatrix} \mathbf{q}_1^\top \\ \mathbf{q}_2^\top \\ \mathbf{q}_3^\top \end{pmatrix} \mathbf{v} = Q^\top \mathbf{v}
+$$
+
+> 📌 **图形学工程收益**：
+> 在 GPU 着色器中，转置操作只是内存重排，完全不需要除法与消元求逆。因此，**图形学管线极度青睐标准正交基构成的变换矩阵**！
+
+---
+
+## 四、三维旋转的数学表达：罗德里格斯公式与反对称矩阵
+
+三维旋转有多种数学表示形式，了解它们的演进有助于深刻理解旋转变换：
+
+### 1. 欧拉角（Euler Angles）与万向节死锁（Gimbal Lock）
+
+经典欧拉角将任意 3D 旋转分解为绕三个主轴的连续旋转：偏航角（Yaw $\psi$ 绕 $Z$ 轴）、俯仰角（Pitch $\theta$ 绕 $X$ 轴）与翻滚角（Roll $\phi$ 绕 $Y$ 轴）：
+
+$$
+R = R_z(\psi) R_x(\theta) R_y(\phi)
+$$
+
+虽然直观，但当俯仰角到达 $\pm 90^\circ$ 时，前后两个旋转轴会重合为同一轴向，丢失一个旋转自由度，即 **万向节死锁（Gimbal Lock）**。
+
+### 2. 轴角旋转与罗德里格斯公式（Rodrigues' Rotation Formula）
+
+根据欧拉旋转定理（Euler's Rotation Theorem）：**三维空间中的任何刚体旋转，都可以等价表示为绕某一单位旋转轴 $\mathbf{k}$（$\|\mathbf{k}\|=1$）旋转一个确定角度 $\theta$**。
+
+设原始向量为 $\mathbf{v}$，将其正交分解为平行于旋转轴的分量 $\mathbf{v}_\parallel$ 和垂直于轴的分量 $\mathbf{v}_\perp$：
+
+1. 平行分量不受旋转影响：$\mathbf{v}_\parallel = (\mathbf{k} \cdot \mathbf{v})\mathbf{k}$；
+2. 垂直分量：$\mathbf{v}_\perp = \mathbf{v} - (\mathbf{k} \cdot \mathbf{v})\mathbf{k}$；
+3. 构建垂直平面内的正交基底：$\mathbf{w} = \mathbf{k} \times \mathbf{v}$（模长与 $\mathbf{v}_\perp$ 相同且与 $\mathbf{v}_\perp$ 正交）；
+4. 垂直分量在平面内旋转 $\theta$ 角：$\mathbf{v}'_\perp = \mathbf{v}_\perp \cos\theta + \mathbf{w} \sin\theta$。
+
+将各部分相加，得到著名的 **罗德里格斯旋转公式（Rodrigues' Rotation Formula）**：
+
+$$
+\boxed{\mathbf{v}_{\text{rot}} = \mathbf{v} \cos\theta + (\mathbf{k} \times \mathbf{v}) \sin\theta + \mathbf{k}(\mathbf{k} \cdot \mathbf{v})(1 - \cos\theta)}
+$$
+
+### 3. 反对称矩阵与李代数 $\mathfrak{so}(3)$
+
+若定义叉乘对应的 **反对称矩阵（Skew-symmetric Matrix）** $[\mathbf{k}]_\times$：
+
+$$
+\mathbf{k} = \begin{pmatrix} k_x \\ k_y \\ k_z \end{pmatrix} \implies [\mathbf{k}]_\times = \begin{pmatrix} 0 & -k_z & k_y \\ k_z & 0 & -k_x \\ -k_y & k_x & 0 \end{pmatrix}
+$$
+
+注意到 $[\mathbf{k}]_\times \mathbf{v} = \mathbf{k} \times \mathbf{v}$，且 $[\mathbf{k}]_\times^2 = \mathbf{k}\mathbf{k}^\top - I$。罗德里格斯公式可以直接写成纯矩阵形式：
+
+$$
+R(\mathbf{k}, \theta) = I + (\sin\theta)[\mathbf{k}]_\times + (1 - \cos\theta)[\mathbf{k}]_\times^2 = \exp\big(\theta [\mathbf{k}]_\times\big)
+$$
+
+这正是现代李群（Lie Group $SO(3)$）与李代数（Lie Algebra $\mathfrak{so}(3)$）之间的 **指数映射（Exponential Map）**！
+
+---
+
+## 五、图形学核心：相机 View 变换矩阵（LookAt）推导
+
+现在，我们将上述所有数学工具汇聚到图形学最核心的算法——**相机视图矩阵（View Matrix / LookAt Matrix）** 的构建中。
+
+### 1. 相机坐标系的定义
+
+为了观察 3D 虚拟世界，我们在世界空间中放置一个虚拟相机，通常由三个参数定义：
+
+1. **相机位置 $\mathbf{eye}$**：相机在世界坐标系中的空间位置；
+2. **目标注视点 $\mathbf{target}$**：相机镜头正对看过去的目标点；
+3. **参考上方向 $\mathbf{up}_{\text{raw}}$**：定义相机头顶大致朝向的参考向量（通常为世界向上方向 $(0, 0, 1)^\top$）。
+
+<CameraLookAtDiagram client:visible />
+
+### 2. Gram-Schmidt 正交化构建相机标准正交基
+
+利用叉乘与归一化，我们严格构造出相机的局部标准正交基底 $(\mathbf{r}, \mathbf{u}, \mathbf{f})$：
+
+1. **前向视线单位向量 $\mathbf{f}$（Forward）**：
+   $$
+   \mathbf{f} = \frac{\mathbf{target} - \mathbf{eye}}{\|\mathbf{target} - \mathbf{eye}\|}
+   $$
+2. **右向单位向量 $\mathbf{r}$（Right）**：视线与参考上方向的叉积
+   $$
+   \mathbf{r} = \frac{\mathbf{f} \times \mathbf{up}_{\text{raw}}}{\|\mathbf{f} \times \mathbf{up}_{\text{raw}}\|}
+   $$
+3. **严格正交的实际上方向 $\mathbf{u}$（True Up）**：右向量与视线向量的叉积
+   $$
+   \mathbf{u} = \mathbf{r} \times \mathbf{f}
+   $$
+
+$(\mathbf{r}, \mathbf{u}, \mathbf{f})$ 构成了一组右手系下的标准正交基：$\mathbf{r} \cdot \mathbf{u} = 0, \; \mathbf{r} \cdot \mathbf{f} = 0, \; \mathbf{u} \cdot \mathbf{f} = 0$，模长均为 1。
+
+### 3. 世界坐标到相机坐标的基变换逆变换
+
+**View 变换的目的**：是将整个世界坐标系中的物体，转换到“以相机为坐标原点，相机的 $\mathbf{r}$ 为 $X$ 轴，$\mathbf{u}$ 为 $Y$ 轴，$-\mathbf{f}$ 为 $Z$ 轴”的相机观察坐标系中。
+
+这个过程分为两步完成：
+
+#### 第一步：平移变换（将世界原点搬到相机位置）
+
+先把世界中的点相对于相机位置平移：
+
+$$
+T_{\text{view}} = T(-\mathbf{eye}) = \begin{pmatrix} 1 & 0 & 0 & -\text{eye}_x \\ 0 & 1 & 0 & -\text{eye}_y \\ 0 & 0 & 1 & -\text{eye}_z \\ 0 & 0 & 0 & 1 \end{pmatrix}
+$$
+
+#### 第二步：旋转与基对齐（世界基底变换到相机基底）
+
+相机的姿态旋转矩阵是将相机局部轴变换到世界空间的矩阵：
+
+$$
+R_{\text{cam}} = \begin{pmatrix} \mathbf{r} & \mathbf{u} & -\mathbf{f} \end{pmatrix} = \begin{pmatrix} r_x & u_x & -f_x \\ r_y & u_y & -f_y \\ r_z & u_z & -f_z \end{pmatrix}
+$$
+
+将世界中的物体对齐回相机坐标系，正好需要应用它的**逆变换**。因为 $R_{\text{cam}}$ 是标准正交矩阵，$R^{-1} = R^\top$：
+
+$$
+R_{\text{view}} = R_{\text{cam}}^{-1} = R_{\text{cam}}^\top = \begin{pmatrix} \mathbf{r}^\top \\ \mathbf{u}^\top \\ -\mathbf{f}^\top \end{pmatrix} = \begin{pmatrix} r_x & r_y & r_z \\ u_x & u_y & u_z \\ -f_x & -f_y & -f_z \end{pmatrix}
+$$
+
+### 4. 复合最终的 4×4 LookAt View 矩阵
+
+将旋转与平移矩阵相乘：$V = R_{\text{view}} \cdot T(-\mathbf{eye})$：
+
+$$
+V = \begin{pmatrix} r_x & r_y & r_z & 0 \\ u_x & u_y & u_z & 0 \\ -f_x & -f_y & -f_z & 0 \\ 0 & 0 & 0 & 1 \end{pmatrix} \begin{pmatrix} 1 & 0 & 0 & -\text{eye}_x \\ 0 & 1 & 0 & -\text{eye}_y \\ 0 & 0 & 1 & -\text{eye}_z \\ 0 & 0 & 0 & 1 \end{pmatrix}
+$$
+
+直接计算得出最终的 **LookAt 视图矩阵显式展开式**：
+
+$$
+\boxed{V = \begin{pmatrix}
+r_x & r_y & r_z & -\mathbf{r} \cdot \mathbf{eye} \\
+u_x & u_y & u_z & -\mathbf{u} \cdot \mathbf{eye} \\
+-f_x & -f_y & -f_z & \mathbf{f} \cdot \mathbf{eye} \\
+0 & 0 & 0 & 1
+\end{pmatrix}}
+$$
+
+平移列的第四列四个元素，本质就是**相机原点分别在相机的三个局部正交轴上的投影分量取反**。
+
+---
+
+## 六、3D 双视口交互演示
+
+下方演示组件构建了完整的双视口联动实验环境：
+
+- **左侧视口（第三人称世界空间）**：你可以按住鼠标左键自由旋转观察整个世界，看清虚拟相机的物理机身、视锥台（Frustum Wireframe）、注视光束（Sightline）以及相机身上的 $(\mathbf{r}, \mathbf{u}, \mathbf{f})$ 彩色局部坐标轴；
+- **右侧视口（第一人称相机视野）**：实时展示当前 $4\times 4$ LookAt 视图矩阵作用后的实际渲染画面；
+- **下方控制台**：尝试切换预设视角（如鸟瞰、仰角特写、荷兰倾斜角），或拖动滑块实时观察正交基与 $4\times 4$ 矩阵数值的动态分解。
+
+<RotationViewDemo client:visible />
+
+---
+
+## 七、图形学实战避坑与 API 差异
+
+在具体图形学 API 中应用 View 矩阵时，需要注意以下工程细节：
+
+| 特性 / 约定         | OpenGL / GLM               | Vulkan / Direct3D / Metal      |
+| :------------------ | :------------------------- | :----------------------------- |
+| **相机注视朝向**    | 沿负 $Z$ 轴（$-Z$）看去    | 沿正 $Z$ 轴（$+Z$）或负 $Z$ 轴 |
+| **NDC 深度范围**    | $[-1, 1]$                  | $[0, 1]$（精度更高）           |
+| **屏幕空间 $Y$ 轴** | $Y$ 向上（屏幕底部为原点） | $Y$ 向下（屏幕顶部为原点）     |
+| **矩阵存储顺序**    | 默认列主序（Column-Major） | 列主序（SPIR-V / HLSL 可配置） |
+
+无论具体 API 怎么定义轴向正负，**构建正交归一基 $\to$ 逆等于转置（$R^\top$）$\to$ 平移原点内积投影** 的代数内核恒定不变。
+
+---
+
+## 八、总结与延伸思考
+
+1. **正交矩阵的几何灵魂**：$Q^\top Q = I$ 保证了长度与内积的不变性，保护 3D 物体在空间变换中不发生任何畸变；
+2. **特殊正交群 $SO(3)$**：由所有 $\det = +1$ 的正交矩阵构成，完整描述了三维刚体的纯旋转运动；
+3. **求逆即转置**：正交基底让复杂的矩阵求逆退化为零开销的矩阵转置操作；
+4. **View 矩阵的本质**：是一个将世界坐标转换为相机正交归一局部基的基变换过程，矩阵结构直接印证了 $V = R_{\text{cam}}^\top T(-\mathbf{eye})$。

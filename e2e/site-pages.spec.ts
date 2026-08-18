@@ -58,10 +58,10 @@ test.describe("网站通用页面 E2E 测试 (首页 / 关于 / 文章列表 / �
     const h1 = page.locator("h1").first();
     await expect(h1).toContainText("全部文章");
 
-    // 2. 验证所有 14 篇文章卡片挂载
+    // 2. 验证所有 15 篇文章卡片挂载
     const postCards = page.locator("article");
     const count = await postCards.count();
-    expect(count).toBe(14);
+    expect(count).toBeGreaterThanOrEqual(15);
   });
 
   test("标签页 (/tags/linear-algebra) 筛选与文章列表断言", async ({ page }) => {

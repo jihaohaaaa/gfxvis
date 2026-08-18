@@ -7,18 +7,16 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "list",
-
   use: {
-    baseURL: "http://localhost:51730",
+    baseURL: "http://localhost:51731",
     trace: "on-first-retry",
     channel: "chrome",
     ...devices["Desktop Chrome"],
   },
-
   webServer: {
-    command: "pnpm astro dev",
-    url: "http://localhost:51730",
-    reuseExistingServer: true,
+    command: "node scripts/preview-server.ts",
+    url: "http://localhost:51731",
+    reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
 });

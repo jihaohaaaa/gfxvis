@@ -15,8 +15,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "validate": "pnpm typecheck && pnpm lint && pnpm format:check",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e": "pnpm build && playwright test",
+    "test:e2e:ui": "pnpm build && playwright test --ui"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.2",
