@@ -11,114 +11,121 @@ tags:
     "pseudoinverse",
     "visualization",
   ]
+draft: false
 ---
 
 import { FourSubspacesDemo } from "../../../components/demos/FourSubspacesDemo";
 
-在现代线性代数与计算机图形学中，任意一个 $m \times n$ 的实数矩阵 $A \in \mathbb{R}^{m \times n}$ 都不止是一个静态的数据表格，它本质上是一个连接输入空间 $\mathbb{R}^n$ 与输出空间 $\mathbb{R}^m$ 的 **线性映射**(Linear Mapping)。
+在现代线性代数与计算机图形学中，任意一个 $m \times n$ 的实数矩阵 $A \in \mathbb{R}^{m \times n}$ 都不止是一个静态的数据表格，它本质上是一个连接输入空间 $\mathbb{R}^n$ 与输出空间 $\mathbb{R}^m$ 的 **多维线性映射（Linear Mapping）**。
 
-MIT 的 Prof. Gilbert Strang 提出了著名的 **线性代数基本定理**(The Fundamental Theorem of Linear Algebra)。该定理指出：任何矩阵都在输入和输出端完美分割出 **四个基本子空间**(Four Fundamental Subspaces)。这四个子空间不仅决定了映射的几何形态，更构成了正交投影、最小二乘法、奇异值分解(SVD)与 Moore-Penrose 伪逆的基石。
+MIT 的 Gilbert Strang 教授提出了著名的 **线性代数基本定理（The Fundamental Theorem of Linear Algebra）**。该定理指出：任何矩阵都在输入和输出端完美分割出 **四个基本子空间（Four Fundamental Subspaces）**。这四个子空间不仅决定了映射的全部几何形态，更构成了正交投影、最小二乘法、奇异值分解（SVD）与 Moore-Penrose 伪逆的坚实基石。
 
 ---
 
-## 1. 四大基本子空间的定义与维数
+## 一、四大基本子空间的定义与维数
 
 对于矩阵 $A \in \mathbb{R}^{m \times n}$，设其矩阵的秩为 $\operatorname{rank}(A) = r$。四大子空间分别分布在输入空间 $\mathbb{R}^n$ 与输出空间 $\mathbb{R}^m$ 中：
 
-### 输入空间 $\mathbb{R}^n$ 中的两个子空间
+### 1.1 输入空间 $\mathbb{R}^n$ 中的两个子空间
 
-1. **行空间(Row Space, $\operatorname{Row}(A) = \operatorname{Col}(A^\top)$)**：
-   由 $A$ 的所有行向量张成的子空间。它是输入空间中**真正参与变换并产生非零输出**的维度：
+1. **行空间（Row Space, $\operatorname{Row}(A) = \operatorname{Col}(A^\top)$）**：
+   由矩阵 $A$ 的所有行向量张成的子空间。它是输入空间中**真正参与变换并产生非零有效输出**的维度：
 
    $$
-   \operatorname{Row}(A) = \{ A^\top y \mid y \in \mathbb{R}^m \} \subseteq \mathbb{R}^n, \quad \dim(\operatorname{Row}(A)) = r
+   \operatorname{Row}(A) = \{ A^\top \mathbf{y} \mid \mathbf{y} \in \mathbb{R}^m \} \subseteq \mathbb{R}^n, \quad \dim(\operatorname{Row}(A)) = r
    $$
 
 2. **零空间 / 核（Null Space / Kernel, $\ker(A)$ 或 $\operatorname{Null}(A)$）**：
    所有被矩阵 $A$ 映射为零向量的输入向量构成的集合：
    $$
-   \ker(A) = \{ x \in \mathbb{R}^n \mid A x = \mathbf{0} \} \subseteq \mathbb{R}^n, \quad \dim(\ker(A)) = n - r
+   \ker(A) = \{ \mathbf{x} \in \mathbb{R}^n \mid A \mathbf{x} = \mathbf{0} \} \subseteq \mathbb{R}^n, \quad \dim(\ker(A)) = n - r
    $$
-
-### 输出空间 $\mathbb{R}^m$ 中的两个子空间
-
-3. **列空间 / 像空间（Column Space / Image, $\operatorname{Col}(A)$ 或 $\operatorname{Im}(A)$）**：
-   由 $A$ 的所有列向量线性组合构成的集合，代表映射**所能到达的所有输出可能**：
-
-   $$
-   \operatorname{Col}(A) = \{ A x \mid x \in \mathbb{R}^n \} \subseteq \mathbb{R}^m, \quad \dim(\operatorname{Col}(A)) = r
-   $$
-
-4. **左零空间 / 左核（Left Nullspace, $\ker(A^\top)$ 或 $\operatorname{Null}(A^\top)$）**：
-   转置矩阵 $A^\top$ 的零空间，对应输出空间中**无法由 $A$ 达到的残差方向**（满足 $y^\top A = \mathbf{0}^\top$）：
-   $$
-   \ker(A^\top) = \{ y \in \mathbb{R}^m \mid A^\top y = \mathbf{0} \} \subseteq \mathbb{R}^m, \quad \dim(\ker(A^\top)) = m - r
-   $$
-
-> **关键要点**：行空间与列空间的维度**完全相等**且均等于矩阵的秩 $r$（即 $\operatorname{rank}(A^\top) = \operatorname{rank}(A) = r$）。这正是“行秩等于列秩”这一代数奇迹的几何体现。
 
 ---
 
-## 2. 正交直和分解(Orthogonal Decomposition)
+### 1.2 输出空间 $\mathbb{R}^m$ 中的两个子空间
 
-线性代数基本定理的核心在于几何上的**相互垂直与正交补**。
+3. **列空间 / 像空间（Column Space / Image, $\operatorname{Col}(A)$ 或 $\operatorname{im}(A)$）**：
+   由矩阵 $A$ 的所有列向量线性组合构成的集合，代表映射**所能抵达的所有输出可能**：
 
-### 输入空间的正交直和 $\mathbb{R}^n = \operatorname{Row}(A) \oplus \ker(A)$
+   $$
+   \operatorname{Col}(A) = \{ A \mathbf{x} \mid \mathbf{x} \in \mathbb{R}^n \} \subseteq \mathbb{R}^m, \quad \dim(\operatorname{Col}(A)) = r
+   $$
 
-对于任意零空间中的向量 $x_n \in \ker(A)$ 与行空间中的生成向量 $A^\top y \in \operatorname{Row}(A)$，计算它们的内积：
+4. **左零空间 / 左核（Left Nullspace, $\ker(A^\top)$ 或 $\operatorname{Null}(A^\top)$）**：
+   转置矩阵 $A^\top$ 的零空间，对应输出空间中**无法由矩阵 $A$ 抵达的正交残差方向**（满足 $\mathbf{y}^\top A = \mathbf{0}^\top$）：
+   $$
+   \ker(A^\top) = \{ \mathbf{y} \in \mathbb{R}^m \mid A^\top \mathbf{y} = \mathbf{0} \} \subseteq \mathbb{R}^m, \quad \dim(\ker(A^\top)) = m - r
+   $$
+
+> 💡 **核心结论**：行空间与列空间的维度**严格相等**且均等于矩阵的秩 $r$（即 $\operatorname{rank}(A^\top) = \operatorname{rank}(A) = r$）。这正是“行秩等于列秩”这一代数奇迹的几何体现。
+
+---
+
+## 二、正交直和分解（Orthogonal Decomposition）
+
+线性代数基本定理的核心在于几何上的**相互垂直与正交补（Orthogonal Complement）**。
+
+### 2.1 输入空间的正交直和 $\mathbb{R}^n = \operatorname{Row}(A) \oplus^\perp \ker(A)$
+
+对于任意零空间中的向量 $\mathbf{x}_n \in \ker(A)$ 与行空间中的生成向量 $A^\top \mathbf{y} \in \operatorname{Row}(A)$，计算它们的点积：
 
 $$
-\langle A^\top y, x_n \rangle = (A^\top y)^\top x_n = y^\top (A x_n) = y^\top \mathbf{0} = 0
+\langle A^\top \mathbf{y}, \mathbf{x}_n \rangle = (A^\top \mathbf{y})^\top \mathbf{x}_n = \mathbf{y}^\top (A \mathbf{x}_n) = \mathbf{y}^\top \mathbf{0} = 0
 $$
 
-这证明了**行空间与零空间在几何上严格垂直正交**($\operatorname{Row}(A) \perp \ker(A)$)。根据秩-零化度定理(Rank-Nullity Theorem)，它们的维数之和恰好等于输入空间的总维度 $r + (n - r) = n$。因此，输入空间可以唯一地正交直和分解为：
+这严谨证明了**行空间与零空间在几何上处处严格正交**（$\operatorname{Row}(A) \perp \ker(A)$）。根据秩-零化度定理（Rank-Nullity Theorem），它们的维数之和恰好等于输入空间的总维度 $r + (n - r) = n$。因此，输入空间可以唯一地正交直和分解为：
 
 $$
-\mathbb{R}^n = \operatorname{Row}(A) \oplus \ker(A)
+\boxed{\mathbb{R}^n = \operatorname{Row}(A) \oplus^\perp \ker(A)}
 $$
+
+---
+
+### 2.2 输出空间的正交直和 $\mathbb{R}^m = \operatorname{Col}(A) \oplus^\perp \ker(A^\top)$
 
 同理，在输出空间中，列空间与左零空间也是互为正交补的：
 
 $$
-\mathbb{R}^m = \operatorname{Col}(A) \oplus \ker(A^\top)
+\boxed{\mathbb{R}^m = \operatorname{Col}(A) \oplus^\perp \ker(A^\top)}
 $$
 
 ---
 
-## 3. 映射几何全景与 2D/3D 交互演示
+## 三、映射几何全景与 2D/3D 交互演示
 
-任意输入向量 $x \in \mathbb{R}^n$ 都可以唯一分解为行空间分量 $x_r \in \operatorname{Row}(A)$ 与零空间分量 $x_n \in \ker(A)$，即 $x = x_r + x_n$。
+任意输入向量 $\mathbf{x} \in \mathbb{R}^n$ 都可以唯一分解为行空间分量 $\mathbf{x}_r \in \operatorname{Row}(A)$ 与零空间分量 $\mathbf{x}_n \in \ker(A)$，即 $\mathbf{x} = \mathbf{x}_r + \mathbf{x}_n$。
 
-当矩阵 $A$ 作用于 $x$ 时：
+当矩阵 $A$ 作用于 $\mathbf{x}$ 时：
 
 $$
-A x = A (x_r + x_n) = A x_r + A x_n = A x_r + \mathbf{0} = A x_r
+A \mathbf{x} = A (\mathbf{x}_r + \mathbf{x}_n) = A \mathbf{x}_r + A \mathbf{x}_n = A \mathbf{x}_r + \mathbf{0} = A \mathbf{x}_r
 $$
 
-这意味着：**零空间分量 $x_n$ 被完全消融压缩为零，只有行空间分量 $x_r$ 真正贡献了输出 $b = A x$**！并且矩阵 $A$ 实现了从行空间 $\operatorname{Row}(A)$ 到列空间 $\operatorname{Col}(A)$ 的**一对一双射(Isomorphism)**。
+这揭示了映射的深层机制：**零空间分量 $\mathbf{x}_n$ 被彻底过滤压缩为零向量，唯有行空间分量 $\mathbf{x}_r$ 真正贡献了非零输出 $\mathbf{b} = A \mathbf{x}$**！并且矩阵 $A$ 实现了从行空间 $\operatorname{Row}(A)$ 到列空间 $\operatorname{Col}(A)$ 的**一一对应双射（Isomorphism）**。
 
-在下面的交互演示中，尝试切换预设矩阵并拖动输入向量 $x$，直观观察四个子空间的正交关系与映射本质：
+在下面的交互演示中，尝试切换预设矩阵并拖动输入向量 $\mathbf{x}$，直观观察四个子空间的正交关系与映射本质：
 
 <FourSubspacesDemo client:visible />
 
 ---
 
-## 4. SVD 与伪逆(Moore-Penrose Pseudoinverse)视角
+## 四、SVD 与伪逆（Moore-Penrose Pseudoinverse）视角
 
-将四大子空间推向极致的是**奇异值分解(Singular Value Decomposition, SVD)**。对于 $m \times n$ 矩阵 $A$，SVD 将其分解为：
+将四大子空间推向极致的是 **奇异值分解（Singular Value Decomposition, SVD）**。对于 $m \times n$ 矩阵 $A$，SVD 将其分解为：
 
 $$
 A = U \Sigma V^\top
 $$
 
-其中 $V = [v_1, \dots, v_r, \dots, v_n]$ 是输入空间 $\mathbb{R}^n$ 的标准正交基，$\Sigma$ 是对角阵，$\sigma_1 \ge \dots \ge \sigma_r > 0$；$U = [u_1, \dots, u_r, \dots, u_m]$ 是输出空间 $\mathbb{R}^m$ 的标准正交基：
+其中 $V = [\mathbf{v}_1, \dots, \mathbf{v}_r, \dots, \mathbf{v}_n]$ 是输入空间 $\mathbb{R}^n$ 的标准正交基，$\Sigma$ 是对角阵（奇异值 $\sigma_1 \ge \dots \ge \sigma_r > 0$）；$U = [\mathbf{u}_1, \dots, \mathbf{u}_r, \dots, \mathbf{u}_m]$ 是输出空间 $\mathbb{R}^m$ 的标准正交基：
 
-- **$v_1, \dots, v_r$** 构成了**行空间 $\operatorname{Row}(A)$** 的正交基；
-- **$v_{r+1}, \dots, v_n$** 构成了**零空间 $\ker(A)$** 的正交基；
-- **$u_1, \dots, u_r$** 构成了**列空间 $\operatorname{Col}(A)$** 的正交基；
-- **$u_{r+1}, \dots, u_m$** 构成了**左零空间 $\ker(A^\top)$** 的正交基。
+- **$\mathbf{v}_1, \dots, \mathbf{v}_r$** 构成了 **行空间 $\operatorname{Row}(A)$** 的正交基；
+- **$\mathbf{v}_{r+1}, \dots, \mathbf{v}_n$** 构成了 **零空间 $\ker(A)$** 的正交基；
+- **$\mathbf{u}_1, \dots, \mathbf{u}_r$** 构成了 **列空间 $\operatorname{Col}(A)$** 的正交基；
+- **$\mathbf{u}_{r+1}, \dots, \mathbf{u}_m$** 构成了 **左零空间 $\ker(A^\top)$** 的正交基。
 
-SVD 的几何本质就是：**为四大子空间各自挑选了一组完美的正交坐标轴，使得 $A$ 在这些坐标轴上仅仅做纯粹的拉伸（乘以奇异值 $\sigma_i$）与维度投影。**
+> 💡 **SVD 的几何物理本质**：**为四大子空间各自精挑细选了一组完美的正交坐标轴，使得复杂的全空间映射 $A$ 在这些坐标轴上仅仅体现为纯粹的主轴拉伸（乘以奇异值 $\sigma_i$）与维度投影。**
 
 而 **Moore-Penrose 伪逆 $A^+$** 则完成了逆向的完美映射：
 
@@ -126,12 +133,12 @@ $$
 A^+ = V \Sigma^+ U^\top
 $$
 
-它将列空间 $\operatorname{Col}(A)$ 中的向量精准逆向映射回行空间 $\operatorname{Row}(A)$，并将左零空间 $\ker(A^\top)$ 中的不可达残差完美压回为 0。
+它将列空间 $\operatorname{Col}(A)$ 中的向量精准逆向映射回行空间 $\operatorname{Row}(A)$，并将左零空间 $\ker(A^\top)$ 中的不可达残差完美压回为零向量 $\mathbf{0}$。
 
 ---
 
-## 关联阅读与扩展
-
-- [《矩阵的秩、像空间与核》](/posts/linear-algebra/matrix-rank-column-row-space) — 深入探讨矩阵的秩与线性无关维度。
-- [《投影算子与正交分解》](/posts/linear-algebra/projection-operators) — 学习正交投影矩阵 $P = A(A^\top A)^{-1}A^\top$ 的几何构造。
-- [《Gram 矩阵与几何体积》](/posts/linear-algebra/gram-matrix) — 探究内积矩阵 $A^\top A$ 与平行多面体体积的关系。
+> 💡 **知识贯通**：
+>
+> - [《矩阵的秩、列空间与行空间》](/posts/linear-algebra/matrix-rank-column-row-space) — 深入探讨矩阵的秩与线性无关维度；
+> - [《投影算子》](/posts/linear-algebra/projection-operators) — 学习正交投影矩阵 $P = A(A^\top A)^{-1}A^\top$ 的几何构造；
+> - [《Gram 矩阵与几何体积》](/posts/linear-algebra/gram-matrix) — 探究内积矩阵 $A^\top A$ 与平行多面体体积的关系。

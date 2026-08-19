@@ -11,328 +11,347 @@ import ParametricCurve3DDemo from "../../../components/demos/ParametricCurve3DDe
 import ParametricCurveDemo from "../../../components/demos/ParametricCurveDemo";
 import ParametricSurfaceDemo from "../../../components/demos/ParametricSurfaceDemo";
 
-# 曲线与曲面定义
+在多元微积分与微分几何中，曲线与曲面最核心的定义可以统一成一句话：
 
-在多元微积分里，曲线与曲面最核心的定义可以统一成一句话：
+> **用低维参数空间中的点，通过一个连续可微的映射，映射到高维欧氏空间中生成几何形态。**
 
-> 用参数空间中的点，通过一个映射，映射到欧氏空间中的点。
+这条主线与标量场、梯度以及等值集合紧密相连——**隐式曲线与隐式曲面，本质上正是标量场的零等值线（Level Curve）与零等值面（Level Surface）**。
 
-这条思路与标量场、梯度、等值线直接相连——隐式曲线与隐式曲面，正是标量场的零等值线与零等值面。
+---
 
-## 参数化曲线
+## 一、参数化曲线：一维自由度在空间中的扫掠轨迹
 
-最一般地，一条参数曲线是一个映射
+### 1.1 空间曲线与平面曲线参数化
 
-$$
-\mathbf r: I \subset \mathbb{R} \to \mathbb{R}^n
-$$
-
-其中 $I$ 是参数 $t$ 的定义域，$\mathbf r(t)$ 是曲线上的一个点。三维空间中的曲线写成
+最一般地，一条参数化曲线定义为一个一维区间到高维空间的映射：
 
 $$
-\mathbf r(t) = (x(t),\, y(t),\, z(t))
+\mathbf{r}: I \subset \mathbb{R} \to \mathbb{R}^n
 $$
 
-随着 $t$ 变化，$\mathbf r(t)$ 在 $\mathbb{R}^3$ 中运动，扫出一条曲线。因为只有一个自由参数，曲线是**一维对象**。
-
-例如圆：
+其中 $I$ 是参数 $t$ 的定义域，$\mathbf{r}(t)$ 是曲线上对应位置的点。三维空间中的参数曲线表示为：
 
 $$
-\mathbf r(t) = (\cos t,\, \sin t,\, 0), \qquad t \in [0,\, 2\pi]
+\mathbf{r}(t) = (x(t),\, y(t),\, z(t))
 $$
 
-这里本质上是 $t \mapsto (x, y, z)$：一维参数 $\mathbb{R}$ 映射到三维空间。
+随着标量参数 $t$ 连续演化，点 $\mathbf{r}(t)$ 在 $\mathbb{R}^3$ 中平滑运动，扫出一条一维空间轨迹。因为只有一个自由度，所以曲线是**一维几何对象**。
 
-圆是平面曲线（$z$ 恒为 0），螺旋线与三叶结才真正用到三个坐标。拖动滑块并在三种曲线之间切换，观察 $\mathbf r(t)$ 沿空间曲线运动（蓝色箭头为速度方向）：
+#### 空间曲线实例
+
+例如三维空间中的平面圆：
+
+$$
+\mathbf{r}(t) = (\cos t,\, \sin t,\, 0), \qquad t \in [0,\, 2\pi]
+$$
+
+这里本质上是 $t \mapsto (x, y, z)$：将一维参数 $\mathbb{R}$ 映射到三维空间。
+
+圆是平面曲线（$z$ 分量恒为 0），而像螺旋线与三叶结才真正充分利用了三个维度的自由度。拖动滑块并在三种曲线之间切换，观察 $\mathbf{r}(t)$ 沿空间曲线的动态运动（蓝色箭头为运动速度方向）：
 
 <ParametricCurve3DDemo client:visible />
 
-曲线同样可以只活在平面 $\mathbb{R}^2$ 中，此时 $\mathbf r: I \subset \mathbb{R} \to \mathbb{R}^2$。例如二维圆：
+#### 平面曲线实例
+
+曲线同样可以只存在于二维平面 $\mathbb{R}^2$ 中，此时映射形式为 $\mathbf{r}: I \subset \mathbb{R} \to \mathbb{R}^2$。
+
+例如二维单位圆：
 
 $$
-\mathbf r(t) = (\cos t,\, \sin t), \qquad t \in [0,\, 2\pi]
+\mathbf{r}(t) = (\cos t,\, \sin t), \qquad t \in [0,\, 2\pi]
 $$
 
-再如抛物线 $y = x^2$ 的参数化：
+再如标准抛物线 $y = x^2$ 的参数化：
 
 $$
-\mathbf r(t) = (t,\, t^2), \qquad t \in \mathbb{R}
+\mathbf{r}(t) = (t,\, t^2), \qquad t \in \mathbb{R}
 $$
 
-二维参数曲线与函数图像、隐式方程描述的是同一条曲线——同一个几何对象的不同表示，这正是后面《四种表示》一节要总结的观点。
+二维参数曲线与显式函数图像、隐式方程描述的是完全相同的几何实体——即同一个几何对象的不同代数表示，这正是后续第五节要系统总结的核心观点。
 
-在平面里同样可以拖动滑块或曲线上的点，比较 $\mathbf r(t)$ 与它的切线：
+在平面交互画板中同样可以拖动滑块或曲线上的控制点，直观比对 $\mathbf{r}(t)$ 的位置与切线方向：
 
 <ParametricCurveDemo client:visible />
 
-## 参数化曲线的切线
+---
 
-参数化曲线在 $t=t_0$ 处的**切向量**就是对参数 $t$ 求导：
+### 1.2 参数化曲线的切向量与运动速度
 
-$$
-\mathbf r'(t_0) = \frac{d\mathbf r}{dt}(t_0) = (x'(t_0),\, y'(t_0))
-$$
-
-- $\mathbf r'(t)$ 的**方向**就是曲线的切线方向；
-- $\lVert \mathbf r'(t) \rVert$ 是点沿参数 $t$ 运动的**速度**；
-- $\dfrac{\mathbf r'(t)}{\lVert \mathbf r'(t) \rVert}$ 是**单位切向量**。
-
-例如抛物线 $y = x^2$ 参数化为 $\mathbf r(t) = (t, t^2)$，于是 $\mathbf r'(t) = (1, 2t)$。在 $t=2$ 处，$\mathbf r'(2) = (1,4)$，过点 $\mathbf r(2) = (2,4)$ 的切线方程为
+参数化曲线在 $t = t_0$ 处的 **切向量（Tangent Vector）** 就是位置向量对参数 $t$ 的导数：
 
 $$
-y - 4 = 4(x - 2), \qquad \text{即} \quad y = 4x - 4
+\mathbf{r}'(t_0) = \frac{d\mathbf{r}}{dt}(t_0) = (x'(t_0),\, y'(t_0))
 $$
 
-上面的 2D 交互里，箭头就是切向量 $\mathbf r'(t)$，可以看到它始终沿着曲线方向。
+- $\mathbf{r}'(t)$ 的 **几何指向** 代表曲线在该点处的切线方向；
+- 其模长 $\lVert \mathbf{r}'(t) \rVert$ 代表质点沿参数 $t$ 运动的 **标量速率（Speed）**；
+- 归一化向量 $\dfrac{\mathbf{r}'(t)}{\lVert \mathbf{r}'(t) \rVert}$ 则是曲线的 **单位切向量（Unit Tangent Vector）**。
 
-## 参数化曲面
+#### 具体数值计算实例
 
-把参数从一个增加到两个：
+例如抛物线 $y = x^2$ 参数化为 $\mathbf{r}(t) = (t, t^2)$，其导数向量为 $\mathbf{r}'(t) = (1, 2t)$：
 
-$$
-\mathbf r: D \subset \mathbb{R}^2 \to \mathbb{R}^3, \qquad
-\mathbf r(u,v) = (x(u,v),\, y(u,v),\, z(u,v))
-$$
-
-其中 $u, v$ 是两个独立参数。因为有两个自由参数，曲面是**二维对象**。
-
-例如球面可以参数化为
+- 在 $t = 2$ 处，切向量为 $\mathbf{r}'(2) = (1, 4)$；
+- 此时过曲线上点 $\mathbf{r}(2) = (2, 4)$ 的切线方程为：
 
 $$
-\mathbf r(u,v) = (R \sin u \cos v,\, R \sin u \sin v,\, R \cos u)
+y - 4 = 4(x - 2), \qquad \text{整理即得} \quad y = 4x - 4
 $$
 
-其中 $u \in [0, \pi]$，$v \in [0, 2\pi)$。参数对 $(u,v) \in \mathbb{R}^2$ 映射到 $\mathbb{R}^3$ 中的一个点。
+在上述二维交互演示中，切向量箭头始终紧密贴合曲线的前进方向。
 
-拖动 $u$、$v$ 滑块，观察参数如何决定曲面上的点；网格线就是“固定一个参数”得到的参数曲线：
+---
+
+## 二、参数化曲面：二维参数网格与切平面张成
+
+### 2.1 空间曲面映射与经典球面参数化
+
+将参数空间的自由度从一个增加到两个，即可生成曲面：
+
+$$
+\mathbf{r}: D \subset \mathbb{R}^2 \to \mathbb{R}^3, \qquad
+\mathbf{r}(u,v) = (x(u,v),\, y(u,v),\, z(u,v))
+$$
+
+其中 $u, v$ 是两个独立的标量参数。因为拥有两个独立的自由参数，所以曲面是**二维几何对象**。
+
+#### 经典球面参数化
+
+例如半径为 $R$ 的三维球面可以参数化为：
+
+$$
+\mathbf{r}(u,v) = (R \sin u \cos v,\, R \sin u \sin v,\, R \cos u)
+$$
+
+其中纬度参数 $u \in [0, \pi]$，经度参数 $v \in [0, 2\pi)$。参数对 $(u,v) \in \mathbb{R}^2$ 平滑地映射到三维空间 $\mathbb{R}^3$ 中的每一个表面点。
+
+拖动下方的 $u$ 与 $v$ 参数滑块，观察参数网格如何构建曲面；曲面上的经纬网格线，正是“固定其中一个参数、变化另一个参数”所得到的一维参数曲线：
 
 <ParametricSurfaceDemo client:visible />
 
-## 参数化曲面的切线
+---
 
-曲面有两个独立参数，因此每个点上有**两个切向量**：
+### 2.2 参数化曲面的切向量与切平面
 
-$$
-\frac{\partial \mathbf r}{\partial u}, \qquad \frac{\partial \mathbf r}{\partial v}
-$$
-
-它们张成该点的**切平面**：
+由于曲面由两个独立参数控制，因此曲面上的每一个正则点都同时存在 **两个天然的偏导切向量**：
 
 $$
-T_p S = \operatorname{span}\left\{ \frac{\partial \mathbf r}{\partial u},\, \frac{\partial \mathbf r}{\partial v} \right\}
+\frac{\partial \mathbf{r}}{\partial u}, \qquad \frac{\partial \mathbf{r}}{\partial v}
 $$
 
-统一模式是：参数化对象对每个独立参数求导，就得到对应的切向。这也是为什么在图形学里，参数曲面的 $u,v$ 偏导直接成为 **tangent / bitangent** 的来源。
+这两个切向量共同张成了该点处的 **切平面（Tangent Plane）**：
 
-上面的交互里，黄色箭头是 $\partial \mathbf r/\partial u$，青色箭头是 $\partial \mathbf r/\partial v$，浅蓝色半透明面就是它们张成的切平面；拖动 $u$、$v$，可以看到切平面随曲面位置转动。
+$$
+T_p S = \operatorname{span}\left\{ \frac{\partial \mathbf{r}}{\partial u},\, \frac{\partial \mathbf{r}}{\partial v} \right\}
+$$
 
-## 曲面不一定是函数图像
+> 💡 **统一微积分模式**：参数化几何对象对每一个独立参数求偏导，即可直接得到该维度上的切向基底。这也是现代计算机图形学中，UV 纹理映射下的切线（Tangent）与副切线（Bitangent）构建法线贴图（Normal Mapping）的数学基石。
 
-初学时常遇到的
+在上方 3D 交互演示中，黄色箭头代表 $\partial \mathbf{r}/\partial u$，青色箭头代表 $\partial \mathbf{r}/\partial v$，浅蓝色半透明平面即为它们张成的切平面空间。
+
+---
+
+### 2.3 为什么曲面不一定是单值显式函数图像？
+
+初学者在单变量微积分中习惯的显式曲面：
 
 $$
 z = f(x,y)
 $$
 
-只是曲面的一种特殊参数化形式：
+其实仅仅是曲面参数化的一种特例（Monge Patch）：
 
 $$
-\mathbf r(x,y) = (x,\, y,\, f(x,y))
+\mathbf{r}(x,y) = (x,\, y,\, f(x,y))
 $$
 
-反过来，球面 $x^2 + y^2 + z^2 = R^2$ 不能整体写成 $z = f(x,y)$，因为
+反过来，闭合曲面（如球面 $x^2 + y^2 + z^2 = R^2$）**无法作为整体**写成单值函数 $z = f(x,y)$，因为开方会产生两个符号分支：
 
 $$
 z = \pm \sqrt{R^2 - x^2 - y^2}
 $$
 
-必须分成上下两片；但它完全可以参数化。所以 $z = f(x,y)$ 是曲面的一种表示，而不是“曲面”的最一般定义。
+必须人为割裂为上半球与下半球。然而，整个球面却可以用一套平滑的参数化映射 $\mathbf{r}(u,v)$ 统一完整表达。因此，$z = f(x,y)$ 只是曲面的一种局部表达形式，而非曲面的最一般数学定义。
 
-## 隐式曲线与隐式曲面
+---
 
-参数化直接给出“点在哪里”；隐式表示则给出“哪些点属于这个几何对象”。
+## 三、隐式曲线与隐式曲面：标量场的零等值集（Level Sets）
 
-平面中的隐式曲线：
+如果说参数化形式直接回答了“**点在哪里生成**”，那么隐式方程则从筛选的角度定义了“**哪些空间点属于该几何体**”。
 
-$$
-F(x,y) = 0, \qquad
-C = F^{-1}(0) = \{(x,y) \in \mathbb{R}^2 \mid F(x,y) = 0\}
-$$
+- **二维平面中的隐式曲线**：
 
-例如圆：
+  $$
+  F(x,y) = 0, \qquad C = F^{-1}(0) = \{(x,y) \in \mathbb{R}^2 \mid F(x,y) = 0\}
+  $$
 
-$$
-F(x,y) = x^2 + y^2 - R^2
-$$
+  例如平面圆：$F(x,y) = x^2 + y^2 - R^2 = 0$。
 
-三维空间中的隐式曲面：
+- **三维空间中的隐式曲面**：
+  $$
+  F(x,y,z) = 0, \qquad S = F^{-1}(0) = \{(x,y,z) \in \mathbb{R}^3 \mid F(x,y,z) = 0\}
+  $$
+  例如空间球面：$F(x,y,z) = x^2 + y^2 + z^2 - R^2 = 0$。
 
-$$
-F(x,y,z) = 0, \qquad
-S = F^{-1}(0) = \{(x,y,z) \in \mathbb{R}^3 \mid F(x,y,z) = 0\}
-$$
+---
 
-例如球面：
+### 3.1 标量场、等值线与等值面的几何定义
 
-$$
-F(x,y,z) = x^2 + y^2 + z^2 - R^2
-$$
-
-### 标量场与等值线、等值面
-
-$F$ 本身是一个**标量场(scalar field)**：它把平面或空间中的每个点映射成一个实数，
+方程左侧的 $F$ 本身就是一个定义在全空间上的 **标量场（Scalar Field）**：
 
 $$
 F: \mathbb{R}^2 \to \mathbb{R} \quad \text{或} \quad F: \mathbb{R}^3 \to \mathbb{R}
 $$
 
-温度场、气压场、高度图、电势都是标量场：温度场给每个位置一个温度值，高度图给每个经纬度一个海拔。标量场通常用**颜色**可视化——把数值映射成色标，就是《标量场与梯度》里的热力图；把数值画成第三维高度 $z = F(x,y)$，就是它的曲面图像。
+物理世界中的温度场、气压场、地形高度图、静电势场都是典型的标量场：
 
-**等值线(level curve)** 是平面标量场中数值恰好等于某个常数 $c$ 的点构成的曲线：
+- **等值线（Level Curve）**：平面标量场中函数值恒等于常数 $c$ 的点集：$F(x,y) = c$；
+- **等值面（Level Surface）**：三维标量场中函数值恒等于常数 $c$ 的点集：$F(x,y,z) = c$；
+- 两者在数学上统称为 **等值集（Level Set）**：
+  $$
+  L_c = \{\mathbf{p} \mid F(\mathbf{p}) = c\}
+  $$
 
-$$
-F(x,y) = c
-$$
+等值集合具备两个至关重要的几何性质：
 
-**等值面(level surface)** 是三维标量场中 $F(x,y,z) = c$ 的点构成的曲面。两者统称 **level set**:
+1. **函数值守恒**：在同一条等值线/面上，$F$ 的取值恒为常数 $c$；
+2. **互不相交与空间填充**：对应不同常数 $c_1 \neq c_2$ 的等值集合彼此严格不相交；当 $c$ 连续扫描时，等值面族如洋葱切片般密实填满整个三维空间。
 
-$$
-L_c = \{\mathbf p \mid F(\mathbf p) = c\}
-$$
+#### 实例解析
 
-等值线 / 等值面有两个基本性质：
+例如标量场 $F(x,y) = x^2 + y^2$：当 $c > 0$ 时，方程 $x^2 + y^2 = c$ 构成半径为 $\sqrt{c}$ 的一系列同心圆。当 $c$ 从 $0$ 逐渐增大，同心圆族从原点向外扩散。
 
-- 在等值线 / 等值面上，$F$ 恒等于常数 $c$——它们是“函数值相同”的点的集合；
-- 不同的 $c$ 对应的等值线 / 等值面**互不相交**，并且 $c$ 连续变化时，一族等值线 / 等值面会填满整个区域。
+---
 
-例如 $F(x,y) = x^2 + y^2$，$F = c$ 是半径 $\sqrt{c}$ 的圆($c > 0$)：
+### 3.2 零等值集与隐式几何对象的本质等价性
 
-$$
-x^2 + y^2 = c
-$$
-
-$c$ 从 $0$ 增大，圆族就从原点向外扩散成同心圆。再如 $F(x,y) = y - x^2$，$F = c$ 是一族上下平移的抛物线 $y = x^2 + c$。三维中，$F(x,y,z) = x^2 + y^2 + z^2 = c$ 是一族同心球面，半径 $\sqrt{c}$。
-
-隐式曲线 / 隐式曲面正是 $c = 0$ 的特例——**零等值线 / 零等值面**：
+由此可见，**隐式曲线与隐式曲面，正是标量场在常数 $c = 0$ 时的特殊切片——零等值集（Zero Level Set）**：
 
 $$
-\text{隐式曲线} = \text{标量场的零等值线}, \qquad
-\text{隐式曲面} = \text{标量场的零等值面}
+\boxed{\text{隐式曲线} \equiv \text{标量场的零等值线}, \qquad \text{隐式曲面} \equiv \text{标量场的零等值面}}
 $$
 
-梯度 $\nabla F$ 总与等值线 / 等值面垂直，并指向 $F$ 增长最快的方向——这正是[《场论基础：标量场、向量场与微分算子》](/posts/calculus/fields-and-operators#二交互实验二维热力图--三维曲面)交互实验的主题。下面用 $c$ 滑块扫描一族等值线：
+标量场的梯度向量 $\nabla F$ 永远严格正交垂直于等值线与等值面，并精确指向函数值上升最快的方向——这正是 [《场论基础：标量场、向量场与微分算子》](/posts/calculus/fields-and-operators#二交互实验二维热力图--三维曲面) 的核心主题。
+
+拖动下方的 $c$ 值滑块，动态观察等值线族的生成与空间扫描：
 
 <LevelSetDemo client:visible />
 
-## 参数化切线与隐式梯度
+---
 
-同一个曲线或曲面，参数化与隐式给出了两个互补的方向：
+## 四、正交对偶：参数化求导（切向） vs 隐式求梯度（法向）
 
-- **参数化**对参数求导 → **切向**：曲线 $\mathbf r'(t)$，曲面 $\frac{\partial \mathbf r}{\partial u}$、$\frac{\partial \mathbf r}{\partial v}$；
-- **隐式**取梯度 → **法向**：$\nabla F$ 垂直于等值线 / 等值面。
+对于同一个几何对象，参数化与隐式表达分别提供了两个高度对称且互补的微分方向：
 
-### 曲线情形
+- **参数化表达（求偏导） $\implies$ 切向量（Tangent）**：曲线的 $\mathbf{r}'(t)$ 与曲面的 $\dfrac{\partial \mathbf{r}}{\partial u}, \dfrac{\partial \mathbf{r}}{\partial v}$；
+- **隐式函数表达（求梯度） $\implies$ 法向量（Normal）**：标量场梯度 $\nabla F$ 永远垂直于切平面。
 
-设同一条曲线既参数化为 $\mathbf r(t)$，又隐式写为 $F(x,y) = 0$。沿曲线有 $F(\mathbf r(t)) \equiv 0$。代入 $\mathbf r(t) = (x(t), y(t))$，由链式法则：
+---
 
-$$
-\frac{dF}{dt}
-= \frac{\partial F}{\partial x}\frac{dx}{dt} + \frac{\partial F}{\partial y}\frac{dy}{dt}
-= \left(\frac{\partial F}{\partial x},\, \frac{\partial F}{\partial y}\right) \cdot \left(\frac{dx}{dt},\, \frac{dy}{dt}\right)
-$$
+### 4.1 曲线情形：链式法则与切向法向正交证明
 
-右边的两个因子正是梯度与切向量：
+假设同一条平面曲线既被参数化为 $\mathbf{r}(t) = (x(t), y(t))$，又满足隐式方程 $F(x,y) = 0$。
+
+由于曲线上的所有点都严格落在隐式曲线上，因此沿着整条参数曲线，复合函数的值恒为零：
 
 $$
-\nabla F = \left(\frac{\partial F}{\partial x},\, \frac{\partial F}{\partial y}\right), \qquad
-\mathbf r'(t) = \left(\frac{dx}{dt},\, \frac{dy}{dt}\right)
+F(\mathbf{r}(t)) \equiv 0, \quad \forall t \in I
 $$
 
-于是
+对该恒等式两端关于参数 $t$ 应用多元复合函数链式法则求全导数：
 
 $$
-\frac{d}{dt} F(\mathbf r(t)) = \nabla F \cdot \mathbf r'(t)
+\frac{d}{dt} F(\mathbf{r}(t)) = \frac{\partial F}{\partial x}\frac{dx}{dt} + \frac{\partial F}{\partial y}\frac{dy}{dt} = \left(\frac{\partial F}{\partial x},\, \frac{\partial F}{\partial y}\right) \cdot \left(\frac{dx}{dt},\, \frac{dy}{dt}\right) = 0
 $$
 
-而 $F(\mathbf r(t)) \equiv 0$ 是常值函数，导数为零，所以
+注意观察点积两端的几何含义：
+
+- 左侧因子正是标量场的梯度向量：$\nabla F = \left(\dfrac{\partial F}{\partial x},\, \dfrac{\partial F}{\partial y}\right)$；
+- 右侧因子正是参数曲线的瞬时速度切向量：$\mathbf{r}'(t) = \left(\dfrac{dx}{dt},\, \dfrac{dy}{dt}\right)$。
+
+因为常数函数的全导数必为 0，所以必然有：
 
 $$
-\nabla F \cdot \mathbf r'(t) = 0
+\nabla F \cdot \mathbf{r}'(t) = 0 \quad \implies \quad \boxed{\mathbf{r}'(t) \perp \nabla F}
 $$
 
-即切向量与梯度正交：
+**结论：隐式标量场的梯度向量与参数曲线的切向量在任意点处严格保持 $90^\circ$ 正交！**
+
+#### 二维圆的正交验证
+
+考察单位圆：参数化形式为 $\mathbf{r}(t) = (\cos t, \sin t)$，隐式方程为 $F(x,y) = x^2 + y^2 - 1 = 0$。
+
+- 切向量：$\mathbf{r}'(t) = (-\sin t,\, \cos t)$；
+- 梯度向量：$\nabla F = (2x,\, 2y) = (2\cos t,\, 2\sin t)$；
+- 计算两者的内积：
 
 $$
-\mathbf r'(t) \perp \nabla F
+\mathbf{r}'(t) \cdot \nabla F = (-\sin t)(2\cos t) + (\cos t)(2\sin t) = -2\sin t \cos t + 2\sin t \cos t \equiv 0
 $$
 
-例如圆：参数化 $\mathbf r(t) = (\cos t, \sin t)$，隐式 $F(x,y) = x^2 + y^2 - 1$。于是
+两向量完全正交！
+
+---
+
+### 4.2 曲面情形：梯度垂直于切平面张成基底
+
+同理，设三维空间曲面参数化为 $\mathbf{r}(u,v)$，隐式方程为 $F(x,y,z) = 0$。曲面上恒满足 $F(\mathbf{r}(u,v)) \equiv 0$。
+
+分别对自变量 $u$ 与 $v$ 求偏导数：
 
 $$
-\mathbf r'(t) = (-\sin t,\, \cos t), \qquad
-\nabla F = (2x,\, 2y) = (2\cos t,\, 2\sin t)
+\frac{\partial}{\partial u} F(\mathbf{r}(u,v)) = \nabla F \cdot \frac{\partial \mathbf{r}}{\partial u} = 0
 $$
 
-两者点积为零：
-
 $$
-\mathbf r'(t) \cdot \nabla F = -2\sin t \cos t + 2\cos t \sin t = 0
+\frac{\partial}{\partial v} F(\mathbf{r}(u,v)) = \nabla F \cdot \frac{\partial \mathbf{r}}{\partial v} = 0
 $$
 
-### 曲面情形
+这证明了：**梯度向量 $\nabla F$ 同时垂直于切平面的两个生成基向量 $\dfrac{\partial \mathbf{r}}{\partial u}$ 与 $\dfrac{\partial \mathbf{r}}{\partial v}$**。
 
-设曲面参数化为 $\mathbf r(u,v)$，隐式写为 $F(x,y,z) = 0$。沿曲面有 $F(\mathbf r(u,v)) \equiv 0$。同样由链式法则，先对 $u$ 求偏导：
+因此，$\nabla F$ 必然垂直于整个切平面 $T_p S$，它正是曲面的 **标准法向量（Normal Vector）**。这与 [《导数、偏导数与切空间》](/posts/calculus/derivatives-and-tangent-spaces) 中“显式曲面 $F(x,y,z) = f(x,y) - z = 0$ 的法向量为 $(f_x, f_y, -1)^\top$”完全统一。
 
-$$
-\frac{\partial F}{\partial u}
-= \frac{\partial F}{\partial x}\frac{\partial x}{\partial u} + \frac{\partial F}{\partial y}\frac{\partial y}{\partial u} + \frac{\partial F}{\partial z}\frac{\partial z}{\partial u}
-= \nabla F \cdot \frac{\partial \mathbf r}{\partial u} = 0
-$$
+> 💡 **核心总结**：**参数化形式通过求导生成切向基底；隐式方程通过求梯度捕获法向基底；两者通过零导数条件自然正交。**
 
-对 $v$ 同理：
+---
 
-$$
-\nabla F \cdot \frac{\partial \mathbf r}{\partial v} = 0
-$$
+## 五、多重视角统一：显式函数、隐式方程与参数化映射
 
-所以梯度 $\nabla F$ 同时垂直于两个切向量，即垂直于整个**切平面**——它正是曲面的法向量。这与《偏导数、切平面与法线》中“隐式函数的梯度给出法向量”（$F = f(x,y) - z$ 时 $\nabla F = (f_x, f_y, -1)$）是一致的。
+以简单的平面几何曲线为例，同一个几何对象可以在三种等价的数学视角之间自由转换：
 
-> 一句话总结：参数化对每个独立参数求导得到**切向**，隐式方程求梯度得到**法向**；两者正交，互为补充。
+| 表示形式                     | 数学对象定义                                                               | 核心功能与计算优势                                        |
+| :--------------------------- | :------------------------------------------------------------------------- | :-------------------------------------------------------- |
+| **显式函数（Explicit）**     | $f: \mathbb{R} \to \mathbb{R}, \quad y = f(x)$                             | 输入 $x$ 直接求解唯一高度 $y$，直观但无法表达多值闭合图形 |
+| **隐式方程（Implicit）**     | $F(x,y) = f(x) - y = 0$                                                    | 快速判定点是否在几何边界上（碰撞检测与空间分割）          |
+| **参数化映射（Parametric）** | $\mathbf{r}(t) = (t, f(t)), \quad \mathbf{r}: \mathbb{R} \to \mathbb{R}^2$ | 沿路径平滑采样与渲染绘制（网格顶点生成）                  |
 
-## 三种表示：同一个几何对象
+> ⚠️ **概念辨析：参数化（向量值函数） vs 向量场**
+>
+> - **参数化（向量值函数）**：是将低维标量参数映射到高维空间中的坐标点（“**用参数生成几何位置**”）；
+> - **向量场（Vector Field）**：是在空间中的每一个已有坐标点上附加一个物理向量（“**空间各点处的作用力/速度**”）。两者在微积分体系中具有明确的区分。
 
-以 $y = f(x)$ 为例，它的图像是一条曲线，同一个几何对象可以用不同方式描述：
+---
 
-| 形式                   | 数学对象                                                                | 作用               |
-| ---------------------- | ----------------------------------------------------------------------- | ------------------ |
-| 函数                   | $f: \mathbb{R} \to \mathbb{R}$                                          | 给定 $x$，计算 $y$ |
-| 隐式                   | $F(x,y) = f(x) - y = 0$                                                 | 筛选属于曲线的点   |
-| 参数化（即向量值函数） | $\mathbf r(t) = (t, f(t))$，即 $\mathbf r: \mathbb{R} \to \mathbb{R}^2$ | 生成曲线上的点     |
+## 六、图形学实战联系：符号距离场（SDF）与 Ray Marching 隐式表面
 
-“参数化”与“向量值函数”是同一个东西：参数化 $\mathbf r(t)$ 把参数 $t$ 映射成空间中的点，数学上就是一个向量值函数 $\mathbf r: \mathbb{R} \to \mathbb{R}^2$——它不是与函数、隐式并列的第四种表示，而是参数化形式的另一种叫法。
+在现代计算机图形学、神经隐式渲染（NeRF / 3D Gaussian Splatting）与物理仿真中，隐式等值面扮演着极度关键的角色。
 
-需要与**向量场**区分：向量场是在空间中的每个点上附加一个向量；参数化（向量值函数）则是“用参数生成点”，两者是不同概念。
+**符号距离场（Signed Distance Field, SDF）** 是一种特殊的标量场 $d: \mathbb{R}^3 \to \mathbb{R}$，它度量了空间任意点 $\mathbf{p}$ 到物体几何表面的欧氏最短距离：
 
-## 图形学联系：SDF 与 level set
+- $d(\mathbf{p}) < 0$：点位于物体内部（Solid Interior）；
+- $d(\mathbf{p}) = 0$：点精确落在物体表面上（Surface Boundary）；
+- $d(\mathbf{p}) > 0$：点位于物体外部空间（Empty Exterior）。
 
-在计算机图形学里，这个关系非常重要。**符号距离场**(Signed Distance Field, SDF)是一个标量场
-
-$$
-d: \mathbb{R}^3 \to \mathbb{R}
-$$
-
-满足
-
-- $d(\mathbf p) < 0$：在物体内部；
-- $d(\mathbf p) = 0$：在表面上；
-- $d(\mathbf p) > 0$：在物体外部。
-
-于是物体表面就是它的零等值面：
+因此，物体的实体渲染表面正好就是该 SDF 标量场的 **零等值面**：
 
 $$
-S = \{\mathbf p \mid d(\mathbf p) = 0\}
+S = \{\mathbf{p} \in \mathbb{R}^3 \mid d(\mathbf{p}) = 0\}
 $$
 
-这与“隐式曲面 = 标量场的 level set”完全一致：参数化负责**生成**几何，隐式 / SDF 负责**筛选**几何。
+光线步进算法（Ray Marching）与着色管线通过计算该标量场的梯度 $\nabla d(\mathbf{p})$，无需构建任何多边形三角网格，就能在微秒级时间内极速解析出物体表面任意采样点的**精确法线方向与光照高光**！
 
-> 本文把系列串了起来：标量场给出等值线 / 等值面，等值线就是隐式曲线，等值面就是隐式曲面，梯度总与等值面垂直——正是[《场论基础：标量场、向量场与微分算子》](/posts/calculus/fields-and-operators#二交互实验二维热力图--三维曲面)那篇的核心。
+---
+
+> 💡 **知识贯通**：
+>
+> 本文完成了几何表示与场论的深度贯通：**标量场生成等值面，等值面构造隐式曲面，梯度算子定义曲面法向**——这也构成了后续深入探索 [《导数、偏导数与切空间》](/posts/calculus/derivatives-and-tangent-spaces) 与 [《场论基础：标量场、向量场与微分算子》](/posts/calculus/fields-and-operators) 的底层几何基石。

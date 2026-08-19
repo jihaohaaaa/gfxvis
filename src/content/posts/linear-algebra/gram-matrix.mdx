@@ -16,161 +16,166 @@ draft: false
 
 import GramMatrixDemo from "../../../components/demos/GramMatrixDemo";
 
-# Gram 矩阵与几何体积
+在向量空间中，一组向量两两之间的内积构成了 **Gram 矩阵（格拉姆矩阵，Gram Matrix）**。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 **度规张量（Metric Tensor）** 的核心桥梁。
 
-在向量空间中，一组向量两两之间的内积构成了 **Gram 矩阵(Gram matrix)**。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 **度规张量(metric tensor)** 的核心桥梁。关于内积公理、加权内积与函数空间内积的完整推导，详见 [《内积空间：从欧氏点积到函数空间与希尔伯特空间》](/posts/linear-algebra/inner-product-spaces)。
+关于内积公理、加权内积与函数空间内积的完整推导，详见 [《内积空间：从欧氏点积到广义内积与函数空间》](/posts/linear-algebra/inner-product-spaces)。
 
 ---
 
-## 1. 代数定义与矩阵形式
+## 一、代数定义与矩阵形式
 
-设 $V$ 为一个[内积空间](/posts/linear-algebra/inner-product-spaces)，给定一组向量 $v_1, v_2, \dots, v_k \in V$。这组向量的 **Gram 矩阵** $G$ 定义为一个 $k \times k$ 的对称方阵，其第 $i$ 行第 $j$ 列的元素为向量 $v_i$ 与 $v_j$ 的内积：
+设 $V$ 为一个 [内积空间](/posts/linear-algebra/inner-product-spaces)，给定一组向量 $\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k \in V$。这组向量的 **Gram 矩阵** $G$ 定义为一个 $k \times k$ 的对称方阵，其第 $i$ 行第 $j$ 列的元素为向量 $\mathbf{v}_i$ 与 $\mathbf{v}_j$ 的内积：
 
 $$
-G_{ij} = \langle v_i, v_j \rangle
+G_{ij} = \langle \mathbf{v}_i, \mathbf{v}_j \rangle
 $$
 
 展开形式为：
 
 $$
 G = \begin{pmatrix}
-\langle v_1, v_1 \rangle & \langle v_1, v_2 \rangle & \dots & \langle v_1, v_k \rangle \\
-\langle v_2, v_1 \rangle & \langle v_2, v_2 \rangle & \dots & \langle v_2, v_k \rangle \\
+\langle \mathbf{v}_1, \mathbf{v}_1 \rangle & \langle \mathbf{v}_1, \mathbf{v}_2 \rangle & \dots & \langle \mathbf{v}_1, \mathbf{v}_k \rangle \\
+\langle \mathbf{v}_2, \mathbf{v}_1 \rangle & \langle \mathbf{v}_2, \mathbf{v}_2 \rangle & \dots & \langle \mathbf{v}_2, \mathbf{v}_k \rangle \\
 \vdots & \vdots & \ddots & \vdots \\
-\langle v_k, v_1 \rangle & \langle v_k, v_2 \rangle & \dots & \langle v_k, v_k \rangle
+\langle \mathbf{v}_k, \mathbf{v}_1 \rangle & \langle \mathbf{v}_k, \mathbf{v}_2 \rangle & \dots & \langle \mathbf{v}_k, \mathbf{v}_k \rangle
 \end{pmatrix}
 $$
 
 当向量处于标准欧氏空间 $\mathbb{R}^n$ 中（采用标准点积）时，若我们将向量按列拼成一个 $n \times k$ 的矩阵：
 
 $$
-A = \begin{pmatrix} v_1 & v_2 & \dots & v_k \end{pmatrix}
+A = \begin{pmatrix} \mathbf{v}_1 & \mathbf{v}_2 & \dots & \mathbf{v}_k \end{pmatrix}
 $$
 
 则 Gram 矩阵可以直接写成矩阵转置乘积的形式：
 
 $$
-G = A^T A
+\boxed{G = A^\top A}
 $$
 
-这正是在正规方程和投影矩阵推导中频繁出现的 $A^T A$！
+这正是在正规方程和投影矩阵推导中频繁出现的 $A^\top A$！
 
 ---
 
-## 2. 几何意义与 Gram 行列式
+## 二、几何意义与 Gram 行列式计算体积
 
-Gram 矩阵最引人入胜的几何性质在于：**它的行列式蕴含了向量组在空间中张成的平行多面体的体积(Volume)**。
+Gram 矩阵最引人入胜的几何性质在于：**它的行列式蕴含了向量组在空间中张成的平行多面体的体积（Volume）**。
 
-### 二维与三维直观
+### 2.1 二维与三维直观推导
 
-对于二维平面上的两个向量 $u, v$，它们张成的平行四边形面积为 $S = \|u\| \|v\| \sin\theta$。此时 Gram 矩阵为：
+对于二维平面上的两个向量 $\mathbf{u}, \mathbf{v}$，它们张成的平行四边形面积为 $S = \lVert\mathbf{u}\rVert \lVert\mathbf{v}\rVert \sin\theta$。此时 Gram 矩阵为：
 
 $$
 G = \begin{pmatrix}
-\|u\|^2 & u \cdot v \\
-u \cdot v & \|v\|^2
+\lVert\mathbf{u}\rVert^2 & \mathbf{u} \cdot \mathbf{v} \\
+\mathbf{u} \cdot \mathbf{v} & \lVert\mathbf{v}\rVert^2
 \end{pmatrix}
 $$
 
 其行列式为：
 
 $$
-\det(G) = \|u\|^2 \|v\|^2 - (u \cdot v)^2 = \|u\|^2 \|v\|^2 (1 - \cos^2\theta) = \|u\|^2 \|v\|^2 \sin^2\theta = S^2
+\det(G) = \lVert\mathbf{u}\rVert^2 \lVert\mathbf{v}\rVert^2 - (\mathbf{u} \cdot \mathbf{v})^2 = \lVert\mathbf{u}\rVert^2 \lVert\mathbf{v}\rVert^2 (1 - \cos^2\theta) = \lVert\mathbf{u}\rVert^2 \lVert\mathbf{v}\rVert^2 \sin^2\theta = S^2
 $$
 
-因此，平行四边形的面积恰好等于 **Gram 行列式(Gram determinant)** 的平方根：
+因此，平行四边形的面积恰好等于 **Gram 行列式（Gram Determinant）** 的平方根：
 
 $$
 \text{Area} = \sqrt{\det(G)}
 $$
 
-同理，在高维空间中，由 $k$ 个向量张成的 $k$ 维平行多面体(parallelotope)的体积满足：
+同理，在高维空间中，由 $k$ 个向量张成的 $k$ 维平行多面体（Parallelotope）的体积满足：
 
 $$
-\text{Volume}_k = \sqrt{\det(A^T A)} = \sqrt{\det(G)}
+\boxed{\text{Volume}_k = \sqrt{\det(A^\top A)} = \sqrt{\det(G)}}
 $$
 
-### 交互可视化： Gram 矩阵与平行四边形退化
+---
 
-下面的交互演示展示了二维向量 $u, v$ 张成的平行四边形及其对应的 Gram 矩阵与行列式。你可以拖动向量端点，观察当向量接近共线（线性相关）时，$\det(G) \to 0$ 的退化过程：
+### 2.2 交互可视化：Gram 矩阵与平行四边形退化
+
+下面的交互演示展示了二维向量 $\mathbf{u}, \mathbf{v}$ 张成的平行四边形及其对应的 Gram 矩阵与行列式。你可以拖动向量端点，观察当向量接近共线（线性相关）时，$\det(G) \to 0$ 的退化过程：
 
 <GramMatrixDemo client:visible />
 
 ---
 
-## 3. 核心代数性质
+## 三、核心代数性质
 
 Gram 矩阵具备许多极佳的线性代数性质：
 
-1. **对称性(Symmetric)**：由于内积满足对称性 $\langle v_i, v_j \rangle = \langle v_j, v_i \rangle$，因此 $G = G^T$。
-2. **半正定性(Positive Semi-Definite)**：对任意非零向量 $x \in \mathbb{R}^k$，有：
+1. **对称性（Symmetric）**：由于内积满足对称公理 $\langle \mathbf{v}_i, \mathbf{v}_j \rangle = \langle \mathbf{v}_j, \mathbf{v}_i \rangle$，因此：
    $$
-   x^T G x = x^T A^T A x = (Ax)^T (Ax) = \|Ax\|^2 \ge 0
+   G = G^\top
+   $$
+2. **半正定性（Positive Semi-Definite）**：对任意非零向量 $\mathbf{x} \in \mathbb{R}^k$，有：
+   $$
+   \mathbf{x}^\top G \mathbf{x} = \mathbf{x}^\top A^\top A \mathbf{x} = (A\mathbf{x})^\top (A\mathbf{x}) = \lVert A\mathbf{x} \rVert^2 \ge 0
    $$
    因此 $G \succeq 0$。
-3. **秩与可逆性(Rank and Invertibility)**：
+3. **秩与可逆性（Rank and Invertibility）**：
    $$
-   \text{rank}(A^T A) = \text{rank}(A)
+   \operatorname{rank}(A^\top A) = \operatorname{rank}(A)
    $$
-   当且仅当向量组 $v_1, \dots, v_k$ **线性无关(linearly independent)** 时，$A$ 满列秩，Gram 矩阵 $G$ 严格正定($G \succ 0$)且可逆 ($\det(G) > 0$)。若向量组线性相关，则 $\det(G) = 0$。
+   当且仅当向量组 $\mathbf{v}_1, \dots, \mathbf{v}_k$ **线性无关（Linearly Independent）** 时，$A$ 满列秩，Gram 矩阵 $G$ 严格正定（$G \succ 0$）且可逆（$\det(G) > 0$）。若向量组线性相关，则 $\det(G) = 0$。
 
 ---
 
-## 4. 核心应用场景
+## 四、核心工程与几何应用场景
 
 ### 4.1 正规方程与正交投影算子
 
-在最小二乘法与子空间投影中，我们要将向量 $b$ 投影到由矩阵 $A$ 的列空间 $\text{im}(A)$ 上。求解正规方程(Normal Equations)：
+在最小二乘法与子空间投影中，我们要将向量 $\mathbf{b}$ 投影到由矩阵 $A$ 的列空间 $\operatorname{im}(A)$ 上。求解正规方程（Normal Equations）：
 
 $$
-A^T A x = A^T b
+A^\top A \mathbf{x} = A^\top \mathbf{b}
 $$
 
-其中的系数矩阵恰好就是 Gram 矩阵 $G = A^T A$。正交投影算子的显式表达式为：
+其中的系数矩阵恰好就是 Gram 矩阵 $G = A^\top A$。正交投影算子的显式表达式为：
 
 $$
-P = A (A^T A)^{-1} A^T = A G^{-1} A^T
+P = A (A^\top A)^{-1} A^\top = A G^{-1} A^\top
 $$
 
-当列向量线性无关时，$G$ 严格正定可逆，保证了投影算子 $P$ 的唯一存在性。详见 [投影算子](/posts/linear-algebra/projection-operators) 一文中的完整推导。
+当列向量线性无关时，$G$ 严格正定可逆，保证了投影算子 $P$ 的唯一存在性。详见 [《投影算子》](/posts/linear-algebra/projection-operators) 中的完整推导。
 
 ---
 
 ### 4.2 Gram-Schmidt 正交化过程
 
-**Gram-Schmidt 正交化** 的目标是将一组线性无关基 $v_1, \dots, v_k$ 转换为正交基 $u_1, \dots, u_k$。从矩阵对角化的视角看：
+**Gram-Schmidt 正交化** 的目标是将一组线性无关基 $\mathbf{v}_1, \dots, \mathbf{v}_k$ 转换为正交基 $\mathbf{u}_1, \dots, \mathbf{u}_k$。从矩阵对角化的视角看：
 
 - 原始基的内积矩阵 $G$ 是一个一般的满秩对称正定矩阵；
 - 正交化过程相当于寻找一个上三角可逆变换矩阵 $R$，使得正交基的内积矩阵化为对角矩阵（若归一化则为单位矩阵 $I$）：
   $$
-  R^T G R = I
+  R^\top G R = I
   $$
-  这正是矩阵的 $QR$ 分解在内积结构上的体现。
+  这正是矩阵 $QR$ 分解在内积结构上的代数体现。
 
 ---
 
-### 4.3 计算机图形学与微分几何：度规张量 (Metric Tensor)
+### 4.3 计算机图形学与微分几何：度规张量（Metric Tensor）
 
-在计算机图形学、3D 曲面建模与渲染中，参量曲面通常表示为 $r(u, v) \in \mathbb{R}^3$。
+在计算机图形学、3D 曲面建模与渲染中，参量曲面通常表示为 $\mathbf{r}(u, v) \in \mathbb{R}^3$。
 
-曲面在点 $(u, v)$ 处的切平面由偏导向量 $r_u = \frac{\partial r}{\partial u}$ 与 $r_v = \frac{\partial r}{\partial v}$ 张成。这两个切向量构成的 Gram 矩阵在微分几何中被称为 **第一基本形式(First Fundamental Form)** 或 **度规张量(Metric Tensor)**：
+曲面在点 $(u, v)$ 处的切平面由偏导向量 $\mathbf{r}_u = \dfrac{\partial \mathbf{r}}{\partial u}$ 与 $\mathbf{r}_v = \dfrac{\partial \mathbf{r}}{\partial v}$ 张成。这两个切向量构成的 Gram 矩阵在微分几何中被称为 **第一基本形式（First Fundamental Form）** 或 **度规张量（Metric Tensor）**：
 
 $$
-g = \begin{pmatrix} E & F \\ F & G_{\text{surf}} \end{pmatrix} = \begin{pmatrix} r_u \cdot r_u & r_u \cdot r_v \\ r_v \cdot r_u & r_v \cdot r_v \end{pmatrix}
+g = \begin{pmatrix} E & F \\ F & G_{\text{surf}} \end{pmatrix} = \begin{pmatrix} \mathbf{r}_u \cdot \mathbf{r}_u & \mathbf{r}_u \cdot \mathbf{r}_v \\ \mathbf{r}_v \cdot \mathbf{r}_u & \mathbf{r}_v \cdot \mathbf{r}_v \end{pmatrix}
 $$
 
 利用 Gram 行列式，曲面上的微元面积 $\mathrm{d}A$ 可以优雅地写成：
 
 $$
-\mathrm{d}A = \|r_u \times r_v\| \, \mathrm{d}u \mathrm{d}v = \sqrt{\det(g)} \, \mathrm{d}u \mathrm{d}v = \sqrt{EG_{\text{surf}} - F^2} \, \mathrm{d}u \mathrm{d}v
+\mathrm{d}A = \lVert \mathbf{r}_u \times \mathbf{r}_v \rVert \, \mathrm{d}u \mathrm{d}v = \sqrt{\det(g)} \, \mathrm{d}u \mathrm{d}v = \sqrt{EG_{\text{surf}} - F^2} \, \mathrm{d}u \mathrm{d}v
 $$
 
-这种用度规张量的 Gram 行列式计算积分面积元的方法，是纹理映射(Texture Mapping)、保角/保面积曲面展开以及物理模拟中不可或缺的基础。
+这种用度规张量的 Gram 行列式计算积分面积元的方法，是纹理映射（Texture Mapping）、保角/保面积曲面展开以及物理仿真模拟中不可或缺的数学基础。
 
 ---
 
-## 总结
-
-- **Gram 矩阵** $G_{ij} = \langle v_i, v_j \rangle = A^T A$ 刻画了一组向量的内在结构；
-- **Gram 行列式** $\sqrt{\det(G)}$ 在几何上度量了向量组张成的平行多面体体积；
-- 从最小二乘投影 $P = A(A^T A)^{-1}A^T$ 到曲面渲染中的度规张量 $\mathrm{d}A = \sqrt{\det g} \, \mathrm{d}u\mathrm{d}v$，Gram 矩阵深刻贯穿了代数与几何的融会贯通。
+> 💡 **全文总结 Takeaway**：
+>
+> 1. **Gram 矩阵**：$G_{ij} = \langle \mathbf{v}_i, \mathbf{v}_j \rangle = A^\top A$ 完整刻画了一组向量的内在夹角与模长几何；
+> 2. **Gram 行列式**：$\sqrt{\det(G)}$ 在几何上精确度量了向量组张成的平行多面体体积；
+> 3. **领域统一**：从最小二乘正规方程 $A^\top A \mathbf{x} = A^\top \mathbf{b}$ 到曲面微元面积 $\mathrm{d}A = \sqrt{\det g} \, \mathrm{d}u\mathrm{d}v$，Gram 矩阵深刻贯通了代数计算与微分几何。
