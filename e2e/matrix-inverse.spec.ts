@@ -38,7 +38,11 @@ test.describe("Matrix Inverse 文章与 MatrixInverseDemo 可视化组件 E2E �
     const count = await mathNodes.count();
     expect(count).toBeGreaterThan(15);
 
-    // 4. 滚动至交互演示区域并等待 Canvas 可视化元素挂载
+    // 4. 几何撤销模型图表检验
+    const diagram = page.getByText("几何撤销模型：前向变换与时空倒流还原");
+    await expect(diagram).toBeVisible();
+
+    // 5. 滚动至交互演示区域并等待 Canvas 可视化元素挂载
     const demoHeading = page.getByRole("heading", { name: /交互演示/ });
     await demoHeading.scrollIntoViewIfNeeded();
     const canvas = page.locator("canvas").first();

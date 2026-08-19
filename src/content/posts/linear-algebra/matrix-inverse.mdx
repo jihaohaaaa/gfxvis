@@ -17,8 +17,7 @@ draft: false
 import MatrixInverseDemo from "../../../components/demos/MatrixInverseDemo";
 import InvertibleEquivalenceDiagram from "../../../components/diagrams/InvertibleEquivalenceDiagram";
 import FastMatrixInverseDiagram from "../../../components/diagrams/FastMatrixInverseDiagram";
-
-# 矩阵的逆：几何撤销、可逆性定理、高斯消元与图形学法线变换
+import InverseTransformDiagram from "../../../components/diagrams/InverseTransformDiagram";
 
 如果把一个方阵 $A$ 视为对整个几何空间的一次**线性拉伸、旋转或剪切**，那么矩阵的逆 $A^{-1}$ 就是一台精确的“时空倒流机”——它能够把被扭曲变形的空间无损、精准地拉回初始状态。
 
@@ -28,7 +27,7 @@ import FastMatrixInverseDiagram from "../../../components/diagrams/FastMatrixInv
 
 ---
 
-## 1. 几何直观：什么是逆？“时空倒流”的撤销算子
+## 一、几何直观：什么是逆？“时空倒流”的撤销算子
 
 设 $V$ 是一个 $n$ 维向量空间，$A$ 是作用在 $V$ 上的一个线性映射（$n \times n$ 阶方阵）。
 
@@ -44,12 +43,7 @@ $$
 \boxed{A A^{-1} = A^{-1} A = I}
 $$
 
-```
-   初始空间 x  ────── 矩阵 A (变换/变形) ─────►  变换后空间 y = Ax
-        ▲                                            │
-        │                                            │
-        └────── 逆矩阵 A⁻¹ (撤销/还原) ───────────────┘
-```
+<InverseTransformDiagram />
 
 从几何运动来看：
 
@@ -59,7 +53,7 @@ $$
 
 ---
 
-## 2. 为什么会有矩阵不可逆？降维塌缩与信息丢失
+## 二、为什么会有矩阵不可逆？降维塌缩与信息丢失
 
 为什么不是所有矩阵都存在逆矩阵？
 
@@ -84,7 +78,7 @@ $$
 
 ---
 
-## 3. 可逆矩阵等价定理（The Invertible Matrix Theorem）
+## 三、可逆矩阵等价定理（The Invertible Matrix Theorem）
 
 在线性代数中，一个 $n \times n$ 方阵 $A$ 是否可逆，统领了整个代数体系的各大核心概念。以下所有陈述在逻辑上**完全等价**：
 
@@ -102,7 +96,7 @@ $$
 
 ---
 
-## 4. 求逆算法与代数推导
+## 四、求逆算法与代数推导
 
 ### 4.1 高斯-约旦消元法（Gauss-Jordan Elimination）
 
@@ -114,7 +108,7 @@ $$
 (E_k \cdots E_2 E_1) [A \mid I] = [I \mid (E_k \cdots E_1)] = [I \mid A^{-1}]
 $$
 
-#### 实例计算
+### 4.2 实例计算：高斯-约旦消元实战
 
 求解 $A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}$ 的逆矩阵：
 
@@ -137,9 +131,7 @@ $$
 
 右半部分即为逆矩阵：$A^{-1} = \begin{pmatrix} -2 & 1 \\ 1.5 & -0.5 \end{pmatrix}$。
 
----
-
-### 4.2 伴随矩阵与克莱姆法则公式（Adjugate Formula）
+### 4.3 伴随矩阵与克莱姆法则公式（Adjugate Formula）
 
 对于低维矩阵（特别是 $2\times 2$ 与 $3\times 3$），使用代数余子式构成的**伴随矩阵（Adjugate Matrix）** 能够给出解析显式解：
 
@@ -149,7 +141,7 @@ $$
 
 其中 $C_{ij} = (-1)^{i+j} M_{ij}$ 为代数余子式（$M_{ij}$ 是划去第 $i$ 行第 $j$ 列后的余子式行列式）。
 
-#### 2×2 矩阵求逆显式黄金公式
+### 4.4 2×2 矩阵求逆显式黄金公式
 
 $$
 \begin{pmatrix} a & b \\ c & d \end{pmatrix}^{-1} = \frac{1}{ad - bc} \begin{pmatrix} d & -b \\ -c & a \end{pmatrix}
@@ -159,7 +151,7 @@ $$
 
 ---
 
-## 5. 逆矩阵的核心代数运算律
+## 五、逆矩阵的核心代数运算律
 
 1. **穿脱鞋袜原则（Shoes and Socks Property）**：
 
@@ -190,13 +182,13 @@ $$
 
 ---
 
-## 6. 特殊矩阵的极速求逆
+## 六、特殊矩阵的极速求逆
 
 在工程实践中，显式调用高斯消元算法求 $n$ 阶逆矩阵的复杂度高达 $O(n^3)$。因此，图形学与物理引擎极其依赖特殊矩阵的**解析瞬时求逆**：
 
 <FastMatrixInverseDiagram />
 
-### 1. 正交矩阵（Orthogonal Matrix）
+### 6.1 正交矩阵（Orthogonal Matrix）
 
 如果矩阵的列向量构成一组标准正交基（如纯旋转矩阵 $R$、镜像反射矩阵），则：
 
@@ -206,7 +198,7 @@ $$
 
 - 求逆代价由 $O(n^3)$ 瞬间降为 $O(1)$ 的内存转置！
 
-### 2. 对角矩阵（Diagonal Matrix）
+### 6.2 对角矩阵（Diagonal Matrix）
 
 若 $D = \operatorname{diag}(d_1, d_2, \ldots, d_n)$ 且所有 $d_i \neq 0$：
 
@@ -216,13 +208,13 @@ $$
 
 ---
 
-## 7. 图形学核心实战：法线矩阵为什么是逆转置 $(M^{-1})^\top$？
+## 七、图形学核心实战：法线矩阵为什么是逆转置 $(M^{-1})^\top$？
 
 在 3D 图形渲染管线中，顶点位置经过模型矩阵 $M$ 变换后：$\mathbf{p}' = M \mathbf{p}$。
 
 初学者往往会自然地认为：“顶点法线向量 $\mathbf{n}$ 同样应当直接乘以 $M$ 进行变换”。**这是一个极其严重的错误！**
 
-### 几何矛盾：非均匀缩放下的垂直性破缺
+### 7.1 几何矛盾：非均匀缩放下的垂直性破缺
 
 考虑一个沿 $x$ 轴拉伸 2 倍的变换 $M = \begin{pmatrix} 2 & 0 \\ 0 & 1 \end{pmatrix}$：
 
@@ -242,7 +234,7 @@ $$
                                                     ▲
 ```
 
-### 数学严格推导：法线变换矩阵的诞生
+### 7.2 数学严格推导：法线变换矩阵的诞生
 
 设变换后的正确法线变换矩阵为 $N$（即 $\mathbf{n}' = N\mathbf{n}$），变换后的切线为 $\mathbf{t}' = M\mathbf{t}$。
 
@@ -269,7 +261,9 @@ $$
 
 ---
 
-## 8. 图形学渲染管线优化：TRS 仿射变换的高速求逆
+## 八、图形学渲染管线优化：TRS 仿射变换的高速求逆
+
+### 8.1 TRS 复合变换逆拆解
 
 在游戏引擎（如 Unity、Unreal）和 WebGL 场景图中，物体的模型矩阵 $M$ 通常由**平移 $T$、旋转 $R$、缩放 $S$** 复合而成：
 
@@ -289,6 +283,8 @@ $$
 2. **旋转逆变换**：$R^{-1} = R^\top$（旋转矩阵直接转置）；
 3. **缩放逆变换**：$S(s_x, s_y, s_z)^{-1} = S(1/s_x, 1/s_y, 1/s_z)$（对角缩放因子直接取倒数）。
 
+### 8.2 现代图形引擎快速求逆实战与数值计算原则
+
 ```cpp
 // 现代图形引擎中的 TRS 快速解析求逆伪代码
 mat4 fastInverseTRS(const vec3& translation, const quat& rotation, const vec3& scale) {
@@ -305,7 +301,7 @@ mat4 fastInverseTRS(const vec3& translation, const quat& rotation, const vec3& s
 
 ---
 
-## 9. 交互演示：空间变换的逆还原与法线变换对比
+## 九、交互演示：空间变换的逆还原与法线变换对比
 
 通过下方交互实验岛，你可以直观感受：
 
@@ -316,7 +312,7 @@ mat4 fastInverseTRS(const vec3& translation, const quat& rotation, const vec3& s
 
 ---
 
-## 10. 总结与知识脉络
+## 十、总结与知识脉络
 
 | 概念维度       | 核心结论                                                                                             |
 | :------------- | :--------------------------------------------------------------------------------------------------- |

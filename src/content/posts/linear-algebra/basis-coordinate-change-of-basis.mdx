@@ -395,6 +395,7 @@ $$
 >
 > - **自同态方阵特例（$V = W$ 且采用同一套原基底 $\mathcal{B}$）**：代数计算中 $A e_j = \operatorname{Col}_j(A) = [T(b_j)]_{\mathcal{B}}$。方阵 $A$ 的第 $j$ 列正是第 $j$ 个基向量经变换后的像。
 > - **图形学直观对应**：在 3D 变换矩阵中，矩阵的三列分别锁定了变换后局部坐标系的 **右向 $\mathbf{r}$、前向 $\mathbf{f}$ 与上向 $\mathbf{u}$** 在世界基底下的坐标（“矩阵的列就是变换后的基向量”）。
+> - **谱理论与对角化的必然性**：当我们选择特征向量组 $\mathcal{V}$ 作为基底时，由于 $T(\mathbf{v}_j) = \lambda_j \mathbf{v}_j$，其坐标向量 $[T(\mathbf{v}_j)]_{\mathcal{V}} = (0, \dots, \lambda_j, \dots, 0)^\top$ 每一列仅对角元非零，这正是**矩阵对角化 $A = P \Lambda P^{-1}$ 与特征值 $\lambda$ 成立的根本几何原因**（详见 [《特征值与特征向量：矩阵对角化》](/posts/linear-algebra/eigenvalues-and-eigenvectors#四矩阵对角化解耦线性变换的终极坐标系)）。
 >
 > 这不是一个人为规定出来的巧合，矩阵乘法按列线性组合的结构（column-linear structure）恰好就是线性变换的定义。
 
