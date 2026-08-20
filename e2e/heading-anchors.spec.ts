@@ -30,8 +30,11 @@ test.describe("文章标题锚点与深层链接复制 E2E 测试", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // 1. 验证小节标题存在且已自动注入 .heading-anchor
-    const targetHeading = page.locator("h2#先从直观说起");
+    const targetHeading = page.locator(".prose h2").first();
     await expect(targetHeading).toBeVisible();
+
+    const headingId = await targetHeading.getAttribute("id");
+    expect(headingId).toBeTruthy();
 
     const anchor = targetHeading.locator(".heading-anchor");
     await expect(anchor).toBeAttached();
@@ -39,10 +42,9 @@ test.describe("文章标题锚点与深层链接复制 E2E 测试", () => {
     // 2. 点击锚点图标
     await anchor.click();
 
-    // 3. 验证 URL Hash 正确更新 (自动等待地址栏异步更新)
-    await expect(page).toHaveURL(
-      /#(%E5%85%88%E4%BB%8E%E7%9B%B4%E8%A7%82%E8%AF%B4%E8%B5%B7|先从直观说起)/,
-    );
+    // 3. 验证 URL Hash 正确更新 (兼容未编码或已 URL 编码形式)
+    const encodedId = encodeURIComponent(headingId!);
+    await expect(page).toHaveURL(new RegExp(`#.*(${encodedId}|${headingId})`));
 
     // 4. 验证 Toast 提示组件已弹出
     const toast = page.locator("#heading-copy-toast");
@@ -56,10 +58,16 @@ test.describe("文章标题锚点与深层链接复制 E2E 测试", () => {
   test("直接带 Hash 访问页面能够自动滚动定位并触发脉冲高亮", async ({
     page,
   }) => {
-    await page.goto("/posts/linear-algebra/projection-operators#代数定义");
+    await page.goto("/posts/linear-algebra/projection-operators");
     await page.waitForLoadState("domcontentloaded");
 
-    const targetHeading = page.locator("h2#代数定义");
+    const targetHeading = page.locator(".prose h2").nth(1);
+    const headingId = await targetHeading.getAttribute("id");
+    expect(headingId).toBeTruthy();
+
+    await page.goto("/posts/linear-algebra/projection-operators#" + headingId);
+    await page.waitForLoadState("domcontentloaded");
+
     await expect(targetHeading).toBeVisible();
     await expect(targetHeading).toHaveClass(/heading-pulse/, { timeout: 3000 });
   });
@@ -67,11 +75,17 @@ test.describe("文章标题锚点与深层链接复制 E2E 测试", () => {
   test("带 Hash 刷新页面能够准确恢复至目标小节并处于视口范围内", async ({
     page,
   }) => {
-    await page.goto("/posts/linear-algebra/projection-operators#正交投影");
+    await page.goto("/posts/linear-algebra/projection-operators");
+    await page.waitForLoadState("domcontentloaded");
+
+    const targetHeading = page.locator(".prose h2").nth(2);
+    const headingId = await targetHeading.getAttribute("id");
+    expect(headingId).toBeTruthy();
+
+    await page.goto("/posts/linear-algebra/projection-operators#" + headingId);
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(500);
 
-    const targetHeading = page.locator("h2#正交投影");
     await expect(targetHeading).toBeInViewport();
 
     // 页面刷新 (Reload)

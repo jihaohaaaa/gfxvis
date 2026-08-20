@@ -18,7 +18,8 @@ import {
 import { createAxesGroup } from "../../core/3d/axes3d";
 import { coolwarm, valueToT } from "../../core/common/colormap";
 import { mathToWorld } from "../../core/3d/coords";
-import { clamp, forEachCube } from "../../core/common/math";
+import { clamp } from "@math";
+import { forEachCube } from "../../core/common/math";
 import { addStandardLights, disposeObject } from "../../core/3d/three-utils";
 import {
   createTransformGizmo3D,

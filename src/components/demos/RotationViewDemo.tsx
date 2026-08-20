@@ -28,12 +28,9 @@ import {
   disposeObject,
 } from "../../visualizations/core/3d/three-utils";
 import { mathToWorld } from "../../visualizations/core/3d/coords";
+import { type Vec3, normalize, dot, cross } from "@math";
 
-export interface Vec3 {
-  x: number;
-  y: number;
-  z: number;
-}
+export type { Vec3 };
 
 type PresetKey = "front" | "topdown" | "closeup" | "orbit" | "dutch";
 
@@ -82,27 +79,6 @@ const PRESETS: Record<PresetKey, CameraPreset> = {
     desc: "相机 Up 轴斜向倾斜 45°，第一人称画面发生戏剧性的旋转翻滚（Roll 旋转）。",
   },
 };
-
-/** Normalizes a vector */
-function normalize(v: Vec3): Vec3 {
-  const len = Math.hypot(v.x, v.y, v.z);
-  if (len < 1e-6) return { x: 0, y: 0, z: 1 };
-  return { x: v.x / len, y: v.y / len, z: v.z / len };
-}
-
-/** Dot product */
-function dot(a: Vec3, b: Vec3): number {
-  return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-/** Cross product: a x b */
-function cross(a: Vec3, b: Vec3): Vec3 {
-  return {
-    x: a.y * b.z - a.z * b.y,
-    y: a.z * b.x - a.x * b.z,
-    z: a.x * b.y - a.y * b.x,
-  };
-}
 
 /** Builds common static geometric target objects in a scene */
 function populateSceneObjects(scene: Scene) {

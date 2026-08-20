@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { mathToWorld } from "./coords";
-import { clamp } from "../common/math";
+import { clamp } from "@math";
 import { disposeObject } from "./three-utils";
 import {
   computeFadeOpacity,

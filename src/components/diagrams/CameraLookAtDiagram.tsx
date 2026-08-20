@@ -7,12 +7,7 @@ import ParamSlider from "../framework/ParamSlider";
 import InlineMath from "../framework/InlineMath";
 import { mathToWorld } from "../../visualizations/core/3d/coords";
 import { createControls } from "../../visualizations/core/3d/controls";
-
-interface Vec3 {
-  x: number;
-  y: number;
-  z: number;
-}
+import { type Vec3, length, normalize, cross, dot } from "@math";
 
 const PRESETS: PresetOption[] = [
   {
@@ -37,27 +32,6 @@ const PRESETS: PresetOption[] = [
       "参考 Up_raw 发生严重倾斜，Gram-Schmidt 正交化自动投影纠偏出严格正交的 True Up",
   },
 ];
-
-function norm(v: Vec3): number {
-  return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z) || 1e-6;
-}
-
-function normalize(v: Vec3): Vec3 {
-  const l = norm(v);
-  return { x: v.x / l, y: v.y / l, z: v.z / l };
-}
-
-function cross(a: Vec3, b: Vec3): Vec3 {
-  return {
-    x: a.y * b.z - a.z * b.y,
-    y: a.z * b.x - a.x * b.z,
-    z: a.x * b.y - a.y * b.x,
-  };
-}
-
-function dot(a: Vec3, b: Vec3): number {
-  return a.x * b.x + a.y * b.y + a.z * b.z;
-}
 
 function fmt(n: number): string {
   const v = Math.abs(n) < 1e-4 ? 0 : n;
@@ -100,7 +74,7 @@ export default function CameraLookAtDiagram({
   const f: Vec3 = normalize(forwardRaw);
 
   const rightRaw = cross(f, upRaw);
-  const rightLength = norm(rightRaw);
+  const rightLength = length(rightRaw);
   const r: Vec3 =
     rightLength < 1e-4 ? { x: 1, y: 0, z: 0 } : normalize(rightRaw);
 

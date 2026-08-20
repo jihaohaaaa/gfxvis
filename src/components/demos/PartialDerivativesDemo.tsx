@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import * as THREE from "three";
-import { clamp } from "../../visualizations/core/common/math";
+import { clamp } from "@math";
 import { attachDrag3D } from "../../visualizations/core/3d/drag3d";
 import {
   DOMAIN,

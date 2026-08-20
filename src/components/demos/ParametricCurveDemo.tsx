@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { clamp } from "../../visualizations/core/common/math";
+import { clamp } from "@math";
 import {
   drawAdaptiveAxes,
   drawArrow,

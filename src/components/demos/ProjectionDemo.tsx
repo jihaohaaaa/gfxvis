@@ -21,7 +21,7 @@ import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import ParamSlider from "../framework/ParamSlider";
-import { clamp } from "../../visualizations/core/common/math";
+import { clamp } from "@math";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useVectorDrag } from "../framework/useVectorDrag";
 

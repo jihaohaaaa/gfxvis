@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { worldToMath } from "./coords";
-import { clamp } from "../common/math";
+import { clamp } from "@math";
 
 export interface Drag3DOptions {
   domElement: HTMLElement;

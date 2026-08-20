@@ -1,5 +1,6 @@
 import { coolwarm, valueToT } from "../../core/common/colormap";
-import { lerp, sampleGrid } from "../../core/common/math";
+import { mix } from "@math";
+import { sampleGrid } from "../../core/common/math";
 import type { Bounds2 } from "../../core/2d/plot2d";
 
 export type Field2DId = "sincos" | "circle" | "parabola";
@@ -185,11 +186,11 @@ export function marchingSquares(
 
   const lerpX = (j0: number, j1: number, v0: number, v1: number) => {
     const t = v1 === v0 ? 0.5 : (level - v0) / (v1 - v0);
-    return lerp(xAt(j0), xAt(j1), t);
+    return mix(xAt(j0), xAt(j1), t);
   };
   const lerpY = (i0: number, i1: number, v0: number, v1: number) => {
     const t = v1 === v0 ? 0.5 : (level - v0) / (v1 - v0);
-    return lerp(yAt(i0), yAt(i1), t);
+    return mix(yAt(i0), yAt(i1), t);
   };
 
   const edgePoint = (i: number, j: number, edge: number): [number, number] => {

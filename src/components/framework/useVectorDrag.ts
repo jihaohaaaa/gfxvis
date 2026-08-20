@@ -1,6 +1,6 @@
 import { useRef, useEffect, type RefObject } from "react";
 import type { Plot2D, Bounds2 } from "../../visualizations/core/2d/plot2d";
-import { clamp } from "../../visualizations/core/common/math";
+import { clamp } from "@math";
 import {
   computeFadeOpacity,
   FADE_DELAY_MS,

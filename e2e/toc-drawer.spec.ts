@@ -30,14 +30,12 @@ test.describe("左侧书签高阈值静止悬停文章目录 (350ms Dwell TOC Dr
     await expect(drawer).toBeVisible();
 
     // 4. 点击目录小节
-    const targetLink = drawer.locator('a[href*="代数定义"]').first();
+    const targetLink = drawer.locator("nav a").nth(1);
+    const targetHref = await targetLink.getAttribute("href");
     await targetLink.click();
     await page.waitForTimeout(600);
 
-    const targetHeading = page
-      .locator("h2, h3")
-      .filter({ hasText: "代数定义" })
-      .first();
+    const targetHeading = page.locator(targetHref!);
     await expect(targetHeading).toBeInViewport();
 
     // 5. 鼠标移开正文 -> 抽屉平滑收起

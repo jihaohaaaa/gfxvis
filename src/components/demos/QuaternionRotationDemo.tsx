@@ -7,19 +7,18 @@ import ParamSlider from "../framework/ParamSlider";
 import InlineMath from "../framework/InlineMath";
 import { mathToWorld } from "../../visualizations/core/3d/coords";
 import { createControls } from "../../visualizations/core/3d/controls";
-
-interface Vec3 {
-  x: number;
-  y: number;
-  z: number;
-}
-
-interface Quat {
-  w: number;
-  x: number;
-  y: number;
-  z: number;
-}
+import {
+  type Vec3,
+  type Quat,
+  type Mat3,
+  length,
+  normalize,
+  axisAngleToQuat,
+  slerp,
+  quatToMat3,
+  determinant3,
+  getCol3,
+} from "@math";
 
 const PRESETS: PresetOption[] = [
   {
@@ -50,85 +49,12 @@ const PRESETS: PresetOption[] = [
   },
 ];
 
-function norm3(v: Vec3): number {
-  return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z) || 1e-6;
-}
-
-function normalize3(v: Vec3): Vec3 {
-  const l = norm3(v);
-  return { x: v.x / l, y: v.y / l, z: v.z / l };
-}
-
-function axisAngleToQuat(axis: Vec3, angleDeg: number): Quat {
-  const u = normalize3(axis);
-  const rad = (angleDeg * Math.PI) / 180;
-  const halfAngle = rad / 2;
-  const s = Math.sin(halfAngle);
-  return {
-    w: Math.cos(halfAngle),
-    x: u.x * s,
-    y: u.y * s,
-    z: u.z * s,
-  };
-}
-
-function quatToMatrix(q: Quat): number[][] {
-  const { w, x, y, z } = q;
-  return [
-    [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
-    [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
-    [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
-  ];
-}
-
-function quatSlerp(qa: Quat, qb: Quat, t: number): Quat {
-  let dotVal = qa.w * qb.w + qa.x * qb.x + qa.y * qb.y + qa.z * qb.z;
-  let targetB = qb;
-  if (dotVal < 0) {
-    dotVal = -dotVal;
-    targetB = { w: -qb.w, x: -qb.x, y: -qb.y, z: -qb.z };
+function mat3Lerp(m1: Mat3, m2: Mat3, t: number): Mat3 {
+  const res: number[] = new Array(9);
+  for (let i = 0; i < 9; i++) {
+    res[i] = (1 - t) * m1[i] + t * m2[i];
   }
-
-  if (dotVal > 0.9995) {
-    // Linear approximation for very close quaternions
-    const w = qa.w + t * (targetB.w - qa.w);
-    const x = qa.x + t * (targetB.x - qa.x);
-    const y = qa.y + t * (targetB.y - qa.y);
-    const z = qa.z + t * (targetB.z - qa.z);
-    const l = Math.hypot(w, x, y, z);
-    return { w: w / l, x: x / l, y: y / l, z: z / l };
-  }
-
-  const theta = Math.acos(Math.min(Math.max(dotVal, -1), 1));
-  const sinTheta = Math.sin(theta);
-  const scaleA = Math.sin((1 - t) * theta) / sinTheta;
-  const scaleB = Math.sin(t * theta) / sinTheta;
-
-  return {
-    w: scaleA * qa.w + scaleB * targetB.w,
-    x: scaleA * qa.x + scaleB * targetB.x,
-    y: scaleA * qa.y + scaleB * targetB.y,
-    z: scaleA * qa.z + scaleB * targetB.z,
-  };
-}
-
-function matrixLerp(m1: number[][], m2: number[][], t: number): number[][] {
-  const res: number[][] = [];
-  for (let r = 0; r < 3; r++) {
-    res[r] = [];
-    for (let c = 0; c < 3; c++) {
-      res[r][c] = (1 - t) * m1[r][c] + t * m2[r][c];
-    }
-  }
-  return res;
-}
-
-function matrixDet3(m: number[][]): number {
-  return (
-    m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
-    m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
-    m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
-  );
+  return res as Mat3;
 }
 
 function fmt(n: number): string {
@@ -180,7 +106,7 @@ export default function QuaternionRotationDemo({
     };
   }, [baseQuat, isNegated]);
 
-  const currentMat = useMemo(() => quatToMatrix(currentQuat), [currentQuat]);
+  const currentMat = useMemo(() => quatToMat3(currentQuat), [currentQuat]);
 
   // Interpolation endpoints: q1 = Identity, q2 = 180° rotation around (1, 1, 0)/√2
   const qStart: Quat = useMemo(() => ({ w: 1, x: 0, y: 0, z: 0 }), []);
@@ -190,18 +116,18 @@ export default function QuaternionRotationDemo({
   );
 
   const slerpQuat = useMemo(
-    () => quatSlerp(qStart, qEnd, tInterp),
+    () => slerp(qStart, qEnd, tInterp),
     [qStart, qEnd, tInterp],
   );
-  const slerpMat = useMemo(() => quatToMatrix(slerpQuat), [slerpQuat]);
+  const slerpMat = useMemo(() => quatToMat3(slerpQuat), [slerpQuat]);
 
-  const mStart = useMemo(() => quatToMatrix(qStart), [qStart]);
-  const mEnd = useMemo(() => quatToMatrix(qEnd), [qEnd]);
+  const mStart = useMemo(() => quatToMat3(qStart), [qStart]);
+  const mEnd = useMemo(() => quatToMat3(qEnd), [qEnd]);
   const lerpMat = useMemo(
-    () => matrixLerp(mStart, mEnd, tInterp),
+    () => mat3Lerp(mStart, mEnd, tInterp),
     [mStart, mEnd, tInterp],
   );
-  const lerpDet = useMemo(() => matrixDet3(lerpMat), [lerpMat]);
+  const lerpDet = useMemo(() => determinant3(lerpMat), [lerpMat]);
 
   // Handle Preset Switching
   const handlePreset = (val: string) => {
@@ -440,10 +366,12 @@ export default function QuaternionRotationDemo({
 
       // Convert Math Quaternion (w, x, y, z) where z-up to Three.js World Quaternion (y-up)
       // Math matrix -> World matrix
-      const mat = currentMat;
-      const [c0x, c0y, c0z] = mathToWorld(mat[0][0], mat[1][0], mat[2][0]);
-      const [c1x, c1y, c1z] = mathToWorld(mat[0][1], mat[1][1], mat[2][1]);
-      const [c2x, c2y, c2z] = mathToWorld(mat[0][2], mat[1][2], mat[2][2]);
+      const c0 = getCol3(currentMat, 0);
+      const c1 = getCol3(currentMat, 1);
+      const c2 = getCol3(currentMat, 2);
+      const [c0x, c0y, c0z] = mathToWorld(c0.x, c0.y, c0.z);
+      const [c1x, c1y, c1z] = mathToWorld(c1.x, c1.y, c1.z);
+      const [c2x, c2y, c2z] = mathToWorld(c2.x, c2.y, c2.z);
 
       const threeMat = new THREE.Matrix4().makeBasis(
         new THREE.Vector3(c0x, c0y, c0z),
@@ -454,7 +382,7 @@ export default function QuaternionRotationDemo({
       group.add(craft);
 
       // 2. Visual Rotation Axis Vector
-      const uNorm = normalize3(axis);
+      const uNorm = normalize(axis);
       const [uWx, uWy, uWz] = mathToWorld(uNorm.x, uNorm.y, uNorm.z);
       const axisDir = new THREE.Vector3(uWx, uWy, uWz).normalize();
 
@@ -484,21 +412,12 @@ export default function QuaternionRotationDemo({
       // Interpolation Tab: SLERP (Left/Accent) vs Matrix LERP (Right/Orange)
       // 1. SLERP Model (Green/Emerald, Left side)
       const slerpCraft = createAircraftMesh(0x10b981, 1.0);
-      const [s0x, s0y, s0z] = mathToWorld(
-        slerpMat[0][0],
-        slerpMat[1][0],
-        slerpMat[2][0],
-      );
-      const [s1x, s1y, s1z] = mathToWorld(
-        slerpMat[0][1],
-        slerpMat[1][1],
-        slerpMat[2][1],
-      );
-      const [s2x, s2y, s2z] = mathToWorld(
-        slerpMat[0][2],
-        slerpMat[1][2],
-        slerpMat[2][2],
-      );
+      const s0 = getCol3(slerpMat, 0);
+      const s1 = getCol3(slerpMat, 1);
+      const s2 = getCol3(slerpMat, 2);
+      const [s0x, s0y, s0z] = mathToWorld(s0.x, s0.y, s0.z);
+      const [s1x, s1y, s1z] = mathToWorld(s1.x, s1.y, s1.z);
+      const [s2x, s2y, s2z] = mathToWorld(s2.x, s2.y, s2.z);
 
       const slerpThreeMat = new THREE.Matrix4().makeBasis(
         new THREE.Vector3(s0x, s0y, s0z),
@@ -512,21 +431,12 @@ export default function QuaternionRotationDemo({
 
       // 2. Matrix LERP Model (Orange/Red, Right side - shows squeezing distortion)
       const lerpCraft = createAircraftMesh(0xf97316, 0.85);
-      const [l0x, l0y, l0z] = mathToWorld(
-        lerpMat[0][0],
-        lerpMat[1][0],
-        lerpMat[2][0],
-      );
-      const [l1x, l1y, l1z] = mathToWorld(
-        lerpMat[0][1],
-        lerpMat[1][1],
-        lerpMat[2][1],
-      );
-      const [l2x, l2y, l2z] = mathToWorld(
-        lerpMat[0][2],
-        lerpMat[1][2],
-        lerpMat[2][2],
-      );
+      const l0 = getCol3(lerpMat, 0);
+      const l1 = getCol3(lerpMat, 1);
+      const l2 = getCol3(lerpMat, 2);
+      const [l0x, l0y, l0z] = mathToWorld(l0.x, l0.y, l0.z);
+      const [l1x, l1y, l1z] = mathToWorld(l1.x, l1.y, l1.z);
+      const [l2x, l2y, l2z] = mathToWorld(l2.x, l2.y, l2.z);
 
       const lerpThreeMat = new THREE.Matrix4().makeBasis(
         new THREE.Vector3(l0x, l0y, l0z),
@@ -662,7 +572,7 @@ export default function QuaternionRotationDemo({
                   旋转轴向量 <InlineMath tex="\mathbf{u} = (u_x, u_y, u_z)" />
                 </span>
                 <span className="font-mono text-[11px] text-muted">
-                  单位化模长 = {norm3(axis).toFixed(2)}
+                  单位化模长 = {length(axis).toFixed(2)}
                 </span>
               </div>
               <ParamSlider
@@ -764,7 +674,7 @@ export default function QuaternionRotationDemo({
                     </div>
                     <div className="text-foreground">
                       <InlineMath
-                        tex={`\\mathbf{u} = (${fmt(normalize3(axis).x)},\\, ${fmt(normalize3(axis).y)},\\, ${fmt(normalize3(axis).z)})^\\top`}
+                        tex={`\\mathbf{u} = (${fmt(normalize(axis).x)},\\, ${fmt(normalize(axis).y)},\\, ${fmt(normalize(axis).z)})^\\top`}
                       />
                     </div>
                     <div className="text-[10px] text-muted">
@@ -779,12 +689,12 @@ export default function QuaternionRotationDemo({
                   <div className="flex items-center justify-between text-blue-500 font-bold">
                     <span>3. 等价 3×3 旋转矩阵 R(q) ∈ SO(3)</span>
                     <span className="text-[10px] text-muted">
-                      det(R) = {matrixDet3(currentMat).toFixed(2)}
+                      det(R) = {determinant3(currentMat).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-center overflow-x-auto py-1">
                     <InlineMath
-                      tex={`R = \\begin{pmatrix} ${fmt(currentMat[0][0])} & ${fmt(currentMat[0][1])} & ${fmt(currentMat[0][2])} \\\\ ${fmt(currentMat[1][0])} & ${fmt(currentMat[1][1])} & ${fmt(currentMat[1][2])} \\\\ ${fmt(currentMat[2][0])} & ${fmt(currentMat[2][1])} & ${fmt(currentMat[2][2])} \\end{pmatrix}`}
+                      tex={`R = \\begin{pmatrix} ${fmt(currentMat[0])} & ${fmt(currentMat[3])} & ${fmt(currentMat[6])} \\\\ ${fmt(currentMat[1])} & ${fmt(currentMat[4])} & ${fmt(currentMat[7])} \\\\ ${fmt(currentMat[2])} & ${fmt(currentMat[5])} & ${fmt(currentMat[8])} \\end{pmatrix}`}
                     />
                   </div>
                 </div>
@@ -871,7 +781,7 @@ export default function QuaternionRotationDemo({
                   <div className="flex justify-between mt-1">
                     <span className="text-muted">等价矩阵行列式 det(R)：</span>
                     <span className="font-bold text-emerald-500">
-                      {matrixDet3(slerpMat).toFixed(3)}
+                      {determinant3(slerpMat).toFixed(3)}
                     </span>
                   </div>
                 </div>
