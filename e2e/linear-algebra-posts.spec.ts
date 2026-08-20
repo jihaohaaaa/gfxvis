@@ -122,5 +122,70 @@ test.describe("线性代数板块 (Linear Algebra) 补充文章与可视化组�
     const diagTab = page.getByRole("button", { name: /对角化/ });
     await diagTab.click();
     await expect(canvas).toBeVisible();
+
+    // 校验特征值分解与谱展开段落
+    await expect(
+      page.getByRole("heading", { name: /矩阵对角化与特征值分解/ }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /谱展开/ })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /矩阵分解全景透视/ }),
+    ).toBeVisible();
+  });
+
+  test("6. 奇异值分解 (/posts/linear-algebra/singular-value-decomposition)", async ({
+    page,
+  }) => {
+    await page.goto("/posts/linear-algebra/singular-value-decomposition");
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect(page).toHaveTitle(/奇异值分解/);
+    const h1 = page.locator("article h1").first();
+    await expect(h1).toBeVisible();
+
+    const mathNodes = page.locator(".katex");
+    expect(await mathNodes.count()).toBeGreaterThan(15);
+
+    const canvas = page.locator("canvas").first();
+    await canvas.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(400);
+    await expect(canvas).toBeVisible();
+
+    // 交互测试：切换分步阶段与预设
+    const step2Tab = page.getByRole("button", { name: /2\. 轴向缩放/ });
+    await step2Tab.scrollIntoViewIfNeeded();
+    await step2Tab.click();
+    await expect(page.getByText("第二奇异值").first()).toBeVisible();
+
+    const step3Tab = page.getByRole("button", { name: /3\. 旋转输出/ });
+    await step3Tab.click();
+    await expect(canvas).toBeVisible();
+
+    const shearPreset = page.getByRole("button", { name: /剪切矩阵/ });
+    await shearPreset.click();
+    await expect(canvas).toBeVisible();
+
+    // 校验正交群分解与代数推导段落
+    await expect(
+      page.getByRole("heading", { name: /核心思想的大一统/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /三维几何直观/ }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /一般形式/ })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /基变换视角/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /双边对称 Gram 矩阵的谱分解对偶/ }),
+    ).toBeVisible();
+
+    // 校验探测向量追踪与矩阵数值分解等式
+    await expect(page.getByText("探测向量实时变换追踪")).toBeVisible();
+    await expect(page.getByText("实时矩阵数值分解等式")).toBeVisible();
+    await expect(page.getByText("左奇异矩阵").first()).toBeVisible();
+    await expect(page.getByText("主轴向量").first()).toBeVisible();
+    await expect(page.getByText("原像主向").first()).toBeVisible();
+    await expect(page.getByText("基底向量映射校验")).toBeVisible();
   });
 });

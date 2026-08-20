@@ -1,10 +1,4 @@
-/**
- * Client-side pure top-edge hover sensing header controller.
- * - Zero scroll-triggered popups: Scrolling in any direction (up or down) never pops in the header while reading.
- * - Top-edge hover sensing: Moving the mouse to the top edge (clientY < 48px) instantly reveals the header.
- * - Remains naturally visible at the very top of the page (scrollY <= 80px).
- * - Leaves smoothly when cursor exits the top/header area.
- */
+import { isFocusModeActive } from "./focus-mode";
 
 export function setupHeaderAutoHide(): void {
   const header = document.getElementById("site-header");
@@ -14,29 +8,38 @@ export function setupHeaderAutoHide(): void {
   let isFocused = false;
 
   const showHeader = () => {
+    if (isFocusModeActive()) return;
     header.classList.remove(
+      "-translate-y-28",
+      "-translate-y-24",
       "-translate-y-full",
-      "pointer-events-none",
-      "opacity-0",
     );
-    header.classList.add("translate-y-0", "opacity-100");
+    header.classList.add("translate-y-0");
   };
 
-  const hideHeader = () => {
-    if (window.scrollY <= 80 || isHovered || isFocused) return;
+  const hideHeader = (force = false) => {
+    if (!force && (window.scrollY <= 80 || isHovered || isFocused)) return;
 
-    header.classList.remove("translate-y-0", "opacity-100");
-    header.classList.add(
-      "-translate-y-full",
-      "pointer-events-none",
-      "opacity-0",
-    );
+    header.classList.remove("translate-y-0");
+    header.classList.add("-translate-y-28");
   };
+
+  // Listen to focus mode change
+  window.addEventListener("focus-mode-change", ((
+    e: CustomEvent<{ isFocusMode: boolean }>,
+  ) => {
+    if (e.detail.isFocusMode) {
+      hideHeader(true);
+    } else if (window.scrollY <= 80) {
+      showHeader();
+    }
+  }) as EventListener);
 
   // Scroll listener: only toggles visibility based on page top boundary
   window.addEventListener(
     "scroll",
     () => {
+      if (isFocusModeActive()) return;
       if (window.scrollY <= 80) {
         showHeader();
       } else if (!isHovered && !isFocused) {
@@ -50,6 +53,7 @@ export function setupHeaderAutoHide(): void {
   window.addEventListener(
     "mousemove",
     (e: MouseEvent) => {
+      if (isFocusModeActive()) return;
       if (e.clientY < 48) {
         showHeader();
       } else if (
@@ -66,27 +70,29 @@ export function setupHeaderAutoHide(): void {
 
   // Hover lock
   header.addEventListener("mouseenter", () => {
+    if (isFocusModeActive()) return;
     isHovered = true;
     showHeader();
   });
 
   header.addEventListener("mouseleave", () => {
     isHovered = false;
-    if (window.scrollY > 80) {
-      hideHeader();
+    if (window.scrollY > 80 || isFocusModeActive()) {
+      hideHeader(isFocusModeActive());
     }
   });
 
   // Focus lock for accessibility
   header.addEventListener("focusin", () => {
+    if (isFocusModeActive()) return;
     isFocused = true;
     showHeader();
   });
 
   header.addEventListener("focusout", () => {
     isFocused = false;
-    if (window.scrollY > 80) {
-      hideHeader();
+    if (window.scrollY > 80 || isFocusModeActive()) {
+      hideHeader(isFocusModeActive());
     }
   });
 }

@@ -14,7 +14,9 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
     // 2. 模拟向下滚动 1200px -> Header 静默收起以保证专注阅读
     await page.evaluate(() => window.scrollTo(0, 1200));
     await page.waitForTimeout(300);
-    await expect(header).toHaveClass(/-translate-y-full/);
+    await expect(header).toHaveClass(
+      /-translate-y-28|-translate-y-24|-translate-y-full/,
+    );
 
     // 3. 鼠标移至顶部区域 (Y < 35px) -> 唤出 Header
     await page.mouse.move(300, 15);
@@ -78,12 +80,16 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
     // 2. 向下滚动到文章中段 800px -> Header 立即静默隐藏
     await page.evaluate(() => window.scrollTo(0, 800));
     await page.waitForTimeout(300);
-    await expect(header).toHaveClass(/-translate-y-full/);
+    await expect(header).toHaveClass(
+      /-translate-y-28|-translate-y-24|-translate-y-full/,
+    );
 
     // 3. 向上大幅滚动 300px -> Header 依然绝对静默，绝不弹出分心
     await page.evaluate(() => window.scrollTo(0, 500));
     await page.waitForTimeout(300);
-    await expect(header).toHaveClass(/-translate-y-full/);
+    await expect(header).toHaveClass(
+      /-translate-y-28|-translate-y-24|-translate-y-full/,
+    );
 
     // 4. 鼠标移至屏幕最顶端区域 (Y < 48px) -> Header 轻柔唤出
     await page.mouse.move(300, 20);
@@ -93,6 +99,53 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
     // 5. 鼠标离开顶端区域 -> Header 重新收起
     await page.mouse.move(300, 300);
     await page.waitForTimeout(200);
-    await expect(header).toHaveClass(/-translate-y-full/);
+    await expect(header).toHaveClass(
+      /-translate-y-28|-translate-y-24|-translate-y-full/,
+    );
+  });
+
+  test("右下角 Focus 模式按钮：开启后锁定隐藏 Header，鼠标移至顶端绝不唤出，再次点击恢复", async ({
+    page,
+  }) => {
+    await page.goto("/posts/linear-algebra/projection-operators");
+    await page.waitForLoadState("domcontentloaded");
+
+    const header = page.locator("#site-header");
+    const focusBtn = page.locator("#focus-toggle");
+    const focusToast = page.locator("#focus-toast");
+
+    // 1. 初始在顶部，Header 正常显现
+    await expect(header).toHaveClass(/translate-y-0/);
+    await expect(focusBtn).toBeVisible();
+
+    // 2. 点击 Focus 按钮 -> 开启专注模式
+    await focusBtn.click();
+    await page.waitForTimeout(200);
+
+    // 验证 Toast 弹出且 Header 立即收起
+    await expect(focusToast).toHaveClass(/opacity-100/);
+    await expect(header).toHaveClass(
+      /-translate-y-28|-translate-y-24|-translate-y-full/,
+    );
+    await expect(focusBtn).toHaveAttribute("aria-pressed", "true");
+
+    // 3. 鼠标移至屏幕最顶端区域 (Y < 20px) -> 在 Focus 模式下，Header 保持绝对锁定隐藏，绝不弹出
+    await page.mouse.move(300, 10);
+    await page.waitForTimeout(300);
+    await expect(header).toHaveClass(
+      /-translate-y-28|-translate-y-24|-translate-y-full/,
+    );
+
+    // 4. 再次点击 Focus 按钮 -> 退出专注模式
+    await focusBtn.click();
+    await page.waitForTimeout(200);
+
+    // 验证 Header 恢复显现 (由于仍在页面顶部 scrollY <= 80)
+    await expect(header).toHaveClass(/translate-y-0/);
+    await expect(focusBtn).toHaveAttribute("aria-pressed", "false");
+
+    // 5. 鼠标离开 Focus 按钮区域，等待保底展示时间 (MIN_TOAST_DURATION = 800ms) 过后 Toast 顺滑收起消失
+    await page.mouse.move(100, 100);
+    await expect(focusToast).toHaveClass(/opacity-0/, { timeout: 2000 });
   });
 });
