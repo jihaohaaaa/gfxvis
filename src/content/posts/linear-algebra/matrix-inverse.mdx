@@ -297,7 +297,7 @@ mat4 fastInverseTRS(const vec3& translation, const quat& rotation, const vec3& s
 
 > [!WARNING]
 > **数值计算原则：永远不要显式计算 $A^{-1}$ 去解方程！**
-> 在物理模拟或最小二乘拟合中，求解线性系统 $A\mathbf{x} = \mathbf{b}$ 时，**绝不能**先求出 $A^{-1}$ 再做矩阵向量乘法 $\mathbf{x} = A^{-1}\mathbf{b}$（这样计算量大且条件数平方放大浮点舍入误差）。工程上始终使用 **LU 分解、Cholesky 分解（针对对称正定矩阵）或 QR 分解** 直接求解。
+> 在物理模拟或最小二乘拟合中，求解线性系统 $A\mathbf{x} = \mathbf{b}$ 时，**绝不能**先求出 $A^{-1}$ 再做矩阵向量乘法 $\mathbf{x} = A^{-1}\mathbf{b}$（这样计算量大且条件数平方放大浮点舍入误差）。工程上始终使用 [LU 分解、Cholesky 分解或 QR 分解](/posts/linear-algebra/matrix-decompositions) 直接求解。各分解的几何机制与回代算法详见 [《矩阵分解全景大一统》](/posts/linear-algebra/matrix-decompositions)。
 
 ---
 

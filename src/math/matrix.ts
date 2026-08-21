@@ -412,3 +412,138 @@ export function svd2x2(m: Mat2): SvdResult2 {
     v2,
   };
 }
+
+// --- Additional Analytical 2x2 Matrix Decompositions (Column-Major) ---
+
+export interface LuResult2 {
+  L: Mat2;
+  U: Mat2;
+  P: Mat2; // Permutation matrix
+  hasPermutation: boolean;
+}
+
+/**
+ * 2x2 LU Decomposition with partial pivoting: P * A = L * U
+ * Column-major: m = [a, c, b, d] representing [[a, b], [c, d]]
+ */
+export function lu2x2(m: Mat2): LuResult2 {
+  let a = m[0];
+  let c = m[1];
+  let b = m[2];
+  let d = m[3];
+  let hasPermutation = false;
+  let P: Mat2 = [1, 0, 0, 1];
+
+  if (Math.abs(c) > Math.abs(a)) {
+    // Swap row 0 and row 1
+    hasPermutation = true;
+    P = [0, 1, 1, 0];
+    const tempA = a;
+    a = c;
+    c = tempA;
+    const tempB = b;
+    b = d;
+    d = tempB;
+  }
+
+  const u00 = a;
+  const u01 = b;
+  const l10 = Math.abs(a) > 1e-12 ? c / a : 0;
+  const u10 = 0;
+  const u11 = d - l10 * b;
+
+  return {
+    L: [1, l10, 0, 1], // Column-major: col0=[1, l10], col1=[0, 1]
+    U: [u00, u10, u01, u11], // Column-major: col0=[u00, 0], col1=[u01, u11]
+    P,
+    hasPermutation,
+  };
+}
+
+export interface QrResult2 {
+  Q: Mat2;
+  R: Mat2;
+}
+
+/**
+ * 2x2 QR Decomposition via Gram-Schmidt / Householder: A = Q * R
+ * Q is orthogonal (rotation/reflection), R is upper triangular.
+ */
+export function qr2x2(m: Mat2): QrResult2 {
+  const a1x = m[0];
+  const a1y = m[1];
+  const a2x = m[2];
+  const a2y = m[3];
+
+  const r00 = Math.hypot(a1x, a1y);
+  let q1x = 1;
+  let q1y = 0;
+  if (r00 > 1e-12) {
+    q1x = a1x / r00;
+    q1y = a1y / r00;
+  }
+
+  // Projection of a2 onto q1
+  const r01 = q1x * a2x + q1y * a2y;
+
+  // Orthogonal component u2 = a2 - r01 * q1
+  const u2x = a2x - r01 * q1x;
+  const u2y = a2y - r01 * q1y;
+  const r11 = Math.hypot(u2x, u2y);
+
+  let q2x = -q1y;
+  let q2y = q1x;
+  if (r11 > 1e-12) {
+    q2x = u2x / r11;
+    q2y = u2y / r11;
+  }
+
+  return {
+    Q: [q1x, q1y, q2x, q2y], // Column-major: [col0, col1]
+    R: [r00, 0, r01, r11], // Column-major: [col0, col1]
+  };
+}
+
+/**
+ * 2x2 Cholesky Decomposition: A = L * L^T
+ * Applicable only for symmetric positive definite (SPD) matrices.
+ * Returns null if matrix is not positive definite.
+ */
+export function cholesky2x2(m: Mat2): Mat2 | null {
+  const a = m[0]; // (0,0)
+  const b = m[1]; // (1,0) = (0,1) for symmetric
+  const d = m[3]; // (1,1)
+
+  if (a <= 1e-12) return null;
+  const l00 = Math.sqrt(a);
+  const l10 = b / l00;
+  const dMinusL10Sq = d - l10 * l10;
+  if (dMinusL10Sq <= 1e-12) return null;
+  const l11 = Math.sqrt(dMinusL10Sq);
+
+  return [l00, l10, 0, l11]; // Column-major lower triangular
+}
+
+export interface PolarResult2 {
+  Q: Mat2; // Orthogonal factor (pure rotation/reflection)
+  P: Mat2; // Symmetric positive semi-definite stretch factor
+}
+
+/**
+ * 2x2 Polar Decomposition: A = Q * P (Right Polar Decomposition)
+ * Q in O(2) is orthogonal rotation/reflection, P = sqrt(A^T * A) is symmetric semi-positive definite.
+ */
+export function polar2x2(m: Mat2): PolarResult2 {
+  const svd = svd2x2(m);
+  const { U, sigma1, sigma2, V } = svd;
+
+  // Q = U * V^T
+  const VT = transpose2(V);
+  const Q = mat2Mul(U, VT);
+
+  // P = V * Sigma * V^T
+  const Sigma: Mat2 = [sigma1, 0, 0, sigma2];
+  const P = mat2Mul(V, mat2Mul(Sigma, VT));
+
+  return { Q, P };
+}
