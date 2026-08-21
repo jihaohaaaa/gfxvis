@@ -303,21 +303,30 @@ $$
 - **子空间坐标（Coordinates）**：$\hat{\mathbf{x}} \in \mathbb{R}^k$，表示投影点在基 $A$ 下的线性组合系数，即 $\mathbf{p} = A\hat{\mathbf{x}}$；
 - **误差向量（Residual Vector）**：$\mathbf{e} = \mathbf{b} - \mathbf{p} = \mathbf{b} - A\hat{\mathbf{x}} \in \mathbb{R}^n$。
 
-#### 几何正交性推导
+#### 几何正交性推导与正规方程（Normal Equation）
 
-正交投影的几何要求是：误差残差向量 $\mathbf{e} = \mathbf{b} - A\hat{\mathbf{x}}$ 必须垂直于目标子空间 $W$ 中的 **每一个基向量** $\mathbf{a}_i$（$i = 1, \dots, k$）：
+正交投影的几何第一性原理非常简单直接：**残差向量 $\mathbf{e} = \mathbf{b} - A\hat{\mathbf{x}}$ 必须垂直于目标列空间 $\operatorname{col}(A)$**。
 
-$$
-\mathbf{a}_1^\top (\mathbf{b} - A\hat{\mathbf{x}}) = 0, \quad \mathbf{a}_2^\top (\mathbf{b} - A\hat{\mathbf{x}}) = 0, \quad \dots, \quad \mathbf{a}_k^\top (\mathbf{b} - A\hat{\mathbf{x}}) = 0
-$$
-
-把这 $k$ 个标量内积方程组合并为一个紧凑的矩阵方程（注意 $A^\top \in \mathbb{R}^{k \times n}$）：
+根据线性代数基本定理，列空间的正交补正是矩阵的 **左零空间（Left Nullspace）**：
 
 $$
-A^\top (\mathbf{b} - A\hat{\mathbf{x}}) = \mathbf{0} \implies \boxed{A^\top A \hat{\mathbf{x}} = A^\top \mathbf{b}}
+\mathbf{e} \perp \operatorname{col}(A) \iff \mathbf{e} \in \operatorname{col}(A)^\perp = \ker(A^\top)
 $$
 
-这就是著名的 **正规方程（Normal Equation）**。
+根据左零空间的定义，必有 $A^\top \mathbf{e} = \mathbf{0}$。将残差 $\mathbf{e} = \mathbf{b} - A\hat{\mathbf{x}}$ 直接代入：
+
+$$
+A^\top (\mathbf{b} - A\hat{\mathbf{x}}) = \mathbf{0} \iff A^\top \mathbf{b} - A^\top A \hat{\mathbf{x}} = \mathbf{0}
+$$
+
+移项立即得出著名的 **正规方程（Normal Equation）**：
+
+$$
+\boxed{A^\top A \hat{\mathbf{x}} = A^\top \mathbf{b}}
+$$
+
+> [!NOTE]
+> 正规方程在几何本质上正是 **“残差向量 $\mathbf{e}$ 严格落入左零空间 $\ker(A^\top)$”** 的充要条件（详见 [《最小二乘法》](/posts/linear-algebra/least-squares)）。
 
 #### 正规方程求解与结构解剖
 
@@ -552,6 +561,8 @@ $$
 $$
 
 即最佳拟合直线方程为 $y = \tfrac{2}{3} + \tfrac{1}{2} t$。整个最小二乘算法的底层数学本质，就是一次优雅的子空间正交投影。
+
+关于最小二乘的微积分梯度推导、左零空间正交补证明、三大求解器（正规方程、QR、SVD 伪逆）与双视口联动交互实验，详见专题长文 [《最小二乘法：从微积分极值、四大子空间正交补到工业级数值求解》](/posts/linear-algebra/least-squares)。
 
 ---
 

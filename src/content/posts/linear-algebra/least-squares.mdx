@@ -1,0 +1,586 @@
+---
+title: "最小二乘法（Least Squares）：从微积分极值、四大子空间正交补到工业级数值求解"
+description: "系统推导最小二乘法（OLS）的代数与几何本质：微积分矩阵梯度 ∇f(x)=2AᵀAx - 2Aᵀb=0、正规方程、四大子空间正交直和分解与左零空间垂线投影。横向对比正规方程法、QR 分解与 SVD 伪逆的数值稳定性，并拓展 Ridge 正则化、总最小二乘 (TLS) 与图形学非线性优化实践。"
+date: "2026-08-21"
+tags:
+  - "matrix"
+  - "linear-algebra"
+  - "optimization"
+  - "graphics"
+  - "visualization"
+  - "least-squares"
+---
+
+import LeastSquaresDemo from "../../../components/demos/LeastSquaresDemo";
+import BasisFittingDemo from "../../../components/demos/BasisFittingDemo";
+
+在实际物理测量、计算机视觉与数据建模中，我们面对的线性方程组往往是 **超定系统（Overdetermined System）** —— 测量数据的方程数 $m$ 远大于未知参数量 $n$（即 $m > n$）。
+
+由于测量噪声与真实世界的复杂性，目标观测向量 $\mathbf{b}$ 几乎必然落在矩阵列空间 $\operatorname{col}(A)$ 的外部，导致线性系统 $A\mathbf{x} = \mathbf{b}$ **在代数上绝对无解**。
+
+如何在这类无解的矛盾系统中找到一个“最优”的近似解？**最小二乘法（Least Squares Method）** 给出了最经典、最优雅的答案：
+
+> [!TIP]
+> **几何第一性原理**：
+>
+> 1. **最小二乘寻找的是在列空间 $\operatorname{col}(A)$ 中找到离 $\mathbf{b}$ 最近的点**；
+> 2. **最小二乘的几何本质，就是把超定方程 $A\mathbf{x} = \mathbf{b}$ 的目标向量 $\mathbf{b}$ 直接正交投影到 $A$ 的列空间 $\operatorname{col}(A)$ 上**，从而将无解的代数矛盾转化为求解投影垂足点的精确解 $A\hat{\mathbf{x}} = \operatorname{proj}_{\operatorname{col}(A)}(\mathbf{b}) = \hat{\mathbf{b}}$。
+
+本文将从微积分梯度推导、四大子空间正交补几何视角、三大工业级数值求解器演进，一直贯通到图形学中的点云平面拟合与非线性优化。
+
+---
+
+## 一、问题的起源：从超定方程到最小二乘目标
+
+考虑包含 $m$ 个方程、$n$ 个未知数的超定线性系统（$m > n$）：
+
+$$
+A\mathbf{x} = \mathbf{b}, \qquad A \in \mathbb{R}^{m \times n}, \quad \mathbf{b} \in \mathbb{R}^m, \quad \mathbf{x} \in \mathbb{R}^n
+$$
+
+将矩阵 $A$ 按列展开为 $A = \begin{pmatrix} \mathbf{a}_1 & \mathbf{a}_2 & \dots & \mathbf{a}_n \end{pmatrix}$，则矩阵乘法 $A\mathbf{x}$ 本质上是列向量的线性组合：
+
+$$
+A\mathbf{x} = x_1 \mathbf{a}_1 + x_2 \mathbf{a}_2 + \dots + x_n \mathbf{a}_n \in \operatorname{col}(A)
+$$
+
+- 所有可能的输出向量 $A\mathbf{x}$ 只能填满 $m$ 维空间中的一个 $n$ 维低维超平面 —— **列空间（Column Space / Range）** $\operatorname{col}(A)$。
+- 一旦受噪声污染的测量向量 $\mathbf{b} \notin \operatorname{col}(A)$，就不存在任何 $\mathbf{x}$ 能够严格满足 $A\mathbf{x} = \mathbf{b}$。
+- **几何转化的核心思路**：既然在 $\operatorname{col}(A)$ 之外的 $\mathbf{b}$ 无法精准达到，退而求其次的最佳策略，就是在整个列空间 $\operatorname{col}(A)$ 中寻找一个 **离 $\mathbf{b}$ 最近的点 $\hat{\mathbf{b}} = A\hat{\mathbf{x}}$**。
+
+为此，高斯（Carl Friedrich Gauss）提出了最小二乘准则：寻找一个解 $\hat{\mathbf{x}}$，使得预测值 $A\hat{\mathbf{x}}$ 与观测值 $\mathbf{b}$ 之间的 **残差向量（Residual Vector）** $\mathbf{e} = \mathbf{b} - A\hat{\mathbf{x}}$ 的欧几里得范数平方最小：
+
+$$
+\hat{\mathbf{x}} = \arg\min_{\mathbf{x} \in \mathbb{R}^n} \lVert \mathbf{b} - A\mathbf{x} \rVert^2 = \arg\min_{\mathbf{x} \in \mathbb{R}^n} \sum_{i=1}^m \left( b_i - \sum_{j=1}^n A_{ij} x_j \right)^2
+$$
+
+---
+
+## 二、代数与微积分视角：矩阵导数与正规方程推导
+
+我们首先从纯粹的多元微积分与实二次型极值视角，求取目标函数的全局极小值点。
+
+定义标量损失函数 $f(\mathbf{x}): \mathbb{R}^n \to \mathbb{R}$：
+
+$$
+f(\mathbf{x}) = \lVert \mathbf{b} - A\mathbf{x} \rVert^2 = (\mathbf{b} - A\mathbf{x})^\top (\mathbf{b} - A\mathbf{x})
+$$
+
+### 2.1 矩阵乘法展开
+
+利用矩阵转置与乘法分配律展开二次型：
+
+$$
+\begin{aligned}
+f(\mathbf{x}) &= (\mathbf{b}^\top - \mathbf{x}^\top A^\top) (\mathbf{b} - A\mathbf{x}) \\
+&= \mathbf{b}^\top \mathbf{b} - \mathbf{b}^\top A \mathbf{x} - \mathbf{x}^\top A^\top \mathbf{b} + \mathbf{x}^\top A^\top A \mathbf{x}
+\end{aligned}
+$$
+
+注意到 $\mathbf{b}^\top A \mathbf{x}$ 是一个 $1 \times 1$ 的标量，标量的转置等于其自身：
+
+$$
+(\mathbf{b}^\top A \mathbf{x})^\top = \mathbf{x}^\top A^\top \mathbf{b} \implies \mathbf{b}^\top A \mathbf{x} = \mathbf{x}^\top A^\top \mathbf{b}
+$$
+
+因此损失函数可精炼化简为：
+
+$$
+f(\mathbf{x}) = \mathbf{x}^\top (A^\top A) \mathbf{x} - 2 (A^\top \mathbf{b})^\top \mathbf{x} + \mathbf{b}^\top \mathbf{b}
+$$
+
+### 2.2 矩阵偏导数与一阶驻点条件
+
+对向量 $\mathbf{x}$ 求矩阵偏导数（梯度 $\nabla f(\mathbf{x})$）。
+
+根据多元向量微积分的常用求导法则：
+
+1. **常数项求导**：$\nabla_{\mathbf{x}} (\mathbf{b}^\top \mathbf{b}) = \mathbf{0}$（因为观测向量模长平方 $\mathbf{b}^\top \mathbf{b} = \lVert \mathbf{b} \rVert^2$ 完全不含待求自变量 $\mathbf{x}$，作为标量常数项，其对 $\mathbf{x}$ 的梯度直接为零向量 $\mathbf{0}$）；
+2. **一阶线性项求导**：$\nabla_{\mathbf{x}} (\mathbf{c}^\top \mathbf{x}) = \mathbf{c}$（此处令 $\mathbf{c} = A^\top \mathbf{b}$，故 $\nabla_{\mathbf{x}} \left( -2 (A^\top \mathbf{b})^\top \mathbf{x} \right) = -2 A^\top \mathbf{b}$）；
+3. **二阶二次型求导**：$\nabla_{\mathbf{x}} (\mathbf{x}^\top M \mathbf{x}) = (M + M^\top) \mathbf{x}$（对于对称矩阵 $M = A^\top A = M^\top$，即为 $2 (A^\top A) \mathbf{x}$）。
+
+对 $f(\mathbf{x}) = \mathbf{x}^\top (A^\top A) \mathbf{x} - 2 (A^\top \mathbf{b})^\top \mathbf{x} + \mathbf{b}^\top \mathbf{b}$ 逐项求导：
+
+$$
+\begin{aligned}
+\nabla f(\mathbf{x}) &= \nabla_{\mathbf{x}} \left( \mathbf{x}^\top A^\top A \mathbf{x} \right) - \nabla_{\mathbf{x}} \left( 2 (A^\top \mathbf{b})^\top \mathbf{x} \right) + \nabla_{\mathbf{x}} (\mathbf{b}^\top \mathbf{b}) \\
+&= 2 A^\top A \mathbf{x} - 2 A^\top \mathbf{b} + \mathbf{0} \\
+&= 2 A^\top A \mathbf{x} - 2 A^\top \mathbf{b}
+\end{aligned}
+$$
+
+令梯度为零向量 $\nabla f(\mathbf{x}) = \mathbf{0}$，即可导出线性代数中著名的 **正规方程组（Normal Equations）**：
+
+$$
+A^\top A \hat{\mathbf{x}} = A^\top \mathbf{b}
+$$
+
+### 2.3 二阶充分条件：Hessian 矩阵正定性
+
+对梯度进一步求二阶导数，得到 $f(\mathbf{x})$ 的 Hessian 矩阵：
+
+$$
+H = \nabla^2 f(\mathbf{x}) = 2 A^\top A
+$$
+
+若设计矩阵 $A$ **列满秩**（$\operatorname{rank}(A) = n$），则根据实矩阵内积性质，对于任意非零向量 $\mathbf{v} \neq \mathbf{0}$：
+
+$$
+\mathbf{v}^\top (A^\top A) \mathbf{v} = (A\mathbf{v})^\top (A\mathbf{v}) = \lVert A\mathbf{v} \rVert^2 > 0
+$$
+
+这证明 $A^\top A$ 是严格 **对称正定矩阵（SPD）**，Hessian 矩阵处处正定。函数图像是一个严格凸的超维碗状抛物面，驻点 $\hat{\mathbf{x}}$ 必然是**全域唯一全局极小值点**：
+
+$$
+\hat{\mathbf{x}} = (A^\top A)^{-1} A^\top \mathbf{b}
+$$
+
+---
+
+## 三、几何与子空间视角：列空间与左零空间的正交补大一统
+
+如果说微积分推导展示了最小二乘的代数严谨性，那么 Gilbert Strang 教授提出的 **四大子空间正交直和分解** 则揭示了其灵魂深处的几何真理：
+
+- **最小二乘寻找的是在列空间 $\operatorname{col}(A)$ 中找到离 $\mathbf{b}$ 最近的点**；
+- **最小二乘就是把 $A\mathbf{x} = \mathbf{b}$ 的 $\mathbf{b}$ 直接正交投影到 $A$ 的列空间 $\operatorname{col}(A)$**。
+
+### 3.1 几何本质：在 $\operatorname{col}(A)$ 中寻找离 $\mathbf{b}$ 最近的点
+
+在几何空间中，连接空间点 $\mathbf{b}$ 与低维子空间超平面 $\operatorname{col}(A)$ 上任意一点 $A\mathbf{x}$ 的距离 $\lVert \mathbf{b} - A\mathbf{x} \rVert$ 何时达到最短？
+
+**初等欧氏几何定理** 告诉我们：**垂线段最短**。
+
+因此，**最小二乘就是把超定方程 $A\mathbf{x} = \mathbf{b}$ 的 $\mathbf{b}$ 直接正交投影到 $A$ 的列空间**，其最佳预测向量 $\hat{\mathbf{b}} = A\hat{\mathbf{x}}$ 正是正交投影垂足（Orthogonal Projection）：
+
+$$
+\hat{\mathbf{b}} = \operatorname{proj}_{\operatorname{col}(A)}(\mathbf{b}) = A\hat{\mathbf{x}}
+$$
+
+这意味着连接空间点与投影垂足的误差残差向量：
+
+$$
+\mathbf{e} = \mathbf{b} - A\hat{\mathbf{x}} = \mathbf{b} - \hat{\mathbf{b}}
+$$
+
+**必须垂直于列空间 $\operatorname{col}(A)$ 中的每一个基向量！**
+
+### 3.2 残差向量落在左零空间 $\ker(A^\top)$
+
+由于矩阵 $A$ 的列向量 $\mathbf{a}_1, \dots, \mathbf{a}_n$ 张成了整个列空间 $\operatorname{col}(A)$，残差向量 $\mathbf{e}$ 垂直于平面，等价于它与每一个列向量的内积均为零：
+
+$$
+\begin{cases}
+\mathbf{a}_1 \cdot \mathbf{e} = \mathbf{a}_1^\top (\mathbf{b} - A\hat{\mathbf{x}}) = 0 \\
+\mathbf{a}_2 \cdot \mathbf{e} = \mathbf{a}_2^\top (\mathbf{b} - A\hat{\mathbf{x}}) = 0 \\
+\quad \vdots \\
+\mathbf{a}_n \cdot \mathbf{e} = \mathbf{a}_n^\top (\mathbf{b} - A\hat{\mathbf{x}}) = 0
+\end{cases}
+\iff
+\begin{pmatrix} \mathbf{a}_1^\top \\ \mathbf{a}_2^\top \\ \vdots \\ \mathbf{a}_n^\top \end{pmatrix} \mathbf{e} = \mathbf{0}
+\iff
+A^\top \mathbf{e} = \mathbf{0}
+$$
+
+回顾四大基本子空间定理（详见 [《四大基本子空间》](/posts/linear-algebra/four-fundamental-subspaces)）：
+
+- 满足 $A^\top \mathbf{e} = \mathbf{0}$ 的向量集合，正是矩阵 $A$ 的 **左零空间（Left Nullspace）** $\ker(A^\top)$。
+- 线性代数基本定理指出：$\operatorname{col}(A)^\perp = \ker(A^\top)$，全空间 $\mathbb{R}^m$ 严格正交直和分解为：
+  $$
+  \mathbb{R}^m = \operatorname{col}(A) \oplus \ker(A^\top)
+  $$
+
+将 $\mathbf{e} = \mathbf{b} - A\hat{\mathbf{x}}$ 代入 $A^\top \mathbf{e} = \mathbf{0}$：
+
+$$
+A^\top (\mathbf{b} - A\hat{\mathbf{x}}) = \mathbf{0} \iff A^\top \mathbf{b} - A^\top A \hat{\mathbf{x}} = \mathbf{0} \iff A^\top A \hat{\mathbf{x}} = A^\top \mathbf{b}
+$$
+
+**微积分求导求出的正规方程，在几何上恰好等于“残差向量必须正交落入左零空间”的充要条件！** 代数与几何在此完成了极致的大一统。
+
+### 3.3 正交投影算子 $P$
+
+由于 $\hat{\mathbf{b}} = A\hat{\mathbf{x}} = A (A^\top A)^{-1} A^\top \mathbf{b}$，我们将映射算子提炼为 **正交投影矩阵（Orthogonal Projection Matrix）**：
+
+$$
+P = A (A^\top A)^{-1} A^\top
+$$
+
+正交投影矩阵具备两条神圣代数性质（详见 [《投影算子》](/posts/linear-algebra/projection-operators)）：
+
+1. **幂等性（Idempotence）**：$P^2 = P$（投影两次等于投影一次）；
+2. **对称性（Symmetry）**：$P^\top = P$（保证投影方向沿着正交法线，而非斜向投影）。
+
+---
+
+## 四、交互实验：双视口联动拟合工作台
+
+在下方的交互实验中，你可以同时在两个不同的物理空间中审视最小二乘：
+
+1. **左侧「数据拟合空间」（$\mathbb{R}^2$ 散点图）**：可自由拖动蓝点坐标 $(x_i, y_i)$，实时观察回归直线 $y = c + dx$ 的变化，红色的半透明方块直观展现了最小化的 **残差平方和面积 $\sum e_i^2$**；
+2. **右侧「向量子空间」（$\mathbb{R}^3$ 三维视角）**：三维空间展示了观测向量 $\mathbf{b} = (y_1, y_2, y_3)^\top$ 是如何垂直投影到由列向量 $\mathbf{a}_1, \mathbf{a}_2$ 张成的浅蓝色列空间平面 $\operatorname{col}(A)$ 上的，紫色虚线向量 $\mathbf{e}$ 严格正交落入左零空间 $\ker(A^\top)$。
+
+<LeastSquaresDemo client:load />
+
+---
+
+## 五、三大工业级数值求解路径横向演进与对比
+
+在实际工业代码与线性代数库（如 LAPACK、Eigen、SciPy、GLM）中，我们该如何求解最小二乘问题？
+
+虽然代数公式写为 $\hat{\mathbf{x}} = (A^\top A)^{-1} A^\top \mathbf{b}$，但在数值计算中 **绝不能显式求逆**。工业界演进出了三大经典求解路径：
+
+### 5.1 路径一：正规方程法（Cholesky 分解）
+
+直接构造 $n \times n$ 对称正定系数矩阵 $G = A^\top A$（即 [Gram 矩阵](/posts/linear-algebra/gram-matrix)），并利用 [Cholesky 分解](/posts/linear-algebra/matrix-decompositions#二高斯消元谱系luplu-与-cholesky-分解) $A^\top A = L L^\top$ 进行前代与回代：
+
+$$
+L \mathbf{y} = A^\top \mathbf{b}, \qquad L^\top \hat{\mathbf{x}} = \mathbf{y}
+$$
+
+- **时间复杂度**：$\mathcal{O}(m n^2 + \frac{1}{3} n^3)$（当 $m \gg n$ 时速度最快，内存开销仅为 $n \times n$）；
+- **致命缺陷（条件数平方）**：构造 $A^\top A$ 时，矩阵的条件数会 **被平方放大**：
+  $$
+  \kappa(A^\top A) = (\kappa(A))^2
+  $$
+  若原始设计矩阵条件数 $\kappa(A) = 10^4$（在 IEEE 754 双精度 16 位有效数字下尚可安全求解），构造 $A^\top A$ 后的条件数飙升至 $10^8$，直接丢失 8 位精度；若数据接近共线，正规方程法会因严重的舍入误差彻底失效。
+
+---
+
+### 5.2 路径二：QR 分解法（Householder 正交化 —— 工业标准）
+
+为了避免条件数平方放大，工业求解器普遍优先采用 [QR 分解](/posts/linear-algebra/matrix-decompositions#三单边正交化流水线qr-分解)。
+
+对长方矩阵 $A \in \mathbb{R}^{m \times n}$ 做瘦 QR 分解（Thin QR）：
+
+$$
+A = Q_1 R = \begin{pmatrix} Q_1 & Q_2 \end{pmatrix} \begin{pmatrix} R \\ 0 \end{pmatrix}
+$$
+
+其中 $Q_1 \in \mathbb{R}^{m \times n}$ 满足 $Q_1^\top Q_1 = I_n$，$R \in \mathbb{R}^{n \times n}$ 为非奇异上三角矩阵。
+
+将 $A = Q_1 R$ 代入最小二乘残差范数（利用正交矩阵保持欧几里得长度不变的特性 $\lVert Q^\top \mathbf{v} \rVert = \lVert \mathbf{v} \rVert$）：
+
+$$
+\lVert \mathbf{b} - A\mathbf{x} \rVert^2 = \left\lVert Q^\top \mathbf{b} - Q^\top A\mathbf{x} \right\rVert^2 = \left\lVert \begin{pmatrix} Q_1^\top \mathbf{b} - R \mathbf{x} \\ Q_2^\top \mathbf{b} \end{pmatrix} \right\rVert^2 = \lVert Q_1^\top \mathbf{b} - R \mathbf{x} \rVert^2 + \lVert Q_2^\top \mathbf{b} \rVert^2
+$$
+
+由于后半项 $\lVert Q_2^\top \mathbf{b} \rVert^2$ 与 $\mathbf{x}$ 完全无关，最小化损失仅需令前半项为零：
+
+$$
+R \hat{\mathbf{x}} = Q_1^\top \mathbf{b}
+$$
+
+由于 $R$ 是上三角矩阵，只需一次极速的 **后代求解（Back-substitution）** 即可得出最优解！
+
+- **条件数表现**：算法直接作用于 $A$，条件数严格保持为 $\kappa(A)$，无精度平方损失；
+- **工业地位**：Eigen 库的 `ColPivHouseholderQR`、MATLAB 中的反斜杠操作符 `A \\ b` 默认均基于此算法。
+
+---
+
+### 5.3 路径三：SVD 奇异值分解（Moore-Penrose 伪逆 —— 终极鲁棒）
+
+当设计矩阵 $A$ **秩亏损（Rank-deficient）** 或存在严重的 **多重共线性（Multicollinearity）** 时，$A^\top A$ 和 $R$ 均不可逆，前两种算法全部失效。
+
+此时必须借助 [奇异值分解（SVD）](/posts/linear-algebra/singular-value-decomposition)：
+
+$$
+A = U \Sigma V^\top = \sum_{i=1}^r \sigma_i \mathbf{u}_i \mathbf{v}_i^\top
+$$
+
+最优解由 **Moore-Penrose 伪逆（Pseudoinverse）** $A^+$ 给出：
+
+$$
+\hat{\mathbf{x}} = A^+ \mathbf{b} = V \Sigma^+ U^\top \mathbf{b} = \sum_{i=1}^r \frac{\mathbf{u}_i^\top \mathbf{b}}{\sigma_i} \mathbf{v}_i
+$$
+
+其中 $\Sigma^+ = \operatorname{diag}(1/\sigma_1, \dots, 1/\sigma_r, 0, \dots, 0)$。
+
+- **数学完备性**：若超定系统存在无穷多组最小二乘解，SVD 伪逆解是所有可行解中 **参数范数最小的唯一解（Minimal Norm Solution）**：
+  $$
+  \hat{\mathbf{x}} = \arg\min_{\mathbf{x} \in \mathcal{S}} \lVert \mathbf{x} \rVert, \qquad \mathcal{S} = \left\{ \mathbf{x} \mid \lVert \mathbf{b} - A\mathbf{x} \rVert = \min \right\}
+  $$
+- **截断奇异值（TSVD）**：对于极小噪声奇异值 $\sigma_i < \epsilon$，直接置零 $1/\sigma_i \to 0$，彻底免疫除以零的数值溢出。
+
+---
+
+## 六、鲁棒性与正则化拓展
+
+### 6.1 Ridge 回归与 Tikhonov 正则化
+
+当矩阵接近奇异病态（$\kappa(A) \to \infty$）时，未受约束的最小二乘参数解 $\hat{\mathbf{x}}$ 会剧烈震荡放大，导致严重的过拟合。
+
+**Tikhonov 正则化（在统计学中称 Ridge 回归 / 岭回归）** 在损失函数中增加了 $L_2$ 范数惩罚项：
+
+$$
+\min_{\mathbf{x}} \left( \lVert \mathbf{b} - A\mathbf{x} \rVert^2 + \lambda \lVert \mathbf{x} \rVert^2 \right), \qquad \lambda > 0
+$$
+
+求导后得到正则化正规方程：
+
+$$
+(A^\top A + \lambda I) \hat{\mathbf{x}}_{\text{ridge}} = A^\top \mathbf{b}
+$$
+
+- **几何本质**：在 $A^\top A$ 的对角线上人为注入正数 $\lambda$，将所有特征值由 $\sigma_i^2$ 整体抬升为 $\sigma_i^2 + \lambda > 0$；
+- **奇异值滤波收缩**：
+  $$
+  \hat{\mathbf{x}}_{\text{ridge}} = \sum_{i=1}^n \left( \frac{\sigma_i^2}{\sigma_i^2 + \lambda} \right) \frac{\mathbf{u}_i^\top \mathbf{b}}{\sigma_i} \mathbf{v}_i
+  $$
+  大奇异值分量保持不变（滤波因子 $\approx 1$），微小噪声奇异值分量被强力衰减归零（滤波因子 $\to 0$），极大增强了数值稳健性。
+
+---
+
+### 6.2 普通最小二乘 (OLS) vs 总最小二乘 (TLS / PCA)
+
+经典普通最小二乘（Ordinary Least Squares, OLS）假设只有观测值 $y_i$ 存在测量误差，而自变量坐标 $x_i$ 是绝对准确的，因此它最小化的是 **竖直方向的残差距离**：
+
+$$
+\text{OLS 误差} = \sum_{i=1}^m |y_i - (c + d x_i)|^2
+$$
+
+但在计算机视觉与三维几何重建中，数据点 $(x_i, y_i, z_i)$ 的所有坐标均来自三维激光扫描仪或双目相机，各个方向都存在等同的测量噪声。
+
+**总最小二乘（Total Least Squares, TLS）** 最小化的是数据点到拟合直线/平面的 **真正几何正交垂直距离**：
+
+$$
+\text{TLS 误差} = \sum_{i=1}^m \operatorname{dist}_{\perp}(P_i, \text{Line})^2
+$$
+
+TLS 的求解在数学上完全等价于 **主成分分析（PCA）** 与 SVD：最佳拟合直线的方向即为数据协方差矩阵的最大特征向量（第一主成分方向）。
+
+---
+
+## 七、计算机图形学与三维视觉核心实战
+
+### 7.1 三维点云最佳拟合平面
+
+在 3D 几何建模、碰撞检测与网格重建中，给定局部邻域内的 $N$ 个三维散乱点云 $\{ \mathbf{p}_i = (x_i, y_i, z_i)^\top \}_{i=1}^N$，如何拟合出最佳切平面 $\mathbf{n}^\top (\mathbf{p} - \mathbf{p}_0) = 0$？
+
+1. **计算质心**：平面必然经过点云几何中心 $\bar{\mathbf{p}} = \frac{1}{N} \sum_{i=1}^N \mathbf{p}_i$；
+2. **中心化坐标矩阵**：构建去中心化矩阵 $X \in \mathbb{R}^{N \times 3}$，其第 $i$ 行为 $(\mathbf{p}_i - \bar{\mathbf{p}})^\top$；
+3. **SVD / 协方差分析**：
+   $$
+   X^\top X = V \Sigma^2 V^\top = \lambda_1 \mathbf{v}_1 \mathbf{v}_1^\top + \lambda_2 \mathbf{v}_2 \mathbf{v}_2^\top + \lambda_3 \mathbf{v}_3 \mathbf{v}_3^\top \quad (\lambda_1 \ge \lambda_2 \ge \lambda_3)
+   $$
+   - 特征向量 $\mathbf{v}_1, \mathbf{v}_2$ 张成了平面的切空间（扩展方差最大的两个主轴）；
+   - 最小特征值 $\lambda_3$ 对应的特征向量 $\mathbf{v}_3$ **恰好就是最佳平面的单位法向量 $\mathbf{n}$**！
+
+---
+
+### 7.2 相机标定中的直接线性变换（DLT）
+
+在计算机视觉中，三维空间点 $\mathbf{X}_i = (X_i, Y_i, Z_i, 1)^\top$ 投影到二维图像像素点 $\mathbf{x}_i = (u_i, v_i, 1)^\top$ 服从透视投影关系：
+
+$$
+s \begin{pmatrix} u_i \\ v_i \\ 1 \end{pmatrix} = P \begin{pmatrix} X_i \\ Y_i \\ Z_i \\ 1 \end{pmatrix} = \begin{pmatrix} \mathbf{p}_1^\top \\ \mathbf{p}_2^\top \\ \mathbf{p}_3^\top \end{pmatrix} \mathbf{X}_i
+$$
+
+消去未知尺度因子 $s$ 后，每个对应点对可列出 2 个线性约束方程：
+
+$$
+\begin{cases}
+u_i (\mathbf{p}_3^\top \mathbf{X}_i) - (\mathbf{p}_1^\top \mathbf{X}_i) = 0 \\
+v_i (\mathbf{p}_3^\top \mathbf{X}_i) - (\mathbf{p}_2^\top \mathbf{X}_i) = 0
+\end{cases}
+\implies
+A_i \mathbf{m} = \mathbf{0}
+$$
+
+将 $N \ge 6$ 组标定物特征点堆叠为大矩阵 $A \in \mathbb{R}^{2N \times 12}$，由于右端项为零，该问题为 **齐次最小二乘问题**：
+
+$$
+\min_{\lVert \mathbf{m} \rVert = 1} \lVert A \mathbf{m} \rVert^2
+$$
+
+利用 SVD 分解 $A = U \Sigma V^\top$，解向量 $\hat{\mathbf{m}}$ 即为矩阵 $V$ 的最后一列（对应最小奇异值的右奇异向量）。
+
+---
+
+### 7.3 非线性最小二乘：Gauss-Newton 与 Levenberg-Marquardt (LM)
+
+在刚体姿态估计（ICP 配准）与光束法平差（Bundle Adjustment）中，残差函数往往是参数的非线性函数：
+
+$$
+\min_{\mathbf{x}} \frac{1}{2} \sum_{i=1}^m \lVert \mathbf{r}_i(\mathbf{x}) \rVert^2
+$$
+
+在当前估计值 $\mathbf{x}_k$ 处对残差做一阶泰勒展开：$\mathbf{r}(\mathbf{x}_k + \Delta \mathbf{x}) \approx \mathbf{r}(\mathbf{x}_k) + J(\mathbf{x}_k) \Delta \mathbf{x}$，将非线性问题在局部转化为标准线性最小二乘子问题：
+
+- **Gauss-Newton 步长方程**：
+  $$
+  (J^\top J) \Delta \mathbf{x}_{\text{gn}} = -J^\top \mathbf{r}
+  $$
+- **Levenberg-Marquardt (LM) 混合阻尼方程**：
+  $$
+  (J^\top J + \mu I) \Delta \mathbf{x}_{\text{lm}} = -J^\top \mathbf{r}
+  $$
+  当阻尼因子 $\mu$ 较大时退化为最速下降法，$\mu$ 较小时退化为高效的 Gauss-Newton 高斯牛顿法，是现代 SLAM 与非线性优化的中流砥柱。
+
+---
+
+## 八、现代机器学习与函数分析视野：从输入非线性到特征空间投影
+
+在实际数据科学与机器学习中，初学者常有一个经典疑惑：“**实际物理现象或真实数据明明是高度弯曲的非线性函数，为什么还能用‘线性’最小二乘法直接拟合？**”
+
+答案就在于一个极其深刻且关键的数学限定：
+
+> **“对输入 $x$ 是非线性的”，并不意味着“对未知待求参数是非线性的”。**
+>
+> **一个模型是否能够直接用普通线性最小二乘（Linear Least Squares）求出解析解，真正看的恰恰是后者！**
+
+### 8.1 辨析两种截然不同的“线性”
+
+设我们想拟合观测模型 $y = f(x; \boldsymbol{\theta})$，其中 $x$ 为输入自变量，$\boldsymbol{\theta}$ 为待求参数，$y$ 为目标观测值。存在两种本质不同的线性维度：
+
+#### A. 对输入 $x$ 线性
+
+例如线性多项式：
+
+$$
+f(x) = ax + b
+$$
+
+此处函数关于输入变量 $x$ 严格呈现一阶线性直线关系。
+
+#### B. 对参数 $\boldsymbol{\theta}$ 线性（Linear in Parameters）
+
+例如混合非线性模型：
+
+$$
+f(x; a, b) = a \sin x + b e^x
+$$
+
+虽然该函数图像关于自变量 $x$ **显然是高度非线性的**，但对于待求解的未知参数 $(a, b)$ 而言，它却是**严格的一阶线性齐次组合**：
+
+$$
+f(x; a, b) = a \underbrace{\sin x}_{\phi_1(x)} + b \underbrace{e^x}_{\phi_2(x)} = \sum_{j=1}^n \theta_j \phi_j(x)
+$$
+
+将非线性输入变换 $\phi_j(x)$ 视为固定的 **基函数（Basis Functions）** 或 **特征映射（Feature Mapping）**，对于给定的 $m$ 个离散采样点 $(x_1, \dots, x_m)$，我们依然能严丝合缝地构造出标准设计矩阵 $A$：
+
+$$
+A = \begin{pmatrix}
+\phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_n(x_1) \\
+\phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_n(x_2) \\
+\vdots & \vdots & \ddots & \vdots \\
+\phi_1(x_m) & \phi_2(x_m) & \cdots & \phi_n(x_m)
+\end{pmatrix}, \qquad
+\boldsymbol{\theta} = \begin{pmatrix} \theta_1 \\ \theta_2 \\ \vdots \\ \theta_n \end{pmatrix}, \qquad
+\mathbf{b} = \begin{pmatrix} y_1 \\ y_2 \\ \vdots \\ y_m \end{pmatrix}
+$$
+
+该系统依然服从标准的超定方程组 $A\boldsymbol{\theta} \approx \mathbf{b}$。因此，我们可以毫不犹豫地直接套用普通线性最小二乘的正规方程或 QR 分解求解全局最优参数：
+
+$$
+\hat{\boldsymbol{\theta}} = \arg\min_{\boldsymbol{\theta}} \lVert A\boldsymbol{\theta} - \mathbf{b} \rVert_2^2 = (A^\top A)^{-1} A^\top \mathbf{b}
+$$
+
+---
+
+### 8.2 基函数展开（Basis Expansion）的经典族谱
+
+把“非线性函数”看作“固定基底的线性组合”，是连接数值分析、傅里叶分析与机器学习特征工程的核心基石。常见的基底构造包括：
+
+1. **多项式基（Polynomial Basis）**：
+   $$
+   f(x) = \sum_{k=0}^n a_k x^k = a_0 \cdot 1 + a_1 x + a_2 x^2 + \dots + a_n x^n
+   $$
+   基函数为 $\{ 1, x, x^2, \dots, x^n \}$，设计矩阵 $A$ 即为著名的 **范德蒙矩阵（Vandermonde Matrix）**；
+2. **傅里叶/三角基（Fourier Basis）**：
+   $$
+   f(x) = a_0 + \sum_{k=1}^n \left( a_k \cos kx + b_k \sin kx \right)
+   $$
+   基函数为 $\{ 1, \cos x, \sin x, \cos 2x, \sin 2x, \dots \}$，参数依然严格保持线性；
+3. **径向基函数（RBF Basis）**：
+   $$
+   f(x) = \sum_{j=1}^n w_j \exp\left( -\frac{\lVert x - c_j \rVert^2}{2\sigma_j^2} \right)
+   $$
+   当高斯核中心 $c_j$ 与方差 $\sigma_j$ 预先选定固定时，模型对权重参数 $w_j$ 是严格线性的，依然可直接通过线性最小二乘瞬间求出最优权重。
+
+---
+
+### 8.3 交互实验：基函数非线性拟合工作台
+
+在下方的交互实验中，你可以拖动 6 个散点 $(x_i, y_i)$，在 **多项式基**、**傅里叶三角基** 与 **高斯径向基 (RBF)** 之间自由切换，亲身体验“非线性曲线如何通过一次线性参数投影直接解出”：
+
+<BasisFittingDemo client:load />
+
+---
+
+### 8.4 线性最小二乘的适用边界与真·非线性模型
+
+绝不能误以为“任何非线性方程都能用普通最小二乘求解”。
+
+#### 案例 1：平方参数方程 $y = a^2 x + b$
+
+虽然该方程关于 $x$ 是一条直线，但关于未知参数 $a$ 却是二次非线性的。若通过令 $c = a^2$ 将其线性化求解得出 $\hat{c}$，反算 $a = \pm\sqrt{\hat{c}}$ 时不仅存在正负号歧义，而且在残差平方和准则下并不等价于在原参数 $a$ 上的极小化。
+
+#### 案例 2：指数衰减方程 $y = a e^{bx}$
+
+此时函数对参数 $a$ 是线性的，但对参数 $b$ **在代数上是非线性的**：$b$ 处于指数函数内部，无法被分离为 $b \cdot \phi(x)$ 的乘积形态。该模型无法写成 $A \begin{pmatrix} a \\ b \end{pmatrix}$ 的矩阵形式。
+
+这种情况属于真正的 **非线性最小二乘（Nonlinear Least Squares）**，必须依赖本文 7.3 节所述的 **Gauss-Newton** 或 **Levenberg-Marquardt** 算法，通过局部泰勒展开迭代逼近。
+
+#### 常见拟合模型线性度判别表
+
+| 待拟合模型                        | 对自变量 $x$ 线性度 | 对待求参数线性度 | 能否直接使用普通线性最小二乘                  |
+| :-------------------------------- | :------------------ | :--------------- | :-------------------------------------------- |
+| $f(x) = ax + b$                   | 线性                | **线性**         | ✅ 经典一元线性回归                           |
+| $f(x) = ax^2 + b$                 | 非线性              | **线性**         | ✅ 基函数 $\phi = [1, x^2]^\top$              |
+| $f(x) = a\sin x + b$              | 非线性              | **线性**         | ✅ 基函数 $\phi = [1, \sin x]^\top$           |
+| $f(x) = ax^2 + b\sin x + ce^{-x}$ | 非线性              | **线性**         | ✅ 基函数 $\phi = [x^2, \sin x, e^{-x}]^\top$ |
+| $f(x) = \sum_{k=0}^d a_k x^k$     | 非线性              | **线性**         | ✅ 多项式回归（范德蒙矩阵）                   |
+| $f(x) = a^2 x + b$                | 线性                | **非线性**       | ❌ 参数含平方项                               |
+| $f(x) = a e^{bx}$                 | 非线性              | **非线性**       | ❌ 参数 $b$ 在指数内（需非线性优化）          |
+| $f(x) = e^{ax + b}$               | 非线性              | **非线性**       | ❌ 参数在指数内（对数变换后有偏）             |
+
+---
+
+### 8.5 函数空间（Function Space）正交投影的大一统
+
+把基函数展开推向极致，就能将线性代数与泛函分析融汇贯通为一个壮丽的大一统图景：
+
+1. **函数空间的有限维子空间**：
+   当我们选定一组正规基函数 $\{ \phi_1, \phi_2, \dots, \phi_n \}$ 时，它们在无限维函数空间 $\mathcal{H}$（如 $L^2$ 平方可积函数空间，详见 [《内积空间》](/posts/linear-algebra/inner-product-spaces)）中张成了一个 $n$ 维低维函数子空间：
+   $$
+   \mathcal{F} = \operatorname{span}\{ \phi_1, \phi_2, \dots, \phi_n \} \subset \mathcal{H}
+   $$
+2. **函数空间中的正交投影**：
+   目标函数或散点观测数据 $g(x)$ 通常不属于子空间 $\mathcal{F}$（即 $g \notin \mathcal{F}$）。
+   **最小二乘法的本质，就是在函数子空间 $\mathcal{F}$ 中寻找与目标 $g$ 距离最近的正交投影函数 $\hat{f}$！**
+   $$
+   \hat{f}(x) = \operatorname{proj}_{\mathcal{F}}(g) = \arg\min_{f \in \mathcal{F}} \lVert g - f \rVert^2
+   $$
+3. **离散与连续的对偶映射**：
+   - 在离散采样下，基函数在各采样点的值构成了设计矩阵 $A$ 的各列，函数空间子空间 $\mathcal{F}$ 对应离散列空间 $\operatorname{col}(A)$；
+   - 连续函数内积矩阵（Gram 矩阵，详见 [《Gram 矩阵》](/posts/linear-algebra/gram-matrix)）$G_{ij} = \langle \phi_i, \phi_j \rangle = \int \phi_i(x) \phi_j(x) dx$ 在离散采样下精确对应矩阵乘积 $A^\top A$；
+   - 正规方程 $(A^\top A) \hat{\boldsymbol{\theta}} = A^\top \mathbf{b}$ 正是函数投影在离散基底下的解析表达；
+   - 误差残差 $\mathbf{e} = \mathbf{b} - A\hat{\boldsymbol{\theta}}$ 正交落入左零空间 $\ker(A^\top)$（详见 [《四大基本子空间》](/posts/linear-algebra/four-fundamental-subspaces)），对应连续函数残差 $g(x) - \hat{f}(x)$ 垂直于所有基函数 $\langle g - \hat{f}, \phi_j \rangle = 0$。
+
+> 💡 **大一统总结**：
+>
+> **列空间（Column Space）、正交投影（Orthogonal Projection）、最小二乘（Least Squares）、基底展开（Basis Expansion）与 Gram 矩阵**，本质上是同一套几何投影公理在“离散矩阵代数”与“连续函数空间”两端的完美对偶。
+
+---
+
+## 九、全景决策树与工业选型对照表
+
+| 求解算法                    | 核心代数公式                                                  | 适用场景                                | 时间复杂度                            | 数值稳定性                     | 工业优缺点                                       |
+| :-------------------------- | :------------------------------------------------------------ | :-------------------------------------- | :------------------------------------ | :----------------------------- | :----------------------------------------------- |
+| **正规方程法 (Cholesky)**   | $(A^\top A) \hat{\mathbf{x}} = A^\top \mathbf{b}$             | $m \gg n$ 且 $A$ 严格列满秩、条件数极低 | $\mathcal{O}(mn^2 + \frac{1}{3}n^3)$  | ★★☆☆☆（条件数平方 $\kappa^2$） | 速度最快、内存极小；但极易因舍入误差导致病态失效 |
+| **QR 分解法 (Householder)** | $R \hat{\mathbf{x}} = Q_1^\top \mathbf{b}$                    | 工业通用超定最小二乘拟合                | $\mathcal{O}(2mn^2 - \frac{2}{3}n^3)$ | ★★★★☆（条件数保持 $\kappa$）   | 工业界默认黄金标准，精度与速度平衡最佳           |
+| **SVD 伪逆法**              | $\hat{\mathbf{x}} = V \Sigma^+ U^\top \mathbf{b}$             | 矩阵秩亏损、多重共线性、需最小范数解    | $\mathcal{O}(mn^2 + n^3)$             | ★★★★★（绝对最高）              | 彻底免疫奇异退化，但计算量较重                   |
+| **Ridge 正则化**            | $(A^\top A + \lambda I) \hat{\mathbf{x}} = A^\top \mathbf{b}$ | 数据高度共线、防止参数过拟合震荡        | $\mathcal{O}(mn^2 + \frac{1}{3}n^3)$  | ★★★★☆（人为注入稳定性）        | 引入微小偏差换取方差大幅下降与数值稳定           |
+| **总最小二乘 (TLS / PCA)**  | 协方差矩阵最小奇异值向量                                      | 自变量与因变量均存在等同噪声            | $\mathcal{O}(m n^2 + n^3)$            | ★★★★☆                          | 真正最小化几何垂直欧氏距离，适合点云与几何拟合   |
+
+---
+
+> 💡 **核心总结**：
+>
+> 最小二乘法不仅是一组求解方程的数值技巧，更是连接代数、几何与函数分析的宏伟桥梁：
+>
+> 1. **几何第一性原理**：**最小二乘寻找的是在列空间 $\operatorname{col}(A)$ 中离 $\mathbf{b}$ 最近的点，其本质就是把 $A\mathbf{x} = \mathbf{b}$ 的目标向量 $\mathbf{b}$ 直接正交投影到矩阵 $A$ 的列空间 $\operatorname{col}(A)$**，得到最佳投影近似点 $\hat{\mathbf{b}} = A\hat{\mathbf{x}} = P\mathbf{b}$；
+> 2. **微积分与驻点**：目标函数极值条件 $\nabla f(\mathbf{x}) = 2 A^\top A \mathbf{x} - 2 A^\top \mathbf{b} = \mathbf{0} \implies A^\top A \hat{\mathbf{x}} = A^\top \mathbf{b}$；
+> 3. **四大子空间正交补**：残差向量 $\mathbf{e} = \mathbf{b} - A\hat{\mathbf{x}}$ 必然正交落入左零空间 $\mathbf{e} \in \ker(A^\top)$，实现正交直和分解 $\mathbb{R}^m = \operatorname{col}(A) \oplus \ker(A^\top)$；
+> 4. **参数线性与特征升维**：只要基函数不含未知参数，非线性函数即可通过特征映射 $\boldsymbol{\phi}(x)$ 转化为标准线性最小二乘，在基函数张成的函数子空间 $\mathcal{F}$ 中完成正交投影；
+> 5. **数值工程选型**：正规方程拼速度，QR 分解保精度，SVD 伪逆御奇异。

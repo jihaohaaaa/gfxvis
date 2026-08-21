@@ -547,3 +547,186 @@ export function polar2x2(m: Mat2): PolarResult2 {
 
   return { Q, P };
 }
+
+// --- Least Squares Fitting & Subspace Projections ---
+
+export interface LeastSquaresResult2D {
+  /** Intercept c (beta0) and slope d (beta1): y = c + d * x */
+  c: number;
+  d: number;
+  xHat: [number, number];
+  /** Residual vector e = b - A * xHat */
+  residuals: number[];
+  /** Residual sum of squares: ||e||^2 = sum(e_i^2) */
+  residualNormSq: number;
+  /** Design matrix rows: [1, x_i] */
+  A: Array<[number, number]>;
+  /** Observation vector b: [y_0, y_1, ...] */
+  b: number[];
+  /** Projected observation in col(A): bHat = A * xHat */
+  bHat: number[];
+  /** Gram matrix A^T * A in column-major Mat2: [col0, col1] */
+  AtA: Mat2;
+  /** A^T * b: [sum(y), sum(x * y)] */
+  Atb: [number, number];
+  /** Singular values of design matrix A: sigma1 >= sigma2 */
+  sigma1: number;
+  sigma2: number;
+  /** Condition number of A: kappa(A) = sigma1 / sigma2 */
+  condA: number;
+  /** Condition number of normal equations: kappa(A^T * A) = condA^2 */
+  condAtA: number;
+  /** Effective method used */
+  method: "normal" | "qr" | "svd" | "ridge";
+  lambda: number;
+}
+
+/**
+ * Fit linear 2D line y = c + d * x to an array of points using Least Squares.
+ * Supports Normal Equations, QR Decomposition, SVD Pseudoinverse, and Ridge Regularization.
+ */
+export function fitLeastSquaresLinear2D(
+  points: Array<{ x: number; y: number }>,
+  options?: {
+    method?: "normal" | "qr" | "svd" | "ridge";
+    lambda?: number;
+  },
+): LeastSquaresResult2D {
+  const method = options?.method ?? "normal";
+  const lambda = options?.lambda ?? 0;
+
+  const A: Array<[number, number]> = points.map((p) => [1, p.x]);
+  const b: number[] = points.map((p) => p.y);
+
+  // Compute A^T * A and A^T * b
+  let sum1 = 0;
+  let sumX = 0;
+  let sumX2 = 0;
+  let sumY = 0;
+  let sumXY = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    const px = points[i].x;
+    const py = points[i].y;
+    sum1 += 1;
+    sumX += px;
+    sumX2 += px * px;
+    sumY += py;
+    sumXY += px * py;
+  }
+
+  const AtA: Mat2 = [sum1, sumX, sumX, sumX2];
+  const Atb: [number, number] = [sumY, sumXY];
+
+  // Singular values of A from eigenvalues of A^T * A
+  const eig = eigen2x2(AtA);
+  const sigma1 = Math.sqrt(Math.max(eig.lambda1, 0));
+  const sigma2 = Math.sqrt(Math.max(eig.lambda2, 0));
+  const condA = sigma2 > 1e-12 ? sigma1 / sigma2 : 1e9;
+  const condAtA = condA * condA;
+
+  let c = 0;
+  let d = 0;
+
+  if (method === "ridge" || lambda > 0) {
+    // (A^T * A + lambda * I) * x = A^T * b
+    const regAtA: Mat2 = [sum1 + lambda, sumX, sumX, sumX2 + lambda];
+    const inv = inverse2(regAtA);
+    if (inv) {
+      const sol = mat2Vec(inv, { x: Atb[0], y: Atb[1] });
+      c = sol.x;
+      d = sol.y;
+    }
+  } else if (method === "svd") {
+    // SVD Pseudoinverse of 2x2 normal matrix / design matrix
+    // A^T A = V * Lambda * V^T => (A^T A)^+ = V * Lambda^+ * V^T
+    const svd = svd2x2(AtA);
+    const s1 = svd.sigma1;
+    const s2 = svd.sigma2;
+    const invS1 = s1 > 1e-6 ? 1 / s1 : 0;
+    const invS2 = s2 > 1e-6 ? 1 / s2 : 0;
+    const VT = transpose2(svd.V);
+    const SigmaInv: Mat2 = [invS1, 0, 0, invS2];
+    const pinv = mat2Mul(svd.V, mat2Mul(SigmaInv, VT));
+    const sol = mat2Vec(pinv, { x: Atb[0], y: Atb[1] });
+    c = sol.x;
+    d = sol.y;
+  } else if (method === "qr") {
+    // QR of tall matrix A (m x 2) via Gram-Schmidt
+    // col0 = (1, ..., 1)^T, r00 = ||col0|| = sqrt(m)
+    // q0 = col0 / r00
+    // r01 = <q0, col1> = sumX / sqrt(m)
+    // q1_unnorm = col1 - r01 * q0
+    // r11 = ||q1_unnorm||
+    // q1 = q1_unnorm / r11
+    const r00 = Math.sqrt(sum1);
+    const r01 = sumX / r00;
+    let q1NormSq = 0;
+    const q1Unnorm: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+      const val = points[i].x - r01 / r00;
+      q1Unnorm.push(val);
+      q1NormSq += val * val;
+    }
+    const r11 = Math.sqrt(q1NormSq);
+
+    if (r11 > 1e-8) {
+      // Q^T * b = [ (sum(b_i)/r00), (sum(q1Unnorm_i * b_i) / r11) ]
+      const qty0 = sumY / r00;
+      let qty1Unnorm = 0;
+      for (let i = 0; i < points.length; i++) {
+        qty1Unnorm += q1Unnorm[i] * points[i].y;
+      }
+      const qty1 = qty1Unnorm / r11;
+
+      // Back-substitution: R * x = Q^T * b
+      // [r00 r01] [c] = [qty0]
+      // [ 0  r11] [d] = [qty1]
+      d = qty1 / r11;
+      c = (qty0 - r01 * d) / r00;
+    } else {
+      // Degenerate (all x_i identical)
+      c = sumY / sum1;
+      d = 0;
+    }
+  } else {
+    // Normal equations (A^T * A) x = A^T * b
+    const inv = inverse2(AtA);
+    if (inv) {
+      const sol = mat2Vec(inv, { x: Atb[0], y: Atb[1] });
+      c = sol.x;
+      d = sol.y;
+    } else {
+      // Degenerate case: fallback to average y
+      c = sumY / (sum1 || 1);
+      d = 0;
+    }
+  }
+
+  // Projected bHat and residuals e
+  if (Math.abs(c) < 1e-7) c = 0;
+  if (Math.abs(d) < 1e-7) d = 0;
+
+  const bHat: number[] = points.map((p) => c + d * p.x);
+  const residuals: number[] = points.map((p, i) => p.y - bHat[i]);
+  const residualNormSq = residuals.reduce((sum, r) => sum + r * r, 0);
+
+  return {
+    c,
+    d,
+    xHat: [c, d],
+    residuals,
+    residualNormSq,
+    A,
+    b,
+    bHat,
+    AtA,
+    Atb,
+    sigma1,
+    sigma2,
+    condA,
+    condAtA,
+    method,
+    lambda,
+  };
+}

@@ -618,10 +618,9 @@ export default function MatrixDecompositionsDemo({
                   </div>
                   <p className="text-[11px] text-muted font-sans pt-1">
                     💡 <strong>物理与图形学灵魂</strong>：
-                    <InlineMath tex="P = \\sqrt{A^\\top A}" />{" "}
-                    是纯正实对称拉伸（沿主轴拉伸成椭圆，零旋转）；
-                    <InlineMath tex="Q = U V^\\top" />{" "}
-                    是纯刚体旋转，彻底剥离了弹性形变与空间自旋！
+                    <InlineMath tex="P = \sqrt{A^\top A}" />{" "}
+                    为半正定对称矩阵，代表纯拉伸形变；
+                    <InlineMath tex="Q = U V^\top" /> 为正交矩阵，代表刚体旋转。
                   </p>
                 </div>
               </div>
@@ -648,7 +647,7 @@ export default function MatrixDecompositionsDemo({
                     💡 <strong>终极正交统领</strong>：通过在输入空间 (
                     <InlineMath tex="V" />) 与输出空间 (<InlineMath tex="U" />)
                     同时寻找标准正交基，将所有剪切分量完全归零，只留下纯对角缩放{" "}
-                    <InlineMath tex="\\Sigma" />。
+                    <InlineMath tex="\Sigma" />。
                   </p>
                 </div>
               </div>

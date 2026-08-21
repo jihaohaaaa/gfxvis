@@ -7,6 +7,7 @@ import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
 import remarkMath from "remark-math";
 import remarkKatex from "./src/plugins/remark-katex";
+import remarkAlerts from "./src/plugins/remark-alerts";
 
 // https://astro.build/config
 export default defineConfig({
@@ -14,7 +15,7 @@ export default defineConfig({
 
   markdown: {
     processor: unified({
-      remarkPlugins: [remarkMath, remarkKatex],
+      remarkPlugins: [remarkMath, remarkKatex, remarkAlerts],
     }),
     shikiConfig: {
       themes: {

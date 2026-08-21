@@ -122,7 +122,7 @@ $$\boxed{R \mathbf{x} = Q^\top \mathbf{b}}$$
 
 > [!IMPORTANT]
 > **QR 求解最小二乘的压倒性优势** ：
-> 绝不能显式计算 $A^\top A$！因为 $\kappa(A^\top A) = \kappa(A)^2$，直接求正规方程会使矩阵条件数平方倍恶化。而通过 Householder QR 分解，条件数保持为 $\kappa(R) = \kappa(A)$，求解仅需对 $R \mathbf{x} = Q^\top \mathbf{b}$ 进行一次极速后退代入即可。
+> 绝不能显式计算 $A^\top A$！因为 $\kappa(A^\top A) = \kappa(A)^2$，直接求正规方程会使矩阵条件数平方倍恶化。而通过 Householder QR 分解，条件数保持为 $\kappa(R) = \kappa(A)$，求解仅需对 $R \mathbf{x} = Q^\top \mathbf{b}$ 进行一次极速后退代入即可。详细推导、子空间正交补证明与双视口交互实验详见 [《最小二乘法》](/posts/linear-algebra/least-squares)。
 
 ---
 

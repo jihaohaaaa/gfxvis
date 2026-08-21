@@ -594,7 +594,7 @@ export default function SvdDemo({ height }: { height?: string }) {
               <div className="p-2 rounded bg-surface/90 border border-border/60">
                 <div className="font-semibold text-foreground mb-1">
                   3. 最终变换像向量{" "}
-                  <InlineMath tex="A\\mathbf{x} \in \text{椭圆}" />
+                  <InlineMath tex="A\mathbf{x} \in \text{椭圆}" />
                 </div>
                 <div className="my-1 text-ink text-center">
                   <InlineMath

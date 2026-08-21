@@ -35,7 +35,7 @@ export default function CanvasToolbar({
   };
 
   const isExpanded = expandable?.isExpanded ?? false;
-  const canToggleExpand = showExpand && Boolean(expandable);
+  const canToggleExpand = showExpand && Boolean(expandable) && !isExpanded;
   const canSetHeight = showHeightPresets && Boolean(expandable) && !isExpanded;
 
   return (
