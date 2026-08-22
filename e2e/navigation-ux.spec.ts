@@ -42,15 +42,23 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
     // 初始在页面顶部，按钮应处于不可见状态
     await expect(backToTopBtn).toHaveClass(/invisible|opacity-0/);
 
-    // 向下滚动 1000px
+    // 2. 向下滚动 1000px
     await page.evaluate(() => window.scrollTo(0, 1000));
     await page.waitForTimeout(400);
 
-    // 滚动后按钮可见
+    // 未悬停时，回到顶部按钮保持收起折叠
+    await expect(backToTopBtn).toHaveClass(/invisible|opacity-0/);
+
+    // 3. 鼠标移至右下角悬浮操作组 -> 回到顶部按钮平滑向上展开浮现
+    const floatingActions = page.locator("#floating-actions");
+    await floatingActions.hover();
+    await page.waitForTimeout(200);
+
+    // 展开后按钮可见
     await expect(backToTopBtn).toBeVisible();
     await expect(backToTopBtn).toHaveClass(/opacity-100/);
 
-    // 点击回到顶部按钮
+    // 4. 点击回到顶部按钮
     await backToTopBtn.click();
     await page.waitForTimeout(600);
 

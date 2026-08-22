@@ -80,39 +80,54 @@ export function smoothScrollTo(targetY: number, customDuration?: number): void {
 
 export function setupScrollTop(): void {
   const btn = document.getElementById("back-to-top");
+  const container = document.getElementById("floating-actions");
   if (!btn) return;
 
-  let ticking = false;
+  let isScrolled = false;
+  let isHovered = false;
 
-  const updateVisibility = () => {
-    const shouldShow = window.scrollY > 350;
-    if (shouldShow) {
+  const syncState = () => {
+    if (isScrolled && isHovered) {
       btn.classList.remove(
-        "opacity-0",
-        "translate-y-3",
-        "pointer-events-none",
         "invisible",
+        "pointer-events-none",
+        "h-0",
+        "opacity-0",
+        "translate-y-2",
+        "scale-90",
       );
       btn.classList.add(
+        "visible",
+        "pointer-events-auto",
+        "h-9",
         "opacity-100",
         "translate-y-0",
-        "pointer-events-auto",
-        "visible",
+        "scale-100",
       );
     } else {
       btn.classList.remove(
+        "visible",
+        "pointer-events-auto",
+        "h-9",
         "opacity-100",
         "translate-y-0",
-        "pointer-events-auto",
-        "visible",
+        "scale-100",
       );
       btn.classList.add(
-        "opacity-0",
-        "translate-y-3",
-        "pointer-events-none",
         "invisible",
+        "pointer-events-none",
+        "h-0",
+        "opacity-0",
+        "translate-y-2",
+        "scale-90",
       );
     }
+  };
+
+  let ticking = false;
+  const updateVisibility = () => {
+    isScrolled = window.scrollY > 350;
+    syncState();
     ticking = false;
   };
 
@@ -126,6 +141,25 @@ export function setupScrollTop(): void {
     },
     { passive: true },
   );
+
+  if (container) {
+    container.addEventListener("mouseenter", () => {
+      isHovered = true;
+      syncState();
+    });
+    container.addEventListener("mouseleave", () => {
+      isHovered = false;
+      syncState();
+    });
+    container.addEventListener("focusin", () => {
+      isHovered = true;
+      syncState();
+    });
+    container.addEventListener("focusout", () => {
+      isHovered = false;
+      syncState();
+    });
+  }
 
   btn.addEventListener("click", (e) => {
     e.preventDefault();

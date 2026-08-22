@@ -407,8 +407,7 @@ export default function MatrixDecompositionsDemo({
           <div className="lg:col-span-7 space-y-2">
             <div
               ref={containerRef}
-              className="relative overflow-hidden rounded-xl border border-border bg-surface-hover/30"
-              style={{ height: "390px" }}
+              className="relative h-[var(--demo-height,24rem)] w-full overflow-hidden rounded-xl border border-border bg-surface-hover/30"
             >
               <canvas ref={canvasRef} className="h-full w-full touch-none" />
               <CanvasToolbar

@@ -120,6 +120,23 @@ test.describe("Matrix Decompositions 文章与 MatrixDecompositionsDemo 可视�
     await circleBtn.click();
     await page.waitForTimeout(100);
     await circleBtn.click();
+
+    // 6. S / M / L 高度预设测试
+    const sBtn = demo.getByRole("button", { name: "标准视口高度 (300px)" });
+    const lBtn = demo.getByRole("button", { name: "大视口高度 (560px)" });
+    const canvasContainer = demo
+      .locator(".relative.overflow-hidden.rounded-xl.border")
+      .first();
+
+    await sBtn.click();
+    await page.waitForTimeout(200);
+    const boxS = await canvasContainer.boundingBox();
+    expect(boxS?.height).toBeCloseTo(300, -1);
+
+    await lBtn.click();
+    await page.waitForTimeout(200);
+    const boxL = await canvasContainer.boundingBox();
+    expect(boxL?.height).toBeCloseTo(560, -1);
   });
 
   test("文章双向超链接跳转与深层锚点测试", async ({ page }) => {
