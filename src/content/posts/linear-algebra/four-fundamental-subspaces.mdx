@@ -52,13 +52,102 @@ MIT 的 Gilbert Strang 教授提出了著名的 **线性代数基本定理（The
    \operatorname{Col}(A) = \{ A \mathbf{x} \mid \mathbf{x} \in \mathbb{R}^n \} \subseteq \mathbb{R}^m, \quad \dim(\operatorname{Col}(A)) = r
    $$
 
-4. **左零空间 / 左核（Left Nullspace, $\ker(A^\top)$ 或 $\operatorname{Null}(A^\top)$）**：
-   转置矩阵 $A^\top$ 的零空间，对应输出空间中**无法由矩阵 $A$ 抵达的正交残差方向**（满足 $\mathbf{y}^\top A = \mathbf{0}^\top$）：
+4. **左零空间 / 左核（Left Nullspace，$\ker(A^\top)$ 或 $\operatorname{Null}(A^\top)$）**：
+   转置矩阵 $A^\top$ 的零空间，也是所有从左侧左乘矩阵 $A$ 得到零行向量的向量集合（满足 $\mathbf{y}^\top A = \mathbf{0}^\top \iff A^\top \mathbf{y} = \mathbf{0}$）：
    $$
-   \ker(A^\top) = \{ \mathbf{y} \in \mathbb{R}^m \mid A^\top \mathbf{y} = \mathbf{0} \} \subseteq \mathbb{R}^m, \quad \dim(\ker(A^\top)) = m - r
+   \ker(A^\top) = \{ \mathbf{y} \in \mathbb{R}^m \mid A^\top \mathbf{y} = \mathbf{0} \} = \{ \mathbf{y} \in \mathbb{R}^m \mid \mathbf{y}^\top A = \mathbf{0}^\top \} \subseteq \mathbb{R}^m, \quad \dim(\ker(A^\top)) = m - r
    $$
 
-> 💡 **核心结论**：行空间与列空间的维度**严格相等**且均等于矩阵的秩 $r$（即 $\operatorname{rank}(A^\top) = \operatorname{rank}(A) = r$）。这正是“行秩等于列秩”这一代数奇迹的几何体现。
+> 💡 **核心结论**：行空间与列空间的维度 **严格相等** 且均等于矩阵的秩 $r$（即 $\operatorname{rank}(A^\top) = \operatorname{rank}(A) = r$）。这正是“行秩等于列秩”这一代数奇迹的几何体现。
+
+---
+
+### 1.3 深度解构：为什么叫“左”零空间？（$\mathbf{y}^\top A$ 与 $A^\top \mathbf{y}$ 的双重视角）
+
+许多初学者常对“左零空间”这个命名感到困惑：既然定义为转置矩阵的零空间 $\ker(A^\top)$，为什么不直接叫“转置零空间”，而要冠以“左（Left）”？
+
+其深层原因在于对代数操作位置与几何正交性的双重视角：
+
+#### 视角一：左乘行向量线性组合（原初代数视角 $\mathbf{y}^\top A = \mathbf{0}^\top$）
+
+普通零空间 $\ker(A)$ 中的向量 $\mathbf{x} \in \mathbb{R}^n$ 是作为 **右操作数** 作用于矩阵 $A$（列向量从右侧乘）：
+
+$$
+A \mathbf{x} = \begin{bmatrix} | & | & & | \\ \mathbf{a}_1 & \mathbf{a}_2 & \cdots & \mathbf{a}_n \\ | & | & & | \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix} = \sum_{j=1}^n x_j \mathbf{a}_j = \mathbf{0}
+$$
+
+这表示 **列向量的线性组合为零**（列的线性相关性）。
+
+而对于左零空间，如果我们将行向量 $\mathbf{y}^\top = \begin{bmatrix} y_1 & y_2 & \cdots & y_m \end{bmatrix} \in \mathbb{R}^{1 \times m}$ 作为 **左操作数** 左乘矩阵 $A$：
+
+$$
+\mathbf{y}^\top A = \begin{bmatrix} y_1 & y_2 & \cdots & y_m \end{bmatrix} \begin{bmatrix} \text{--- }\mathbf{r}_1^\top\text{ ---} \\ \text{--- }\mathbf{r}_2^\top\text{ ---} \\ \vdots \\ \text{--- }\mathbf{r}_m^\top\text{ ---} \end{bmatrix} = \sum_{i=1}^m y_i \mathbf{r}_i^\top = \mathbf{0}^\top
+$$
+
+其中 $\mathbf{r}_i^\top$ 为矩阵 $A$ 的第 $i$ 个行向量。这表明：**左零空间中的非零向量 $\mathbf{y}$，其分量正是矩阵 $A$ 各个行向量之间线性相关性的一组组合系数（Syzygy / Row Linear Dependency）**。因为向量 $\mathbf{y}^\top$ 位于矩阵 $A$ 的 **左侧** ，故名 **左零空间（Left Nullspace）**。
+
+#### 视角二：正交于整个列空间（转置列视角 $A^\top \mathbf{y} = \mathbf{0}$）
+
+对等式 $\mathbf{y}^\top A = \mathbf{0}^\top$ 两侧取转置，即得到形式上完全统一的列向量标准方程：
+
+$$
+(\mathbf{y}^\top A)^\top = (\mathbf{0}^\top)^\top \iff A^\top \mathbf{y} = \mathbf{0}
+$$
+
+展开矩阵 $A^\top$ 与列向量 $\mathbf{y} \in \mathbb{R}^m$ 的乘积：
+
+$$
+A^\top \mathbf{y} = \begin{bmatrix} \text{--- }\mathbf{a}_1^\top\text{ ---} \\ \text{--- }\mathbf{a}_2^\top\text{ ---} \\ \vdots \\ \text{--- }\mathbf{a}_n^\top\text{ ---} \end{bmatrix} \mathbf{y} = \begin{bmatrix} \mathbf{a}_1^\top \mathbf{y} \\ \mathbf{a}_2^\top \mathbf{y} \\ \vdots \\ \mathbf{a}_n^\top \mathbf{y} \end{bmatrix} = \begin{bmatrix} \langle \mathbf{a}_1, \mathbf{y} \rangle \\ \langle \mathbf{a}_2, \mathbf{y} \rangle \\ \vdots \\ \langle \mathbf{a}_n, \mathbf{y} \rangle \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ \vdots \\ 0 \end{bmatrix}
+$$
+
+这揭示了一个优美的几何事实：**向量 $\mathbf{y}$ 与矩阵 $A$ 的每一个列向量 $\mathbf{a}_j$ 的点积全部为零（$\mathbf{y} \perp \mathbf{a}_j$）**。因为 $\mathbf{y}$ 垂直于张成列空间的全部基向量，所以 $\mathbf{y}$ 必定垂直于整个列空间 $\operatorname{Col}(A)$！
+
+$$
+\mathbf{y} \in \ker(A^\top) \iff \mathbf{y} \perp \operatorname{Col}(A) \iff \ker(A^\top) = (\operatorname{Col}(A))^\perp
+$$
+
+#### 几何应用实战：最小二乘法中的残差向量
+
+在工程与图形学拟合中，当线性系统 $A\mathbf{x} = \mathbf{b}$ 无解时，目标向量 $\mathbf{b} \in \mathbb{R}^m$ 不在列空间 $\operatorname{Col}(A)$ 内。我们将 $\mathbf{b}$ 正交投影到列空间得到最佳近似 $\hat{\mathbf{b}} = A\hat{\mathbf{x}}$。
+
+此时产生的 **误差残差向量（Residual Vector）** $\mathbf{e} = \mathbf{b} - \hat{\mathbf{b}}$ 正是生活在左零空间中：
+
+$$
+\mathbf{e} \in \ker(A^\top) \iff A^\top \mathbf{e} = \mathbf{0} \iff A^\top (\mathbf{b} - A\hat{\mathbf{x}}) = \mathbf{0} \implies A^\top A \hat{\mathbf{x}} = A^\top \mathbf{b}
+$$
+
+这正是著名的 **正规方程组（Normal Equations）** 的几何起源（详见 [《最小二乘法》](/posts/linear-algebra/least-squares)）。
+
+#### 具体数值算例验证
+
+考虑一个典型的 $3 \times 2$ 矩阵（3 个方程、2 个未知数）：
+
+$$
+A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{bmatrix}, \quad \operatorname{rank}(A) = 2
+$$
+
+- **行空间与列空间**：$\dim(\operatorname{Col}(A)) = \dim(\operatorname{Row}(A)) = 2$；
+- **零空间**：$\dim(\ker(A)) = 2 - 2 = 0$（仅包含零向量）；
+- **左零空间**：$\dim(\ker(A^\top)) = 3 - 2 = 1$（一维直线子空间）。
+
+求解 $A^\top \mathbf{y} = \mathbf{0}$：
+
+$$
+\begin{bmatrix} 1 & 0 & 1 \\ 0 & 1 & 1 \end{bmatrix} \begin{bmatrix} y_1 \\ y_2 \\ y_3 \end{bmatrix} = \begin{bmatrix} y_1 + y_3 \\ y_2 + y_3 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \end{bmatrix} \implies \mathbf{y} = c \begin{bmatrix} -1 \\ -1 \\ 1 \end{bmatrix}, \quad c \in \mathbb{R}
+$$
+
+取基础解 $\mathbf{y} = \begin{bmatrix} 1 & 1 & -1 \end{bmatrix}^\top$：
+
+1. **左乘行视角**：
+   $$
+   \mathbf{y}^\top A = 1 \cdot \begin{bmatrix} 1 & 0 \end{bmatrix} + 1 \cdot \begin{bmatrix} 0 & 1 \end{bmatrix} - 1 \cdot \begin{bmatrix} 1 & 1 \end{bmatrix} = \begin{bmatrix} 0 & 0 \end{bmatrix} = \mathbf{0}^\top
+   $$
+   清晰表明第 1 行与第 2 行之和等于第 3 行。
+2. **转置列内积视角**：
+   $$
+   \mathbf{a}_1^\top \mathbf{y} = 1 \cdot 1 + 0 \cdot 1 + 1 \cdot (-1) = 0, \quad \mathbf{a}_2^\top \mathbf{y} = 0 \cdot 1 + 1 \cdot 1 + 1 \cdot (-1) = 0
+   $$
+   严格验证 $\mathbf{y}$ 与列空间 $\operatorname{Col}(A)$ 的每一个基向量相互正交。
 
 ---
 
