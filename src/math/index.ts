@@ -3,7 +3,7 @@
  * Strictly column-major matrix layout, GLSL / GLM semantics.
  */
 
-export * from "./scalar.ts";
-export * from "./vector.ts";
-export * from "./matrix.ts";
-export * from "./quaternion.ts";
+export * from "./scalar";
+export * from "./vector";
+export * from "./matrix";
+export * from "./quaternion";

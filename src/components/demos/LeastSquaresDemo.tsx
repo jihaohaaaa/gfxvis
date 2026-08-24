@@ -5,10 +5,10 @@ import {
   fitLeastSquaresLinear2D,
   type LeastSquaresResult2D,
   svd2x2,
-  transpose2,
-  mat2Mul,
-  type Mat2,
-} from "../../math/index.ts";
+  transpose2x2,
+  multiplyMatrix2x2,
+  type Matrix2x2,
+} from "../../math/index";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import PresetSelector from "../framework/PresetSelector";
@@ -626,11 +626,17 @@ export default function LeastSquaresDemo({ height }: { height?: string }) {
     const p2y = points[1]?.y.toFixed(1) ?? "2.0";
     const p3y = points[2]?.y.toFixed(1) ?? "2.0";
 
-    const detAtA = AtA[0] * AtA[3] - AtA[1] * AtA[2];
-    const invAtA: Mat2 =
+    const detAtA = AtA[0][0] * AtA[1][1] - AtA[0][1] * AtA[1][0];
+    const invAtA: Matrix2x2 =
       Math.abs(detAtA) > 1e-8
-        ? [AtA[3] / detAtA, -AtA[1] / detAtA, -AtA[2] / detAtA, AtA[0] / detAtA]
-        : [0, 0, 0, 0];
+        ? [
+            [AtA[1][1] / detAtA, -AtA[0][1] / detAtA],
+            [-AtA[1][0] / detAtA, AtA[0][0] / detAtA],
+          ]
+        : [
+            [0, 0],
+            [0, 0],
+          ];
 
     if (method === "qr") {
       const sum1 = points.length;
@@ -683,9 +689,12 @@ export default function LeastSquaresDemo({ height }: { height?: string }) {
       const s2 = Math.sqrt(Math.max(svdObj.sigma2, 0));
       const invS1 = s1 > 1e-4 ? 1 / s1 : 0;
       const invS2 = s2 > 1e-4 ? 1 / s2 : 0;
-      const VT = transpose2(svdObj.V);
-      const SigmaInv: Mat2 = [invS1 * invS1, 0, 0, invS2 * invS2];
-      const pinv = mat2Mul(svdObj.V, mat2Mul(SigmaInv, VT));
+      const VT = transpose2x2(svdObj.V);
+      const SigmaInv: Matrix2x2 = [
+        [invS1 * invS1, 0],
+        [0, invS2 * invS2],
+      ];
+      const pinv = multiplyMatrix2x2(svdObj.V, multiplyMatrix2x2(SigmaInv, VT));
 
       return {
         title: "3. SVD 伪逆法 (SVD Pseudoinverse)",
@@ -701,7 +710,7 @@ export default function LeastSquaresDemo({ height }: { height?: string }) {
           },
           {
             label: "代入伪逆矩阵相乘",
-            tex: `\\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${pinv[0].toFixed(3)} & ${pinv[2].toFixed(3)} \\\\ ${pinv[1].toFixed(3)} & ${pinv[3].toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
+            tex: `\\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${pinv[0][0].toFixed(3)} & ${pinv[1][0].toFixed(3)} \\\\ ${pinv[0][1].toFixed(3)} & ${pinv[1][1].toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
           },
           {
             label: "最终求解向量",
@@ -712,17 +721,21 @@ export default function LeastSquaresDemo({ height }: { height?: string }) {
     }
 
     if (method === "ridge") {
-      const regAtA: Mat2 = [AtA[0] + lambda, AtA[1], AtA[2], AtA[3] + lambda];
-      const detReg = regAtA[0] * regAtA[3] - regAtA[1] * regAtA[2];
-      const regInv: Mat2 =
+      const regAtA: Matrix2x2 = [
+        [AtA[0][0] + lambda, AtA[0][1]],
+        [AtA[1][0], AtA[1][1] + lambda],
+      ];
+      const detReg = regAtA[0][0] * regAtA[1][1] - regAtA[0][1] * regAtA[1][0];
+      const regInv: Matrix2x2 =
         Math.abs(detReg) > 1e-8
           ? [
-              regAtA[3] / detReg,
-              -regAtA[1] / detReg,
-              -regAtA[2] / detReg,
-              regAtA[0] / detReg,
+              [regAtA[1][1] / detReg, -regAtA[0][1] / detReg],
+              [-regAtA[1][0] / detReg, regAtA[0][0] / detReg],
             ]
-          : [0, 0, 0, 0];
+          : [
+              [0, 0],
+              [0, 0],
+            ];
 
       return {
         title: "4. Ridge 正则化 (Ridge Regression)",
@@ -738,11 +751,11 @@ export default function LeastSquaresDemo({ height }: { height?: string }) {
           },
           {
             label: "计算阻尼正规方程组",
-            tex: `\\begin{pmatrix} ${(AtA[0] + lambda).toFixed(1)} & ${AtA[2].toFixed(1)} \\\\ ${AtA[1].toFixed(1)} & ${(AtA[3] + lambda).toFixed(1)} \\end{pmatrix} \\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
+            tex: `\\begin{pmatrix} ${(AtA[0][0] + lambda).toFixed(1)} & ${AtA[1][0].toFixed(1)} \\\\ ${AtA[0][1].toFixed(1)} & ${(AtA[1][1] + lambda).toFixed(1)} \\end{pmatrix} \\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
           },
           {
             label: "阻尼求逆",
-            tex: `\\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${regInv[0].toFixed(3)} & ${regInv[2].toFixed(3)} \\\\ ${regInv[1].toFixed(3)} & ${regInv[3].toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
+            tex: `\\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${regInv[0][0].toFixed(3)} & ${regInv[1][0].toFixed(3)} \\\\ ${regInv[0][1].toFixed(3)} & ${regInv[1][1].toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
           },
           {
             label: "最终求解向量",
@@ -767,11 +780,11 @@ export default function LeastSquaresDemo({ height }: { height?: string }) {
         },
         {
           label: "乘法得到正规方程组",
-          tex: `\\begin{pmatrix} ${AtA[0].toFixed(1)} & ${AtA[2].toFixed(1)} \\\\ ${AtA[1].toFixed(1)} & ${AtA[3].toFixed(1)} \\end{pmatrix} \\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
+          tex: `\\begin{pmatrix} ${AtA[0][0].toFixed(1)} & ${AtA[1][0].toFixed(1)} \\\\ ${AtA[0][1].toFixed(1)} & ${AtA[1][1].toFixed(1)} \\end{pmatrix} \\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
         },
         {
           label: "求逆代入 x̂ = (AᵀA)⁻¹ Aᵀb",
-          tex: `\\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${invAtA[0].toFixed(3)} & ${invAtA[2].toFixed(3)} \\\\ ${invAtA[1].toFixed(3)} & ${invAtA[3].toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
+          tex: `\\begin{pmatrix} c \\\\ d \\end{pmatrix} = \\begin{pmatrix} ${invAtA[0][0].toFixed(3)} & ${invAtA[1][0].toFixed(3)} \\\\ ${invAtA[0][1].toFixed(3)} & ${invAtA[1][1].toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${Atb[0].toFixed(1)} \\\\ ${Atb[1].toFixed(1)} \\end{pmatrix}`,
         },
         {
           label: "最终求解向量",

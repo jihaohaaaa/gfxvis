@@ -79,7 +79,7 @@ import MatrixDecompositionsDemo from "../../../components/demos/MatrixDecomposit
 
 当消元过程中遇到对角元 $a_{kk} = 0$（无法作为除数）或 $|a_{kk}|$ 极小（浮点舍入误差急剧放大）时，必须引入 **行交换置换矩阵（Permutation Matrix）$P$** ：
 $$P A = L U$$
-这就是工程数值库的标准实现：**列主元 LU 分解（LU with Partial Pivoting）** 。
+这就是工程数值库的标准实现：**列主元 LU 分解（LU with Partial Pivoting）**。置换矩阵的正交性 $P^{-1} = P^\top$、对称群同构与稀疏 Cholesky 填充最小化详见 [《置换矩阵》](/posts/linear-algebra/permutation-matrices)。
 
 ---
 

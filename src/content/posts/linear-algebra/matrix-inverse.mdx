@@ -221,18 +221,10 @@ $$
 - 曲线的**切线向量** $\mathbf{t} = (1, 1)^\top$ 变换后变为 $\mathbf{t}' = M\mathbf{t} = (2, 1)^\top$，依然完美贴合拉伸后的曲面；
 - 如果法线 $\mathbf{n} = (-1, 1)^\top$（原先满足 $\mathbf{t} \cdot \mathbf{n} = -1 + 1 = 0$）同样乘以 $M$，则变为 $\mathbf{n}_{wrong}' = (-2, 1)^\top$；
 - 检验它们的点积：$\mathbf{t}' \cdot \mathbf{n}_{wrong}' = (2)(-2) + (1)(1) = -3 \neq 0$！
-- **法线与曲面不再垂直！** 光照计算（如 Phong / PBR 着色）将产生严重的暗斑与光照撕裂。
-
-```
-        原始圆表面 (正交)                    非均匀拉伸后 (法线偏斜)
-              n (法线)                              n_wrong (直接用 M 变换)
-              ▲                                      ▲  (不再垂直!)
-              │                                     /
-        ──────┼──────► t (切线)               ──────┼──────► t' = M t (切线拉长)
-              │                                     │
-                                                    │  n_correct = (M⁻¹)ᵀ n (严格垂直)
-                                                    ▲
-```
+- **几何对比总结**：
+  - **原始表面（正交）**：$\mathbf{t} \cdot \mathbf{n} = 0$，法线与切平面严格垂直；
+  - **错误变换（直接乘以 $M$）**：$\mathbf{t}' \cdot (M\mathbf{n}) \neq 0$，法线发生倾斜畸变；
+  - **正确变换（乘以逆转置 $(M^{-1})^\top$）**：$\mathbf{t}' \cdot ((M^{-1})^\top \mathbf{n}) = (M\mathbf{t})^\top (M^{-1})^\top \mathbf{n} = \mathbf{t}^\top M^\top M^{-\top} \mathbf{n} = \mathbf{t}^\top \mathbf{n} = 0$，严格恢复几何正交性。
 
 ### 7.2 数学严格推导：法线变换矩阵的诞生
 
@@ -257,7 +249,7 @@ M^\top N = I \implies \boxed{N = (M^\top)^{-1} = (M^{-1})^\top}
 $$
 
 > [!TIP]
-> **法线矩阵黄金法则**：变换表面法线向量时，必须使用**模型矩阵左上角 $3\times3$ 子矩阵的逆转置矩阵（Inverse Transpose Matrix）** $(M^{-1})^\top$。若变换仅包含平移、旋转与等比均匀缩放，由于旋转是正交的 $(R^{-1})^\top = R$，法线才可直接乘以 $M$。
+> **法线矩阵与正交族群黄金法则**：变换表面法线向量时，必须使用**模型矩阵左上角 $3\times3$ 子矩阵的逆转置矩阵（Inverse Transpose Matrix）** $(M^{-1})^\top$。正交旋转矩阵 $R^{-1} = R^\top$ 与置换矩阵 $P^{-1} = P^\top$（详见 [《置换矩阵》](/posts/linear-algebra/permutation-matrices)）天然满足逆等于转置，求逆完全零计算开销且绝对数值稳定。
 
 ---
 

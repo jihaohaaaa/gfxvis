@@ -10,14 +10,14 @@ import { createControls } from "../../visualizations/core/3d/controls";
 import {
   type Vec3,
   type Quat,
-  type Mat3,
+  type Matrix3x3,
   length,
   normalize,
   axisAngleToQuat,
   slerp,
-  quatToMat3,
-  determinant3,
-  getCol3,
+  quatToMatrix3x3,
+  determinant3x3,
+  getColumn3,
 } from "@math";
 
 const PRESETS: PresetOption[] = [
@@ -49,12 +49,24 @@ const PRESETS: PresetOption[] = [
   },
 ];
 
-function mat3Lerp(m1: Mat3, m2: Mat3, t: number): Mat3 {
-  const res: number[] = new Array(9);
-  for (let i = 0; i < 9; i++) {
-    res[i] = (1 - t) * m1[i] + t * m2[i];
-  }
-  return res as Mat3;
+function matrix3x3Lerp(m1: Matrix3x3, m2: Matrix3x3, t: number): Matrix3x3 {
+  return [
+    [
+      (1 - t) * m1[0][0] + t * m2[0][0],
+      (1 - t) * m1[0][1] + t * m2[0][1],
+      (1 - t) * m1[0][2] + t * m2[0][2],
+    ],
+    [
+      (1 - t) * m1[1][0] + t * m2[1][0],
+      (1 - t) * m1[1][1] + t * m2[1][1],
+      (1 - t) * m1[1][2] + t * m2[1][2],
+    ],
+    [
+      (1 - t) * m1[2][0] + t * m2[2][0],
+      (1 - t) * m1[2][1] + t * m2[2][1],
+      (1 - t) * m1[2][2] + t * m2[2][2],
+    ],
+  ];
 }
 
 function fmt(n: number): string {
@@ -106,7 +118,7 @@ export default function QuaternionRotationDemo({
     };
   }, [baseQuat, isNegated]);
 
-  const currentMat = useMemo(() => quatToMat3(currentQuat), [currentQuat]);
+  const currentMat = useMemo(() => quatToMatrix3x3(currentQuat), [currentQuat]);
 
   // Interpolation endpoints: q1 = Identity, q2 = 180° rotation around (1, 1, 0)/√2
   const qStart: Quat = useMemo(() => ({ w: 1, x: 0, y: 0, z: 0 }), []);
@@ -119,15 +131,15 @@ export default function QuaternionRotationDemo({
     () => slerp(qStart, qEnd, tInterp),
     [qStart, qEnd, tInterp],
   );
-  const slerpMat = useMemo(() => quatToMat3(slerpQuat), [slerpQuat]);
+  const slerpMat = useMemo(() => quatToMatrix3x3(slerpQuat), [slerpQuat]);
 
-  const mStart = useMemo(() => quatToMat3(qStart), [qStart]);
-  const mEnd = useMemo(() => quatToMat3(qEnd), [qEnd]);
+  const mStart = useMemo(() => quatToMatrix3x3(qStart), [qStart]);
+  const mEnd = useMemo(() => quatToMatrix3x3(qEnd), [qEnd]);
   const lerpMat = useMemo(
-    () => mat3Lerp(mStart, mEnd, tInterp),
+    () => matrix3x3Lerp(mStart, mEnd, tInterp),
     [mStart, mEnd, tInterp],
   );
-  const lerpDet = useMemo(() => determinant3(lerpMat), [lerpMat]);
+  const lerpDet = useMemo(() => determinant3x3(lerpMat), [lerpMat]);
 
   // Handle Preset Switching
   const handlePreset = (val: string) => {
@@ -366,9 +378,9 @@ export default function QuaternionRotationDemo({
 
       // Convert Math Quaternion (w, x, y, z) where z-up to Three.js World Quaternion (y-up)
       // Math matrix -> World matrix
-      const c0 = getCol3(currentMat, 0);
-      const c1 = getCol3(currentMat, 1);
-      const c2 = getCol3(currentMat, 2);
+      const c0 = getColumn3(currentMat, 0);
+      const c1 = getColumn3(currentMat, 1);
+      const c2 = getColumn3(currentMat, 2);
       const [c0x, c0y, c0z] = mathToWorld(c0.x, c0.y, c0.z);
       const [c1x, c1y, c1z] = mathToWorld(c1.x, c1.y, c1.z);
       const [c2x, c2y, c2z] = mathToWorld(c2.x, c2.y, c2.z);
@@ -412,9 +424,9 @@ export default function QuaternionRotationDemo({
       // Interpolation Tab: SLERP (Left/Accent) vs Matrix LERP (Right/Orange)
       // 1. SLERP Model (Green/Emerald, Left side)
       const slerpCraft = createAircraftMesh(0x10b981, 1.0);
-      const s0 = getCol3(slerpMat, 0);
-      const s1 = getCol3(slerpMat, 1);
-      const s2 = getCol3(slerpMat, 2);
+      const s0 = getColumn3(slerpMat, 0);
+      const s1 = getColumn3(slerpMat, 1);
+      const s2 = getColumn3(slerpMat, 2);
       const [s0x, s0y, s0z] = mathToWorld(s0.x, s0.y, s0.z);
       const [s1x, s1y, s1z] = mathToWorld(s1.x, s1.y, s1.z);
       const [s2x, s2y, s2z] = mathToWorld(s2.x, s2.y, s2.z);
@@ -431,9 +443,9 @@ export default function QuaternionRotationDemo({
 
       // 2. Matrix LERP Model (Orange/Red, Right side - shows squeezing distortion)
       const lerpCraft = createAircraftMesh(0xf97316, 0.85);
-      const l0 = getCol3(lerpMat, 0);
-      const l1 = getCol3(lerpMat, 1);
-      const l2 = getCol3(lerpMat, 2);
+      const l0 = getColumn3(lerpMat, 0);
+      const l1 = getColumn3(lerpMat, 1);
+      const l2 = getColumn3(lerpMat, 2);
       const [l0x, l0y, l0z] = mathToWorld(l0.x, l0.y, l0.z);
       const [l1x, l1y, l1z] = mathToWorld(l1.x, l1.y, l1.z);
       const [l2x, l2y, l2z] = mathToWorld(l2.x, l2.y, l2.z);
@@ -689,12 +701,12 @@ export default function QuaternionRotationDemo({
                   <div className="flex items-center justify-between text-blue-500 font-bold">
                     <span>3. 等价 3×3 旋转矩阵 R(q) ∈ SO(3)</span>
                     <span className="text-[10px] text-muted">
-                      det(R) = {determinant3(currentMat).toFixed(2)}
+                      det(R) = {determinant3x3(currentMat).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-center overflow-x-auto py-1">
                     <InlineMath
-                      tex={`R = \\begin{pmatrix} ${fmt(currentMat[0])} & ${fmt(currentMat[3])} & ${fmt(currentMat[6])} \\\\ ${fmt(currentMat[1])} & ${fmt(currentMat[4])} & ${fmt(currentMat[7])} \\\\ ${fmt(currentMat[2])} & ${fmt(currentMat[5])} & ${fmt(currentMat[8])} \\end{pmatrix}`}
+                      tex={`R = \\begin{pmatrix} ${fmt(currentMat[0][0])} & ${fmt(currentMat[1][0])} & ${fmt(currentMat[2][0])} \\\\ ${fmt(currentMat[0][1])} & ${fmt(currentMat[1][1])} & ${fmt(currentMat[2][1])} \\\\ ${fmt(currentMat[0][2])} & ${fmt(currentMat[1][2])} & ${fmt(currentMat[2][2])} \\end{pmatrix}`}
                     />
                   </div>
                 </div>
@@ -781,7 +793,7 @@ export default function QuaternionRotationDemo({
                   <div className="flex justify-between mt-1">
                     <span className="text-muted">等价矩阵行列式 det(R)：</span>
                     <span className="font-bold text-emerald-500">
-                      {determinant3(slerpMat).toFixed(3)}
+                      {determinant3x3(slerpMat).toFixed(3)}
                     </span>
                   </div>
                 </div>

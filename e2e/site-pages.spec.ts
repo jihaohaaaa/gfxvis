@@ -78,4 +78,42 @@ test.describe("网站通用页面 E2E 测试 (首页 / 关于 / 文章列表 / �
     const count = await postCards.count();
     expect(count).toBeGreaterThan(0);
   });
+
+  test("全站所有文章页面 KaTeX 语法无错误断言 (Zero .katex-error)", async ({
+    page,
+  }) => {
+    const postUrls = [
+      "/posts/calculus/curves-and-surfaces",
+      "/posts/calculus/derivative-gradient-jacobian",
+      "/posts/calculus/derivatives-and-tangent-spaces",
+      "/posts/calculus/fields-and-operators",
+      "/posts/linear-algebra/basis-coordinate-change-of-basis",
+      "/posts/linear-algebra/dual-spaces-and-linear-functionals",
+      "/posts/linear-algebra/eigenvalues-and-eigenvectors",
+      "/posts/linear-algebra/four-fundamental-subspaces",
+      "/posts/linear-algebra/gram-matrix",
+      "/posts/linear-algebra/inner-product-spaces",
+      "/posts/linear-algebra/least-squares",
+      "/posts/linear-algebra/linear-combination-independence",
+      "/posts/linear-algebra/matrix-decompositions",
+      "/posts/linear-algebra/matrix-fundamentals-linear-mappings",
+      "/posts/linear-algebra/matrix-inverse",
+      "/posts/linear-algebra/matrix-rank-column-row-space",
+      "/posts/linear-algebra/permutation-matrices",
+      "/posts/linear-algebra/projection-operators",
+      "/posts/linear-algebra/quaternions-rotations-and-so3",
+      "/posts/linear-algebra/rotation-so3-view-transform",
+      "/posts/linear-algebra/singular-value-decomposition",
+      "/posts/linear-algebra/trace-and-determinant",
+    ];
+
+    for (const url of postUrls) {
+      await page.goto(url);
+      await page.waitForLoadState("domcontentloaded");
+      const errors = page.locator(".katex-error");
+      await expect(errors, `页面 ${url} 不应包含 KaTeX 解析错误`).toHaveCount(
+        0,
+      );
+    }
+  });
 });

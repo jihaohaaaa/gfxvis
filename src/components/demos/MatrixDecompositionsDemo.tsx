@@ -10,11 +10,11 @@ import {
   type Bounds2,
 } from "../../visualizations/core/2d/plot2d";
 import {
-  type Mat2,
-  mat2Vec,
-  mat2Mul,
-  transpose2,
-  determinant2,
+  type Matrix2x2,
+  multiplyMatrix2x2Vector2,
+  multiplyMatrix2x2,
+  transpose2x2,
+  determinant2x2,
   lu2x2,
   qr2x2,
   polar2x2,
@@ -62,12 +62,14 @@ function fmt(n: number, d = 2): string {
   return v.toFixed(d);
 }
 
-function interpolateMat2(m1: Mat2, m2: Mat2, t: number): Mat2 {
+function interpolateMatrix2x2(
+  m1: Matrix2x2,
+  m2: Matrix2x2,
+  t: number,
+): Matrix2x2 {
   return [
-    mix(m1[0], m2[0], t),
-    mix(m1[1], m2[1], t),
-    mix(m1[2], m2[2], t),
-    mix(m1[3], m2[3], t),
+    [mix(m1[0][0], m2[0][0], t), mix(m1[0][1], m2[0][1], t)],
+    [mix(m1[1][0], m2[1][0], t), mix(m1[1][1], m2[1][1], t)],
   ];
 }
 
@@ -77,7 +79,10 @@ export default function MatrixDecompositionsDemo({
   height?: string;
 }) {
   const [activeTab, setActiveTab] = useState<DecompTab>("polar");
-  const [matrix, setMatrix] = useState<Mat2>([1.5, 0.4, 0.8, 1.2]); // [a, c, b, d]
+  const [matrix, setMatrix] = useState<Matrix2x2>([
+    [1.5, 0.4],
+    [0.8, 1.2],
+  ]); // [col0=[a, c], col1=[b, d]]
   const [presetKey, setPresetKey] = useState<string>("general_transform");
   const [progress, setProgress] = useState<number>(1.0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -88,50 +93,56 @@ export default function MatrixDecompositionsDemo({
   const qr = useMemo(() => qr2x2(matrix), [matrix]);
   const polar = useMemo(() => polar2x2(matrix), [matrix]);
   const svd = useMemo(() => svd2x2(matrix), [matrix]);
-  const detA = useMemo(() => determinant2(matrix), [matrix]);
+  const detA = useMemo(() => determinant2x2(matrix), [matrix]);
   const condNum = useMemo(() => {
     return svd.sigma2 > 1e-6 ? svd.sigma1 / svd.sigma2 : Infinity;
   }, [svd]);
 
-  const currentTransform = useMemo<Mat2>(() => {
-    const I: Mat2 = [1, 0, 0, 1];
+  const currentTransform = useMemo<Matrix2x2>(() => {
+    const I: Matrix2x2 = [
+      [1, 0],
+      [0, 1],
+    ];
     const t = Math.max(0, Math.min(1, progress));
 
     if (activeTab === "lu") {
       if (t <= 0.5) {
-        return interpolateMat2(I, lu.U, t * 2);
+        return interpolateMatrix2x2(I, lu.U, t * 2);
       } else {
-        const currentL = interpolateMat2(I, lu.L, (t - 0.5) * 2);
-        return mat2Mul(currentL, lu.U);
+        const currentL = interpolateMatrix2x2(I, lu.L, (t - 0.5) * 2);
+        return multiplyMatrix2x2(currentL, lu.U);
       }
     } else if (activeTab === "qr") {
       if (t <= 0.5) {
-        return interpolateMat2(I, qr.R, t * 2);
+        return interpolateMatrix2x2(I, qr.R, t * 2);
       } else {
-        const currentQ = interpolateMat2(I, qr.Q, (t - 0.5) * 2);
-        return mat2Mul(currentQ, qr.R);
+        const currentQ = interpolateMatrix2x2(I, qr.Q, (t - 0.5) * 2);
+        return multiplyMatrix2x2(currentQ, qr.R);
       }
     } else if (activeTab === "polar") {
       if (t <= 0.5) {
-        return interpolateMat2(I, polar.P, t * 2);
+        return interpolateMatrix2x2(I, polar.P, t * 2);
       } else {
-        const currentQ = interpolateMat2(I, polar.Q, (t - 0.5) * 2);
-        return mat2Mul(currentQ, polar.P);
+        const currentQ = interpolateMatrix2x2(I, polar.Q, (t - 0.5) * 2);
+        return multiplyMatrix2x2(currentQ, polar.P);
       }
     } else {
-      const VT = transpose2(svd.V);
-      const Sigma: Mat2 = [svd.sigma1, 0, 0, svd.sigma2];
+      const VT = transpose2x2(svd.V);
+      const Sigma: Matrix2x2 = [
+        [svd.sigma1, 0],
+        [0, svd.sigma2],
+      ];
       if (t <= 0.333) {
         const subT = t / 0.333;
-        return interpolateMat2(I, VT, subT);
+        return interpolateMatrix2x2(I, VT, subT);
       } else if (t <= 0.666) {
         const subT = (t - 0.333) / 0.333;
-        const currentSigma = interpolateMat2(I, Sigma, subT);
-        return mat2Mul(currentSigma, VT);
+        const currentSigma = interpolateMatrix2x2(I, Sigma, subT);
+        return multiplyMatrix2x2(currentSigma, VT);
       } else {
         const subT = (t - 0.666) / 0.334;
-        const currentU = interpolateMat2(I, svd.U, subT);
-        return mat2Mul(currentU, mat2Mul(Sigma, VT));
+        const currentU = interpolateMatrix2x2(I, svd.U, subT);
+        return multiplyMatrix2x2(currentU, multiplyMatrix2x2(Sigma, VT));
       }
     }
   }, [activeTab, progress, matrix, lu, qr, polar, svd]);
@@ -151,17 +162,32 @@ export default function MatrixDecompositionsDemo({
     setProgress(1.0);
     setIsPlaying(false);
     if (val === "general_transform") {
-      setMatrix([1.5, 0.4, 0.8, 1.2]);
+      setMatrix([
+        [1.5, 0.4],
+        [0.8, 1.2],
+      ]);
     } else if (val === "pure_rotation_45") {
       const c = Math.cos(Math.PI / 4);
       const s = Math.sin(Math.PI / 4);
-      setMatrix([c, s, -s, c]);
+      setMatrix([
+        [c, s],
+        [-s, c],
+      ]);
     } else if (val === "symmetric_spd") {
-      setMatrix([1.8, 0.6, 0.6, 1.2]);
+      setMatrix([
+        [1.8, 0.6],
+        [0.6, 1.2],
+      ]);
     } else if (val === "anisotropic_shear") {
-      setMatrix([1.0, 0.0, 1.2, 1.0]);
+      setMatrix([
+        [1.0, 0.0],
+        [1.2, 1.0],
+      ]);
     } else if (val === "near_singular") {
-      setMatrix([1.5, 1.5, 1.4, 1.6]);
+      setMatrix([
+        [1.5, 1.5],
+        [1.4, 1.6],
+      ]);
     }
   };
 
@@ -217,8 +243,8 @@ export default function MatrixDecompositionsDemo({
         const range = 2.5;
 
         for (let y = -range; y <= range + 1e-4; y += step) {
-          const pStart = mat2Vec(M, { x: -range, y });
-          const pEnd = mat2Vec(M, { x: range, y });
+          const pStart = multiplyMatrix2x2Vector2(M, { x: -range, y });
+          const pEnd = multiplyMatrix2x2Vector2(M, { x: range, y });
           const sx1 = plot.toScreenX(pStart.x);
           const sy1 = plot.toScreenY(pStart.y);
           const sx2 = plot.toScreenX(pEnd.x);
@@ -230,8 +256,8 @@ export default function MatrixDecompositionsDemo({
         }
 
         for (let x = -range; x <= range + 1e-4; x += step) {
-          const pStart = mat2Vec(M, { x, y: -range });
-          const pEnd = mat2Vec(M, { x, y: range });
+          const pStart = multiplyMatrix2x2Vector2(M, { x, y: -range });
+          const pEnd = multiplyMatrix2x2Vector2(M, { x, y: range });
           const sx1 = plot.toScreenX(pStart.x);
           const sy1 = plot.toScreenY(pStart.y);
           const sx2 = plot.toScreenX(pEnd.x);
@@ -268,7 +294,10 @@ export default function MatrixDecompositionsDemo({
         ctx.beginPath();
         for (let i = 0; i <= numSegments; i++) {
           const theta = (i / numSegments) * Math.PI * 2;
-          const pt = mat2Vec(M, { x: Math.cos(theta), y: Math.sin(theta) });
+          const pt = multiplyMatrix2x2Vector2(M, {
+            x: Math.cos(theta),
+            y: Math.sin(theta),
+          });
           const sx = plot.toScreenX(pt.x);
           const sy = plot.toScreenY(pt.y);
           if (i === 0) ctx.moveTo(sx, sy);
@@ -280,8 +309,8 @@ export default function MatrixDecompositionsDemo({
       }
 
       // 3. Draw Transformed Basis Vectors
-      const v1 = mat2Vec(M, { x: 1, y: 0 });
-      const v2 = mat2Vec(M, { x: 0, y: 1 });
+      const v1 = multiplyMatrix2x2Vector2(M, { x: 1, y: 0 });
+      const v2 = multiplyMatrix2x2Vector2(M, { x: 0, y: 1 });
 
       const drawArrow = (
         toX: number,
@@ -513,45 +542,45 @@ export default function MatrixDecompositionsDemo({
               <div className="grid grid-cols-2 gap-2">
                 <ParamSlider
                   label="a₁₁"
-                  value={matrix[0]}
+                  value={matrix[0][0]}
                   min={-2.5}
                   max={2.5}
                   step={0.1}
                   onChange={(v) => {
-                    setMatrix([v, matrix[1], matrix[2], matrix[3]]);
+                    setMatrix([[v, matrix[0][1]], matrix[1]]);
                     setPresetKey("custom");
                   }}
                 />
                 <ParamSlider
                   label="a₁₂"
-                  value={matrix[2]}
+                  value={matrix[1][0]}
                   min={-2.5}
                   max={2.5}
                   step={0.1}
                   onChange={(v) => {
-                    setMatrix([matrix[0], matrix[1], v, matrix[3]]);
+                    setMatrix([matrix[0], [v, matrix[1][1]]]);
                     setPresetKey("custom");
                   }}
                 />
                 <ParamSlider
                   label="a₂₁"
-                  value={matrix[1]}
+                  value={matrix[0][1]}
                   min={-2.5}
                   max={2.5}
                   step={0.1}
                   onChange={(v) => {
-                    setMatrix([matrix[0], v, matrix[2], matrix[3]]);
+                    setMatrix([[matrix[0][0], v], matrix[1]]);
                     setPresetKey("custom");
                   }}
                 />
                 <ParamSlider
                   label="a₂₂"
-                  value={matrix[3]}
+                  value={matrix[1][1]}
                   min={-2.5}
                   max={2.5}
                   step={0.1}
                   onChange={(v) => {
-                    setMatrix([matrix[0], matrix[1], matrix[2], v]);
+                    setMatrix([matrix[0], [matrix[1][0], v]]);
                     setPresetKey("custom");
                   }}
                 />
@@ -567,7 +596,7 @@ export default function MatrixDecompositionsDemo({
                   </div>
                   <div className="flex flex-col gap-1 justify-center py-1">
                     <InlineMath
-                      tex={`L = \\begin{pmatrix} 1 & 0 \\\\ ${fmt(lu.L[1])} & 1 \\end{pmatrix},\\quad U = \\begin{pmatrix} ${fmt(lu.U[0])} & ${fmt(lu.U[2])} \\\\ 0 & ${fmt(lu.U[3])} \\end{pmatrix}`}
+                      tex={`L = \\begin{pmatrix} 1 & 0 \\\\ ${fmt(lu.L[0][1])} & 1 \\end{pmatrix},\\quad U = \\begin{pmatrix} ${fmt(lu.U[0][0])} & ${fmt(lu.U[1][0])} \\\\ 0 & ${fmt(lu.U[1][1])} \\end{pmatrix}`}
                     />
                   </div>
                   <p className="text-[11px] text-muted font-sans pt-1">
@@ -588,7 +617,7 @@ export default function MatrixDecompositionsDemo({
                   </div>
                   <div className="flex flex-col gap-1 justify-center py-1">
                     <InlineMath
-                      tex={`Q = \\begin{pmatrix} ${fmt(qr.Q[0])} & ${fmt(qr.Q[2])} \\\\ ${fmt(qr.Q[1])} & ${fmt(qr.Q[3])} \\end{pmatrix},\\quad R = \\begin{pmatrix} ${fmt(qr.R[0])} & ${fmt(qr.R[2])} \\\\ 0 & ${fmt(qr.R[3])} \\end{pmatrix}`}
+                      tex={`Q = \\begin{pmatrix} ${fmt(qr.Q[0][0])} & ${fmt(qr.Q[1][0])} \\\\ ${fmt(qr.Q[0][1])} & ${fmt(qr.Q[1][1])} \\end{pmatrix},\\quad R = \\begin{pmatrix} ${fmt(qr.R[0][0])} & ${fmt(qr.R[1][0])} \\\\ 0 & ${fmt(qr.R[1][1])} \\end{pmatrix}`}
                     />
                   </div>
                   <p className="text-[11px] text-muted font-sans pt-1">
@@ -612,7 +641,7 @@ export default function MatrixDecompositionsDemo({
                   </div>
                   <div className="flex flex-col gap-1 justify-center py-1">
                     <InlineMath
-                      tex={`Q = \\begin{pmatrix} ${fmt(polar.Q[0])} & ${fmt(polar.Q[2])} \\\\ ${fmt(polar.Q[1])} & ${fmt(polar.Q[3])} \\end{pmatrix},\\quad P = \\begin{pmatrix} ${fmt(polar.P[0])} & ${fmt(polar.P[2])} \\\\ ${fmt(polar.P[1])} & ${fmt(polar.P[3])} \\end{pmatrix}`}
+                      tex={`Q = \\begin{pmatrix} ${fmt(polar.Q[0][0])} & ${fmt(polar.Q[1][0])} \\\\ ${fmt(polar.Q[0][1])} & ${fmt(polar.Q[1][1])} \\end{pmatrix},\\quad P = \\begin{pmatrix} ${fmt(polar.P[0][0])} & ${fmt(polar.P[1][0])} \\\\ ${fmt(polar.P[0][1])} & ${fmt(polar.P[1][1])} \\end{pmatrix}`}
                     />
                   </div>
                   <p className="text-[11px] text-muted font-sans pt-1">

@@ -44,6 +44,10 @@
 - 3D 交互统一走共享层:`core/viewer3d.ts`(renderer/camera/controls/resize/主题/清理)与 `core/3d/gizmo3d.ts` / `core/3d/drag3d.ts`(raycast 拖拽,拖拽时禁用 controls);3D 场景的坐标由 `core/3d/coords.ts` 的 `mathToWorld` 唯一映射。
 - 每个 demo 自带"坐标轴"开关(默认开启):2D 用 `drawAxes`(含刻度 / 网格),3D 用 `core/3d/axes3d.ts` 的彩色轴线组(x 红 / y 绿 / z 蓝),scene API 提供 `setAxesVisible(v)`。
 - 交互区增强:每个 demo 由 `ExpandableDemo` 包裹,右上角"展开"进入伪全屏固定浮层(非 Fullscreen API),× 关闭恢复;同一实例状态保留;画布高度用 CSS 变量 `--demo-height`(默认 2D 20rem / 3D 28rem,展开 70vh)。
+  - **CanvasToolbar 放置规范（严防 UI 重叠）**:
+    - `<CanvasToolbar>` **必须且只能**作为 Canvas 画布容器（具备 `relative overflow-hidden` 类）的**直接子元素**，严禁放置在外部的 Card/Flex 顶层容器中；
+    - 画布容器高度必须绑定 `h-[var(--demo-height,28rem)]`（2D 为 `20rem`），确保 S/M/L 预设与拖拽缩放正常工作；
+    - 严禁在 Demo 顶部控制栏自制重复的“复位”或“关闭/全屏”按钮，统一由 `CanvasToolbar`（画布视野复位 + 展开）与 `ExpandableDemo`（全局模态关闭）分别承载。
 - 3D 曲面默认半透明(opacity≈0.55、depthWrite=false)并带开关,保证箭头/标记可见;切换时同步 transparent/opacity/depthWrite。
 - 主题:2D 用 `watchTheme` 触发重绘;3D 监听 `html` 的 class 变化,重设 `setClearColor` 并重渲;颜色从 CSS 变量读取(`readThemeColors`),禁止硬编码。
 - 数值微分统一走 `core/common/math.ts`(中心差分:梯度 / 散度 / 旋度),默认步长 h = 1e-4。

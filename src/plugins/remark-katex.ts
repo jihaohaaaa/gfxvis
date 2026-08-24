@@ -74,10 +74,16 @@ function nodeToHtml(node: unknown, settings: RemarkKatexOptions): string {
       return katex.renderToString(n.value ?? "", {
         ...settings,
         displayMode: false,
-        throwOnError: false,
+        throwOnError: true,
       });
-    } catch {
-      return escapeHtml(n.value ?? "");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `[KaTeX Heading Syntax Error] Failed to render LaTeX formula in heading:\n` +
+          `Formula: ${n.value}\n` +
+          `KaTeX Error: ${message}`,
+        { cause: error },
+      );
     }
   }
   if (n.type === "html") {
@@ -176,17 +182,13 @@ export default function remarkKatex(
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        fileData?.message?.(`Could not render math with KaTeX: ${message}`);
-        try {
-          html = katex.renderToString(value, {
-            ...settings,
-            displayMode,
-            strict: "ignore",
-            throwOnError: false,
-          });
-        } catch {
-          html = `<span class="katex-error" style="color:${settings.errorColor ?? "#cc0000"}" title="${escapeHtml(message)}">${escapeHtml(value)}</span>`;
-        }
+        const filePath = (file as { path?: string })?.path ?? "unknown file";
+        throw new Error(
+          `[KaTeX Syntax Error] Failed to render LaTeX formula in ${filePath}:\n` +
+            `Formula: ${value}\n` +
+            `KaTeX Error: ${message}`,
+          { cause: error },
+        );
       }
 
       node.type = "html";

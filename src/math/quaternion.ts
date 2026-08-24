@@ -2,8 +2,8 @@
  * GLM-styled Quaternion interface, operations, transformations, and SLERP.
  */
 
-import { type Vec3, normalize } from "./vector.ts";
-import type { Mat3 } from "./matrix.ts";
+import { type Vec3, normalize } from "./vector";
+import type { Matrix3x3 } from "./matrix";
 
 export interface Quat {
   w: number;
@@ -87,20 +87,12 @@ export function quatToAxisAngle(q: Quat): { axis: Vec3; angleDeg: number } {
 }
 
 /** Convert unit quaternion to 3x3 Column-Major rotation matrix */
-export function quatToMat3(q: Quat): Mat3 {
+export function quatToMatrix3x3(q: Quat): Matrix3x3 {
   const { w, x, y, z } = quatNormalize(q);
   return [
-    1 - 2 * (y * y + z * z),
-    2 * (x * y + z * w),
-    2 * (x * z - y * w),
-
-    2 * (x * y - z * w),
-    1 - 2 * (x * x + z * z),
-    2 * (y * z + x * w),
-
-    2 * (x * z + y * w),
-    2 * (y * z - x * w),
-    1 - 2 * (x * x + y * y),
+    [1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w)],
+    [2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w)],
+    [2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y)],
   ];
 }
 
