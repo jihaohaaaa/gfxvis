@@ -32,33 +32,41 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
     await expect(page.locator("h1").first()).toContainText("GFXVis");
   });
 
-  test("滚动超过阈值后回到顶部按钮自动浮现，点击后平滑回到顶部", async ({
+  test("回到顶部按钮作为主锚点常驻，鼠标靠近半展开，悬停全展开并可点击回到顶部", async ({
     page,
   }) => {
     await page.goto("/posts/linear-algebra/inner-product-spaces");
     await page.waitForLoadState("domcontentloaded");
 
     const backToTopBtn = page.locator("#back-to-top");
-    // 初始在页面顶部，按钮应处于不可见状态
-    await expect(backToTopBtn).toHaveClass(/invisible|opacity-0/);
-
-    // 2. 向下滚动 1000px
-    await page.evaluate(() => window.scrollTo(0, 1000));
-    await page.waitForTimeout(400);
-
-    // 未悬停时，回到顶部按钮保持收起折叠
-    await expect(backToTopBtn).toHaveClass(/invisible|opacity-0/);
-
-    // 3. 鼠标移至右下角悬浮操作组 -> 回到顶部按钮平滑向上展开浮现
+    const focusBtn = page.locator("#focus-toggle");
     const floatingActions = page.locator("#floating-actions");
+
+    // 1. 初始在页面顶部，回到顶部主按钮默认存在
+    await expect(backToTopBtn).toBeVisible();
+    await expect(floatingActions).toHaveAttribute("data-state", "collapsed");
+
+    // 2. 向下滚动 1000px -> 回到顶部按钮高亮激活
+    await page.evaluate(() => window.scrollTo(0, 1000));
+    await page.waitForTimeout(300);
+    await expect(backToTopBtn).toHaveClass(/text-accent|opacity-100/);
+
+    // 3. 鼠标移动到右下角附近 (~100px 处) -> 触发半展开 peek 状态
+    const box = await floatingActions.boundingBox();
+    if (box) {
+      // 移动到卡片左上方 70px 处
+      await page.mouse.move(box.x - 70, box.y - 70);
+      await page.waitForTimeout(200);
+      await expect(floatingActions).toHaveAttribute("data-state", "peek");
+    }
+
+    // 4. 鼠标直接移入卡片本体 -> 触发全展开 expanded 状态
     await floatingActions.hover();
     await page.waitForTimeout(200);
+    await expect(floatingActions).toHaveAttribute("data-state", "expanded");
+    await expect(focusBtn).toBeVisible();
 
-    // 展开后按钮可见
-    await expect(backToTopBtn).toBeVisible();
-    await expect(backToTopBtn).toHaveClass(/opacity-100/);
-
-    // 4. 点击回到顶部按钮
+    // 5. 点击回到顶部按钮
     await backToTopBtn.click();
     await page.waitForTimeout(600);
 
@@ -66,7 +74,7 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
     let scrollY = await page.evaluate(() => window.scrollY);
     expect(scrollY).toBeLessThan(100);
 
-    // 5. 测试核心功能：点击浏览器后退，能够自动平滑返回刚才阅读的 1000px 位置
+    // 6. 测试核心功能：点击浏览器后退，能够自动平滑返回刚才阅读的 1000px 位置
     await page.goBack();
     await page.waitForTimeout(600);
 
@@ -124,9 +132,13 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
 
     // 1. 初始在顶部，Header 正常显现
     await expect(header).toHaveClass(/translate-y-0/);
+
+    // 2. 悬停展开悬浮卡片并点击 Focus 按钮 -> 开启专注模式
+    const floatingActions = page.locator("#floating-actions");
+    await floatingActions.hover();
+    await page.waitForTimeout(200);
     await expect(focusBtn).toBeVisible();
 
-    // 2. 点击 Focus 按钮 -> 开启专注模式
     await focusBtn.click();
     await page.waitForTimeout(200);
 
@@ -144,7 +156,11 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
       /-translate-y-28|-translate-y-24|-translate-y-full/,
     );
 
-    // 4. 再次点击 Focus 按钮 -> 退出专注模式
+    // 4. 再次移回右下角悬浮卡片并点击 Focus 按钮 -> 退出专注模式
+    await floatingActions.hover();
+    await page.waitForTimeout(200);
+    await expect(focusBtn).toBeVisible();
+
     await focusBtn.click();
     await page.waitForTimeout(200);
 
@@ -152,8 +168,10 @@ test.describe("导航体验与回到顶部 UX E2E 测试", () => {
     await expect(header).toHaveClass(/translate-y-0/);
     await expect(focusBtn).toHaveAttribute("aria-pressed", "false");
 
-    // 5. 鼠标离开 Focus 按钮区域，等待保底展示时间 (MIN_TOAST_DURATION = 800ms) 过后 Toast 顺滑收起消失
+    // 5. 鼠标离开悬浮卡片区域，验证卡片立即失去焦点并自动收起为 collapsed
     await page.mouse.move(100, 100);
+    await page.waitForTimeout(200);
+    await expect(floatingActions).toHaveAttribute("data-state", "collapsed");
     await expect(focusToast).toHaveClass(/opacity-0/, { timeout: 2000 });
   });
 });

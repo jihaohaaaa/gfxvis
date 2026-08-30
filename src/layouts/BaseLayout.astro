@@ -43,16 +43,40 @@ const {
       <Footer />
     </div>
 
-    <!-- Floating Action Card: Collapsed compact card by default, expands upward on hover -->
+    <!-- Floating Action Card: Back to top is main anchor, Focus Mode expands upward on proximity / hover -->
     <div
       id="floating-actions"
-      class="group fixed bottom-6 right-6 z-40 flex flex-col-reverse items-center rounded-2xl border border-border/80 bg-surface/90 p-1 shadow-lg backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-accent/40 hover:bg-surface/98 hover:shadow-2xl hover:p-1.5 hover:gap-1 select-none"
+      data-state="collapsed"
+      class="group fixed bottom-6 right-6 z-40 flex flex-col-reverse items-center rounded-2xl border border-border/80 bg-surface/90 p-1 shadow-lg backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none hover:border-accent/40 hover:bg-surface/98 hover:shadow-2xl data-[state=peek]:border-accent/30 data-[state=peek]:bg-surface/95 data-[state=peek]:p-1.5 data-[state=peek]:gap-1 data-[state=expanded]:border-accent/40 data-[state=expanded]:bg-surface/98 data-[state=expanded]:shadow-2xl data-[state=expanded]:p-1.5 data-[state=expanded]:gap-1"
     >
-      <!-- Focus Mode toggle button (Main Anchor) -->
+      <!-- Back to top floating button (Main Anchor) -->
+      <button
+        id="back-to-top"
+        type="button"
+        class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-muted/70 transition-all duration-200 hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/50 active:scale-90"
+        aria-label="回到顶部"
+        title="回到顶部"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m18 15-6-6-6 6"></path>
+        </svg>
+      </button>
+
+      <!-- Focus Mode toggle button (Expandable upward item) -->
       <button
         id="focus-toggle"
         type="button"
-        class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-muted transition-all duration-200 hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/50 active:scale-90"
+        class="pointer-events-none invisible h-0 w-9 opacity-0 translate-y-3 scale-75 overflow-hidden flex cursor-pointer items-center justify-center rounded-xl text-muted transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/50 active:scale-90 group-data-[state=peek]:visible group-data-[state=peek]:h-6 group-data-[state=peek]:opacity-60 group-data-[state=peek]:translate-y-1 group-data-[state=peek]:scale-90 group-data-[state=expanded]:pointer-events-auto group-data-[state=expanded]:visible group-data-[state=expanded]:h-9 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:translate-y-0 group-data-[state=expanded]:scale-100"
         aria-label="进入专注模式 (隐藏顶栏)"
         aria-pressed="false"
         title="进入专注模式 (隐藏顶栏)"
@@ -87,29 +111,6 @@ const {
           <path
             d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"
           ></path>
-        </svg>
-      </button>
-
-      <!-- Back to top floating button (Card item expanding upward) -->
-      <button
-        id="back-to-top"
-        type="button"
-        class="pointer-events-none invisible h-0 w-9 opacity-0 translate-y-2 scale-90 overflow-hidden flex cursor-pointer items-center justify-center rounded-xl text-muted transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent/15 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/50 active:scale-90"
-        aria-label="回到顶部"
-        title="回到顶部"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="m18 15-6-6-6 6"></path>
         </svg>
       </button>
     </div>

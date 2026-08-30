@@ -1,9 +1,6 @@
 /**
- * Client-side back-to-top button controller with Apple-style damped smooth scrolling.
- * - Distance-adaptive duration (600ms~950ms) for natural glide physics across any scroll distance.
- * - Ultra-soft easeOutQuart decelerating curve for seamless, buttery landings.
- * - User-interruption safe: immediately yields control on mousewheel, touchmove, or keydown.
- * - Records reading progress on scroll-to-top and smoothly glides back on browser "Back" navigation.
+ * Client-side back-to-top button controller with Apple-style damped smooth scrolling
+ * and two-stage proximity sensing (peek when near, expand on direct hover).
  */
 
 interface ScrollHistoryState {
@@ -81,53 +78,77 @@ export function smoothScrollTo(targetY: number, customDuration?: number): void {
 export function setupScrollTop(): void {
   const btn = document.getElementById("back-to-top");
   const container = document.getElementById("floating-actions");
-  if (!btn) return;
+  if (!btn || !container) return;
 
-  let isScrolled = false;
-  let isHovered = false;
+  let isFocused = false;
+  let isDirectHovered = false;
 
-  const syncState = () => {
-    if (isScrolled && isHovered) {
-      btn.classList.remove(
-        "invisible",
-        "pointer-events-none",
-        "h-0",
-        "opacity-0",
-        "translate-y-2",
-        "scale-90",
-      );
-      btn.classList.add(
-        "visible",
-        "pointer-events-auto",
-        "h-9",
-        "opacity-100",
-        "translate-y-0",
-        "scale-100",
-      );
-    } else {
-      btn.classList.remove(
-        "visible",
-        "pointer-events-auto",
-        "h-9",
-        "opacity-100",
-        "translate-y-0",
-        "scale-100",
-      );
-      btn.classList.add(
-        "invisible",
-        "pointer-events-none",
-        "h-0",
-        "opacity-0",
-        "translate-y-2",
-        "scale-90",
-      );
+  const updateCardState = (state: "collapsed" | "peek" | "expanded") => {
+    if (container.dataset.state !== state) {
+      container.dataset.state = state;
     }
   };
 
+  // Distance-based Proximity Sensing (~135px radius for peek, inside rect for expanded)
+  const handlePointerMove = (e: PointerEvent) => {
+    if (isFocused || isDirectHovered) {
+      updateCardState("expanded");
+      return;
+    }
+
+    const rect = container.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+
+    // Direct proximity or inside bounds
+    if (
+      e.clientX >= rect.left - 8 &&
+      e.clientX <= rect.right + 8 &&
+      e.clientY >= rect.top - 8 &&
+      e.clientY <= rect.bottom + 8
+    ) {
+      updateCardState("expanded");
+    } else if (dist <= 135) {
+      updateCardState("peek");
+    } else {
+      updateCardState("collapsed");
+    }
+  };
+
+  window.addEventListener("pointermove", handlePointerMove, { passive: true });
+  document.addEventListener("mouseleave", () => {
+    if (!isFocused) updateCardState("collapsed");
+  });
+
+  // Direct hover & focus state handling
+  container.addEventListener("mouseenter", () => {
+    isDirectHovered = true;
+    updateCardState("expanded");
+  });
+  container.addEventListener("mouseleave", () => {
+    isDirectHovered = false;
+  });
+  container.addEventListener("focusin", () => {
+    isFocused = true;
+    updateCardState("expanded");
+  });
+  container.addEventListener("focusout", () => {
+    isFocused = false;
+    updateCardState("collapsed");
+  });
+
+  // Scroll threshold styling
   let ticking = false;
-  const updateVisibility = () => {
-    isScrolled = window.scrollY > 350;
-    syncState();
+  const updateScrollState = () => {
+    const isScrolled = window.scrollY > 300;
+    if (isScrolled) {
+      btn.classList.add("text-accent", "opacity-100");
+      btn.classList.remove("text-muted/70", "opacity-70");
+    } else {
+      btn.classList.remove("text-accent", "opacity-100");
+      btn.classList.add("text-muted/70", "opacity-70");
+    }
     ticking = false;
   };
 
@@ -135,34 +156,17 @@ export function setupScrollTop(): void {
     "scroll",
     () => {
       if (!ticking) {
-        window.requestAnimationFrame(updateVisibility);
+        window.requestAnimationFrame(updateScrollState);
         ticking = true;
       }
     },
     { passive: true },
   );
 
-  if (container) {
-    container.addEventListener("mouseenter", () => {
-      isHovered = true;
-      syncState();
-    });
-    container.addEventListener("mouseleave", () => {
-      isHovered = false;
-      syncState();
-    });
-    container.addEventListener("focusin", () => {
-      isHovered = true;
-      syncState();
-    });
-    container.addEventListener("focusout", () => {
-      isHovered = false;
-      syncState();
-    });
-  }
-
   btn.addEventListener("click", (e) => {
     e.preventDefault();
+    btn.blur();
+    isFocused = false;
     const currentY = window.scrollY;
 
     if (currentY > 100 && window.history) {
@@ -186,7 +190,7 @@ export function setupScrollTop(): void {
   });
 
   // Initial check on load
-  updateVisibility();
+  updateScrollState();
 }
 
 if (document.readyState === "loading") {

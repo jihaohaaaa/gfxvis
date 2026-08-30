@@ -144,6 +144,7 @@ export function setupFocusMode(): void {
   btn.addEventListener("click", () => {
     isCursorOnControl = true;
     toggleFocusMode();
+    btn.blur();
   });
 
   btn.addEventListener("mouseenter", handleCursorEnter);
