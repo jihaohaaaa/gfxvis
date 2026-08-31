@@ -94,7 +94,7 @@ test.describe("网站通用页面 E2E 测试 (首页 / 关于 / 文章列表 / �
       "/posts/linear-algebra/gram-matrix",
       "/posts/linear-algebra/inner-product-spaces",
       "/posts/linear-algebra/least-squares",
-      "/posts/linear-algebra/linear-combination-independence",
+      "/posts/linear-algebra/abstract-vector-spaces-and-linear-maps",
       "/posts/linear-algebra/matrix-decompositions",
       "/posts/linear-algebra/matrix-fundamentals-linear-mappings",
       "/posts/linear-algebra/matrix-inverse",

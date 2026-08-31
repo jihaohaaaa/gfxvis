@@ -1,10 +1,12 @@
-import http from "node:http";
-import fs from "node:fs";
-import path from "node:path";
+import { createServer } from "node:http";
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
+import type { Stats } from "node:fs";
+import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const distDir = path.resolve(__dirname, "../dist");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const distDir = resolve(__dirname, "../dist");
 const port = parseInt(process.env.PORT || "51731", 10);
 
 const MIME_TYPES: Record<string, string> = {
@@ -22,7 +24,15 @@ const MIME_TYPES: Record<string, string> = {
   ".txt": "text/plain; charset=utf-8",
 };
 
-const server = http.createServer((req, res) => {
+async function checkStat(target: string): Promise<Stats | null> {
+  try {
+    return await stat(target);
+  } catch {
+    return null;
+  }
+}
+
+const server = createServer(async (req, res) => {
   req.on("error", () => {
     // Ignore client socket aborts
   });
@@ -35,26 +45,36 @@ const server = http.createServer((req, res) => {
     const parsedUrl = new URL(req.url || "/", `http://127.0.0.1:${port}`);
     const reqPath = decodeURIComponent(parsedUrl.pathname);
 
-    let filePath = path.join(distDir, reqPath);
+    let filePath = join(distDir, reqPath);
 
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
-      filePath = path.join(filePath, "index.html");
-    } else if (!fs.existsSync(filePath) && !path.extname(filePath)) {
-      if (fs.existsSync(filePath + ".html")) {
-        filePath = filePath + ".html";
-      } else if (fs.existsSync(path.join(filePath, "index.html"))) {
-        filePath = path.join(filePath, "index.html");
+    let fileStat = await checkStat(filePath);
+    if (fileStat && fileStat.isDirectory()) {
+      filePath = join(filePath, "index.html");
+      fileStat = await checkStat(filePath);
+    } else if (!fileStat && !extname(filePath)) {
+      const htmlCandidate = filePath + ".html";
+      const htmlStat = await checkStat(htmlCandidate);
+      if (htmlStat && htmlStat.isFile()) {
+        filePath = htmlCandidate;
+        fileStat = htmlStat;
+      } else {
+        const indexCandidate = join(filePath, "index.html");
+        const indexStat = await checkStat(indexCandidate);
+        if (indexStat && indexStat.isFile()) {
+          filePath = indexCandidate;
+          fileStat = indexStat;
+        }
       }
     }
 
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      const ext = path.extname(filePath).toLowerCase();
+    if (fileStat && fileStat.isFile()) {
+      const ext = extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || "application/octet-stream";
       res.writeHead(200, {
         "Content-Type": contentType,
         "Cache-Control": "no-cache",
       });
-      const stream = fs.createReadStream(filePath);
+      const stream = createReadStream(filePath);
       stream.on("error", () => {
         if (!res.headersSent) {
           res.writeHead(500);

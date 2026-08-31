@@ -19,13 +19,15 @@ test.describe("线性代数板块 (Linear Algebra) 补充文章与可视化组�
     expect(consoleErrors, "不应产生控制台 JS 异常").toEqual([]);
   });
 
-  test("1. 线性组合、线性相关与线性无关 (/posts/linear-algebra/linear-combination-independence)", async ({
+  test("1. 抽象向量空间与线性映射 (/posts/linear-algebra/abstract-vector-spaces-and-linear-maps)", async ({
     page,
   }) => {
-    await page.goto("/posts/linear-algebra/linear-combination-independence");
+    await page.goto(
+      "/posts/linear-algebra/abstract-vector-spaces-and-linear-maps",
+    );
     await page.waitForLoadState("domcontentloaded");
 
-    await expect(page).toHaveTitle(/线性组合/);
+    await expect(page).toHaveTitle(/抽象向量空间与线性映射/);
     const h1 = page.locator("article h1").first();
     await expect(h1).toBeVisible();
 

@@ -16,7 +16,7 @@ import ChangeOfBasisDemo from "../../../components/demos/ChangeOfBasisDemo";
 
 ## 一、什么是基：空间参照系的数学定义
 
-在进入基之前，先回顾一个重要前提：一组向量 **线性无关**，指的是只有全零组合才能得到零向量，即每个向量都带来一个真正的新几何方向（详见 [《线性组合、线性相关与线性无关》](/posts/linear-algebra/linear-combination-independence)）。
+在进入基之前，先回顾一个重要前提：一组向量 **线性无关**，指的是只有全零组合才能得到零向量，即每个向量都带来一个真正的新几何方向（详见 [《抽象向量空间与线性映射》](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps)）。
 
 设 $V$ 是一个 $n$ 维向量空间。$V$ 的一组 **基（Basis）** $\mathcal{B} = (\mathbf{b}_1, \mathbf{b}_2, \dots, \mathbf{b}_n)$ 是一组 **线性无关且张成全空间 $V$** 的有序向量组：
 
@@ -376,4 +376,4 @@ $$
 > 4. **换基矩阵**：$P = \begin{bmatrix} [\mathbf{c}_1]_{\mathcal{B}} & \cdots & [\mathbf{c}_n]_{\mathcal{B}} \end{bmatrix}$，实现 $[\mathbf{x}]_{\mathcal{B}} = P [\mathbf{x}]_{\mathcal{C}}$ 与 $[\mathbf{x}]_{\mathcal{C}} = P^{-1} [\mathbf{x}]_{\mathcal{B}}$；
 > 5. **矩阵表示与相似**：第 $j$ 列精确记录原基向量变换后的坐标；算子换基满足 $[T]_{\mathcal{C}} = P^{-1} [T]_{\mathcal{B}} P$。
 >
-> 延伸阅读：[《矩阵相似、相似不变量与特征结构》](/posts/linear-algebra/matrix-similarity-and-invariants)（算子换基与 $B = P^{-1}AP$ 相似理论全景）、[《线性组合、线性相关与线性无关》](/posts/linear-algebra/linear-combination-independence)（基的铺垫）、[《矩阵的秩、列空间与行空间》](/posts/linear-algebra/matrix-rank-column-row-space)（“列 = 基向量的像”）、[《投影算子》](/posts/linear-algebra/projection-operators)（投影矩阵与正规方程）、[《内积空间：从欧氏点积到广义内积与函数空间》](/posts/linear-algebra/inner-product-spaces)（几何度规与正交基展开）。
+> 延伸阅读：[《矩阵相似、相似不变量与特征结构》](/posts/linear-algebra/matrix-similarity-and-invariants)（算子换基与 $B = P^{-1}AP$ 相似理论全景）、[《抽象向量空间与线性映射》](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps)（公理与基底铺垫）、[《矩阵的秩、列空间与行空间》](/posts/linear-algebra/matrix-rank-column-row-space)（“列 = 基向量的像”）、[《投影算子》](/posts/linear-algebra/projection-operators)（投影矩阵与正规方程）、[《内积空间：从欧氏点积到广义内积与函数空间》](/posts/linear-algebra/inner-product-spaces)（几何度规与正交基展开）。
