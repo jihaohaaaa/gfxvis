@@ -43,7 +43,7 @@ function scrollToTargetHeading(target: HTMLElement, pulse = true): void {
 
 export function setupHeadingAnchors(): void {
   const headings = document.querySelectorAll<HTMLElement>(
-    ".prose h1, .prose h2, .prose h3, .prose h4",
+    ".prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6",
   );
 
   headings.forEach((heading) => {

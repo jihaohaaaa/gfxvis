@@ -10,14 +10,20 @@ GFXVis:本地托管的图形学/可视化技术博客(Astro 静态输出 + MDX +
   - **InlineMath 转义规则**: JSX 中使用 `<InlineMath tex="..." />` 时：
     - **静态字符串属性(双引号)**: 必须使用**单个反斜杠**（如 `tex="\mathbb{R}^3"`、`tex="\mathbf{b}"`），**严禁写成双反斜杠 `tex="\\..."`**（JSX 静态双引号属性不会转义反斜杠，`\\` 会被 KaTeX 解析为换行符导致公式破坏/报错）。
     - **模板字符串/JS表达式(`{...}`)**: 按 JS 规则使用**双反斜杠**（如 ``tex={`\\hat{\\mathbf{x}} = ${val}`}``，矩阵换行使用 `\\\\`）。
-- **MDX 排版**:写文章时 `**...**` 加粗**两侧都加空格、保持对称**(紧贴中文会被 CommonMark 误配,渲染成字面 `**` 或加粗错位;`**` 内也不要包中文引号);**中文语句用全角标点**(`,;:?!` → `，；：？！`、引号用 `“”`),公式/代码/Markdown 链接保持英文标点。详见 `docs/conventions.md`"记号与命名"。
+- **MDX 排版**:
+  - **加粗空格规范（外侧留空，内侧严禁空格）**: 写文章时 `**...**` 加粗**外侧两端加空格、保持对称**（如 `落到 **线性组合** 上`，紧贴中文会被 CommonMark 误配，渲染成字面 `**` 或错位）；**加粗定界符内侧开头和末尾严禁加空格**（严禁写成 `** 文本 **`，CommonMark 规范中定界符内接空格将直接导致无法开闭加粗，渲染成字面 `**` 乱码）；`**` 内侧也不要包中文引号。
+  - **标点规范**: **中文语句用全角标点**（`,;:?!` → `，；：？！`、引号用 `“”`），公式/代码/Markdown 链接保持英文标点。详见 `docs/conventions.md`"记号与命名"。
 - **TypeScript 优先**:所有支持 TypeScript 的文件必须使用 `.ts` / `.tsx`,不允许 `.js` / `.mjs` / `.cjs` 变体。
   - 配置文件同样适用:`astro.config.ts`、`eslint.config.ts`、`prettier.config.ts`(不得写成 `.mjs` / `.js`)。
   - 例外:无 TS 形态的格式(JSON/YAML/纯文本,如 `package.json`、`tsconfig.json`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`、`.gitignore`、`.prettierignore`),以及 `.astro`、`.mdx`、`.css` 等框架/内容/样式文件。
+- **按需具名导入（禁止整包/默认导入大对象）**:
+  - 引入模块（特别是 Node.js 内置模块如 `node:fs`、`node:http`、`node:path` 等或第三方库）时，**禁止使用 `import http from "node:http"`、`import fs from "node:fs"` 这种默认全量导入**；
+  - **必须按需具名导入具体使用的接口**，如 `import { createServer } from "node:http"`、`import { readFile, writeFile } from "node:fs/promises"`、`import { join, dirname } from "node:path"`。用到哪些就导入哪些，保持依赖树最小化和代码意图清晰。
 
 ## 常用命令
 
 - `pnpm dev` — 本地开发
 - `pnpm build` — 静态构建到 `dist/`
 - `pnpm lint` — ESLint 检查
-- `pnpm format` / `pnpm format:check` — Prettier 格式化 / 校验
+- `pnpm format` / `pnpm format:check` — Markdown加粗空格清洗 + Prettier 格式化 / 校验
+- `pnpm format:bold` / `pnpm format:bold:check` — 独立执行加粗空格规范（外侧留空，内侧严禁空格）清洗 / 检查

@@ -73,6 +73,22 @@ html.dark .icon-moon {
   position: relative;
 }
 
+.prose :is(h5, h6) {
+  font-weight: 600;
+  color: var(--gfx-ink);
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.prose h5 {
+  font-size: 1.05rem;
+}
+
+.prose h6 {
+  font-size: 0.95rem;
+}
+
 .heading-anchor {
   display: inline-flex;
   align-items: center;

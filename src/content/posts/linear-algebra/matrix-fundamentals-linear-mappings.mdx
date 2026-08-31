@@ -126,6 +126,65 @@ $$
 3. **同维方阵（$m = n$，方阵，例如 $2 \times 2$ 或 $3 \times 3$）**：
    - 典型场景：刚体旋转、等比/非等比轴向缩放、剪切与反射（详见 [《矩阵分解全景》](/posts/linear-algebra/matrix-decompositions)）。
 
+### 2.4 线性变换的核心几何不变量（Geometric Invariants of Linear Maps）
+
+克莱因（Felix Klein）在《埃尔朗根纲领》中指出：**一种几何学就是研究在一类特定几何变换作用下保持不变的性质**。
+
+对于纯线性映射 $T: \mathbb{R}^n \to \mathbb{R}^m$（由矩阵乘法 $\mathbf{x} \mapsto A\mathbf{x}$ 实现），空间中的向量在变换中可能被拉伸、旋转或投影，但以下五大 **几何不变量（Geometric Invariants）** 被严格恒定守恒：
+
+#### 不变量一：原点绝对锚定（Origin Fixed）
+
+$$
+\boxed{ T(\mathbf{0}) = \mathbf{0} }
+$$
+
+- **几何内涵**：输入空间的零向量（原点）经过任何线性变换后，**必定且只能映射到输出空间的零向量（原点）**。
+- **代数本质**：根据线性性公理，$T(\mathbf{0}) = T(0 \cdot \mathbf{v}) = 0 \cdot T(\mathbf{v}) = \mathbf{0}$。
+- **物理与图形推论**：任何包含非零平移的变换（例如刚体位移 $\mathbf{x} + \mathbf{t}$）在数学上 **绝不是纯线性映射**！这也是为何在图形渲染管线中必须引入 [齐次坐标与仿射空间](/posts/linear-algebra/affine-spaces-and-affine-maps) 来统一表达位移。
+
+#### 不变量二：保持任意线性组合（Linear Combinations Preserved）
+
+对任意向量集合 $\{\mathbf{v}_1, \ldots, \mathbf{v}_k\}$ 及任意实数权重 $c_1, \ldots, c_k \in \mathbb{R}$，均恒有：
+
+$$
+\boxed{ T\left(\sum_{i=1}^k c_i \mathbf{v}_i\right) = \sum_{i=1}^k c_i T(\mathbf{v}_i) }
+$$
+
+- **几何内涵**：线性组合的结构在映射前后完全保真。若一个向量由若干向量合成，其像向量也必然以完全相同的标量权重由这些向量的像合成。
+- **对比警示**：在线性映射中，权重系数 $c_i$ **没有任何求和限制**（可以是负数、任意大小，和可以不为 $1$）；而在仿射几何中，为了摆脱原点选取的约束，只能保持权重和严格为 $1$ 的仿射组合（Barycentric / Affine Combination）。
+
+#### 不变量三：保持共线性、平行性与单比不变性
+
+1. **保持共线（Collinearity）**：若三点（以原点为起点的位移终点）共线，变换后的像点必然共线（退化时收缩为单点）；
+2. **保持平行（Parallelism）**：平行线段变换后依然平行（或共线重合）；
+3. **单比守恒（Simple Ratio Invariance）**：共线（或平行）的任意两条线段，其有向长度之比在变换前后 **严格保持恒定不变**：
+   $$
+   \frac{\|T(\mathbf{a}) - T(\mathbf{b})\|}{\|T(\mathbf{b}) - T(\mathbf{c})\|} = \frac{\|\mathbf{a} - \mathbf{b}\|}{\|\mathbf{b} - \mathbf{c}\|} \quad (\mathbf{a}, \mathbf{b}, \mathbf{c} \text{ 共线})
+   $$
+   绝对长度虽然会被拉伸或压缩，但相对比值绝不失真。
+
+#### 不变量四：保持线性子空间结构（Subspace Preservation）
+
+- **几何内涵**：输入空间中任意穿过原点的 $k$ 维线性子空间 $V \subseteq \mathbb{R}^n$（过原点的直线、平面、超平面），其像集 $T(V)$ 依然是输出空间 $\mathbb{R}^m$ 中 **穿过原点的线性子空间**（其维数至多为 $k$）；
+- **结构完备性**：由矩阵诱导的两个核心子空间——零空间 $\ker(A)$（被压至原点的所有方向）与列空间 $\operatorname{Col}(A)$（所有可达像点），全部无一例外地天然包含原点并具有子空间封闭性（详见 [《四大基本子空间与正交直和分解》](/posts/linear-algebra/four-fundamental-subspaces)）。
+
+#### 不变量五：体积缩放率与空间定向（Volume Ratio & Orientation）
+
+对于同维线性算子 $A \in \mathbb{R}^{n \times n}$（$m = n$），空间中任意几何体 $\Omega$ 的体积在变换前后满足：
+
+$$
+\boxed{ \frac{\operatorname{Vol}(A(\Omega))}{\operatorname{Vol}(\Omega)} = |\det(A)| }
+$$
+
+- **$|\det(A)|$ 为均匀体积缩放因子**：无论几何体形状多么复杂，整体体积缩放比例恒等于矩阵行列式的绝对值（详见 [《矩阵的迹与行列式》](/posts/linear-algebra/trace-and-determinant)）；
+- **$\operatorname{sgn}(\det(A))$ 决定手性定向**：$\det(A) > 0$ 保持空间右手系定向；$\det(A) < 0$ 伴随镜像翻转。
+
+> 💡 **思维跃迁：当打破原点锚定时会发生什么？**
+>
+> 线性变换的不变量体系极为优美，但它必须以“原点 $\mathbf{0}$ 绝对静止”为铁律。在真实物理世界与 3D 图形学中，空间中的点并没有天然的“上帝原点”，物体更需要自由平移。
+>
+> 当我们打破原点固定性，将原点也作为可平移变量时，几何体系便从 **线性几何** 平滑升华至 **仿射几何**。关于线性变换与仿射变换不变量的异同与完整层级对照，请参见 [《仿射空间与仿射映射：7.2.5 线性变换 vs 仿射变换几何不变量全景横向对照》](/posts/linear-algebra/affine-spaces-and-affine-maps#725-线性变换-vs-仿射变换几何不变量全景横向对照)。
+
 ---
 
 ## 三、转置矩阵 $A^\top \in \mathbb{R}^{n \times m}$：维度翻转与伴随映射
