@@ -20,8 +20,6 @@ import RotationViewDemo from "../../../components/demos/RotationViewDemo";
 import CameraLookAtDiagram from "../../../components/diagrams/CameraLookAtDiagram";
 import OrthogonalGroupDiagram from "../../../components/diagrams/OrthogonalGroupDiagram";
 
-# 三维旋转、正交群 SO(3) 与图形学 View 变换
-
 在 3D 游戏引擎、渲染器和图形学着色管线中，我们无时无刻不在与两件事打交道：**物体的旋转运动**与**观察相机的视角变换（View Transformation）**。
 
 为什么旋转矩阵的逆矩阵永远**等于它的转置矩阵**（$R^{-1} = R^\top$）？为什么由正交基构成的相机矩阵不仅算力开销为零，还能完美保持物体的几何形状不发生畸变？为什么经典的相机 `LookAt` 矩阵能够把整个世界空间一键搬进相机的眼帘？
