@@ -14,6 +14,8 @@ const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
     <p class="mt-2 text-sm text-muted">共 {posts.length} 篇</p>
   </header>
   <div class="grid gap-5">
-    {posts.map((post) => <PostCard post={post} />)}
+    {posts.map((post) => (
+      <PostCard post={post} />
+    ))}
   </div>
 </BaseLayout>

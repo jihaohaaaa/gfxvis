@@ -64,6 +64,14 @@ $
 
 使用 $\det(\lambda I - A)$ 的标准定义，最高次项系数恒为首一正系数（$\lambda^n$ 为首一多项式 Monic Polynomial）。
 
+从[集合论基础](../discrete-math/set-theory-relations-and-partitions)的概括公理（Axiom of Comprehension）视角，矩阵 $A$ 的所有特征值构成的集合称为 **谱（Spectrum）**，记作：
+
+$$
+\sigma(A) = \{\lambda \in \mathbb{C} \mid \det(\lambda I - A) = 0\}
+$$
+
+这是一个典型的由一阶谓词 $P(\lambda): \det(\lambda I - A) = 0$ 在复数全集 $\mathbb{C}$ 中抽取的有限子集，其基数满足 $|\sigma(A)| \le n$。
+
 ### 2.2 串联上篇：迹与行列式的代数统一
 
 对于 $2 \times 2$ 矩阵 $A = \begin{pmatrix} a & b \\ c & d \end{pmatrix}$，展开特征多项式：

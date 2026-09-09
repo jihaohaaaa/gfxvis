@@ -95,7 +95,7 @@ $$
 
 ### 2.2 相似性是严格的等价关系
 
-在近世代数中，相似关系在所有 $n \times n$ 方阵集合 $\mathcal{M}_n(\mathbb{F})$ 上构成一个严格的 **等价关系（Equivalence Relation）**：
+在近世代数中，相似关系在所有 $n \times n$ 方阵集合 $\mathcal{M}_n(\mathbb{F})$ 上构成一个严格的 **等价关系（Equivalence Relation）**（二元关系公理体系与商集定理详见 [《集合论与二元关系》](/posts/discrete-math/set-theory-relations-and-partitions#四等价关系与商集划分基本定理)）：
 
 1. **自反性（Reflexivity）**：$A \sim A$（取单位矩阵 $P = I$，满足 $A = I^{-1} A I$）；
 2. **对称性（Symmetry）**：若 $A \sim B$，则 $B \sim A$（由 $B = P^{-1}AP$ 两边左乘 $P$、右乘 $P^{-1}$，得到 $A = P B P^{-1} = (P^{-1})^{-1} B (P^{-1})$，取可逆矩阵 $Q = P^{-1}$ 即可）；
@@ -103,7 +103,7 @@ $$
 
 ### 2.3 几何意义：相似等价类（Similarity Orbit）
 
-因为相似是等价关系，它将整个 $n$ 阶方阵空间划分为互不相交的 **相似等价类（Similarity Classes）**：
+根据集合划分基本定理，相似等价关系将整个 $n$ 阶方阵空间 $\mathcal{M}_n(\mathbb{F})$ 严格划分为互不相交的 **相似等价类（Similarity Classes）**（即商空间/商集 $\mathcal{M}_n / {\sim}$）：
 
 - 同一个相似等价类中的所有矩阵，本质上是 **同一个抽象线性算子在所有可能基底下的全套数字化身**；
 - 研究矩阵相似，就是要寻找在基底变换下 **保持恒定不变的几何内禀属性（不变量）**，以及在每个等价类中最优雅、最简化的“代表元”（标准型）。

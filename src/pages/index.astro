@@ -21,7 +21,9 @@ const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
   <section>
     <h2 class="mb-5 text-lg font-semibold text-ink">最新文章</h2>
     <div class="grid gap-5">
-      {posts.map((post) => <PostCard post={post} />)}
+      {posts.map((post) => (
+        <PostCard post={post} />
+      ))}
     </div>
   </section>
 </BaseLayout>

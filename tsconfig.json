@@ -6,10 +6,9 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "types": ["node"],
-    "baseUrl": ".",
     "paths": {
-      "@math": ["src/math/index.ts"],
-      "@math/*": ["src/math/*"]
+      "@math": ["./src/math/index.ts"],
+      "@math/*": ["./src/math/*"]
     }
   }
 }

@@ -591,6 +591,8 @@ $$
 > 陪域 $W$ 是映射在声明时指定的目标大空间，而像空间 $\operatorname{im}(T)$ 是实际命中的输出子集。
 > 例如在 $T: \mathbb{R}^2 \to \mathbb{R}^3, \; (x, y) \mapsto (x, y, 0)$ 中，陪域是三维空间 $\mathbb{R}^3$，而像空间仅仅是其二维 $xy$ 水平子平面 $\mathbb{R}^2 \times \{0\}$。
 > **只有当映射为满射时，像空间才与陪域完全重合（$\operatorname{im} T = W$）**。
+>
+> （映射的集合论公理化基础与单满双射逆映射判定，详见 [《集合论与二元关系：映射的公理化与范畴视野》](/posts/discrete-math/set-theory-relations-and-partitions#七映射的公理化与范畴视野)）。
 
 ---
 
@@ -757,7 +759,7 @@ $$
   $$
   [\mathbf{v}] = \mathbf{v} + U = \{ \mathbf{v} + \mathbf{u} \mid \mathbf{u} \in U \}
   $$
-  商空间 $V / U$ 就是以这些陪集作为“新元素”构成的向量空间。
+  商空间 $V / U$ 就是以这些陪集作为“新元素”构成的向量空间（其母理论为集合论中的 [商集划分基本定理](/posts/discrete-math/set-theory-relations-and-partitions#四等价关系与商集划分基本定理)）。
 - **核心直觉：“把 $U$ 中的方向视为没有区别”**：
   如果两个向量 $\mathbf{v}_1$ 与 $\mathbf{v}_2$ 仅仅相差一个属于 $U$ 的分量（即差异完全落在 $U$ 所张成的方向上），那么在商空间 $V / U$ 看来，**它们没有任何区别，被完全合并视为同一个点** $[\mathbf{v}_1] = [\mathbf{v}_2]$。
 - **几何形象（压平与降维）**：

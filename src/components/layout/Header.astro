@@ -10,24 +10,20 @@ const nav = [
   id="site-header"
   class="fixed top-3 inset-x-0 z-50 flex justify-center px-3 sm:px-5 pointer-events-none transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] translate-y-0 will-change-transform"
 >
-  <div
-    class="pointer-events-auto flex w-full max-w-6xl items-center justify-between rounded-2xl border border-border/40 bg-surface/35 px-4 py-3 sm:px-6 shadow-lg shadow-black/5 backdrop-blur-md backdrop-saturate-150 dark:border-border/30 dark:bg-surface/40 dark:shadow-black/20"
-  >
+  <div class="pointer-events-auto flex w-full max-w-6xl items-center justify-between rounded-2xl border border-border/40 bg-surface/35 px-4 py-3 sm:px-6 shadow-lg shadow-black/5 backdrop-blur-md backdrop-saturate-150 dark:border-border/30 dark:bg-surface/40 dark:shadow-black/20">
     <a href="/" class="text-lg font-bold tracking-tight text-ink">
       GFX<span class="text-accent">Vis</span>
     </a>
     <div class="flex items-center gap-5">
       <nav class="flex items-center gap-5 text-sm">
-        {
-          nav.map((item) => (
-            <a
-              href={item.href}
-              class="text-muted transition-colors hover:text-ink"
-            >
-              {item.label}
-            </a>
-          ))
-        }
+        {nav.map((item) => (
+          <a
+            href={item.href}
+            class="text-muted transition-colors hover:text-ink"
+          >
+            {item.label}
+          </a>
+        ))}
       </nav>
       <button
         id="theme-toggle"
@@ -48,9 +44,7 @@ const nav = [
           stroke-linejoin="round"
         >
           <circle cx="12" cy="12" r="4"></circle>
-          <path
-            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
-          ></path>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
         </svg>
         <svg
           class="icon-moon"

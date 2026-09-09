@@ -12,7 +12,7 @@ const MODE_OPTIONS = [
   { id: "point_vector" as const, label: "1. 点 vs 自由向量（原点平移不变性）" },
   {
     id: "frame_barycentric" as const,
-    label: "2. Affine Frame 与重心坐标（仿射包 vs 凸包）",
+    label: "2. 仿射标架与重心坐标（仿射包 vs 凸包）",
   },
   {
     id: "homogenization" as const,
