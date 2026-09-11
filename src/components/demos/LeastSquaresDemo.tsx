@@ -11,9 +11,19 @@ import {
 } from "../../math/index";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import CanvasToolbar from "../framework/CanvasToolbar";
+import CapsuleTabs from "../framework/CapsuleTabs";
 import PresetSelector from "../framework/PresetSelector";
 import InlineMath from "../framework/InlineMath";
 import ParamSlider from "../framework/ParamSlider";
+
+type FitMethod = "normal" | "qr" | "svd" | "ridge";
+
+const METHOD_TABS = [
+  { id: "normal", label: "1. 正规方程法 (Normal)" },
+  { id: "qr", label: "2. QR 分解法 (QR)" },
+  { id: "svd", label: "3. SVD 伪逆法 (SVD)" },
+  { id: "ridge", label: "4. Ridge 正则化" },
+] as const;
 
 interface Point2D {
   id: number;
@@ -802,29 +812,11 @@ export default function LeastSquaresDemo({ height }: { height?: string }) {
           {/* Row 1: Method Tabs & Right-aligned CanvasToolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Method Tabs */}
-            <div className="flex rounded-lg bg-surface-hover p-1">
-              {(
-                [
-                  { id: "normal", label: "1. 正规方程法 (Normal)" },
-                  { id: "qr", label: "2. QR 分解法 (QR)" },
-                  { id: "svd", label: "3. SVD 伪逆法 (SVD)" },
-                  { id: "ridge", label: "4. Ridge 正则化" },
-                ] as const
-              ).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setMethod(item.id)}
-                  className={`cursor-pointer rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
-                    method === item.id
-                      ? "bg-accent text-accent-foreground shadow-sm"
-                      : "text-muted hover:text-foreground"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            <CapsuleTabs
+              options={METHOD_TABS}
+              value={method}
+              onChange={(m) => setMethod(m as FitMethod)}
+            />
 
             {/* Right: Toolbar Controls (S / M / L & Expand) */}
             <CanvasToolbar className="static" />

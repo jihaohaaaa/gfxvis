@@ -4,6 +4,7 @@ import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import InlineMath from "../framework/InlineMath";
 import CapsuleTabs from "../framework/CapsuleTabs";
+import PresetSelector from "../framework/PresetSelector";
 import ParamSlider from "../framework/ParamSlider";
 import {
   drawDragHandle,
@@ -717,22 +718,15 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
         {/* MODE 2 Controls & Panel */}
         {mode === "func" && (
           <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-muted font-medium">选择基函数对:</span>
-              {FUNC_PRESETS.map((presetItem, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setFuncIdx(idx)}
-                  className={`rounded px-2.5 py-1 font-medium transition-colors ${
-                    funcIdx === idx
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-surface-hover text-foreground hover:bg-border"
-                  }`}
-                >
-                  {presetItem.name}
-                </button>
-              ))}
-            </div>
+            <PresetSelector
+              label="选择基函数对:"
+              options={FUNC_PRESETS.map((presetItem, idx) => ({
+                id: String(idx),
+                label: presetItem.name,
+              }))}
+              value={String(funcIdx)}
+              onChange={(val) => setFuncIdx(Number(val))}
+            />
             <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm">
               <p className="mb-1 font-semibold text-foreground">
                 连续函数空间积分内积{" "}

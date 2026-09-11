@@ -25,7 +25,7 @@ export default function CapsuleTabs<T extends string>({
 }: CapsuleTabsProps<T>) {
   const textClass = size === "xs" ? "text-xs" : "text-sm";
   return (
-    <div className={`flex items-center gap-1 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
       {label ? <span className="text-sm text-muted">{label}</span> : null}
       {options.map((option) => (
         <button
@@ -34,8 +34,8 @@ export default function CapsuleTabs<T extends string>({
           onClick={() => onChange(option.id)}
           className={
             value === option.id
-              ? `rounded-full border border-accent px-3 py-1 ${textClass} text-accent`
-              : `rounded-full border border-border px-3 py-1 ${textClass} text-muted hover:text-ink`
+              ? `rounded-full border border-accent bg-accent/10 px-3 py-1 ${textClass} font-medium text-accent transition-colors`
+              : `rounded-full border border-border px-3 py-1 ${textClass} text-muted hover:border-accent/40 hover:text-ink transition-colors`
           }
         >
           {option.label}
