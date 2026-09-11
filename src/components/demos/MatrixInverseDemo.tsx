@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import CapsuleTabs from "../framework/CapsuleTabs";
+import PresetSelector from "../framework/PresetSelector";
 import ParamSlider from "../framework/ParamSlider";
 import InlineMath from "../framework/InlineMath";
 import CanvasToolbar from "../framework/CanvasToolbar";
@@ -429,25 +430,15 @@ function ViewTransform({ showAxes }: { showAxes: boolean }) {
     <div className="space-y-4">
       {/* Preset Buttons */}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-muted font-medium">矩阵 A 预设:</span>
-          {(Object.keys(PRESETS) as PresetKey[]).map((key) => (
-            <button
-              key={key}
-              onClick={() => {
-                setPresetKey(key);
-                setProgress(1.0);
-              }}
-              className={`rounded px-2.5 py-1 font-medium transition-colors ${
-                presetKey === key
-                  ? "bg-accent text-accent-foreground"
-                  : "bg-surface-hover text-foreground hover:bg-border"
-              }`}
-            >
-              {PRESETS[key].name}
-            </button>
-          ))}
-        </div>
+        <PresetSelector<PresetKey>
+          label="矩阵 A 预设:"
+          options={PRESETS}
+          value={presetKey}
+          onChange={(key) => {
+            setPresetKey(key);
+            setProgress(1.0);
+          }}
+        />
 
         {/* Quick Undo / Redo Actions */}
         <div className="flex items-center gap-1.5">
