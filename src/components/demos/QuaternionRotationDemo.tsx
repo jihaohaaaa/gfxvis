@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import CanvasToolbar from "../framework/CanvasToolbar";
+import CapsuleTabs from "../framework/CapsuleTabs";
 import PresetSelector, { type PresetOption } from "../framework/PresetSelector";
 import ParamSlider from "../framework/ParamSlider";
 import InlineMath from "../framework/InlineMath";
@@ -19,6 +20,13 @@ import {
   determinant3x3,
   getColumn3,
 } from "@math";
+
+type TabType = "inspect" | "interpolate";
+
+const MODE_TABS = [
+  { id: "inspect", label: "1. 自由旋转与多表象实时解构" },
+  { id: "interpolate", label: "2. SLERP 球面插值 vs Matrix LERP 形变对比" },
+] as const;
 
 const PRESETS: PresetOption[] = [
   {
@@ -474,28 +482,11 @@ export default function QuaternionRotationDemo({
       <div className="space-y-4">
         {/* Mode Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 pb-3">
-          <div className="flex rounded-lg bg-surface-hover p-1">
-            <button
-              onClick={() => setActiveTab("inspect")}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                activeTab === "inspect"
-                  ? "bg-accent text-accent-foreground shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              1. 自由旋转与多表象实时解构
-            </button>
-            <button
-              onClick={() => setActiveTab("interpolate")}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                activeTab === "interpolate"
-                  ? "bg-accent text-accent-foreground shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              2. SLERP 球面插值 vs Matrix LERP 形变对比
-            </button>
-          </div>
+          <CapsuleTabs
+            options={MODE_TABS}
+            value={activeTab}
+            onChange={(tab) => setActiveTab(tab as TabType)}
+          />
 
           {activeTab === "inspect" && (
             <button

@@ -6,6 +6,7 @@ GFXVis:本地托管的图形学/可视化技术博客(Astro 静态输出 + MDX +
 
 - **可视化约定**:实现或修改可视化前先读 `docs/conventions.md`(坐标系与 `mathToWorld` 映射、方向与符号、记号与命名、渲染与交互约定)。
   - **CanvasToolbar 放置与 UI 重叠防护**: `<CanvasToolbar>` **必须且只能**放置在 Canvas 画布容器（必须含 `relative overflow-hidden`）内部作为直接子元素，严禁放在外层 Flex/卡片容器；画布容器高度必须使用 `h-[var(--demo-height,28rem)]`（2D 为 `20rem`）；严禁在外部重复实现复位/关闭按钮。
+  - **多选一选项卡与预设规范**: 严禁手写裸 `<button>` 配合自定义背景自制 Tab / 预设选择器；模式/算法/视图切换必须统一使用 `<CapsuleTabs>`（一级模式用默认 `size="sm"`，参数/细项用 `size="xs"`）；数据场景预设必须统一使用 `<PresetSelector>`。技术细节以 `docs/conventions.md` 为唯一权威来源。
 - **KaTeX 数学渲染**:正文公式由自写插件 `src/plugins/remark-katex.ts` 渲染(直接调用 katex 0.18.2),与 `BaseLayout.astro` 导入的 `katex/dist/katex.min.css` 同版本。**不要重新引入 `rehype-katex`**——它已停更且锁定 `katex ^0.16.0`,曾因类名与 0.18 CSS 不匹配导致 `≠` 显示成 `/=`。详见 `docs/katex-version-mismatch.md`。
   - **InlineMath 转义规则**: JSX 中使用 `<InlineMath tex="..." />` 时：
     - **静态字符串属性(双引号)**: 必须使用**单个反斜杠**（如 `tex="\mathbb{R}^3"`、`tex="\mathbf{b}"`），**严禁写成双反斜杠 `tex="\\..."`**（JSX 静态双引号属性不会转义反斜杠，`\\` 会被 KaTeX 解析为换行符导致公式破坏/报错）。

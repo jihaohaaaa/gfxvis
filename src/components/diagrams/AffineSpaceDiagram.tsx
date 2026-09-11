@@ -939,32 +939,15 @@ export default function AffineSpaceDiagram() {
                 <div className="mb-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                   测试对象类型
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    className={`flex-1 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
-                      testType === "point"
-                        ? "bg-indigo-600 text-white"
-                        : "border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-400"
-                    }`}
-                    onClick={() => setTestType("point")}
-                    type="button"
-                  >
-                    仿射点（
-                    <InlineMath tex="w = 1" />）
-                  </button>
-                  <button
-                    className={`flex-1 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
-                      testType === "vector"
-                        ? "bg-indigo-600 text-white"
-                        : "border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-400"
-                    }`}
-                    onClick={() => setTestType("vector")}
-                    type="button"
-                  >
-                    方向向量（
-                    <InlineMath tex="w = 0" />）
-                  </button>
-                </div>
+                <CapsuleTabs
+                  options={[
+                    { id: "point", label: "仿射点 (w = 1)" },
+                    { id: "vector", label: "方向向量 (w = 0)" },
+                  ]}
+                  value={testType}
+                  onChange={(t) => setTestType(t as "point" | "vector")}
+                  size="xs"
+                />
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-900/70">

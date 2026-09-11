@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import CanvasToolbar from "../framework/CanvasToolbar";
+import CapsuleTabs from "../framework/CapsuleTabs";
 import PresetSelector, { type PresetOption } from "../framework/PresetSelector";
 import ParamSlider from "../framework/ParamSlider";
 import InlineMath from "../framework/InlineMath";
@@ -23,6 +24,13 @@ import {
 } from "@math";
 
 type DecompTab = "lu" | "qr" | "polar" | "svd";
+
+const DECOMP_TABS = [
+  { id: "lu", label: "1. LU 分解 (高斯消元)" },
+  { id: "qr", label: "2. QR 分解 (单边正交)" },
+  { id: "polar", label: "3. 极分解 (旋转-应变分离)" },
+  { id: "svd", label: "4. SVD 奇异值分解 (终极正交)" },
+] as const;
 
 const PRESETS: PresetOption[] = [
   {
@@ -369,60 +377,14 @@ export default function MatrixDecompositionsDemo({
     <ExpandableDemo id="matrix-decompositions-demo" height={height}>
       <div id="matrix-decompositions-demo" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 pb-3">
-          <div className="flex rounded-lg bg-surface-hover p-1">
-            <button
-              onClick={() => {
-                setActiveTab("lu");
-                setProgress(1.0);
-              }}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                activeTab === "lu"
-                  ? "bg-accent text-accent-foreground shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              1. LU 分解 (高斯消元)
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("qr");
-                setProgress(1.0);
-              }}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                activeTab === "qr"
-                  ? "bg-accent text-accent-foreground shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              2. QR 分解 (单边正交)
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("polar");
-                setProgress(1.0);
-              }}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                activeTab === "polar"
-                  ? "bg-accent text-accent-foreground shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              3. 极分解 (旋转-应变分离)
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("svd");
-                setProgress(1.0);
-              }}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                activeTab === "svd"
-                  ? "bg-accent text-accent-foreground shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              4. SVD 奇异值分解 (终极正交)
-            </button>
-          </div>
+          <CapsuleTabs
+            options={DECOMP_TABS}
+            value={activeTab}
+            onChange={(tab) => {
+              setActiveTab(tab as DecompTab);
+              setProgress(1.0);
+            }}
+          />
 
           <PresetSelector
             options={PRESETS}
