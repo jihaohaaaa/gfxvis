@@ -297,23 +297,16 @@ export default function BasisFittingDemo({ height }: { height?: string }) {
           />
 
           {family === "poly" && (
-            <div className="flex items-center gap-2 text-xs text-muted">
-              <span>多项式最高阶数：</span>
-              {[1, 2, 3, 4, 5].map((deg) => (
-                <button
-                  key={deg}
-                  type="button"
-                  onClick={() => setPolyDegree(deg)}
-                  className={`rounded px-2 py-0.5 font-medium transition-colors ${
-                    polyDegree === deg
-                      ? "bg-primary text-primary-foreground font-semibold"
-                      : "bg-surface-hover hover:text-foreground"
-                  }`}
-                >
-                  {deg} 阶
-                </button>
-              ))}
-            </div>
+            <CapsuleTabs
+              label="多项式最高阶数："
+              options={[1, 2, 3, 4, 5].map((deg) => ({
+                id: String(deg),
+                label: `${deg} 阶`,
+              }))}
+              value={String(polyDegree)}
+              onChange={(val) => setPolyDegree(Number(val))}
+              size="xs"
+            />
           )}
         </div>
 

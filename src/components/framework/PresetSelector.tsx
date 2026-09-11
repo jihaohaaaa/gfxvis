@@ -45,17 +45,17 @@ export default function PresetSelector<T extends string = string>({
       });
 
   return (
-    <div className={`flex flex-wrap items-center gap-2 text-xs ${className}`}>
-      {label && <span className="text-muted font-medium">{label}</span>}
+    <div className={`flex flex-wrap items-center gap-1.5 text-xs ${className}`}>
+      {label && <span className="text-muted font-medium mr-0.5">{label}</span>}
       {items.map((item) => (
         <button
           key={String(item.id)}
           type="button"
           onClick={() => onChange(item.id)}
-          className={`rounded px-2.5 py-1 font-medium transition-colors ${
+          className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
             value === item.id
-              ? "bg-accent text-accent-foreground"
-              : "bg-surface-hover text-foreground hover:bg-border"
+              ? "border border-accent bg-accent/10 text-accent"
+              : "border border-border text-muted hover:border-accent/40 hover:text-ink"
           }`}
         >
           {item.label}

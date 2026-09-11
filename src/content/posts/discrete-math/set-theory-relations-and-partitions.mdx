@@ -326,8 +326,12 @@ $$
   \forall y \in B, \exists x \in A, f(x) = y
   $$
   值域覆盖整个陪域，映射不留死角。右逆映射存在的充要条件（依赖选择公理 AC）；
-- **双射（Bijective / 一一对应 / 同构 Isomorphism）**：
-  既是单射又是满射。存在唯一的严格逆映射 $f^{-1}: B \to A$。在集合论中，双射意味着两个集合具有 **完全相同的大小（等势）**。
+- **双射（Bijective / 一一对应 / 集合同构 Set Isomorphism）**：
+  既是单射又是满射。等价于存在逆映射 $g: B \to A$ 满足双边恒等态射条件：
+  $$
+  g \circ f = \operatorname{id}_A \quad \text{且} \quad f \circ g = \operatorname{id}_B \implies \boxed{ A \cong B }
+  $$
+  从 $A$ 出发经 $f$ 抵达 $B$、再由 $g$ 逆推回 $A$，能够分毫不差地“绕一圈回到原来的元素”。在纯集合层面，双射意味着两集合 **元素完全等势（$|A| = |B|$）**；若结构上还额外赋予了运算规则（如向量加法、群乘法），则该互逆语法直接升华成为现代数学统一的 **代数同构**（详见 [《抽象向量空间与线性映射》第 7.1 节](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps#71-结构同构的公理化定义从通用代数语法到线性同构)）。
 
 ### 7.3 特征函数与对偶空间
 
