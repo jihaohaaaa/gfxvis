@@ -292,26 +292,15 @@ export default function PermutationMatrixDemo() {
 
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-muted">当前操作：</span>
-            <button
-              onClick={() => setOpMode("left")}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-                opMode === "left"
-                  ? "bg-accent text-white shadow-sm"
-                  : "bg-surface text-ink hover:bg-surface/80 border border-border"
-              }`}
-            >
-              左乘 PA (行置换)
-            </button>
-            <button
-              onClick={() => setOpMode("right")}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-                opMode === "right"
-                  ? "bg-accent text-white shadow-sm"
-                  : "bg-surface text-ink hover:bg-surface/80 border border-border"
-              }`}
-            >
-              右乘 AP (列置换)
-            </button>
+            <CapsuleTabs
+              options={[
+                { id: "left", label: "左乘 PA (行置换)" },
+                { id: "right", label: "右乘 AP (列置换)" },
+              ]}
+              value={opMode}
+              onChange={(mode) => setOpMode(mode as "left" | "right")}
+              size="xs"
+            />
           </div>
         </div>
 

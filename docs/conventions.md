@@ -49,6 +49,13 @@
     - `<CanvasToolbar>` **必须且只能**作为 Canvas 画布容器（具备 `relative overflow-hidden` 类）的**直接子元素**，严禁放置在外部的 Card/Flex 顶层容器中；
     - 画布容器高度必须绑定 `h-[var(--demo-height,28rem)]`（2D 为 `20rem`），确保 S/M/L 预设与拖拽缩放正常工作；
     - 严禁在 Demo 顶部控制栏自制重复的“复位”或“关闭/全屏”按钮，统一由 `CanvasToolbar`（画布视野复位 + 展开）与 `ExpandableDemo`（全局模态关闭）分别承载。
+  - **选项卡与预设选择控件规范（CapsuleTabs & PresetSelector）**:
+    - **严禁裸写切换按钮**: 严禁在组件内部使用裸 `<button>` 配合手写背景色（如 `bg-accent text-accent-foreground` 等）自制多选一切换控件，深浅主题下极易发生文字发虚、对比度失衡或视觉割裂；
+    - **CapsuleTabs 尺寸与层级规范**:
+      - **一级模态 / 核心算法 / 顶层视图切换**: 统一使用 `<CapsuleTabs>`（默认 `size="sm"`）；
+      - **二级参数 / 操作细项 / 局部状态切换**: 统一使用 `<CapsuleTabs size="xs">`；
+      - 容器内建 `flex-wrap gap-1.5` 防护，确保移动端与窄屏下自适应平滑换行；
+    - **PresetSelector 场景数据预设**: 针对几何、矩阵、函数或场等数据列表项预设，统一使用 `<PresetSelector>`（已内建高对比度胶囊药丸交互与标签排版）。
 - 3D 曲面默认半透明(opacity≈0.55、depthWrite=false)并带开关,保证箭头/标记可见;切换时同步 transparent/opacity/depthWrite。
 - 主题:2D 用 `watchTheme` 触发重绘;3D 监听 `html` 的 class 变化,重设 `setClearColor` 并重渲;颜色从 CSS 变量读取(`readThemeColors`),禁止硬编码。
 - 数值微分统一走 `core/common/math.ts`(中心差分:梯度 / 散度 / 旋度),默认步长 h = 1e-4。
