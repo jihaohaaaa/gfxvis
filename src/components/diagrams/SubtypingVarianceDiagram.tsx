@@ -1,0 +1,473 @@
+import { useState } from "react";
+import CanvasToolbar from "../framework/CanvasToolbar";
+import CapsuleTabs from "../framework/CapsuleTabs";
+import ExpandableDemo from "../framework/ExpandableDemo";
+import InlineMath from "../framework/InlineMath";
+import PresetSelector from "../framework/PresetSelector";
+
+// ============================================================================
+// Types & Presets for Subtyping & Variance
+// ============================================================================
+
+export interface VariancePreset {
+  id: string;
+  label: string;
+  desc: string;
+  ruleTex: string;
+  codeSnippet: string;
+  validAssignmentTex: string;
+  invalidAssignmentTex: string;
+  validReason: string;
+  invalidReason: string;
+  polarityExplanation: string;
+  safetySandbox: {
+    language: string;
+    scenario: string;
+    runtimeEffect: string;
+    isSafe: boolean;
+  };
+  insight: string;
+}
+
+const PRESETS: VariancePreset[] = [
+  {
+    id: "fn_subtyping",
+    label: "1. 函数子类型公理 (Contravariant In, Covariant Out)",
+    desc: "函数入参逆变，返回值协变：(S1 → S2) <: (T1 → T2)",
+    ruleTex:
+      "\\frac{T_1 <: S_1 \\quad S_2 <: T_2}{S_1 \\to S_2 <: T_1 \\to T_2}",
+    codeSnippet:
+      "Dog <: Animal\nfn1: Animal -> Dog\nfn2: Dog -> Animal\n// 判定: fn1 能否安全赋值给 fn2？",
+    validAssignmentTex:
+      "(\\text{Animal} \\to \\text{Dog}) <: (\\text{Dog} \\to \\text{Animal})",
+    invalidAssignmentTex:
+      "(\\text{Dog} \\to \\text{Animal}) \\not<: (\\text{Animal} \\to \\text{Dog})",
+    validReason:
+      "✅ 合法：调用方承诺传入 Dog，fn1 内部只需当成更宽泛的 Animal 处理即可（入参逆变宽限）；fn1 保证产出 Dog，调用方期待宽泛的 Animal，接收完全安全（出参协变收敛）。",
+    invalidReason:
+      "❌ 拒绝：如果允许该赋值，调用方可能传入 Cat（作为 Animal 的合法实例），但被赋值的目标函数却期待只接收 Dog，内部试图访问 Dog 特有字段时将导致严重的运行时崩溃（Type Confusion）！",
+    polarityExplanation:
+      "函数签名 S → T 中，输入参数 S 处于负极性位置（-，逆变）；输出参数 T 处于正极性位置（+，协变）。",
+    safetySandbox: {
+      language: "TypeScript (with strictFunctionTypes)",
+      scenario: "let handler: (a: Dog) => Animal = (a: Animal) => new Dog();",
+      runtimeEffect:
+        "类型检查器顺利通过，保证调用方无论传任何具体狗，均安全被 Animal 接口兼容消费。",
+      isSafe: true,
+    },
+    insight:
+      "里氏替换原则（LSP）在函数上的精髓是‘需求更少，供给更多’：一个合格的替代函数，其接受的输入必须比原先更宽容（逆变），产出的输出必须比原先更精准（协变）。",
+  },
+  {
+    id: "record_subtyping",
+    label: "2. 记录宽度与深度子类型 (Record Subtyping)",
+    desc: "字段更多更具体的是子类型：{x, y, z} <: {x, y}",
+    ruleTex:
+      "\\frac{k \\ge n}{\\{l_1:T_1, \\dots, l_k:T_k\\} <: \\{l_1:T_1, \\dots, l_n:T_n\\}} \\quad (\\text{Width})",
+    codeSnippet:
+      "Point2D = { x: Real, y: Real }\nPoint3D = { x: Real, y: Real, z: Real }\n// 判定: Point3D <: Point2D",
+    validAssignmentTex:
+      "\\{x: \\text{Real}, y: \\text{Real}, z: \\text{Real}\\} <: \\{x: \\text{Real}, y: \\text{Real}\\}",
+    invalidAssignmentTex:
+      "\\{x: \\text{Real}\\} \\not<: \\{x: \\text{Real}, y: \\text{Real}\\}",
+    validReason:
+      "✅ 合法：Point3D 拥有 Point2D 所需的全部属性（x 与 y），当函数只需读取 x 与 y 时，传入 Point3D 绝不会缺失任何字段。",
+    invalidReason:
+      "❌ 拒绝：Point1D 缺少必须的 y 字段，读取 obj.y 将引发未定义属性访问错误。",
+    polarityExplanation:
+      "宽度子类型中‘信息量越丰富、约束条件越严苛’的类型，其满足值的集合反而越小，因而是更具体的子类型（Subtype）。",
+    safetySandbox: {
+      language: "TypeScript / OCaml",
+      scenario:
+        "function render(p: { x: number, y: number }) { return p.x + p.y; }\nrender({ x: 1, y: 2, z: 3 });",
+      runtimeEffect:
+        "宽度子类型允许传入包含多余字段的对象，函数安全解构前置字段，多余字段被无害忽略。",
+      isSafe: true,
+    },
+    insight:
+      "直觉上的‘加法’在类型论中往往对应子类型层级的‘向下收敛’：每多声明一个必须字段，就是对值空间多施加一条过滤条件，形成的子集当然更小更具体。",
+  },
+  {
+    id: "polarity_algebra",
+    label: "3. 极性符号代数 (Polarity Calculus: 负负得正)",
+    desc: "高阶函数入参的入参极性翻转：((A → B) → C)",
+    ruleTex:
+      "\\text{Polarity}((A \\to B) \\to C) \\implies A:(-\\times - = +), \\; B:(-\\times + = -), \\; C:(+)",
+    codeSnippet:
+      "type Transform = (callback: (item: A) => B) => C\n// 问: A 在整个高阶签名中处于什么极性？",
+    validAssignmentTex:
+      "A \\text{ 处于正极性 (+) 位置，因而高阶函数对 } A \\text{ 协变！}",
+    invalidAssignmentTex:
+      "A \\text{ 绝非负极性 (-)，不可当成常规函数入参的逆变处理}",
+    validReason:
+      "✅ 深刻规律：callback 自身是外层函数的入参（极性为 -1）；而 A 是 callback 的入参（极性再次乘 -1）。负负得正（-1 × -1 = +1），因此外层高阶函数对 A 表现为协变！",
+    invalidReason:
+      "❌ 直觉误区：若机械地认为‘只要出现在参数位置就是逆变’，就会错误判断 A 的型变方向，导致高阶管道组合时出现虚假类型报错。",
+    polarityExplanation:
+      "极性代数规则：每次穿过箭头左侧，极性乘以 -1；穿过箭头右侧，极性乘以 +1。乘积结果为 + 则协变，为 - 则逆变。",
+    safetySandbox: {
+      language: "Scala / Haskell / C#",
+      scenario:
+        "trait HighOrder[+A] { def apply(cb: A => Unit): Unit } // 编译通过！",
+      runtimeEffect:
+        "编译器正确推导出 A 处于两次逆变嵌套之内，因而允许 A 标注为协变型变参数 (+A)。",
+      isSafe: true,
+    },
+    insight:
+      "代数符号法则再次在类型论中完美印证：高阶函数不是深不可测的黑盒，通过极性符号相乘，任意深度的函数管道都可以机械推导出各类型变量的协变或逆变归宿。",
+  },
+  {
+    id: "producer_cov",
+    label: "4. 只读生产端与协变 (+T / out T)",
+    desc: "只产出不接收的只读数据源是协变的：Producer[S] <: Producer[T]",
+    ruleTex:
+      "S <: T \\implies \\text{Producer}[S] <: \\text{Producer}[T] \\quad (\\text{Covariant})",
+    codeSnippet:
+      "interface Producer<out T> {\n  fun get(): T\n}\n// Dog <: Animal  =>  Producer<Dog> <: Producer<Animal>",
+    validAssignmentTex:
+      "\\text{Producer}[\\text{Dog}] <: \\text{Producer}[\\text{Animal}]",
+    invalidAssignmentTex:
+      "\\text{Producer}[\\text{Animal}] \\not<: \\text{Producer}[\\text{Dog}]",
+    validReason:
+      "✅ 合法：Producer 只负责向外部交付数据。调用方期待领养一只 Animal，数据源给出的必定是 Dog，狗完全满足 Animal 的一切要求。",
+    invalidReason:
+      "❌ 拒绝：调用方期待专门领养 Dog，而数据源只能保证产出宽泛的 Animal（可能是 Cat），无法满足特化需求。",
+    polarityExplanation:
+      "T 仅出现在方法的返回位置（正极性 +），不接收外部输入，因此类型构造器与 T 保持同向变化（协变）。",
+    safetySandbox: {
+      language: "Kotlin / C#",
+      scenario:
+        "val dogSource: Producer<Dog> = ...\nval animalSource: Producer<Animal> = dogSource // 安全赋值",
+      runtimeEffect:
+        "只读集合（如不可变 List、Iterator）天然支持协变传递，赋予代码极致的复用灵活性。",
+      isSafe: true,
+    },
+    insight:
+      "生产者的契约是‘承诺供给’：交付更高规格的子类产品（Dog）去满足低规格的通用需求（Animal），在物理逻辑上永远是安全的。",
+  },
+  {
+    id: "consumer_contra",
+    label: "5. 只写消费端与逆变 (-T / in T)",
+    desc: "只接收不产出的消费端是逆变的：Consumer[T] <: Consumer[S]",
+    ruleTex:
+      "S <: T \\implies \\text{Consumer}[T] <: \\text{Consumer}[S] \\quad (\\text{Contravariant})",
+    codeSnippet:
+      "interface Consumer<in T> {\n  fun accept(item: T): Unit\n}\n// Dog <: Animal  =>  Consumer<Animal> <: Consumer<Dog>",
+    validAssignmentTex:
+      "\\text{Consumer}[\\text{Animal}] <: \\text{Consumer}[\\text{Dog}]",
+    invalidAssignmentTex:
+      "\\text{Consumer}[\\text{Dog}] \\not<: \\text{Consumer}[\\text{Animal}]",
+    validReason:
+      "✅ 合法：Consumer[Animal] 能够消费任何动物（包括狗、猫、鸟）。当我们把它当作 Consumer[Dog] 使用时，喂给它一只狗，它完全有能力消化处理！",
+    invalidReason:
+      "❌ 拒绝：Consumer[Dog] 只懂得如何处理狗，若强行当成 Consumer[Animal] 接收猫，在执行时访问狗独有逻辑必将崩溃。",
+    polarityExplanation:
+      "T 仅出现在方法的参数位置（负极性 -），因此类型构造器与 T 呈逆向反转变化（逆变）。",
+    safetySandbox: {
+      language: "Kotlin / Java (Comparable<? super T>)",
+      scenario:
+        "val animalFeeder: Consumer<Animal> = ...\nval dogFeeder: Consumer<Dog> = animalFeeder // 逆变安全替换",
+      runtimeEffect:
+        "比较器 Comparator<Animal> 可以无缝替代 Comparator<Dog> 来为狗的列表排序，反之则不可。",
+      isSafe: true,
+    },
+    insight:
+      "消费者的契约是‘包容输入’：具备更宽广消化能力的大胃王（Consumer[Animal]），完全可以轻松胜任挑食挑剔的专属胃口（Consumer[Dog]）。",
+  },
+  {
+    id: "java_array_disaster",
+    label: "6. Java 数组协变灾难 (Array Covariance Disaster)",
+    desc: "可变容器强行协变引发的 ArrayStoreException 惨剧",
+    ruleTex:
+      "\\text{String}[] <: \\text{Object}[] \\quad (\\text{Java Historical Mistake})",
+    codeSnippet:
+      "String[] strArr = new String[5];\nObject[] objArr = strArr; // 允许协变！\nobjArr[0] = Integer.valueOf(42); // 写入整数！\nString s = strArr[0]; // 崩溃！",
+    validAssignmentTex:
+      "\\text{编译期完全放行：String}[] \\text{ 被误判为 } \\text{Object}[] \\text{ 的子类型}",
+    invalidAssignmentTex:
+      "\\text{运行期瞬间暴雷：抛出 java.lang.ArrayStoreException}",
+    validReason:
+      "❌ 漏洞根源：可变数组既能读（要求协变）又能写（要求逆变）。强行协变使得通过 objArr 别名写入非 String 对象成为可能，破坏了内存堆中原生数组的类型同质性！",
+    invalidReason:
+      "✅ 唯一正确的解法：可读写容器在数学上必须是不变（Invariant）的！只读集合才能协变，只写集合才能逆变。",
+    polarityExplanation:
+      "读方法 get(): T 产生正极性 (+)，写方法 set(val: T) 产生负极性 (-)。二者叠加 (+ × - = ±)，迫使型变只能被锁定为 Invariant（不变）。",
+    safetySandbox: {
+      language: "Java Runtime",
+      scenario:
+        "objArr[0] = 42; // JVM 被迫在每次数组写入时注入运行时类型嗅探指令 checkcast",
+      runtimeEffect:
+        "为了弥补类型系统的非健全漏洞，JVM 在每次数组存储时必须付出额外的性能惩罚（检查元素真实类型）。",
+      isSafe: false,
+    },
+    insight:
+      "Java 早期为了在缺乏泛型时支持通用排序（如 Arrays.sort(Object[])）而牺牲了类型系统的健全性。这一沉痛的历史教训彻底警示了后来的语言设计者：可变性与协变绝对不可兼得！",
+  },
+  {
+    id: "rust_mut_invariance",
+    label: "7. Rust 可变引用不变性 (Rust &'a mut T Invariance)",
+    desc: "为什么 &'a mut T 对 T 必须严格不变？防止 Use-After-Free 悬垂逃逸",
+    ruleTex:
+      "\\&'a \\text{ mut } T \\text{ 对 } 'a \\text{ 协变，但对 } T \\text{ 严格不变 (Invariant)}",
+    codeSnippet:
+      "// 设 'long: 'short ('long 比 'short 活得久)\n// 若允许 &mut &'long T 协变为 &mut &'short T:\nfn exploit(outer: &mut &'long str) {\n  let temp: &'short str = ...;\n  *outer = temp; // 短生命周期指针写入外部长指针！\n}\n// 函数退出后，外部指针成为悬垂指针 (UAF)！",
+    validAssignmentTex:
+      "\\&'a \\text{ mut } T \\text{ 只能赋值给类型严格一致的 } \\&'a \\text{ mut } T",
+    invalidAssignmentTex:
+      "\\&'a \\text{ mut } \\&'\\text{long } T \\not<: \\&'a \\text{ mut } \\&'\\text{short } T",
+    validReason:
+      "✅ 编译器铁壁防御：因为对 T 严格不变，Rust 拦截了试图将 short 指针伪装写入 long 槽位的可能，彻底消除了悬垂引用（Use-After-Free）与内存踩踏漏洞！",
+    invalidReason:
+      "❌ 伪协变的灾难：若允许对 T 协变，可变引用将允许攻击者把栈上短命局部变量的地址走私写入全局长命指针中，在栈帧弹出后引发内存安全崩溃。",
+    polarityExplanation:
+      "生命周期也是一种子类型：活得越久越泛化（'long <: 'short）。对生命周期参数 'a 是协变的（可以随时把租期缩短），但对被借用的内容类型 T 必须严格不变。",
+    safetySandbox: {
+      language: "Rust Borrow Checker",
+      scenario:
+        "error[E0308]: mismatched types: lifetime may not live long enough",
+      runtimeEffect:
+        "编译期直接截断生命周期走私逃逸，在零运行时开销下达成 100% 内存安全。",
+      isSafe: true,
+    },
+    insight:
+      "Rust 将子类型理论（Subtyping）高度内化于生命周期系统（Lifetimes）中。不变性（Invariance）在这里不是教条的数学公式，而是守护计算机物理内存安全最坚不可摧的防线。",
+  },
+];
+
+const VIEW_OPTIONS = [
+  { id: "lsp", label: "LSP 与函数子类型验证 (LSP & Function Subtyping)" },
+  { id: "polarity", label: "极性符号代数推导 (Polarity Calculus)" },
+  { id: "safety", label: "内存安全与破坏沙盒 (Safety & Pitfall Sandbox)" },
+];
+
+export default function SubtypingVarianceDiagram() {
+  const [activePresetId, setActivePresetId] = useState<string>("fn_subtyping");
+  const [viewMode, setViewMode] = useState<"lsp" | "polarity" | "safety">(
+    "lsp",
+  );
+  const [activeAssignmentType, setActiveAssignmentType] = useState<
+    "valid" | "invalid"
+  >("valid");
+
+  const preset = PRESETS.find((p) => p.id === activePresetId) ?? PRESETS[0];
+
+  const handleReset = () => {
+    setActiveAssignmentType("valid");
+  };
+
+  const handlePresetChange = (id: string) => {
+    setActivePresetId(id);
+    setActiveAssignmentType("valid");
+  };
+
+  return (
+    <ExpandableDemo id="subtyping-variance-sandbox">
+      <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
+        {/* Header */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+              子类型与型变（Subtyping & Variance）交互探针
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              ✨ <strong>逆变入参与协变出参、极性代数与可变内存防线</strong>
+              ：单步探究里氏替换（LSP）与物理内存安全之间的深邃张力
+            </p>
+          </div>
+        </div>
+
+        {/* View Mode Switcher */}
+        <div className="mb-4 overflow-x-auto pb-1">
+          <CapsuleTabs
+            onChange={(val) =>
+              setViewMode(val as "lsp" | "polarity" | "safety")
+            }
+            options={VIEW_OPTIONS}
+            value={viewMode}
+          />
+        </div>
+
+        {/* Preset Selector */}
+        <div className="mb-4">
+          <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            精选子类型公理与型变工程预设：
+          </div>
+          <PresetSelector
+            onChange={handlePresetChange}
+            options={PRESETS.map((p) => ({
+              id: p.id,
+              label: p.label,
+              description: p.desc,
+            }))}
+            value={activePresetId}
+          />
+        </div>
+
+        {/* Axiom Rule Banner */}
+        <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              形式化公理规则 (Formal Subtyping Rule)：
+            </span>
+            <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              {preset.label}
+            </span>
+          </div>
+          <div className="mt-3 flex items-center justify-center overflow-x-auto py-2">
+            <div className="font-mono text-sm font-bold text-indigo-700 dark:text-indigo-300">
+              <InlineMath tex={preset.ruleTex} />
+            </div>
+          </div>
+        </div>
+
+        {/* Viewport Container with CanvasToolbar */}
+        <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
+          <CanvasToolbar onReset={handleReset} />
+
+          {/* Stepper / Toggle Toolbar in LSP Mode */}
+          {viewMode === "lsp" && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
+                    activeAssignmentType === "valid"
+                      ? "border border-emerald-500 bg-emerald-600 text-white shadow-sm"
+                      : "border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700"
+                  }`}
+                  onClick={() => setActiveAssignmentType("valid")}
+                  type="button"
+                >
+                  ✅ 合法替换 (LSP Subtype)
+                </button>
+                <button
+                  className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
+                    activeAssignmentType === "invalid"
+                      ? "border border-rose-500 bg-rose-600 text-white shadow-sm"
+                      : "border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700"
+                  }`}
+                  onClick={() => setActiveAssignmentType("invalid")}
+                  type="button"
+                >
+                  ❌ 非法替换 (Rejected Subtype)
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                    activeAssignmentType === "valid"
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                      : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                  }`}
+                >
+                  {activeAssignmentType === "valid"
+                    ? "通过类型检查"
+                    : "拦截类型错误"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Main View Area */}
+          <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
+            {viewMode === "lsp" && (
+              <div className="space-y-4 py-2">
+                {/* Assignment Display */}
+                <div className="flex items-center justify-center overflow-x-auto px-4 py-2">
+                  <div className="rounded-2xl border border-slate-700/60 bg-slate-800/60 px-6 py-4 shadow-xl backdrop-blur-md">
+                    <div className="font-mono text-sm font-bold text-slate-100 sm:text-base">
+                      <InlineMath
+                        tex={
+                          activeAssignmentType === "valid"
+                            ? preset.validAssignmentTex
+                            : preset.invalidAssignmentTex
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Explanation Banner */}
+                <div
+                  className={`mx-auto max-w-xl rounded-xl p-3.5 text-xs text-left leading-relaxed ${
+                    activeAssignmentType === "valid"
+                      ? "border border-emerald-500/30 bg-emerald-950/20 text-emerald-200"
+                      : "border border-rose-500/30 bg-rose-950/20 text-rose-200"
+                  }`}
+                >
+                  {activeAssignmentType === "valid"
+                    ? preset.validReason
+                    : preset.invalidReason}
+                </div>
+              </div>
+            )}
+
+            {viewMode === "polarity" && (
+              <div className="space-y-4 py-3 text-center">
+                <div className="text-xs font-semibold text-amber-400">
+                  极性符号运算法则 (Polarity Multiplication)
+                </div>
+
+                <div className="mx-auto max-w-xl rounded-2xl border border-amber-600/40 bg-amber-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
+                  <div className="mb-2 font-mono text-xs text-amber-200">
+                    {preset.codeSnippet}
+                  </div>
+                  <div className="mt-3 text-xs leading-relaxed text-slate-300">
+                    💡 <strong>符号相乘推演</strong>：
+                    {preset.polarityExplanation}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {viewMode === "safety" && (
+              <div className="space-y-4 py-3 text-center">
+                <div className="text-xs font-semibold text-sky-400">
+                  物理内存安全沙盒与运行时行为
+                </div>
+
+                <div className="mx-auto max-w-xl rounded-2xl border border-sky-600/40 bg-sky-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
+                  <div className="flex items-center justify-between border-b border-sky-800/40 pb-2">
+                    <span className="text-xs font-bold text-sky-300">
+                      目标系统：{preset.safetySandbox.language}
+                    </span>
+                    <span
+                      className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                        preset.safetySandbox.isSafe
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                          : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                      }`}
+                    >
+                      {preset.safetySandbox.isSafe
+                        ? "🛡️ 静态内存安全"
+                        : "💥 破坏类型安全性"}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 font-mono text-xs text-slate-200 whitespace-pre-wrap bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                    {preset.safetySandbox.scenario}
+                  </div>
+
+                  <div className="mt-3 text-[11px] leading-relaxed text-slate-400">
+                    💡 <strong>真实影响分析</strong>：
+                    {preset.safetySandbox.runtimeEffect}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Theoretical Insight Card */}
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
+          <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
+            🔍 子类型与型变深邃理论洞见 (Subtyping & Variance Insight)
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
+            {preset.insight}
+          </p>
+        </div>
+      </div>
+    </ExpandableDemo>
+  );
+}
