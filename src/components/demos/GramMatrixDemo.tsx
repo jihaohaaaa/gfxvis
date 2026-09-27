@@ -7,7 +7,7 @@ import {
 } from "../../visualizations/core/2d/plot2d";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import PresetSelector from "../framework/PresetSelector";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useVectorDrag } from "../framework/useVectorDrag";
@@ -146,79 +146,82 @@ export default function GramMatrixDemo({ height }: { height?: string }) {
   const isDegenerate = detG < 1e-4;
 
   return (
-    <ExpandableDemo id="gram-matrix" height={height}>
-      <div className="space-y-4">
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar onReset={resetBounds} />
-          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-        </div>
+    <AutoMath>
+      <ExpandableDemo id="gram-matrix" height={height}>
+        <div className="space-y-4">
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar onReset={resetBounds} />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full"
+            />
+          </div>
 
-        {/* Preset Controls */}
-        <PresetSelector
-          options={PRESETS}
-          value={presetKey}
-          onChange={handlePreset}
-        />
+          {/* Preset Controls */}
+          <PresetSelector
+            options={PRESETS}
+            value={presetKey}
+            onChange={handlePreset}
+          />
 
-        {/* Gram Matrix & Determinant Panel */}
-        <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
-          <div>
-            <p className="mb-1 font-semibold text-foreground">
-              Gram 矩阵 <InlineMath tex="G = A^T A" />
-            </p>
-            <div className="font-mono text-xs text-muted leading-relaxed">
-              <p>
-                g₁₁ = ⟨u, u⟩ ={" "}
-                <span className="text-blue-600 dark:text-blue-400">
-                  {g11.toFixed(3)}
-                </span>
+          {/* Gram Matrix & Determinant Panel */}
+          <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
+            <div>
+              <p className="mb-1 font-semibold text-foreground">
+                Gram 矩阵 $G = A^T A$
               </p>
-              <p>
-                g₁₂ = g₂₁ = ⟨u, v⟩ ={" "}
-                <span className="text-purple-600 dark:text-purple-400">
-                  {g12.toFixed(3)}
-                </span>
+              <div className="font-mono text-xs text-muted leading-relaxed">
+                <p>
+                  g₁₁ = ⟨u, u⟩ ={" "}
+                  <span className="text-blue-600 dark:text-blue-400">
+                    {g11.toFixed(3)}
+                  </span>
+                </p>
+                <p>
+                  g₁₂ = g₂₁ = ⟨u, v⟩ ={" "}
+                  <span className="text-purple-600 dark:text-purple-400">
+                    {g12.toFixed(3)}
+                  </span>
+                </p>
+                <p>
+                  g₂₂ = ⟨v, v⟩ ={" "}
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    {g22.toFixed(3)}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-1 font-semibold text-foreground">
+                Gram 行列式与面积
               </p>
-              <p>
-                g₂₂ = ⟨v, v⟩ ={" "}
-                <span className="text-emerald-600 dark:text-emerald-400">
-                  {g22.toFixed(3)}
-                </span>
+              <p className="text-xs text-muted">
+                {`$\\det(G) = ${detG.toFixed(3)}$`}
               </p>
+              <p className="mt-1 text-xs font-medium text-accent">
+                {`$\\text{Area} = \\sqrt{\\det(G)} = ${area.toFixed(3)}$`}
+              </p>
+
+              {isDegenerate && (
+                <p className="mt-1.5 text-xs text-red-500 font-semibold">
+                  ⚠️ 向量线性相关：平行四边形退化为线段，det(G) = 0，Gram
+                  矩阵不可逆。
+                </p>
+              )}
             </div>
           </div>
 
-          <div>
-            <p className="mb-1 font-semibold text-foreground">
-              Gram 行列式与面积
-            </p>
-            <p className="text-xs text-muted">
-              <InlineMath tex={`\\det(G) = ${detG.toFixed(3)}`} />
-            </p>
-            <p className="mt-1 text-xs font-medium text-accent">
-              <InlineMath
-                tex={`\\text{Area} = \\sqrt{\\det(G)} = ${area.toFixed(3)}`}
-              />
-            </p>
-
-            {isDegenerate && (
-              <p className="mt-1.5 text-xs text-red-500 font-semibold">
-                ⚠️ 向量线性相关：平行四边形退化为线段，det(G) = 0，Gram
-                矩阵不可逆。
-              </p>
-            )}
-          </div>
+          <p className="text-xs text-muted">
+            提示：拖动 <span className="text-blue-600 font-medium">u</span> 或{" "}
+            <span className="text-emerald-600 font-medium">v</span>{" "}
+            向量端点更改向量位置；滚轮缩放，中键平移。
+          </p>
         </div>
-
-        <p className="text-xs text-muted">
-          提示：拖动 <span className="text-blue-600 font-medium">u</span> 或{" "}
-          <span className="text-emerald-600 font-medium">v</span>{" "}
-          向量端点更改向量位置；滚轮缩放，中键平移。
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

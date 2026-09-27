@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import Checkbox from "../framework/Checkbox";
 import PresetSelector, { type PresetOption } from "../framework/PresetSelector";
@@ -392,159 +392,159 @@ export default function DualFunctionalHyperplanesDemo({
   }, [a, b, v, showRiesz, showIntersections, redraw]);
 
   return (
-    <ExpandableDemo id="dual-functional-hyperplanes" height={height}>
-      <div className="space-y-4">
-        {/* Preset Selector */}
-        <PresetSelector
-          label="预设测量场景:"
-          options={PRESETS}
-          value={presetKey}
-          onChange={handlePreset}
-        />
+    <AutoMath>
+      <ExpandableDemo id="dual-functional-hyperplanes" height={height}>
+        <div className="space-y-4">
+          {/* Preset Selector */}
+          <PresetSelector
+            label="预设测量场景:"
+            options={PRESETS}
+            value={presetKey}
+            onChange={handlePreset}
+          />
 
-        {/* 2D Canvas Viewport */}
-        <div className="relative flex flex-col rounded-xl border border-border bg-surface overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border/80 bg-surface-hover/80 px-3 py-2 text-xs font-semibold text-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" />
-              线性泛函等高线穿透模型交互视图
-            </span>
-            <span className="text-[11px] text-muted font-normal">
-              左键拖拽向量箭头顶点 / 滚轮缩放画布
-            </span>
-          </div>
-
-          <div
-            ref={containerRef}
-            className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden"
-          >
-            <CanvasToolbar onReset={resetBounds} />
-            <canvas
-              ref={canvasRef}
-              className="absolute inset-0 h-full w-full cursor-crosshair"
-            />
-
-            {/* In-canvas Legend */}
-            <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded bg-surface/90 p-2 text-[11px] text-muted backdrop-blur-xs border border-border/60">
-              <div className="flex items-center gap-2">
-                <span className="text-amber-500 font-bold">● 向量 v</span>
-                <span className="text-emerald-500 font-bold">
-                  ― ker(f) 零核超平面
-                </span>
-                <span className="text-blue-500 font-bold">
-                  ┄ f(x)=c 等值线族
-                </span>
-              </div>
-              <div className="flex items-center gap-2 pt-0.5 border-t border-border/40 text-[10px]">
-                <span className="text-red-500 font-medium">● 穿透计数点</span>
-                {showRiesz && (
-                  <span className="text-purple-500 font-medium">
-                    ┄ v_f (Riesz 表现向量)
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Real-time Math Calculation & Sliders */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {/* Controls Sliders */}
-          <div className="space-y-3 rounded-xl border border-border bg-surface p-4 text-xs">
-            <p className="font-semibold text-foreground">
-              线性泛函系数探针 <InlineMath tex="f(\mathbf{x}) = a x + b y" />
-            </p>
-            <ParamSlider
-              label="系数 a (x 分量)"
-              value={a}
-              min={-2.5}
-              max={2.5}
-              step={0.1}
-              onChange={(val) => {
-                setA(val);
-                setPresetKey("custom");
-              }}
-            />
-            <ParamSlider
-              label="系数 b (y 分量)"
-              value={b}
-              min={-2.5}
-              max={2.5}
-              step={0.1}
-              onChange={(val) => {
-                setB(val);
-                setPresetKey("custom");
-              }}
-            />
-
-            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-border/50">
-              <Checkbox
-                label="显示穿透交点"
-                checked={showIntersections}
-                onChange={setShowIntersections}
-              />
-              <Checkbox
-                label="显示 Riesz 对偶向量 v_f"
-                checked={showRiesz}
-                onChange={setShowRiesz}
-              />
-            </div>
-          </div>
-
-          {/* Real-time Evaluation Math Card */}
-          <div className="flex flex-col justify-between rounded-xl border border-border bg-surface p-4 text-xs space-y-3">
-            <div>
-              <p className="font-semibold text-foreground mb-2">
-                泛函测量与穿透数实时计算
-              </p>
-              <div className="space-y-2 font-mono text-[11px]">
-                {/* Functional Value */}
-                <div className="rounded border border-blue-500/30 bg-blue-500/5 p-2.5 space-y-1">
-                  <div className="flex items-center justify-between text-blue-500 font-bold">
-                    <span>泛函代数求值 f(v)</span>
-                    <span className="text-sm">{fVal.toFixed(2)}</span>
-                  </div>
-                  <InlineMath
-                    tex={`f(\\mathbf{v}) = (${a.toFixed(1)})(${v.x.toFixed(1)}) + (${b.toFixed(1)})(${v.y.toFixed(1)}) = ${fVal.toFixed(2)}`}
-                  />
-                </div>
-
-                {/* Piercing Analysis */}
-                <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2.5 space-y-1">
-                  <div className="flex items-center justify-between text-amber-500 font-bold">
-                    <span>几何穿透层数（Hyperplane Piercing）</span>
-                    <span>
-                      {Math.abs(fVal) < 1e-4
-                        ? "0 层 (向量位于零核上)"
-                        : `穿透 ${Math.abs(fVal).toFixed(2)} 层等高线`}
-                    </span>
-                  </div>
-                  <p className="text-muted text-[10px]">
-                    等高线间距 $d = 1/\|\nabla f\| =$ {lineSpacing.toFixed(2)}
-                    。间距越密，泛函对同一向量测出的数值越大。
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Zero-Kernel Status */}
-            <div className="pt-2 border-t border-border/50 text-[11px] text-muted flex items-center justify-between">
-              <span>零核状态：</span>
-              <span
-                className={`font-semibold ${
-                  Math.abs(fVal) < 1e-3
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-foreground"
-                }`}
-              >
-                {Math.abs(fVal) < 1e-3
-                  ? "✓ 向量 v 恰好落在 ker(f) 零核超平面上 (f(v)=0)"
-                  : `向量 v 偏离零核超平面，测量值不为零`}
+          {/* 2D Canvas Viewport */}
+          <div className="relative flex flex-col rounded-xl border border-border bg-surface overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border/80 bg-surface-hover/80 px-3 py-2 text-xs font-semibold text-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" />
+                线性泛函等高线穿透模型交互视图
+              </span>
+              <span className="text-[11px] text-muted font-normal">
+                左键拖拽向量箭头顶点 / 滚轮缩放画布
               </span>
             </div>
+
+            <div
+              ref={containerRef}
+              className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden"
+            >
+              <CanvasToolbar onReset={resetBounds} />
+              <canvas
+                ref={canvasRef}
+                className="absolute inset-0 h-full w-full cursor-crosshair"
+              />
+
+              {/* In-canvas Legend */}
+              <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded bg-surface/90 p-2 text-[11px] text-muted backdrop-blur-xs border border-border/60">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-500 font-bold">● 向量 v</span>
+                  <span className="text-emerald-500 font-bold">
+                    ― ker(f) 零核超平面
+                  </span>
+                  <span className="text-blue-500 font-bold">
+                    ┄ f(x)=c 等值线族
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 pt-0.5 border-t border-border/40 text-[10px]">
+                  <span className="text-red-500 font-medium">● 穿透计数点</span>
+                  {showRiesz && (
+                    <span className="text-purple-500 font-medium">
+                      ┄ v_f (Riesz 表现向量)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Real-time Math Calculation & Sliders */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Controls Sliders */}
+            <div className="space-y-3 rounded-xl border border-border bg-surface p-4 text-xs">
+              <p className="font-semibold text-foreground">
+                线性泛函系数探针 {"$f(\\mathbf{x}) = a x + b y$"}
+              </p>
+              <ParamSlider
+                label="系数 a (x 分量)"
+                value={a}
+                min={-2.5}
+                max={2.5}
+                step={0.1}
+                onChange={(val) => {
+                  setA(val);
+                  setPresetKey("custom");
+                }}
+              />
+              <ParamSlider
+                label="系数 b (y 分量)"
+                value={b}
+                min={-2.5}
+                max={2.5}
+                step={0.1}
+                onChange={(val) => {
+                  setB(val);
+                  setPresetKey("custom");
+                }}
+              />
+
+              <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-border/50">
+                <Checkbox
+                  label="显示穿透交点"
+                  checked={showIntersections}
+                  onChange={setShowIntersections}
+                />
+                <Checkbox
+                  label="显示 Riesz 对偶向量 v_f"
+                  checked={showRiesz}
+                  onChange={setShowRiesz}
+                />
+              </div>
+            </div>
+
+            {/* Real-time Evaluation Math Card */}
+            <div className="flex flex-col justify-between rounded-xl border border-border bg-surface p-4 text-xs space-y-3">
+              <div>
+                <p className="font-semibold text-foreground mb-2">
+                  泛函测量与穿透数实时计算
+                </p>
+                <div className="space-y-2 font-mono text-[11px]">
+                  {/* Functional Value */}
+                  <div className="rounded border border-blue-500/30 bg-blue-500/5 p-2.5 space-y-1">
+                    <div className="flex items-center justify-between text-blue-500 font-bold">
+                      <span>泛函代数求值 f(v)</span>
+                      <span className="text-sm">{fVal.toFixed(2)}</span>
+                    </div>
+                    {`$f(\\mathbf{v}) = (${a.toFixed(1)})(${v.x.toFixed(1)}) + (${b.toFixed(1)})(${v.y.toFixed(1)}) = ${fVal.toFixed(2)}$`}
+                  </div>
+
+                  {/* Piercing Analysis */}
+                  <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2.5 space-y-1">
+                    <div className="flex items-center justify-between text-amber-500 font-bold">
+                      <span>几何穿透层数（Hyperplane Piercing）</span>
+                      <span>
+                        {Math.abs(fVal) < 1e-4
+                          ? "0 层 (向量位于零核上)"
+                          : `穿透 ${Math.abs(fVal).toFixed(2)} 层等高线`}
+                      </span>
+                    </div>
+                    <p className="text-muted text-[10px]">
+                      等高线间距 $d = 1/\|\nabla f\| =$ {lineSpacing.toFixed(2)}
+                      。间距越密，泛函对同一向量测出的数值越大。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Zero-Kernel Status */}
+              <div className="pt-2 border-t border-border/50 text-[11px] text-muted flex items-center justify-between">
+                <span>零核状态：</span>
+                <span
+                  className={`font-semibold ${
+                    Math.abs(fVal) < 1e-3
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-foreground"
+                  }`}
+                >
+                  {Math.abs(fVal) < 1e-3
+                    ? "✓ 向量 v 恰好落在 ker(f) 零核超平面上 (f(v)=0)"
+                    : `向量 v 偏离零核超平面，测量值不为零`}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

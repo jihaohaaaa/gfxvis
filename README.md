@@ -1,10 +1,10 @@
 # GFXVis
 
-本地托管的图形学 / 可视化技术博客。静态站点 + 交互式 3D 示例。
+本地托管的图形学 / 可视化技术博客。内容页面在构建时预渲染，Node standalone 服务端提供在线代码运行与交互式 3D 示例。
 
 ## 技术栈
 
-- Astro(静态输出)+ TypeScript
+- Astro（Node standalone 服务端 + 预渲染页面）+ TypeScript
 - MDX + KaTeX + Shiki
 - Tailwind CSS v4
 - React Islands + Three.js
@@ -14,8 +14,8 @@
 ```bash
 pnpm install   # 安装依赖
 pnpm dev       # 本地开发 http://localhost:51730
-pnpm build     # 静态构建到 dist/
-pnpm preview   # 预览构建产物 http://localhost:51730
+pnpm build     # 校验并构建预渲染页面与 Node standalone 服务端到 dist/
+pnpm preview   # 启动 Node standalone 预览构建产物 http://localhost:51730
 pnpm lint      # ESLint 检查
 pnpm format    # Prettier 格式化
 ```
@@ -29,8 +29,8 @@ pnpm format    # Prettier 格式化
 
 ## 3D 示例
 
-- `src/visualizations/core/`: Three.js / Canvas 2D 核心算法与绘制封装
-- `src/visualizations/demos/<name>/`: 每个 Demo 的数学与场景配置
+- `src/visualizations/core/`: Three.js / Canvas 2D 的共享算法与绘制封装，按 `2d/`、`3d/`、`common/` 分类
+- `src/visualizations/scenes/<topic>/<scene-name>.ts`: 按主题组织的数学场景逻辑
 - `src/components/framework/`: 框架 UI 控件与 Hook 基础设施 (ExpandableDemo / CapsuleTabs / PresetSelector / CanvasToolbar / useCanvas2D / useVectorDrag 等)
 - `src/components/demos/`: 可视化 Demo React Islands
 

@@ -25,7 +25,7 @@ import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useViewer3D } from "../framework/useViewer3D";
@@ -328,93 +328,83 @@ export default function ScalarFieldDemo({ height }: { height?: string }) {
   const gy = field.gradY(probe.x, probe.y);
 
   return (
-    <ExpandableDemo id="scalar-field-2d" height={height}>
-      <div className="space-y-3">
-        <div className="grid gap-3 sm:h-[var(--demo-height,24rem)] sm:grid-cols-2">
-          <div
-            ref={container2dRef}
-            className="relative h-64 overflow-hidden rounded-xl border border-border sm:h-full"
-          >
-            <CanvasToolbar onReset={resetBounds2d} />
-            <canvas
-              ref={canvasRef}
-              className="absolute inset-0 h-full w-full cursor-crosshair"
+    <AutoMath>
+      <ExpandableDemo id="scalar-field-2d" height={height}>
+        <div className="space-y-3">
+          <div className="grid gap-3 sm:h-[var(--demo-height,24rem)] sm:grid-cols-2">
+            <div
+              ref={container2dRef}
+              className="relative h-64 overflow-hidden rounded-xl border border-border sm:h-full"
+            >
+              <CanvasToolbar onReset={resetBounds2d} />
+              <canvas
+                ref={canvasRef}
+                className="absolute inset-0 h-full w-full cursor-crosshair"
+              />
+            </div>
+            <div
+              ref={container3dRef}
+              className="h-64 overflow-hidden rounded-xl border border-border sm:h-full"
             />
           </div>
-          <div
-            ref={container3dRef}
-            className="h-64 overflow-hidden rounded-xl border border-border sm:h-full"
-          />
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <CapsuleTabs
-              options={FIELD_OPTIONS}
-              value={fieldId}
-              onChange={(id: Field2DId) => setFieldId(id)}
-              size="xs"
-            />
-            {field.hasC && (
-              <ParamSlider
-                label={<InlineMath tex="c" />}
-                min={field.cMin}
-                max={field.cMax}
-                step={0.05}
-                value={c}
-                onChange={setC}
-                widthClass="w-36"
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <CapsuleTabs
+                options={FIELD_OPTIONS}
+                value={fieldId}
+                onChange={(id: Field2DId) => setFieldId(id)}
+                size="xs"
               />
+              {field.hasC && (
+                <ParamSlider
+                  label="$c$"
+                  min={field.cMin}
+                  max={field.cMax}
+                  step={0.05}
+                  value={c}
+                  onChange={setC}
+                  widthClass="w-36"
+                />
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <CapsuleTabs
+                options={GRADIENT_MODES}
+                value={gradientMode}
+                onChange={(id: GradientArrowMode) => setGradientMode(id)}
+                size="xs"
+                label="箭头:"
+              />
+              <Checkbox
+                label="曲面透明"
+                checked={surfaceTransparent}
+                onChange={setSurfaceTransparent}
+              />
+            </div>
+          </div>
+          <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
+            <p>{`$\\varphi(x,y) = ${field.texAt(c)}$`}</p>
+            <p>
+              {`$\\varphi(${probe.x.toFixed(2)}, ${probe.y.toFixed(2)}) = ${value.toFixed(3)}$`}
+            </p>
+            <p>{`$\\nabla\\varphi = (${gx.toFixed(3)}, ${gy.toFixed(3)})$`}</p>
+            <p>
+              {`$\\lVert\\nabla\\varphi\\rVert = ${Math.hypot(gx, gy).toFixed(3)}$`}
+            </p>
+            {field.hasC && (
+              <p>
+                {`$F(x,y) = ${c.toFixed(2)} \\Rightarrow ${field.levelTex(c)}$`}
+              </p>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <CapsuleTabs
-              options={GRADIENT_MODES}
-              value={gradientMode}
-              onChange={(id: GradientArrowMode) => setGradientMode(id)}
-              size="xs"
-              label="箭头:"
-            />
-            <Checkbox
-              label="曲面透明"
-              checked={surfaceTransparent}
-              onChange={setSurfaceTransparent}
-            />
-          </div>
+          <p className="text-xs text-muted">
+            切换字段,圆族/抛物线族可调 c(accent 实线为零等值线
+            F=c);任一视图移动鼠标或拖动摆放探针,另一视图同步;3D
+            箭头可切换水平梯度/最陡上升;2D:滚轮缩放 · 中键平移;3D:左键/中键旋转
+            · 滚轮缩放 · 右键平移。
+          </p>
         </div>
-        <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
-          <p>
-            <InlineMath tex={`\\varphi(x,y) = ${field.texAt(c)}`} />
-          </p>
-          <p>
-            <InlineMath
-              tex={`\\varphi(${probe.x.toFixed(2)}, ${probe.y.toFixed(2)}) = ${value.toFixed(3)}`}
-            />
-          </p>
-          <p>
-            <InlineMath
-              tex={`\\nabla\\varphi = (${gx.toFixed(3)}, ${gy.toFixed(3)})`}
-            />
-          </p>
-          <p>
-            <InlineMath
-              tex={`\\lVert\\nabla\\varphi\\rVert = ${Math.hypot(gx, gy).toFixed(3)}`}
-            />
-          </p>
-          {field.hasC && (
-            <p>
-              <InlineMath
-                tex={`F(x,y) = ${c.toFixed(2)} \\Rightarrow ${field.levelTex(c)}`}
-              />
-            </p>
-          )}
-        </div>
-        <p className="text-xs text-muted">
-          切换字段,圆族/抛物线族可调 c(accent 实线为零等值线
-          F=c);任一视图移动鼠标或拖动摆放探针,另一视图同步;3D
-          箭头可切换水平梯度/最陡上升;2D:滚轮缩放 · 中键平移;3D:左键/中键旋转 ·
-          滚轮缩放 · 右键平移。
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

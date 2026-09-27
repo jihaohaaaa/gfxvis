@@ -36,6 +36,35 @@ body {
   @apply bg-background text-ink antialiased;
 }
 
+/* Article focus mode: keep only Astro islands and their required wrappers. */
+body.interactive-only-active article > header,
+body.interactive-only-active
+  article
+  > .prose
+  > :not(astro-island):not(.interactive-only-keep) {
+  display: none !important;
+}
+
+body.interactive-only-active article > .prose {
+  display: block;
+}
+
+body.interactive-only-active article > .prose > astro-island,
+body.interactive-only-active article > .prose > .interactive-only-keep {
+  display: block !important;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+body.interactive-only-active #interactive-only-empty {
+  display: block;
+}
+
+body.interactive-only-active
+  #interactive-only-empty[data-has-interactive="true"] {
+  display: none;
+}
+
 /* Shiki dual-theme: Astro emits --shiki-* CSS variables inline on .astro-code;
    pick the active scheme by the .dark class instead of prefers-color-scheme.
    Light code blocks use a fixed gray background (github-light's own bg is pure

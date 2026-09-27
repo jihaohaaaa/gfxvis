@@ -224,7 +224,11 @@ export function createCanvas2D(
       const plot = createPlot2D(bounds, rect.width, rect.height, margin);
       if (options.onLeftDown?.(e, plot) ?? false) {
         dragging = true;
-        canvas.setPointerCapture(e.pointerId);
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          // pointer capture might fail in headless environments
+        }
       }
     }
   };
@@ -268,6 +272,11 @@ export function createCanvas2D(
     panning = false;
     if (dragging) {
       dragging = false;
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch {
+        // pointer capture might fail in headless environments
+      }
       options.onLeftUp?.(e);
     }
   };

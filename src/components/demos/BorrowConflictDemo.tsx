@@ -6,7 +6,7 @@ import { githubLightInit, githubDarkInit } from "@uiw/codemirror-theme-github";
 import { actions } from "astro:actions";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 
 type Permission = "R" | "W";
@@ -391,543 +391,528 @@ export default function BorrowConflictDemo() {
   }, [generatedRustCode, runCompilation]);
 
   return (
-    <ExpandableDemo id="borrow-conflict-simulator">
-      <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface/50 p-4 sm:p-5">
-        {/* 顶部标题与说明 */}
-        <div>
-          <h4 className="text-base font-semibold text-ink">
-            借用冲突三维判定模拟器
-          </h4>
-          <p className="mt-1 text-xs text-muted">
-            验证形式化冲突判据：
-            <span className="font-mono text-ink">
-              A₁ ⋈ A₂ ⟺ (p₁ ∼ p₂) ∧ (ℓ₁ ∩ ℓ₂ ≠ ∅) ∧ conflict(α₁, α₂)
+    <AutoMath>
+      <ExpandableDemo id="borrow-conflict-simulator">
+        <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface/50 p-4 sm:p-5">
+          {/* 顶部标题与说明 */}
+          <div>
+            <h4 className="text-base font-semibold text-ink">
+              借用冲突三维判定模拟器
+            </h4>
+            <p className="mt-1 text-xs text-muted">
+              验证形式化冲突判据：
+              <span className="font-mono text-ink">
+                A₁ ⋈ A₂ ⟺ (p₁ ∼ p₂) ∧ (ℓ₁ ∩ ℓ₂ ≠ ∅) ∧ conflict(α₁, α₂)
+              </span>
+            </p>
+          </div>
+
+          {/* 场景选择 */}
+          <div className="flex flex-wrap items-center gap-3">
+            <CapsuleTabs
+              options={SCENARIOS}
+              value={scenarioId}
+              onChange={(id) => setScenarioId(id)}
+              size="xs"
+              label="Place 场景："
+            />
+          </div>
+          <p className="text-xs text-muted">
+            场景说明：{scenario.desc}
+            <span className="ml-2 font-mono text-ink">
+              {scenario.p1} {placeConflict ? "∼" : "≁"} {scenario.p2}
             </span>
           </p>
-        </div>
 
-        {/* 场景选择 */}
-        <div className="flex flex-wrap items-center gap-3">
-          <CapsuleTabs
-            options={SCENARIOS}
-            value={scenarioId}
-            onChange={(id) => setScenarioId(id)}
-            size="xs"
-            label="Place 场景："
-          />
-        </div>
-        <p className="text-xs text-muted">
-          场景说明：{scenario.desc}
-          <span className="ml-2 font-mono text-ink">
-            {scenario.p1} {placeConflict ? "∼" : "≁"} {scenario.p2}
-          </span>
-        </p>
-
-        {/* 访问事件 A1 与 A2 调节面板 */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* 事件 A1 */}
-          <div className="flex flex-col gap-2.5 rounded-md border border-border bg-surface p-3 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-ink">
-                访问事件 <InlineMath tex="A_1" />
-              </span>
-              <span className="font-mono text-xs text-muted">
-                p₁ = {scenario.p1}
-              </span>
-            </div>
-            <CapsuleTabs
-              options={PERMISSION_OPTIONS}
-              value={alpha1}
-              onChange={(val) => setAlpha1(val)}
-              size="xs"
-              label="权限 α₁："
-            />
-            <div className="space-y-1.5 pt-1">
-              <ParamSlider
-                label={
-                  <span className="text-xs">
-                    起始时刻 <InlineMath tex="s_1" />
-                  </span>
-                }
-                value={s1}
-                min={0}
-                max={Math.min(e1, 10)}
-                step={1}
-                display={String(s1)}
-                onChange={(val) => setS1(Math.min(val, e1))}
-                widthClass="w-32"
-              />
-              <ParamSlider
-                label={
-                  <span className="text-xs">
-                    释放时刻 <InlineMath tex="e_1" />
-                  </span>
-                }
-                value={e1}
-                min={Math.max(s1, 0)}
-                max={10}
-                step={1}
-                display={String(e1)}
-                onChange={(val) => setE1(Math.max(val, s1))}
-                widthClass="w-32"
-              />
-            </div>
-            <p className="font-mono text-xs text-muted">
-              区间 ℓ₁: [{s1}, {e1})，跨度 {Math.max(0, e1 - s1)}
-            </p>
-          </div>
-
-          {/* 事件 A2 */}
-          <div className="flex flex-col gap-2.5 rounded-md border border-border bg-surface p-3 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-ink">
-                访问事件 <InlineMath tex="A_2" />
-              </span>
-              <span className="font-mono text-xs text-muted">
-                p₂ = {scenario.p2}
-              </span>
-            </div>
-            <CapsuleTabs
-              options={PERMISSION_OPTIONS}
-              value={alpha2}
-              onChange={(val) => setAlpha2(val)}
-              size="xs"
-              label="权限 α₂："
-            />
-            <div className="space-y-1.5 pt-1">
-              <ParamSlider
-                label={
-                  <span className="text-xs">
-                    起始时刻 <InlineMath tex="s_2" />
-                  </span>
-                }
-                value={s2}
-                min={0}
-                max={Math.min(e2, 10)}
-                step={1}
-                display={String(s2)}
-                onChange={(val) => setS2(Math.min(val, e2))}
-                widthClass="w-32"
-              />
-              <ParamSlider
-                label={
-                  <span className="text-xs">
-                    释放时刻 <InlineMath tex="e_2" />
-                  </span>
-                }
-                value={e2}
-                min={Math.max(s2, 0)}
-                max={10}
-                step={1}
-                display={String(e2)}
-                onChange={(val) => setE2(Math.max(val, s2))}
-                widthClass="w-32"
-              />
-            </div>
-            <p className="font-mono text-xs text-muted">
-              区间 ℓ₂: [{s2}, {e2})，跨度 {Math.max(0, e2 - s2)}
-            </p>
-          </div>
-        </div>
-
-        {/* 时间轴可视化 (Timeline SVG) */}
-        <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3 text-xs">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-ink">
-              控制流活跃时间轴（CFG 投影）：
-            </span>
-            <span
-              className={`font-mono font-medium ${
-                timeOverlap
-                  ? "text-red-600 dark:text-red-400 font-semibold"
-                  : "text-emerald-600 dark:text-emerald-400 font-semibold"
-              }`}
-            >
-              ℓ₁ ∩ ℓ₂ {timeOverlap ? "≠ ∅ (重叠)" : "= ∅ (无交集)"}
-            </span>
-          </div>
-
-          {/* SVG 时间轴 */}
-          <div className="overflow-x-auto py-1">
-            <svg
-              viewBox="0 0 520 90"
-              className="h-24 w-full min-w-[480px] select-none text-[11px]"
-              role="img"
-              aria-labelledby={`${uniqueId}-title`}
-            >
-              <title id={`${uniqueId}-title`}>
-                借用检查生命周期重叠时间轴投影图
-              </title>
-
-              {/* 背景标尺刻度网格 */}
-              {Array.from({ length: 11 }).map((_, idx) => {
-                const x = 50 + idx * 45;
-                return (
-                  <g key={`grid-${x}`}>
-                    <line
-                      x1={x}
-                      y1={15}
-                      x2={x}
-                      y2={75}
-                      stroke="var(--color-border, #e5e7eb)"
-                      strokeDasharray="2,2"
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={x}
-                      y={88}
-                      textAnchor="middle"
-                      fill="var(--color-muted, #9ca3af)"
-                      className="font-mono text-[10px]"
-                    >
-                      {idx}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* 重叠区间着色高亮（若有） */}
-              {timeOverlap && overlapEnd > overlapStart && (
-                <rect
-                  x={50 + overlapStart * 45}
-                  y={18}
-                  width={(overlapEnd - overlapStart) * 45}
-                  height={54}
-                  fill="var(--color-destructive, #ef4444)"
-                  opacity="0.12"
-                  rx="4"
-                />
-              )}
-
-              {/* A1 生命周期段 */}
-              <g>
-                <text
-                  x={15}
-                  y={35}
-                  fill="var(--color-ink, #1f2937)"
-                  className="font-mono text-[11px] font-semibold"
-                >
-                  A₁
-                </text>
-                <rect
-                  x={50 + s1 * 45}
-                  y={22}
-                  width={Math.max((e1 - s1) * 45, 3)}
-                  height={18}
-                  rx="3"
-                  fill={
-                    alpha1 === "W"
-                      ? "var(--color-accent, #3b82f6)"
-                      : "var(--color-ink, #10b981)"
-                  }
-                  opacity="0.85"
-                />
-              </g>
-
-              {/* A2 生命周期段 */}
-              <g>
-                <text
-                  x={15}
-                  y={63}
-                  fill="var(--color-ink, #1f2937)"
-                  className="font-mono text-[11px] font-semibold"
-                >
-                  A₂
-                </text>
-                <rect
-                  x={50 + s2 * 45}
-                  y={50}
-                  width={Math.max((e2 - s2) * 45, 3)}
-                  height={18}
-                  rx="3"
-                  fill={
-                    alpha2 === "W"
-                      ? "var(--color-accent, #3b82f6)"
-                      : "var(--color-ink, #10b981)"
-                  }
-                  opacity="0.85"
-                />
-              </g>
-            </svg>
-          </div>
-          <div className="mt-1 flex flex-wrap items-center justify-between text-[11px] text-muted">
-            <span>
-              图例：<span className="font-mono">R (Read)</span> 为常规色，
-              <span className="font-mono text-accent">W (Write)</span> 为强调色
-            </span>
-            <span>
-              {timeOverlap
-                ? `重叠活跃区间: [${overlapStart}, ${overlapEnd}]`
-                : "生命周期完全错开（无交集）"}
-            </span>
-          </div>
-        </div>
-
-        {/* 判定三要素矩阵卡片 */}
-        <div className="grid gap-2.5 sm:grid-cols-3">
-          <div
-            className={`rounded-lg border p-3 text-xs transition-all ${
-              placeConflict
-                ? "border-red-500/50 bg-red-500/10 dark:border-red-500/60 dark:bg-red-500/15"
-                : "border-emerald-500/50 bg-emerald-500/10 dark:border-emerald-500/60 dark:bg-emerald-500/15"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-1">
-              <span
-                className={`font-semibold ${
-                  placeConflict
-                    ? "text-red-700 dark:text-red-300"
-                    : "text-emerald-700 dark:text-emerald-300"
-                }`}
-              >
-                ① 空间判定：
-                <InlineMath tex="p_1 \sim p_2" />
-              </span>
-              <span
-                className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold border ${
-                  placeConflict
-                    ? "border-red-500/30 bg-red-500/20 text-red-600 dark:text-red-400"
-                    : "border-emerald-500/30 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                }`}
-              >
-                {placeConflict ? "true (冲突)" : "false (安全)"}
-              </span>
-            </div>
-            <p
-              className={`mt-1.5 font-medium ${
-                placeConflict
-                  ? "text-red-800 dark:text-red-200"
-                  : "text-emerald-800 dark:text-emerald-200"
-              }`}
-            >
-              {placeConflict ? "存在别名重叠 (true)" : "内存完全独立 (false)"}
-            </p>
-          </div>
-
-          <div
-            className={`rounded-lg border p-3 text-xs transition-all ${
-              timeOverlap
-                ? "border-red-500/50 bg-red-500/10 dark:border-red-500/60 dark:bg-red-500/15"
-                : "border-emerald-500/50 bg-emerald-500/10 dark:border-emerald-500/60 dark:bg-emerald-500/15"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-1">
-              <span
-                className={`font-semibold ${
-                  timeOverlap
-                    ? "text-red-700 dark:text-red-300"
-                    : "text-emerald-700 dark:text-emerald-300"
-                }`}
-              >
-                ② 时间判定：
-                <InlineMath tex="\ell_1 \cap \ell_2 \neq \varnothing" />
-              </span>
-              <span
-                className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold border ${
-                  timeOverlap
-                    ? "border-red-500/30 bg-red-500/20 text-red-600 dark:text-red-400"
-                    : "border-emerald-500/30 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                }`}
-              >
-                {timeOverlap ? "true (冲突)" : "false (安全)"}
-              </span>
-            </div>
-            <p
-              className={`mt-1.5 font-medium ${
-                timeOverlap
-                  ? "text-red-800 dark:text-red-200"
-                  : "text-emerald-800 dark:text-emerald-200"
-              }`}
-            >
-              {timeOverlap ? "生命周期重叠 (true)" : "生命周期错开 (false)"}
-            </p>
-          </div>
-
-          <div
-            className={`rounded-lg border p-3 text-xs transition-all ${
-              permConflict
-                ? "border-red-500/50 bg-red-500/10 dark:border-red-500/60 dark:bg-red-500/15"
-                : "border-emerald-500/50 bg-emerald-500/10 dark:border-emerald-500/60 dark:bg-emerald-500/15"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-1">
-              <span
-                className={`font-semibold ${
-                  permConflict
-                    ? "text-red-700 dark:text-red-300"
-                    : "text-emerald-700 dark:text-emerald-300"
-                }`}
-              >
-                ③ 权限判定：
-                <InlineMath tex="\operatorname{conflict}(\alpha_1, \alpha_2)" />
-              </span>
-              <span
-                className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold border ${
-                  permConflict
-                    ? "border-red-500/30 bg-red-500/20 text-red-600 dark:text-red-400"
-                    : "border-emerald-500/30 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                }`}
-              >
-                {permConflict ? "true (冲突)" : "false (安全)"}
-              </span>
-            </div>
-            <p
-              className={`mt-1.5 font-medium ${
-                permConflict
-                  ? "text-red-800 dark:text-red-200"
-                  : "text-emerald-800 dark:text-emerald-200"
-              }`}
-            >
-              {permConflict
-                ? `包含写权限冲突 (${alpha1} vs ${alpha2}) (true)`
-                : `读读安全共享 (${alpha1} ∥ ${alpha2}) (false)`}
-            </p>
-          </div>
-        </div>
-
-        {/* 综合裁决结果 */}
-        <div
-          className={`flex items-start gap-3 rounded-lg border p-3.5 text-sm transition-all ${
-            isConflict
-              ? "border-red-500/60 bg-red-500/10 text-red-800 dark:border-red-500/70 dark:bg-red-500/15 dark:text-red-200"
-              : "border-emerald-500/60 bg-emerald-500/10 text-emerald-800 dark:border-emerald-500/70 dark:bg-emerald-500/15 dark:text-emerald-200"
-          }`}
-          aria-live="polite"
-        >
-          <div className="mt-0.5 text-lg">{isConflict ? "❌" : "✅"}</div>
-          <div className="flex-1 space-y-1">
-            <p className="font-semibold">
-              {isConflict
-                ? "借用检查失败：检测到非法冲突访问 (A₁ ⋈ A₂ = true)"
-                : "借用检查通过：访问事件允许安全共存 (A₁ ⋈ A₂ = false)"}
-            </p>
-            <p className="text-xs opacity-90">
-              {isConflict
-                ? "同时满足【空间别名】、【生命周期重叠】与【写权限冲突】。Rust 编译器在此处将报告借用检查错误（例如 E0499 或 E0502）。"
-                : !placeConflict
-                  ? "访问的 Place 物理不重叠，即便生命周期重叠且均为写操作，也是完全安全的分离字段修改。"
-                  : !timeOverlap
-                    ? "生命周期已完全分离，前一个借用已经结束并交还权限，后续访问不再产生冲突。"
-                    : "所有并发访问均为只读权限 (Shared/Read)，允许多方安全并发读取。"}
-            </p>
-          </div>
-        </div>
-
-        {/* 联动现场 Rust 代码与 rustc 编译面板 */}
-        <div className="mt-1 overflow-hidden rounded-lg border border-border bg-surface shadow-xs">
-          {/* 代码面板头部 */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-hover/60 px-3.5 py-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 rounded-md border border-accent/40 bg-accent/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-accent">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
-                Rust
-              </span>
-              <span className="font-semibold text-ink">
-                实时映射代码与现场 rustc 编译验证
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="cursor-pointer rounded-md border border-border/70 bg-surface px-2.5 py-1 text-muted transition-colors hover:border-accent hover:text-ink active:scale-95"
-                title="复制代码"
-              >
-                {copied ? "✓ 已复制" : "复制代码"}
-              </button>
-              <button
-                type="button"
-                onClick={() => runCompilation(generatedRustCode)}
-                disabled={compiling}
-                className="flex cursor-pointer items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1 font-semibold text-accent-foreground shadow-xs transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-                title="重新编译执行"
-              >
-                {compiling ? (
-                  <>
-                    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    <span>编译中...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>▶</span>
-                    <span>重新运行</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          <p className="border-b border-border/50 bg-surface/30 px-3.5 py-1.5 text-[11px] text-muted">
-            跟随上方参数实时生成的 Rust 代码（停止调节 500ms 后自动调用本地
-            rustc -O 编译并捕获真机诊断）：
-          </p>
-
-          {/* CodeMirror 6 只读展示 */}
-          <div className="relative">
-            <CodeMirror
-              value={generatedRustCode}
-              theme={isDark ? customGithubDark : customGithubLight}
-              extensions={extensions}
-              editable={false}
-              readOnly={true}
-              basicSetup={{
-                lineNumbers: true,
-                foldGutter: false,
-                highlightActiveLineGutter: false,
-                highlightSpecialChars: true,
-                syntaxHighlighting: true,
-                bracketMatching: true,
-              }}
-              className="text-xs"
-            />
-          </div>
-
-          {/* rustc 输出控制台 */}
-          <div className="border-t border-border bg-neutral-950 p-3.5 text-xs text-neutral-200">
-            <div className="mb-2 flex items-center justify-between border-b border-neutral-800 pb-1.5 text-[11px] font-mono text-neutral-400">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`inline-block h-2 w-2 rounded-full ${
-                    compiling
-                      ? "animate-pulse bg-amber-400"
-                      : output?.exitCode === 0
-                        ? "bg-emerald-500"
-                        : "bg-rose-500"
-                  }`}
-                />
-                <span className="font-semibold">
-                  {compiling
-                    ? "正在调用本地 rustc -O 编译推演..."
-                    : output?.exitCode === 0
-                      ? `✓ rustc 编译成功 (Exit: ${output.exitCode})`
-                      : output
-                        ? `✕ rustc 借用检查拦截 (Exit: ${output.exitCode})`
-                        : "等待编译"}
+          {/* 访问事件 A1 与 A2 调节面板 */}
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* 事件 A1 */}
+            <div className="flex flex-col gap-2.5 rounded-md border border-border bg-surface p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-ink">访问事件 $A_1$</span>
+                <span className="font-mono text-xs text-muted">
+                  p₁ = {scenario.p1}
                 </span>
               </div>
-              {output && !compiling && <span>耗时: {output.durationMs}ms</span>}
+              <CapsuleTabs
+                options={PERMISSION_OPTIONS}
+                value={alpha1}
+                onChange={(val) => setAlpha1(val)}
+                size="xs"
+                label="权限 α₁："
+              />
+              <div className="space-y-1.5 pt-1">
+                <ParamSlider
+                  label={<span className="text-xs">起始时刻 $s_1$</span>}
+                  value={s1}
+                  min={0}
+                  max={Math.min(e1, 10)}
+                  step={1}
+                  display={String(s1)}
+                  onChange={(val) => setS1(Math.min(val, e1))}
+                  widthClass="w-32"
+                />
+                <ParamSlider
+                  label={<span className="text-xs">释放时刻 $e_1$</span>}
+                  value={e1}
+                  min={Math.max(s1, 0)}
+                  max={10}
+                  step={1}
+                  display={String(e1)}
+                  onChange={(val) => setE1(Math.max(val, s1))}
+                  widthClass="w-32"
+                />
+              </div>
+              <p className="font-mono text-xs text-muted">
+                区间 ℓ₁: [{s1}, {e1})，跨度 {Math.max(0, e1 - s1)}
+              </p>
             </div>
 
-            <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap font-mono text-xs leading-relaxed select-text">
-              {compiling && (
-                <span className="text-neutral-500">
-                  正在进行借用检查与优化编译...
+            {/* 事件 A2 */}
+            <div className="flex flex-col gap-2.5 rounded-md border border-border bg-surface p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-ink">访问事件 $A_2$</span>
+                <span className="font-mono text-xs text-muted">
+                  p₂ = {scenario.p2}
                 </span>
-              )}
-              {!compiling && output?.stdout && (
-                <span className="text-emerald-400">{output.stdout}</span>
-              )}
-              {!compiling && output?.stderr && (
-                <span className="text-rose-400">{output.stderr}</span>
-              )}
-              {!compiling && !output && (
-                <span className="text-neutral-500">暂无编译输出</span>
-              )}
-            </pre>
+              </div>
+              <CapsuleTabs
+                options={PERMISSION_OPTIONS}
+                value={alpha2}
+                onChange={(val) => setAlpha2(val)}
+                size="xs"
+                label="权限 α₂："
+              />
+              <div className="space-y-1.5 pt-1">
+                <ParamSlider
+                  label={<span className="text-xs">起始时刻 $s_2$</span>}
+                  value={s2}
+                  min={0}
+                  max={Math.min(e2, 10)}
+                  step={1}
+                  display={String(s2)}
+                  onChange={(val) => setS2(Math.min(val, e2))}
+                  widthClass="w-32"
+                />
+                <ParamSlider
+                  label={<span className="text-xs">释放时刻 $e_2$</span>}
+                  value={e2}
+                  min={Math.max(s2, 0)}
+                  max={10}
+                  step={1}
+                  display={String(e2)}
+                  onChange={(val) => setE2(Math.max(val, s2))}
+                  widthClass="w-32"
+                />
+              </div>
+              <p className="font-mono text-xs text-muted">
+                区间 ℓ₂: [{s2}, {e2})，跨度 {Math.max(0, e2 - s2)}
+              </p>
+            </div>
+          </div>
+
+          {/* 时间轴可视化 (Timeline SVG) */}
+          <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-ink">
+                控制流活跃时间轴（CFG 投影）：
+              </span>
+              <span
+                className={`font-mono font-medium ${
+                  timeOverlap
+                    ? "text-red-600 dark:text-red-400 font-semibold"
+                    : "text-emerald-600 dark:text-emerald-400 font-semibold"
+                }`}
+              >
+                ℓ₁ ∩ ℓ₂ {timeOverlap ? "≠ ∅ (重叠)" : "= ∅ (无交集)"}
+              </span>
+            </div>
+
+            {/* SVG 时间轴 */}
+            <div className="overflow-x-auto py-1">
+              <svg
+                viewBox="0 0 520 90"
+                className="h-24 w-full min-w-[480px] select-none text-[11px]"
+                role="img"
+                aria-labelledby={`${uniqueId}-title`}
+              >
+                <title id={`${uniqueId}-title`}>
+                  借用检查生命周期重叠时间轴投影图
+                </title>
+
+                {/* 背景标尺刻度网格 */}
+                {Array.from({ length: 11 }).map((_, idx) => {
+                  const x = 50 + idx * 45;
+                  return (
+                    <g key={`grid-${x}`}>
+                      <line
+                        x1={x}
+                        y1={15}
+                        x2={x}
+                        y2={75}
+                        stroke="var(--color-border, #e5e7eb)"
+                        strokeDasharray="2,2"
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={x}
+                        y={88}
+                        textAnchor="middle"
+                        fill="var(--color-muted, #9ca3af)"
+                        className="font-mono text-[10px]"
+                      >
+                        {idx}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* 重叠区间着色高亮（若有） */}
+                {timeOverlap && overlapEnd > overlapStart && (
+                  <rect
+                    x={50 + overlapStart * 45}
+                    y={18}
+                    width={(overlapEnd - overlapStart) * 45}
+                    height={54}
+                    fill="var(--color-destructive, #ef4444)"
+                    opacity="0.12"
+                    rx="4"
+                  />
+                )}
+
+                {/* A1 生命周期段 */}
+                <g>
+                  <text
+                    x={15}
+                    y={35}
+                    fill="var(--color-ink, #1f2937)"
+                    className="font-mono text-[11px] font-semibold"
+                  >
+                    A₁
+                  </text>
+                  <rect
+                    x={50 + s1 * 45}
+                    y={22}
+                    width={Math.max((e1 - s1) * 45, 3)}
+                    height={18}
+                    rx="3"
+                    fill={
+                      alpha1 === "W"
+                        ? "var(--color-accent, #3b82f6)"
+                        : "var(--color-ink, #10b981)"
+                    }
+                    opacity="0.85"
+                  />
+                </g>
+
+                {/* A2 生命周期段 */}
+                <g>
+                  <text
+                    x={15}
+                    y={63}
+                    fill="var(--color-ink, #1f2937)"
+                    className="font-mono text-[11px] font-semibold"
+                  >
+                    A₂
+                  </text>
+                  <rect
+                    x={50 + s2 * 45}
+                    y={50}
+                    width={Math.max((e2 - s2) * 45, 3)}
+                    height={18}
+                    rx="3"
+                    fill={
+                      alpha2 === "W"
+                        ? "var(--color-accent, #3b82f6)"
+                        : "var(--color-ink, #10b981)"
+                    }
+                    opacity="0.85"
+                  />
+                </g>
+              </svg>
+            </div>
+            <div className="mt-1 flex flex-wrap items-center justify-between text-[11px] text-muted">
+              <span>
+                图例：<span className="font-mono">R (Read)</span> 为常规色，
+                <span className="font-mono text-accent">W (Write)</span>{" "}
+                为强调色
+              </span>
+              <span>
+                {timeOverlap
+                  ? `重叠活跃区间: [${overlapStart}, ${overlapEnd}]`
+                  : "生命周期完全错开（无交集）"}
+              </span>
+            </div>
+          </div>
+
+          {/* 判定三要素矩阵卡片 */}
+          <div className="grid gap-2.5 sm:grid-cols-3">
+            <div
+              className={`rounded-lg border p-3 text-xs transition-all ${
+                placeConflict
+                  ? "border-red-500/50 bg-red-500/10 dark:border-red-500/60 dark:bg-red-500/15"
+                  : "border-emerald-500/50 bg-emerald-500/10 dark:border-emerald-500/60 dark:bg-emerald-500/15"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span
+                  className={`font-semibold ${
+                    placeConflict
+                      ? "text-red-700 dark:text-red-300"
+                      : "text-emerald-700 dark:text-emerald-300"
+                  }`}
+                >
+                  ① 空间判定：
+                  {"$p_1 \\sim p_2$"}
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold border ${
+                    placeConflict
+                      ? "border-red-500/30 bg-red-500/20 text-red-600 dark:text-red-400"
+                      : "border-emerald-500/30 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  }`}
+                >
+                  {placeConflict ? "true (冲突)" : "false (安全)"}
+                </span>
+              </div>
+              <p
+                className={`mt-1.5 font-medium ${
+                  placeConflict
+                    ? "text-red-800 dark:text-red-200"
+                    : "text-emerald-800 dark:text-emerald-200"
+                }`}
+              >
+                {placeConflict ? "存在别名重叠 (true)" : "内存完全独立 (false)"}
+              </p>
+            </div>
+
+            <div
+              className={`rounded-lg border p-3 text-xs transition-all ${
+                timeOverlap
+                  ? "border-red-500/50 bg-red-500/10 dark:border-red-500/60 dark:bg-red-500/15"
+                  : "border-emerald-500/50 bg-emerald-500/10 dark:border-emerald-500/60 dark:bg-emerald-500/15"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span
+                  className={`font-semibold ${
+                    timeOverlap
+                      ? "text-red-700 dark:text-red-300"
+                      : "text-emerald-700 dark:text-emerald-300"
+                  }`}
+                >
+                  ② 时间判定：
+                  {"$\\ell_1 \\cap \\ell_2 \\neq \\varnothing$"}
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold border ${
+                    timeOverlap
+                      ? "border-red-500/30 bg-red-500/20 text-red-600 dark:text-red-400"
+                      : "border-emerald-500/30 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  }`}
+                >
+                  {timeOverlap ? "true (冲突)" : "false (安全)"}
+                </span>
+              </div>
+              <p
+                className={`mt-1.5 font-medium ${
+                  timeOverlap
+                    ? "text-red-800 dark:text-red-200"
+                    : "text-emerald-800 dark:text-emerald-200"
+                }`}
+              >
+                {timeOverlap ? "生命周期重叠 (true)" : "生命周期错开 (false)"}
+              </p>
+            </div>
+
+            <div
+              className={`rounded-lg border p-3 text-xs transition-all ${
+                permConflict
+                  ? "border-red-500/50 bg-red-500/10 dark:border-red-500/60 dark:bg-red-500/15"
+                  : "border-emerald-500/50 bg-emerald-500/10 dark:border-emerald-500/60 dark:bg-emerald-500/15"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span
+                  className={`font-semibold ${
+                    permConflict
+                      ? "text-red-700 dark:text-red-300"
+                      : "text-emerald-700 dark:text-emerald-300"
+                  }`}
+                >
+                  ③ 权限判定：
+                  {"$\\operatorname{conflict}(\\alpha_1, \\alpha_2)$"}
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold border ${
+                    permConflict
+                      ? "border-red-500/30 bg-red-500/20 text-red-600 dark:text-red-400"
+                      : "border-emerald-500/30 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  }`}
+                >
+                  {permConflict ? "true (冲突)" : "false (安全)"}
+                </span>
+              </div>
+              <p
+                className={`mt-1.5 font-medium ${
+                  permConflict
+                    ? "text-red-800 dark:text-red-200"
+                    : "text-emerald-800 dark:text-emerald-200"
+                }`}
+              >
+                {permConflict
+                  ? `包含写权限冲突 (${alpha1} vs ${alpha2}) (true)`
+                  : `读读安全共享 (${alpha1} ∥ ${alpha2}) (false)`}
+              </p>
+            </div>
+          </div>
+
+          {/* 综合裁决结果 */}
+          <div
+            className={`flex items-start gap-3 rounded-lg border p-3.5 text-sm transition-all ${
+              isConflict
+                ? "border-red-500/60 bg-red-500/10 text-red-800 dark:border-red-500/70 dark:bg-red-500/15 dark:text-red-200"
+                : "border-emerald-500/60 bg-emerald-500/10 text-emerald-800 dark:border-emerald-500/70 dark:bg-emerald-500/15 dark:text-emerald-200"
+            }`}
+            aria-live="polite"
+          >
+            <div className="mt-0.5 text-lg">{isConflict ? "❌" : "✅"}</div>
+            <div className="flex-1 space-y-1">
+              <p className="font-semibold">
+                {isConflict
+                  ? "借用检查失败：检测到非法冲突访问 (A₁ ⋈ A₂ = true)"
+                  : "借用检查通过：访问事件允许安全共存 (A₁ ⋈ A₂ = false)"}
+              </p>
+              <p className="text-xs opacity-90">
+                {isConflict
+                  ? "同时满足【空间别名】、【生命周期重叠】与【写权限冲突】。Rust 编译器在此处将报告借用检查错误（例如 E0499 或 E0502）。"
+                  : !placeConflict
+                    ? "访问的 Place 物理不重叠，即便生命周期重叠且均为写操作，也是完全安全的分离字段修改。"
+                    : !timeOverlap
+                      ? "生命周期已完全分离，前一个借用已经结束并交还权限，后续访问不再产生冲突。"
+                      : "所有并发访问均为只读权限 (Shared/Read)，允许多方安全并发读取。"}
+              </p>
+            </div>
+          </div>
+
+          {/* 联动现场 Rust 代码与 rustc 编译面板 */}
+          <div className="mt-1 overflow-hidden rounded-lg border border-border bg-surface shadow-xs">
+            {/* 代码面板头部 */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-hover/60 px-3.5 py-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 rounded-md border border-accent/40 bg-accent/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-accent">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
+                  Rust
+                </span>
+                <span className="font-semibold text-ink">
+                  实时映射代码与现场 rustc 编译验证
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="cursor-pointer rounded-md border border-border/70 bg-surface px-2.5 py-1 text-muted transition-colors hover:border-accent hover:text-ink active:scale-95"
+                  title="复制代码"
+                >
+                  {copied ? "✓ 已复制" : "复制代码"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => runCompilation(generatedRustCode)}
+                  disabled={compiling}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1 font-semibold text-accent-foreground shadow-xs transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                  title="重新编译执行"
+                >
+                  {compiling ? (
+                    <>
+                      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      <span>编译中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>▶</span>
+                      <span>重新运行</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <p className="border-b border-border/50 bg-surface/30 px-3.5 py-1.5 text-[11px] text-muted">
+              跟随上方参数实时生成的 Rust 代码（停止调节 500ms 后自动调用本地
+              rustc -O 编译并捕获真机诊断）：
+            </p>
+
+            {/* CodeMirror 6 只读展示 */}
+            <div className="relative">
+              <CodeMirror
+                value={generatedRustCode}
+                theme={isDark ? customGithubDark : customGithubLight}
+                extensions={extensions}
+                editable={false}
+                readOnly={true}
+                basicSetup={{
+                  lineNumbers: true,
+                  foldGutter: false,
+                  highlightActiveLineGutter: false,
+                  highlightSpecialChars: true,
+                  syntaxHighlighting: true,
+                  bracketMatching: true,
+                }}
+                className="text-xs"
+              />
+            </div>
+
+            {/* rustc 输出控制台 */}
+            <div className="border-t border-border bg-neutral-950 p-3.5 text-xs text-neutral-200">
+              <div className="mb-2 flex items-center justify-between border-b border-neutral-800 pb-1.5 text-[11px] font-mono text-neutral-400">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-block h-2 w-2 rounded-full ${
+                      compiling
+                        ? "animate-pulse bg-amber-400"
+                        : output?.exitCode === 0
+                          ? "bg-emerald-500"
+                          : "bg-rose-500"
+                    }`}
+                  />
+                  <span className="font-semibold">
+                    {compiling
+                      ? "正在调用本地 rustc -O 编译推演..."
+                      : output?.exitCode === 0
+                        ? `✓ rustc 编译成功 (Exit: ${output.exitCode})`
+                        : output
+                          ? `✕ rustc 借用检查拦截 (Exit: ${output.exitCode})`
+                          : "等待编译"}
+                  </span>
+                </div>
+                {output && !compiling && (
+                  <span>耗时: {output.durationMs}ms</span>
+                )}
+              </div>
+
+              <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap font-mono text-xs leading-relaxed select-text">
+                {compiling && (
+                  <span className="text-neutral-500">
+                    正在进行借用检查与优化编译...
+                  </span>
+                )}
+                {!compiling && output?.stdout && (
+                  <span className="text-emerald-400">{output.stdout}</span>
+                )}
+                {!compiling && output?.stderr && (
+                  <span className="text-rose-400">{output.stderr}</span>
+                )}
+                {!compiling && !output && (
+                  <span className="text-neutral-500">暂无编译输出</span>
+                )}
+              </pre>
+            </div>
           </div>
         </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

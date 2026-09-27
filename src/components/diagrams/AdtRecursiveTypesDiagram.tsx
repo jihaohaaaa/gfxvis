@@ -1,8 +1,9 @@
 import { useState } from "react";
 import CanvasToolbar from "../framework/CanvasToolbar";
+import CanvasResizer from "../framework/CanvasResizer";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import PresetSelector from "../framework/PresetSelector";
 
 // ============================================================================
@@ -388,223 +389,227 @@ export default function AdtRecursiveTypesDiagram() {
   };
 
   return (
-    <ExpandableDemo id="adt-recursive-types-explorer">
-      <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
-        {/* Header */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              代数数据类型（ADT）与递归类型交互探针
+    <AutoMath>
+      <ExpandableDemo id="adt-recursive-types-explorer">
+        <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
+          {/* Header */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                代数数据类型（ADT）与递归类型交互探针
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                ✨{" "}
+                <strong>多项式类型方程、Huet Zipper 形式导数与折叠展开</strong>
+                ：洞悉从类型半环到图灵完备重现的数学演进
+              </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              ✨ <strong>多项式类型方程、Huet Zipper 形式导数与折叠展开</strong>
-              ：洞悉从类型半环到图灵完备重现的数学演进
+          </div>
+
+          {/* View Mode Switcher */}
+          <div className="mb-4 overflow-x-auto pb-1">
+            <CapsuleTabs
+              onChange={(val) =>
+                setViewMode(val as "stepper" | "zipper" | "memory")
+              }
+              options={VIEW_OPTIONS}
+              value={viewMode}
+            />
+          </div>
+
+          {/* Preset Selector */}
+          <div className="mb-4">
+            <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              精选经典代数类型与递归演化预设：
+            </div>
+            <PresetSelector
+              onChange={handlePresetChange}
+              options={PRESETS.map((p) => ({
+                id: p.id,
+                label: p.label,
+                description: p.desc,
+              }))}
+              value={activePresetId}
+            />
+          </div>
+
+          {/* Equation & Mu-Type Overview Card */}
+          <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  代数多项式同构方程 (Polynomial Equation)
+                </div>
+                <div className="mt-1 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
+                  {`$${preset.equationTex}$`}
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  类型级不动点形式化 (μ-Type)
+                </div>
+                <div className="mt-1 font-mono text-xs font-bold text-amber-600 dark:text-amber-300">
+                  {`$${preset.muTypeTex}$`}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Viewport Container with CanvasToolbar */}
+          <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
+            <CanvasToolbar onReset={handleReset} />
+
+            {/* Stepper Toolbar (Visible in Stepper Mode) */}
+            {viewMode === "stepper" && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                    disabled={currentStepIndex <= 0}
+                    onClick={() => setCurrentStepIndex(0)}
+                    title="重置至折叠初态"
+                    type="button"
+                  >
+                    ⏮ 初始 (Folded)
+                  </button>
+                  <button
+                    className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                    disabled={currentStepIndex <= 0}
+                    onClick={() =>
+                      setCurrentStepIndex((prev) => Math.max(0, prev - 1))
+                    }
+                    title="折叠一层包装"
+                    type="button"
+                  >
+                    fold 折叠包装 ◀
+                  </button>
+                  <button
+                    className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                    disabled={currentStepIndex >= maxSteps - 1}
+                    onClick={() =>
+                      setCurrentStepIndex((prev) =>
+                        Math.min(maxSteps - 1, prev + 1),
+                      )
+                    }
+                    title="展开一层结构"
+                    type="button"
+                  >
+                    unfold 单步展开 ▶
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${currentStep.statusColor}`}
+                  >
+                    {currentStep.statusLabel}
+                  </span>
+                  <span className="font-mono text-xs text-slate-400">
+                    深度：{currentStepIndex} / {maxSteps - 1}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Main View Area */}
+            <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
+              {viewMode === "stepper" && (
+                <div className="space-y-4 py-2">
+                  <div className="text-xs font-semibold text-slate-400">
+                    当前 Iso-recursive 层级展开状态：
+                  </div>
+
+                  {/* Main Term Box */}
+                  <div className="flex items-center justify-center overflow-x-auto px-4 py-2">
+                    <div className="rounded-2xl border border-indigo-700/60 bg-slate-800/60 px-6 py-4 shadow-xl backdrop-blur-md">
+                      <div className="font-mono text-base font-bold text-slate-100 sm:text-lg">
+                        {`$${currentStep.termTex}$`}
+                      </div>
+                      <div className="mt-2 text-xs font-mono text-indigo-300">
+                        类型签名：
+                        {`$${currentStep.typeTex}$`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action & Explanation */}
+                  <div className="mx-auto flex max-w-xl flex-col items-center gap-1.5 rounded-xl border border-slate-700/60 bg-slate-800/40 p-3 text-xs">
+                    <p className="text-slate-300">{currentStep.desc}</p>
+                  </div>
+                </div>
+              )}
+
+              {viewMode === "zipper" && (
+                <div className="space-y-4 py-3 text-center">
+                  <div className="text-xs font-semibold text-sky-400">
+                    Huet Zipper 形式导数与光标上下文
+                  </div>
+
+                  <div className="mx-auto max-w-xl rounded-2xl border border-sky-600/40 bg-sky-950/20 p-5 shadow-lg backdrop-blur-sm">
+                    <div className="mb-2 text-xs font-medium text-slate-300">
+                      一阶形式导数多项式：
+                    </div>
+                    <div className="my-2 font-mono text-sm font-bold text-sky-200">
+                      {`$${preset.derivativeTex}$`}
+                    </div>
+                    <div className="mt-3 text-left text-[11px] leading-relaxed text-slate-400">
+                      💡 <strong>微积分几何解释</strong>：
+                      {preset.zipperInterpretation}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {viewMode === "memory" && (
+                <div className="space-y-4 py-3 text-center">
+                  <div className="text-xs font-semibold text-rose-400">
+                    物理内存连续内联 vs 指针间接层 (Box Indirection)
+                  </div>
+
+                  <div className="mx-auto max-w-xl rounded-2xl border border-rose-600/40 bg-rose-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="rounded-lg bg-rose-900/30 p-3 border border-rose-800/50">
+                        <div className="text-[11px] font-semibold text-rose-300">
+                          直接连续内联布局 (Direct Inlining)
+                        </div>
+                        <div className="mt-1 font-mono text-xs text-rose-200">
+                          {preset.memoryAnalysis.directSize}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg bg-emerald-900/30 p-3 border border-emerald-800/50">
+                        <div className="text-[11px] font-semibold text-emerald-300">
+                          Box 指针间接布局 (Box Indirection)
+                        </div>
+                        <div className="mt-1 font-mono text-xs text-emerald-200">
+                          {preset.memoryAnalysis.boxedSize}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 text-[11px] leading-relaxed text-slate-300">
+                      💡 <strong>编译器物理约束</strong>：
+                      {preset.memoryAnalysis.explanation}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
+          </div>
+
+          {/* Theoretical Insight Card */}
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
+            <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
+              🔍 代数结构与多项式理论洞见 (Algebraic Structure Insight)
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
+              {preset.insight}
             </p>
           </div>
         </div>
-
-        {/* View Mode Switcher */}
-        <div className="mb-4 overflow-x-auto pb-1">
-          <CapsuleTabs
-            onChange={(val) =>
-              setViewMode(val as "stepper" | "zipper" | "memory")
-            }
-            options={VIEW_OPTIONS}
-            value={viewMode}
-          />
-        </div>
-
-        {/* Preset Selector */}
-        <div className="mb-4">
-          <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            精选经典代数类型与递归演化预设：
-          </div>
-          <PresetSelector
-            onChange={handlePresetChange}
-            options={PRESETS.map((p) => ({
-              id: p.id,
-              label: p.label,
-              description: p.desc,
-            }))}
-            value={activePresetId}
-          />
-        </div>
-
-        {/* Equation & Mu-Type Overview Card */}
-        <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                代数多项式同构方程 (Polynomial Equation)
-              </div>
-              <div className="mt-1 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
-                <InlineMath tex={preset.equationTex} />
-              </div>
-            </div>
-
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                类型级不动点形式化 (μ-Type)
-              </div>
-              <div className="mt-1 font-mono text-xs font-bold text-amber-600 dark:text-amber-300">
-                <InlineMath tex={preset.muTypeTex} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Viewport Container with CanvasToolbar */}
-        <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
-          <CanvasToolbar onReset={handleReset} />
-
-          {/* Stepper Toolbar (Visible in Stepper Mode) */}
-          {viewMode === "stepper" && (
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                  disabled={currentStepIndex <= 0}
-                  onClick={() => setCurrentStepIndex(0)}
-                  title="重置至折叠初态"
-                  type="button"
-                >
-                  ⏮ 初始 (Folded)
-                </button>
-                <button
-                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                  disabled={currentStepIndex <= 0}
-                  onClick={() =>
-                    setCurrentStepIndex((prev) => Math.max(0, prev - 1))
-                  }
-                  title="折叠一层包装"
-                  type="button"
-                >
-                  fold 折叠包装 ◀
-                </button>
-                <button
-                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                  disabled={currentStepIndex >= maxSteps - 1}
-                  onClick={() =>
-                    setCurrentStepIndex((prev) =>
-                      Math.min(maxSteps - 1, prev + 1),
-                    )
-                  }
-                  title="展开一层结构"
-                  type="button"
-                >
-                  unfold 单步展开 ▶
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${currentStep.statusColor}`}
-                >
-                  {currentStep.statusLabel}
-                </span>
-                <span className="font-mono text-xs text-slate-400">
-                  深度：{currentStepIndex} / {maxSteps - 1}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Main View Area */}
-          <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
-            {viewMode === "stepper" && (
-              <div className="space-y-4 py-2">
-                <div className="text-xs font-semibold text-slate-400">
-                  当前 Iso-recursive 层级展开状态：
-                </div>
-
-                {/* Main Term Box */}
-                <div className="flex items-center justify-center overflow-x-auto px-4 py-2">
-                  <div className="rounded-2xl border border-indigo-700/60 bg-slate-800/60 px-6 py-4 shadow-xl backdrop-blur-md">
-                    <div className="font-mono text-base font-bold text-slate-100 sm:text-lg">
-                      <InlineMath tex={currentStep.termTex} />
-                    </div>
-                    <div className="mt-2 text-xs font-mono text-indigo-300">
-                      类型签名：
-                      <InlineMath tex={currentStep.typeTex} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action & Explanation */}
-                <div className="mx-auto flex max-w-xl flex-col items-center gap-1.5 rounded-xl border border-slate-700/60 bg-slate-800/40 p-3 text-xs">
-                  <p className="text-slate-300">{currentStep.desc}</p>
-                </div>
-              </div>
-            )}
-
-            {viewMode === "zipper" && (
-              <div className="space-y-4 py-3 text-center">
-                <div className="text-xs font-semibold text-sky-400">
-                  Huet Zipper 形式导数与光标上下文
-                </div>
-
-                <div className="mx-auto max-w-xl rounded-2xl border border-sky-600/40 bg-sky-950/20 p-5 shadow-lg backdrop-blur-sm">
-                  <div className="mb-2 text-xs font-medium text-slate-300">
-                    一阶形式导数多项式：
-                  </div>
-                  <div className="my-2 font-mono text-sm font-bold text-sky-200">
-                    <InlineMath tex={preset.derivativeTex} />
-                  </div>
-                  <div className="mt-3 text-left text-[11px] leading-relaxed text-slate-400">
-                    💡 <strong>微积分几何解释</strong>：
-                    {preset.zipperInterpretation}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {viewMode === "memory" && (
-              <div className="space-y-4 py-3 text-center">
-                <div className="text-xs font-semibold text-rose-400">
-                  物理内存连续内联 vs 指针间接层 (Box Indirection)
-                </div>
-
-                <div className="mx-auto max-w-xl rounded-2xl border border-rose-600/40 bg-rose-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="rounded-lg bg-rose-900/30 p-3 border border-rose-800/50">
-                      <div className="text-[11px] font-semibold text-rose-300">
-                        直接连续内联布局 (Direct Inlining)
-                      </div>
-                      <div className="mt-1 font-mono text-xs text-rose-200">
-                        {preset.memoryAnalysis.directSize}
-                      </div>
-                    </div>
-
-                    <div className="rounded-lg bg-emerald-900/30 p-3 border border-emerald-800/50">
-                      <div className="text-[11px] font-semibold text-emerald-300">
-                        Box 指针间接布局 (Box Indirection)
-                      </div>
-                      <div className="mt-1 font-mono text-xs text-emerald-200">
-                        {preset.memoryAnalysis.boxedSize}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 text-[11px] leading-relaxed text-slate-300">
-                    💡 <strong>编译器物理约束</strong>：
-                    {preset.memoryAnalysis.explanation}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Theoretical Insight Card */}
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
-          <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
-            🔍 代数结构与多项式理论洞见 (Algebraic Structure Insight)
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
-            {preset.insight}
-          </p>
-        </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

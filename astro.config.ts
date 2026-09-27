@@ -12,6 +12,7 @@ import remarkAlerts from "./src/plugins/remark-alerts";
 
 // https://astro.build/config
 export default defineConfig({
+  output: "server",
   adapter: node({ mode: "standalone" }),
   integrations: [react(), mdx()],
 

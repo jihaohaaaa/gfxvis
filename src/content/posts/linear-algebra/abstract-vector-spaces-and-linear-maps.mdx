@@ -571,6 +571,43 @@ $$
 \boxed{ T(c\mathbf{u} + \mathbf{v}) = c T(\mathbf{u}) + T(\mathbf{v}), \qquad \forall c \in \mathbb{F}, \; \mathbf{u}, \mathbf{v} \in V }
 $$
 
+#### 固定双线性映射的一个参数，得到线性映射
+
+有些运算有两个向量输入，因此运算本身不是单输入映射 $V\to U$。若一个映射 $B:V\times W\to U$ 对每个参数分别线性，称为<strong>双线性映射（Bilinear Map）</strong>。固定第二个参数 $\mathbf{c}\in W$ 后，定义
+
+$$
+T_{\mathbf{c}}:V\to U,\qquad T_{\mathbf{c}}(\mathbf{x})=B(\mathbf{x},\mathbf{c}).
+$$
+
+由 $B$ 对第一个参数的线性，任取 $\mathbf{x},\mathbf{y}\in V$ 与 $\alpha,\beta\in\mathbb{F}$，便有：
+
+$$
+\begin{aligned}
+T_{\mathbf{c}}(\alpha\mathbf{x}+\beta\mathbf{y})
+&=B(\alpha\mathbf{x}+\beta\mathbf{y},\mathbf{c})\\
+&=\alpha B(\mathbf{x},\mathbf{c})+\beta B(\mathbf{y},\mathbf{c})\\
+&=\alpha T_{\mathbf{c}}(\mathbf{x})+\beta T_{\mathbf{c}}(\mathbf{y}).
+\end{aligned}
+$$
+
+因此，固定一个输入后，剩下的单输入映射就是线性映射；同理，固定第一个参数后，$\mathbf{y}\mapsto B(\mathbf{c},\mathbf{y})$ 也对 $\mathbf{y}$ 线性。两个常见例子是：
+
+| 双线性运算 | 固定 $\mathbf{c}$ 后的映射 | 陪域与名称 |
+|---|---|---|
+| 实内积 $B(\mathbf{x},\mathbf{c})=\langle\mathbf{x},\mathbf{c}\rangle$ | $f_{\mathbf{c}}(\mathbf{x})=\langle\mathbf{x},\mathbf{c}\rangle$ | $V\to\mathbb{R}$，线性泛函 $f_{\mathbf{c}}\in V^*$ |
+| 三维叉积 $B(\mathbf{x},\mathbf{c})=\mathbf{x}\times\mathbf{c}$ | $T_{\mathbf{c}}(\mathbf{x})=\mathbf{x}\times\mathbf{c}$ | $\mathbb{R}^3\to\mathbb{R}^3$，线性变换 |
+
+例如固定 $\mathbf{c}=(0,0,1)^\top$，则：
+
+$$
+T_{\mathbf{c}}\begin{pmatrix}x\\y\\z\end{pmatrix}
+=\begin{pmatrix}x\\y\\z\end{pmatrix}\times\begin{pmatrix}0\\0\\1\end{pmatrix}
+=\begin{pmatrix}y\\-x\\0\end{pmatrix}
+=\begin{pmatrix}0&1&0\\-1&0&0\\0&0&0\end{pmatrix}\begin{pmatrix}x\\y\\z\end{pmatrix}.
+$$
+
+这个矩阵就是固定 $\mathbf{c}$ 后线性变换 $T_{\mathbf{c}}$ 的矩阵表示。内积的公理与实、复线性约定见[《内积空间：从欧氏点积到广义内积与函数空间》](/posts/linear-algebra/inner-product-spaces)；内积如何产生线性泛函及其与对偶空间的关系，详见[《对偶空间、对偶基与线性泛函》](/posts/linear-algebra/dual-spaces-and-linear-functionals)；叉积算子在三维旋转中的矩阵表示见[《三维旋转与相机视图变换》](/posts/linear-algebra/rotation-so3-view-transform)。
+
 在现代代数中，理解一个线性映射必须严密区分以下四个核心集合：
 
 1. <strong>定义域（Domain $V$）</strong>：所有合法输入向量的原生空间；

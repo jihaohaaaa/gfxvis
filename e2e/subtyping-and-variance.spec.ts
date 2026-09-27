@@ -100,7 +100,7 @@ test.describe("子类型与型变文章与 SubtypingVarianceDiagram E2E 测试",
     ).toBeVisible();
   });
 
-  test("5. 视图切换（极性代数符号计算与内存安全沙盒）断言", async ({
+  test("5. 视图切换（极性代数符号计算、内存安全沙盒与四大语言矩阵）断言", async ({
     page,
   }) => {
     await page.goto("/posts/type-systems/subtyping-and-variance");
@@ -132,9 +132,28 @@ test.describe("子类型与型变文章与 SubtypingVarianceDiagram E2E 测试",
       page.locator("text=物理内存安全沙盒与运行时行为").first(),
     ).toBeVisible();
     await expect(page.locator("text=真实影响分析").first()).toBeVisible();
+
+    // 切换至“四大语言型变矩阵全景”视图
+    const matrixTab = page
+      .locator("button:has-text('四大语言型变矩阵全景')")
+      .first();
+    await matrixTab.click();
+    await expect(
+      page
+        .locator(
+          "text=四大主流语言型变（Covariance / Contravariance / Invariance）全景矩阵",
+        )
+        .first(),
+    ).toBeVisible();
+    await expect(
+      page.locator("text=C#：声明点型变 (out / in)").first(),
+    ).toBeVisible();
+    await expect(
+      page.locator("text=Rust：生命周期型变与内存安全").first(),
+    ).toBeVisible();
   });
 
-  test("6. CanvasToolbar S/M/L 视口高度切换与复位按钮断言", async ({
+  test("6. CanvasToolbar 复位与底部 CanvasResizer 自适应/双击复位断言", async ({
     page,
   }) => {
     await page.goto("/posts/type-systems/subtyping-and-variance");
@@ -145,18 +164,14 @@ test.describe("子类型与型变文章与 SubtypingVarianceDiagram E2E 测试",
       .first();
     await diagram.scrollIntoViewIfNeeded();
 
-    // 测试 S/M/L 按钮
-    const btnL = page
-      .locator("button[aria-label='大视口高度 (560px)']")
-      .first();
-    await expect(btnL).toBeVisible();
-    await btnL.click();
+    // 检查底部 CanvasResizer 处于自适应状态
+    const resizer = page.getByTestId("canvas-resizer").first();
+    await expect(resizer).toBeVisible();
+    await expect(resizer).toHaveAttribute("data-mode", "adaptive");
 
-    const btnS = page
-      .locator("button[aria-label='标准视口高度 (300px)']")
-      .first();
-    await expect(btnS).toBeVisible();
-    await btnS.click();
+    // 双击底部横条恢复/保持自适应
+    await resizer.dblclick();
+    await expect(resizer).toHaveAttribute("data-mode", "adaptive");
 
     // 先点击非法替换按钮
     const invalidBtn = page.locator("button:has-text('非法替换')").first();
@@ -180,7 +195,7 @@ test.describe("子类型与型变文章与 SubtypingVarianceDiagram E2E 测试",
 
     // 验证核心章节二级标题可达
     const h2Section = page
-      .locator("h2:has-text('九、系统级巅峰：Rust 生命周期子类型化与引用安全')")
+      .locator("h2:has-text('六、四大工业语言型变深度剖析与横向对决')")
       .first();
     await expect(h2Section).toBeVisible();
     await h2Section.scrollIntoViewIfNeeded();

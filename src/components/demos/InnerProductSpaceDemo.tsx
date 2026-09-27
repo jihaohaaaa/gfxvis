@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import PresetSelector from "../framework/PresetSelector";
 import ParamSlider from "../framework/ParamSlider";
@@ -640,185 +640,191 @@ export const InnerProductSpaceDemo: React.FC<{ height?: string }> = ({
   };
 
   return (
-    <ExpandableDemo id="inner-product-space" height={height}>
-      <div className="space-y-4">
-        {/* Mode Selector Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <CapsuleTabs
-            options={MODES}
-            value={mode}
-            onChange={(val) => setMode(val as ModeType)}
-          />
-        </div>
-
-        {/* Canvas Display */}
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar />
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 h-full w-full cursor-crosshair"
-          />
-        </div>
-
-        {/* MODE 1 Controls & Panel */}
-        {mode === "weighted" && (
-          <div className="space-y-3">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <ParamSlider
-                label="x 方向权重 w₁₁"
-                value={w11}
-                min={0.2}
-                max={3.0}
-                step={0.1}
-                onChange={setW11}
-              />
-              <ParamSlider
-                label="y 方向权重 w₂₂"
-                value={w22}
-                min={0.2}
-                max={3.0}
-                step={0.1}
-                onChange={setW22}
-              />
-            </div>
-            <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
-              <div>
-                <p className="mb-1 font-semibold text-foreground">
-                  加权内积定义{" "}
-                  <InlineMath tex="\langle u, v \rangle_W = w_{11} u_1 v_1 + w_{22} u_2 v_2" />
-                </p>
-                <p className="font-mono text-xs text-muted">
-                  诱导范数{" "}
-                  <InlineMath tex="\|u\|_W = \sqrt{\langle u, u \rangle_W} = " />
-                  <span className="font-bold text-blue-600 dark:text-blue-400">
-                    {normUWeighted.toFixed(3)}
-                  </span>
-                </p>
-              </div>
-              <div>
-                <p className="mb-1 font-semibold text-foreground">
-                  加权正交性校验
-                </p>
-                <p className="font-mono text-xs text-muted">
-                  计算 <InlineMath tex="\langle u, v \rangle_W = " />
-                  <span className="font-bold text-purple-600 dark:text-purple-400">
-                    {Math.abs(innerProdWeighted) < 1e-4
-                      ? "0.000 (精确正交!)"
-                      : innerProdWeighted.toFixed(3)}
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* MODE 2 Controls & Panel */}
-        {mode === "func" && (
-          <div className="space-y-3">
-            <PresetSelector
-              label="选择基函数对:"
-              options={FUNC_PRESETS.map((presetItem, idx) => ({
-                id: String(idx),
-                label: presetItem.name,
-              }))}
-              value={String(funcIdx)}
-              onChange={(val) => setFuncIdx(Number(val))}
+    <AutoMath>
+      <ExpandableDemo id="inner-product-space" height={height}>
+        <div className="space-y-4">
+          {/* Mode Selector Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CapsuleTabs
+              options={MODES}
+              value={mode}
+              onChange={(val) => setMode(val as ModeType)}
             />
-            <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm">
-              <p className="mb-1 font-semibold text-foreground">
-                连续函数空间积分内积{" "}
-                <InlineMath tex="\langle f, g \rangle = \int_{-1}^{1} f(x)g(x) \, \mathrm{d}x" />
-              </p>
-              <div className="font-mono text-xs text-muted space-y-1">
-                <p>
-                  f(x) = <InlineMath tex={activeFunc.fName} />, g(x) ={" "}
-                  <InlineMath tex={activeFunc.gName} />
-                </p>
-                <p>
-                  积分内积结果 <InlineMath tex="\langle f, g \rangle = " />
-                  <span className="font-bold text-amber-600 dark:text-amber-400">
-                    {activeFunc.exactIntegral.toFixed(3)}
-                  </span>
-                  {activeFunc.exactIntegral === 0 && (
-                    <span className="ml-2 rounded bg-emerald-500/10 px-1.5 py-0.5 text-emerald-600 font-semibold">
-                      正交函数对 ⟨f,g⟩ = 0
+          </div>
+
+          {/* Canvas Display */}
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full cursor-crosshair"
+            />
+          </div>
+
+          {/* MODE 1 Controls & Panel */}
+          {mode === "weighted" && (
+            <div className="space-y-3">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ParamSlider
+                  label="x 方向权重 w₁₁"
+                  value={w11}
+                  min={0.2}
+                  max={3.0}
+                  step={0.1}
+                  onChange={setW11}
+                />
+                <ParamSlider
+                  label="y 方向权重 w₂₂"
+                  value={w22}
+                  min={0.2}
+                  max={3.0}
+                  step={0.1}
+                  onChange={setW22}
+                />
+              </div>
+              <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
+                <div>
+                  <p className="mb-1 font-semibold text-foreground">
+                    加权内积定义{" "}
+                    {
+                      "$\\langle u, v \\rangle_W = w_{11} u_1 v_1 + w_{22} u_2 v_2$"
+                    }
+                  </p>
+                  <p className="font-mono text-xs text-muted">
+                    诱导范数{" "}
+                    {"$\\|u\\|_W = \\sqrt{\\langle u, u \\rangle_W} = $"}
+                    <span className="font-bold text-blue-600 dark:text-blue-400">
+                      {normUWeighted.toFixed(3)}
                     </span>
-                  )}
-                </p>
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 font-semibold text-foreground">
+                    加权正交性校验
+                  </p>
+                  <p className="font-mono text-xs text-muted">
+                    计算 {"$\\langle u, v \\rangle_W = $"}
+                    <span className="font-bold text-purple-600 dark:text-purple-400">
+                      {Math.abs(innerProdWeighted) < 1e-4
+                        ? "0.000 (精确正交!)"
+                        : innerProdWeighted.toFixed(3)}
+                    </span>
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* MODE 3 Controls & Panel */}
-        {mode === "theorems" && (
-          <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm grid gap-3 sm:grid-cols-2">
-            <div>
-              <p className="mb-1 font-semibold text-foreground">
-                柯西-施瓦茨不等式{" "}
-                <InlineMath tex="|\langle u, v \rangle| \le \|u\| \|v\|" />
-              </p>
-              <div className="font-mono text-xs text-muted space-y-1">
-                <p>
-                  LHS <InlineMath tex="|\langle u, v \rangle| = " />
-                  <span className="font-bold text-purple-600">
-                    {csLHS.toFixed(3)}
-                  </span>
+          {/* MODE 2 Controls & Panel */}
+          {mode === "func" && (
+            <div className="space-y-3">
+              <PresetSelector
+                label="选择基函数对:"
+                options={FUNC_PRESETS.map((presetItem, idx) => ({
+                  id: String(idx),
+                  label: presetItem.name,
+                }))}
+                value={String(funcIdx)}
+                onChange={(val) => setFuncIdx(Number(val))}
+              />
+              <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm">
+                <p className="mb-1 font-semibold text-foreground">
+                  连续函数空间积分内积{" "}
+                  {
+                    "$\\langle f, g \\rangle = \\int_{-1}^{1} f(x)g(x) \\, \\mathrm{d}x$"
+                  }
                 </p>
-                <p>
-                  RHS <InlineMath tex="\|u\| \|v\| = " />
-                  <span className="font-bold text-blue-600">
-                    {csRHS.toFixed(3)}
-                  </span>
-                </p>
-                <p className="text-emerald-600 font-semibold">
-                  {csLHS <= csRHS + 1e-4 ? "✓ 不等式成立" : "✕ 校验失败"}
-                </p>
+                <div className="font-mono text-xs text-muted space-y-1">
+                  <p>
+                    f(x) = {`$${activeFunc.fName}$`}, g(x) ={" "}
+                    {`$${activeFunc.gName}$`}
+                  </p>
+                  <p>
+                    积分内积结果 {"$\\langle f, g \\rangle = $"}
+                    <span className="font-bold text-amber-600 dark:text-amber-400">
+                      {activeFunc.exactIntegral.toFixed(3)}
+                    </span>
+                    {activeFunc.exactIntegral === 0 && (
+                      <span className="ml-2 rounded bg-emerald-500/10 px-1.5 py-0.5 text-emerald-600 font-semibold">
+                        正交函数对 ⟨f,g⟩ = 0
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
+          )}
 
-            <div>
-              <p className="mb-1 font-semibold text-foreground">
-                平行四边形恒等式{" "}
-                <InlineMath tex="\|u+v\|^2 + \|u-v\|^2 = 2\|u\|^2 + 2\|v\|^2" />
-              </p>
-              <div className="font-mono text-xs text-muted space-y-1">
-                <p>
-                  LHS <InlineMath tex="\|u+v\|^2 + \|u-v\|^2 = " />
-                  <span className="font-bold text-emerald-600">
-                    {paraLHS.toFixed(2)}
-                  </span>
+          {/* MODE 3 Controls & Panel */}
+          {mode === "theorems" && (
+            <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm grid gap-3 sm:grid-cols-2">
+              <div>
+                <p className="mb-1 font-semibold text-foreground">
+                  柯西-施瓦茨不等式{" "}
+                  {"$|\\langle u, v \\rangle| \\le \\|u\\| \\|v\\|$"}
                 </p>
-                <p>
-                  RHS <InlineMath tex="2\|u\|^2 + 2\|v\|^2 = " />
-                  <span className="font-bold text-amber-600">
-                    {paraRHS.toFixed(2)}
-                  </span>
+                <div className="font-mono text-xs text-muted space-y-1">
+                  <p>
+                    LHS {"$|\\langle u, v \\rangle| = $"}
+                    <span className="font-bold text-purple-600">
+                      {csLHS.toFixed(3)}
+                    </span>
+                  </p>
+                  <p>
+                    RHS {"$\\|u\\| \\|v\\| = $"}
+                    <span className="font-bold text-blue-600">
+                      {csRHS.toFixed(3)}
+                    </span>
+                  </p>
+                  <p className="text-emerald-600 font-semibold">
+                    {csLHS <= csRHS + 1e-4 ? "✓ 不等式成立" : "✕ 校验失败"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-1 font-semibold text-foreground">
+                  平行四边形恒等式{" "}
+                  {"$\\|u+v\\|^2 + \\|u-v\\|^2 = 2\\|u\\|^2 + 2\\|v\\|^2$"}
                 </p>
-                <p className="text-emerald-600 font-semibold">
-                  {Math.abs(paraLHS - paraRHS) < 1e-3
-                    ? "✓ 恒等式精确相等"
-                    : "✕ 校验失败"}
-                </p>
+                <div className="font-mono text-xs text-muted space-y-1">
+                  <p>
+                    LHS {"$\\|u+v\\|^2 + \\|u-v\\|^2 = $"}
+                    <span className="font-bold text-emerald-600">
+                      {paraLHS.toFixed(2)}
+                    </span>
+                  </p>
+                  <p>
+                    RHS {"$2\\|u\\|^2 + 2\\|v\\|^2 = $"}
+                    <span className="font-bold text-amber-600">
+                      {paraRHS.toFixed(2)}
+                    </span>
+                  </p>
+                  <p className="text-emerald-600 font-semibold">
+                    {Math.abs(paraLHS - paraRHS) < 1e-3
+                      ? "✓ 恒等式精确相等"
+                      : "✕ 校验失败"}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Interaction Hint */}
-        <p className="text-xs text-muted">
-          提示：
-          {mode === "weighted" &&
-            "拖动滑动条调节 x、y 轴权重，或在画布上拖动向量 u，观察度规椭圆与加权正交向量的动态变化。"}
-          {mode === "func" &&
-            "点击上方快捷选项，观察蓝色的 f(x) 与紫色的 g(x) 乘积形成的阴影积分区域与其正交数值。"}
-          {mode === "theorems" &&
-            "在画布上拖动向量 u 或 v，实时验证柯西-施瓦茨不等式与平行四边形恒等式。"}
-        </p>
-      </div>
-    </ExpandableDemo>
+          {/* Interaction Hint */}
+          <p className="text-xs text-muted">
+            提示：
+            {mode === "weighted" &&
+              "拖动滑动条调节 x、y 轴权重，或在画布上拖动向量 u，观察度规椭圆与加权正交向量的动态变化。"}
+            {mode === "func" &&
+              "点击上方快捷选项，观察蓝色的 f(x) 与紫色的 g(x) 乘积形成的阴影积分区域与其正交数值。"}
+            {mode === "theorems" &&
+              "在画布上拖动向量 u 或 v，实时验证柯西-施瓦茨不等式与平行四边形恒等式。"}
+          </p>
+        </div>
+      </ExpandableDemo>
+    </AutoMath>
   );
 };

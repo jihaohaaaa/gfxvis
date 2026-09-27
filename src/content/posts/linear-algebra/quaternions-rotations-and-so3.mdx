@@ -158,7 +158,7 @@ $$
 
 使用 3 个角度参数 $(\psi, \theta, \phi)$，无任何多余代数约束（$3 - 0 = 3$ 自由度）。
 
-- <strong>致命缺陷</strong>：当俯仰角接近 $\pm 90^\circ$ 时出现<strong>万向节死锁（Gimbal Lock）</strong>，此时数学雅可比矩阵降秩，丢失 1 个旋转自由度，且插值路径具有强烈的坐标系依赖性与非各向同性。
+- <strong>致命缺陷</strong>：当俯仰角接近 $\pm 90^\circ$ 时出现<strong>万向节死锁（Gimbal Lock）</strong>，此时数学雅可比矩阵降秩，丢失 1 个旋转自由度，且插值路径具有强烈的坐标系依赖性与非各向同性；对应的 ZYX 欧拉角速度 Jacobian 推导见[《三维旋转与相机视图变换》](/posts/linear-algebra/rotation-so3-view-transform)。
 
 #### (3) 单位四元数（Unit Quaternion / $\mathbb{S}^3$）
 

@@ -1,0 +1,195 @@
+.kde-window-shell {
+  --kde-panel: #eff0f1;
+  --kde-raised: #fcfcfd;
+  --kde-canvas: #ffffff;
+  --kde-border: #bec5cc;
+  --kde-ink: #232629;
+  --kde-muted: #626b73;
+  --kde-accent: #3daee9;
+  --kde-accent-ink: #102630;
+  --kde-success: #27ae60;
+  --kde-warning: #f67400;
+  --kde-danger: #da4453;
+  --kde-control-radius: 0.35rem;
+  --kde-card-radius: 0.45rem;
+  --kde-window-radius: 0.75rem;
+
+  /* Compatibility bindings */
+  --console-panel: var(--kde-panel);
+  --console-raised: var(--kde-raised);
+  --console-border: var(--kde-border);
+  --console-ink: var(--kde-ink);
+  --console-muted: var(--kde-muted);
+  --console-accent: var(--kde-accent);
+  --console-accent-ink: var(--kde-accent-ink);
+
+  overflow: hidden;
+  border: 1px solid var(--kde-border);
+  border-radius: var(--kde-window-radius);
+  background: var(--kde-panel);
+  color: var(--kde-ink);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 0.1);
+  font-family:
+    "Noto Sans",
+    "Oxygen",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+html.dark .kde-window-shell {
+  --kde-panel: #282d33;
+  --kde-raised: #31363b;
+  --kde-canvas: #1e2226;
+  --kde-border: #4d555d;
+  --kde-ink: #eff0f1;
+  --kde-muted: #bdc3c7;
+  --kde-accent: #3daee9;
+  --kde-accent-ink: #101b20;
+  --kde-success: #2ecc71;
+  --kde-warning: #f39c12;
+  --kde-danger: #e74c3c;
+
+  --console-panel: var(--kde-panel);
+  --console-raised: var(--kde-raised);
+  --console-border: var(--kde-border);
+  --console-ink: var(--kde-ink);
+  --console-muted: var(--kde-muted);
+  --console-accent: var(--kde-accent);
+  --console-accent-ink: var(--kde-accent-ink);
+}
+
+.kde-window-shell__windowbar {
+  display: flex;
+  min-height: 2.8rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--kde-border);
+  background: var(--kde-raised);
+  color: var(--kde-ink);
+  font-size: 0.72rem;
+}
+
+.kde-window-shell__mark {
+  display: inline-grid;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  padding: 0 0.2rem;
+  border-radius: 0.28rem;
+  background: var(--kde-accent);
+  color: var(--kde-accent-ink);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.kde-window-shell__heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.kde-window-shell__title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--kde-ink);
+}
+
+.kde-window-shell__context {
+  color: var(--kde-muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
+.kde-window-shell__mode {
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--kde-border);
+  border-radius: var(--kde-control-radius);
+  color: var(--kde-muted);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+}
+
+.kde-window-shell__workspace {
+  display: block;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  color: var(--kde-ink);
+}
+
+.kde-window-shell__workspace > .interactive-layout {
+  --interactive-layout-gap: 0.75rem;
+}
+
+.kde-window-shell__workspace .interactive-layout__region {
+  min-width: 0;
+}
+
+.kde-window-shell__workspace .interactive-layout__region--top {
+  overflow-x: auto;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--kde-border);
+}
+
+.kde-window-shell__tabs-bar {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  padding-bottom: 0.45rem;
+  scrollbar-width: thin;
+}
+
+.kde-window-shell__workspace .interactive-layout__region--main,
+.kde-window-shell__workspace .interactive-layout__region--side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.kde-window-shell__display {
+  display: flex;
+  position: relative;
+  height: 100%;
+  min-height: 20rem;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--kde-border);
+  border-radius: var(--kde-card-radius);
+  background: var(--kde-canvas);
+}
+
+.kde-window-shell__controls-rack {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--kde-border);
+  border-radius: var(--kde-card-radius);
+  background: var(--kde-raised);
+  color: var(--kde-ink);
+}
+
+.kde-window-shell__readouts {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* KaTeX formula display in console panels */
+.kde-window-shell [data-console-formula] .katex,
+[data-console-formula] .katex {
+  white-space: nowrap;
+}

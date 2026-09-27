@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useCallback } from "react";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import PresetSelector, { type PresetOption } from "../framework/PresetSelector";
 
 type SetCount = 2 | 3;
@@ -431,397 +431,405 @@ export default function SetOperationsVennDemo() {
   const numMinterms = 1 << currentCircles.length;
 
   return (
-    <ExpandableDemo id="set-operations-venn" height="24rem">
-      <div className="flex flex-col gap-3">
-        {/* Top Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-lg border border-border/80 bg-surface/70 p-2.5 backdrop-blur-sm">
-          {/* Mode Switcher */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-text-muted">
-              集合数目：
-            </span>
-            <CapsuleTabs
-              size="xs"
-              value={String(setCount)}
-              onChange={(val) => handleSetCountChange(Number(val) as SetCount)}
-              options={[
-                { id: "2", label: "2 集合 (A, B)" },
-                { id: "3", label: "3 集合 (A, B, C)" },
-              ]}
-            />
-          </div>
-
-          {/* Preset Selector */}
-          <div className="flex items-center gap-2">
-            <PresetSelector
-              label="运算预设:"
-              options={setCount === 2 ? PRESETS_2 : PRESETS_3}
-              value={presetId}
-              onChange={(id) => applyPreset(id, setCount)}
-            />
-          </div>
-        </div>
-
-        {/* Pure SVG Vector Workspace */}
-        <div className="relative overflow-hidden rounded-xl border border-border/70 bg-slate-950/80 h-[var(--demo-height,24rem)] shadow-inner select-none">
-          <CanvasToolbar onReset={handleReset} resetLabel="复位位置" />
-
-          {/* Floating Hint Overlay */}
-          <div className="absolute left-3 top-3 z-10 flex flex-col gap-1 rounded-md border border-border/60 bg-surface/85 px-2.5 py-1.5 text-[11px] text-text-muted shadow-sm backdrop-blur-md pointer-events-none">
-            <div className="flex items-center gap-1.5 font-medium text-text">
-              <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" />
-              矢量交互提示
-            </div>
-            <span>• 拖拽圆心调整相对位置；拖拽圆周外沿手柄缩放半径</span>
-            <span>• 点击 Venn 图中任意分割区域可直接切换包含状态</span>
-            {hoveredMinterm !== null && (
-              <span className="text-amber-400 font-mono font-medium">
-                当前探针：{mintermInfo[hoveredMinterm]?.label} (
-                {mintermInfo[hoveredMinterm]?.name})
+    <AutoMath>
+      <ExpandableDemo id="set-operations-venn" height="24rem">
+        <div className="flex flex-col gap-3">
+          {/* Top Control Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-lg border border-border/80 bg-surface/70 p-2.5 backdrop-blur-sm">
+            {/* Mode Switcher */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-text-muted">
+                集合数目：
               </span>
-            )}
+              <CapsuleTabs
+                size="xs"
+                value={String(setCount)}
+                onChange={(val) =>
+                  handleSetCountChange(Number(val) as SetCount)
+                }
+                options={[
+                  { id: "2", label: "2 集合 (A, B)" },
+                  { id: "3", label: "3 集合 (A, B, C)" },
+                ]}
+              />
+            </div>
+
+            {/* Preset Selector */}
+            <div className="flex items-center gap-2">
+              <PresetSelector
+                label="运算预设:"
+                options={setCount === 2 ? PRESETS_2 : PRESETS_3}
+                value={presetId}
+                onChange={(id) => applyPreset(id, setCount)}
+              />
+            </div>
           </div>
 
-          {/* Infinite-Resolution SVG */}
-          <svg
-            ref={svgRef}
-            viewBox={`0 0 ${BASE_WIDTH} ${BASE_HEIGHT}`}
-            onPointerDown={handleSvgPointerDown}
-            onPointerMove={handleSvgPointerMove}
-            onPointerUp={handleSvgPointerUp}
-            onPointerLeave={handleSvgPointerLeave}
-            className="h-full w-full cursor-crosshair touch-none"
-          >
-            <defs>
-              {/* Soft glow filter */}
-              <filter
-                id="venn-glow"
-                x="-20%"
-                y="-20%"
-                width="140%"
-                height="140%"
-              >
-                <feGaussianBlur stdDeviation="4" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
+          {/* Pure SVG Vector Workspace */}
+          <div className="relative overflow-hidden rounded-xl border border-border/70 bg-slate-950/80 h-[var(--demo-height,24rem)] shadow-inner select-none">
+            <CanvasToolbar onReset={handleReset} resetLabel="复位位置" />
 
-              {/* Individual circle masks (pure white fill inside circle) */}
-              {currentCircles.map((c) => (
-                <mask key={`mask-circle-${c.id}`} id={`mask-circle-${c.id}`}>
-                  <rect width={BASE_WIDTH} height={BASE_HEIGHT} fill="black" />
-                  <circle cx={c.x} cy={c.y} r={c.r} fill="white" />
-                </mask>
-              ))}
+            {/* Floating Hint Overlay */}
+            <div className="absolute left-3 top-3 z-10 flex flex-col gap-1 rounded-md border border-border/60 bg-surface/85 px-2.5 py-1.5 text-[11px] text-text-muted shadow-sm backdrop-blur-md pointer-events-none">
+              <div className="flex items-center gap-1.5 font-medium text-text">
+                <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" />
+                矢量交互提示
+              </div>
+              <span>• 拖拽圆心调整相对位置；拖拽圆周外沿手柄缩放半径</span>
+              <span>• 点击 Venn 图中任意分割区域可直接切换包含状态</span>
+              {hoveredMinterm !== null && (
+                <span className="text-amber-400 font-mono font-medium">
+                  当前探针：{mintermInfo[hoveredMinterm]?.label} (
+                  {mintermInfo[hoveredMinterm]?.name})
+                </span>
+              )}
+            </div>
 
-              {/* Minterm exact geometric intersection masks */}
-              {Array.from({ length: numMinterms }).map((_, m) => {
-                const posCircleIndices = currentCircles
-                  .map((_, i) => (((m >> i) & 1) === 1 ? i : -1))
-                  .filter((idx) => idx !== -1);
+            {/* Infinite-Resolution SVG */}
+            <svg
+              ref={svgRef}
+              viewBox={`0 0 ${BASE_WIDTH} ${BASE_HEIGHT}`}
+              onPointerDown={handleSvgPointerDown}
+              onPointerMove={handleSvgPointerMove}
+              onPointerUp={handleSvgPointerUp}
+              onPointerLeave={handleSvgPointerLeave}
+              className="h-full w-full cursor-crosshair touch-none"
+            >
+              <defs>
+                {/* Soft glow filter */}
+                <filter
+                  id="venn-glow"
+                  x="-20%"
+                  y="-20%"
+                  width="140%"
+                  height="140%"
+                >
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
 
-                return (
-                  <mask key={`minterm-mask-${m}`} id={`minterm-mask-${m}`}>
-                    {m === 0 ? (
-                      // m0: Start with universe white rect, then subtract ALL circles with black
-                      <>
-                        <rect
-                          x={U_BOX_MARGIN}
-                          y={U_BOX_MARGIN}
-                          width={BASE_WIDTH - U_BOX_MARGIN * 2}
-                          height={BASE_HEIGHT - U_BOX_MARGIN * 2}
-                          rx={12}
-                          fill="white"
-                        />
-                        {currentCircles.map((c) => (
-                          <circle
-                            key={`cut-all-${c.id}`}
-                            cx={c.x}
-                            cy={c.y}
-                            r={c.r}
+                {/* Individual circle masks (pure white fill inside circle) */}
+                {currentCircles.map((c) => (
+                  <mask key={`mask-circle-${c.id}`} id={`mask-circle-${c.id}`}>
+                    <rect
+                      width={BASE_WIDTH}
+                      height={BASE_HEIGHT}
+                      fill="black"
+                    />
+                    <circle cx={c.x} cy={c.y} r={c.r} fill="white" />
+                  </mask>
+                ))}
+
+                {/* Minterm exact geometric intersection masks */}
+                {Array.from({ length: numMinterms }).map((_, m) => {
+                  const posCircleIndices = currentCircles
+                    .map((_, i) => (((m >> i) & 1) === 1 ? i : -1))
+                    .filter((idx) => idx !== -1);
+
+                  return (
+                    <mask key={`minterm-mask-${m}`} id={`minterm-mask-${m}`}>
+                      {m === 0 ? (
+                        // m0: Start with universe white rect, then subtract ALL circles with black
+                        <>
+                          <rect
+                            x={U_BOX_MARGIN}
+                            y={U_BOX_MARGIN}
+                            width={BASE_WIDTH - U_BOX_MARGIN * 2}
+                            height={BASE_HEIGHT - U_BOX_MARGIN * 2}
+                            rx={12}
+                            fill="white"
+                          />
+                          {currentCircles.map((c) => (
+                            <circle
+                              key={`cut-all-${c.id}`}
+                              cx={c.x}
+                              cy={c.y}
+                              r={c.r}
+                              fill="black"
+                            />
+                          ))}
+                        </>
+                      ) : (
+                        // m > 0: Start with base black rect
+                        <>
+                          <rect
+                            width={BASE_WIDTH}
+                            height={BASE_HEIGHT}
                             fill="black"
                           />
-                        ))}
-                      </>
-                    ) : (
-                      // m > 0: Start with base black rect
-                      <>
-                        <rect
-                          width={BASE_WIDTH}
-                          height={BASE_HEIGHT}
-                          fill="black"
-                        />
-                        {/* Positive circle white base (intersection of all positive circles) */}
-                        <g
-                          mask={
-                            posCircleIndices.length > 1
-                              ? `url(#mask-circle-${currentCircles[posCircleIndices[1]].id})`
-                              : undefined
-                          }
-                        >
-                          {posCircleIndices.length > 2 ? (
-                            <g
-                              mask={`url(#mask-circle-${currentCircles[posCircleIndices[2]].id})`}
-                            >
+                          {/* Positive circle white base (intersection of all positive circles) */}
+                          <g
+                            mask={
+                              posCircleIndices.length > 1
+                                ? `url(#mask-circle-${currentCircles[posCircleIndices[1]].id})`
+                                : undefined
+                            }
+                          >
+                            {posCircleIndices.length > 2 ? (
+                              <g
+                                mask={`url(#mask-circle-${currentCircles[posCircleIndices[2]].id})`}
+                              >
+                                <circle
+                                  cx={currentCircles[posCircleIndices[0]].x}
+                                  cy={currentCircles[posCircleIndices[0]].y}
+                                  r={currentCircles[posCircleIndices[0]].r}
+                                  fill="white"
+                                />
+                              </g>
+                            ) : (
                               <circle
                                 cx={currentCircles[posCircleIndices[0]].x}
                                 cy={currentCircles[posCircleIndices[0]].y}
                                 r={currentCircles[posCircleIndices[0]].r}
                                 fill="white"
                               />
-                            </g>
-                          ) : (
-                            <circle
-                              cx={currentCircles[posCircleIndices[0]].x}
-                              cy={currentCircles[posCircleIndices[0]].y}
-                              r={currentCircles[posCircleIndices[0]].r}
-                              fill="white"
-                            />
-                          )}
-                        </g>
+                            )}
+                          </g>
 
-                        {/* Negative circles (0-bits) cut out with black */}
-                        {currentCircles.map((c, i) => {
-                          const isInside = ((m >> i) & 1) === 1;
-                          if (!isInside) {
-                            return (
-                              <circle
-                                key={`cut-neg-${c.id}`}
-                                cx={c.x}
-                                cy={c.y}
-                                r={c.r}
-                                fill="black"
-                              />
-                            );
-                          }
-                          return null;
-                        })}
-                      </>
-                    )}
-                  </mask>
+                          {/* Negative circles (0-bits) cut out with black */}
+                          {currentCircles.map((c, i) => {
+                            const isInside = ((m >> i) & 1) === 1;
+                            if (!isInside) {
+                              return (
+                                <circle
+                                  key={`cut-neg-${c.id}`}
+                                  cx={c.x}
+                                  cy={c.y}
+                                  r={c.r}
+                                  fill="black"
+                                />
+                              );
+                            }
+                            return null;
+                          })}
+                        </>
+                      )}
+                    </mask>
+                  );
+                })}
+              </defs>
+
+              {/* 1. Universe Box U */}
+              <rect
+                x={U_BOX_MARGIN}
+                y={U_BOX_MARGIN}
+                width={BASE_WIDTH - U_BOX_MARGIN * 2}
+                height={BASE_HEIGHT - U_BOX_MARGIN * 2}
+                rx={12}
+                className={`transition-colors duration-150 ${
+                  hoveredMinterm === 0
+                    ? "fill-slate-900/50 stroke-amber-400/80 stroke-2"
+                    : "fill-slate-900/40 stroke-slate-600/50 stroke-[1.8]"
+                }`}
+              />
+              <text
+                x={U_BOX_MARGIN + 16}
+                y={U_BOX_MARGIN + 24}
+                className="fill-slate-400 font-sans font-bold text-xs pointer-events-none select-none"
+              >
+                全集 U (Universe)
+              </text>
+
+              {/* 2. Vector Minterm Shaded Regions with Crisp Anti-aliasing */}
+              {Array.from({ length: numMinterms }).map((_, m) => {
+                const isSelected = (activeMask & (1 << m)) !== 0;
+                const isHovered = hoveredMinterm === m;
+
+                if (!isSelected && !isHovered) return null;
+
+                // For m0 (outside space), do not blast bright yellow across the whole canvas on hover.
+                // Instead, keep it subtle or only show when actually selected.
+                return (
+                  <rect
+                    key={`region-${m}`}
+                    x={U_BOX_MARGIN}
+                    y={U_BOX_MARGIN}
+                    width={BASE_WIDTH - U_BOX_MARGIN * 2}
+                    height={BASE_HEIGHT - U_BOX_MARGIN * 2}
+                    rx={12}
+                    mask={`url(#minterm-mask-${m})`}
+                    className={`transition-colors duration-150 ${
+                      m === 0
+                        ? isHovered
+                          ? isSelected
+                            ? "fill-indigo-500/25"
+                            : "fill-amber-400/10"
+                          : "fill-indigo-500/20"
+                        : isHovered
+                          ? "fill-amber-400/65"
+                          : "fill-indigo-500/50"
+                    }`}
+                  />
                 );
               })}
-            </defs>
 
-            {/* 1. Universe Box U */}
-            <rect
-              x={U_BOX_MARGIN}
-              y={U_BOX_MARGIN}
-              width={BASE_WIDTH - U_BOX_MARGIN * 2}
-              height={BASE_HEIGHT - U_BOX_MARGIN * 2}
-              rx={12}
-              className={`transition-colors duration-150 ${
-                hoveredMinterm === 0
-                  ? "fill-slate-900/50 stroke-amber-400/80 stroke-2"
-                  : "fill-slate-900/40 stroke-slate-600/50 stroke-[1.8]"
-              }`}
-            />
-            <text
-              x={U_BOX_MARGIN + 16}
-              y={U_BOX_MARGIN + 24}
-              className="fill-slate-400 font-sans font-bold text-xs pointer-events-none select-none"
-            >
-              全集 U (Universe)
-            </text>
+              {/* 3. Circle Perimeter Outlines, Centers, and Handles */}
+              {currentCircles.map((c, i) => {
+                const angle =
+                  setCount === 2
+                    ? i === 0
+                      ? Math.PI * 0.8
+                      : Math.PI * 0.2
+                    : i === 0
+                      ? Math.PI * 0.85
+                      : i === 1
+                        ? Math.PI * 0.15
+                        : Math.PI * 0.5;
 
-            {/* 2. Vector Minterm Shaded Regions with Crisp Anti-aliasing */}
-            {Array.from({ length: numMinterms }).map((_, m) => {
-              const isSelected = (activeMask & (1 << m)) !== 0;
-              const isHovered = hoveredMinterm === m;
+                const lx = c.x + (c.r + 24) * Math.cos(angle);
+                const ly = c.y - (c.r + 24) * Math.sin(angle);
 
-              if (!isSelected && !isHovered) return null;
+                // Radius resize handle placed at bottom-right of circle
+                const hx = c.x + c.r * Math.cos(Math.PI * 0.25);
+                const hy = c.y + c.r * Math.sin(Math.PI * 0.25);
 
-              // For m0 (outside space), do not blast bright yellow across the whole canvas on hover.
-              // Instead, keep it subtle or only show when actually selected.
-              return (
-                <rect
-                  key={`region-${m}`}
-                  x={U_BOX_MARGIN}
-                  y={U_BOX_MARGIN}
-                  width={BASE_WIDTH - U_BOX_MARGIN * 2}
-                  height={BASE_HEIGHT - U_BOX_MARGIN * 2}
-                  rx={12}
-                  mask={`url(#minterm-mask-${m})`}
-                  className={`transition-colors duration-150 ${
-                    m === 0
-                      ? isHovered
-                        ? isSelected
-                          ? "fill-indigo-500/25"
-                          : "fill-amber-400/10"
-                        : "fill-indigo-500/20"
-                      : isHovered
-                        ? "fill-amber-400/65"
-                        : "fill-indigo-500/50"
-                  }`}
-                />
-              );
-            })}
-
-            {/* 3. Circle Perimeter Outlines, Centers, and Handles */}
-            {currentCircles.map((c, i) => {
-              const angle =
-                setCount === 2
-                  ? i === 0
-                    ? Math.PI * 0.8
-                    : Math.PI * 0.2
-                  : i === 0
-                    ? Math.PI * 0.85
-                    : i === 1
-                      ? Math.PI * 0.15
-                      : Math.PI * 0.5;
-
-              const lx = c.x + (c.r + 24) * Math.cos(angle);
-              const ly = c.y - (c.r + 24) * Math.sin(angle);
-
-              // Radius resize handle placed at bottom-right of circle
-              const hx = c.x + c.r * Math.cos(Math.PI * 0.25);
-              const hy = c.y + c.r * Math.sin(Math.PI * 0.25);
-
-              return (
-                <g key={`circle-group-${c.id}`}>
-                  {/* Crisp Outlined Circle */}
-                  <circle
-                    cx={c.x}
-                    cy={c.y}
-                    r={c.r}
-                    stroke={c.color}
-                    strokeWidth={2.5}
-                    fill="transparent"
-                    filter="url(#venn-glow)"
-                    className="pointer-events-none"
-                  />
-
-                  {/* Circle Name Label */}
-                  <text
-                    x={lx}
-                    y={ly}
-                    fill={c.color}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="font-sans font-bold text-xl drop-shadow pointer-events-none select-none"
-                  >
-                    {c.name}
-                  </text>
-
-                  {/* Center Drag Handle */}
-                  <g
-                    className="cursor-move"
-                    onPointerDown={(e) => handlePointerDownCenter(e, c)}
-                  >
-                    <circle cx={c.x} cy={c.y} r={14} fill="transparent" />
+                return (
+                  <g key={`circle-group-${c.id}`}>
+                    {/* Crisp Outlined Circle */}
                     <circle
                       cx={c.x}
                       cy={c.y}
-                      r={5.5}
-                      fill={c.color}
-                      stroke="#0f172a"
-                      strokeWidth={2}
+                      r={c.r}
+                      stroke={c.color}
+                      strokeWidth={2.5}
+                      fill="transparent"
+                      filter="url(#venn-glow)"
+                      className="pointer-events-none"
                     />
-                  </g>
 
-                  {/* Perimeter Radius Resize Handle */}
-                  <g
-                    className="cursor-nwse-resize"
-                    onPointerDown={(e) => handlePointerDownRadius(e, c)}
-                  >
-                    <circle cx={hx} cy={hy} r={10} fill="transparent" />
-                    <circle
-                      cx={hx}
-                      cy={hy}
-                      r={4.5}
+                    {/* Circle Name Label */}
+                    <text
+                      x={lx}
+                      y={ly}
                       fill={c.color}
-                      stroke="#ffffff"
-                      strokeWidth={1.5}
-                    />
-                  </g>
-                </g>
-              );
-            })}
-          </svg>
-        </div>
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="font-sans font-bold text-xl drop-shadow pointer-events-none select-none"
+                    >
+                      {c.name}
+                    </text>
 
-        {/* Information & Status Panel */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-          {/* Active Algebraic Formula */}
-          <div className="flex flex-col gap-1.5 rounded-lg border border-border/80 bg-surface/60 p-2.5 text-xs">
-            <div className="flex items-center justify-between">
+                    {/* Center Drag Handle */}
+                    <g
+                      className="cursor-move"
+                      onPointerDown={(e) => handlePointerDownCenter(e, c)}
+                    >
+                      <circle cx={c.x} cy={c.y} r={14} fill="transparent" />
+                      <circle
+                        cx={c.x}
+                        cy={c.y}
+                        r={5.5}
+                        fill={c.color}
+                        stroke="#0f172a"
+                        strokeWidth={2}
+                      />
+                    </g>
+
+                    {/* Perimeter Radius Resize Handle */}
+                    <g
+                      className="cursor-nwse-resize"
+                      onPointerDown={(e) => handlePointerDownRadius(e, c)}
+                    >
+                      <circle cx={hx} cy={hy} r={10} fill="transparent" />
+                      <circle
+                        cx={hx}
+                        cy={hy}
+                        r={4.5}
+                        fill={c.color}
+                        stroke="#ffffff"
+                        strokeWidth={1.5}
+                      />
+                    </g>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* Information & Status Panel */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            {/* Active Algebraic Formula */}
+            <div className="flex flex-col gap-1.5 rounded-lg border border-border/80 bg-surface/60 p-2.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-text">
+                  当前选中区域代数表达式：
+                </span>
+                <span className="font-mono text-[11px] text-accent">
+                  包含 {(activeMask.toString(2).match(/1/g) || []).length} /{" "}
+                  {1 << setCount} 极小项
+                </span>
+              </div>
+              <div className="flex min-h-[36px] items-center justify-center rounded border border-border/40 bg-canvas/60 px-3 py-1 text-center font-mono">
+                {`$${derivedFormula}$`}
+              </div>
+            </div>
+
+            {/* De Morgan & Dual Laws Insight */}
+            <div className="flex flex-col gap-1.5 rounded-lg border border-border/80 bg-surface/60 p-2.5 text-xs">
               <span className="font-semibold text-text">
-                当前选中区域代数表达式：
+                对偶律与布尔位操作视角：
               </span>
-              <span className="font-mono text-[11px] text-accent">
-                包含 {(activeMask.toString(2).match(/1/g) || []).length} /{" "}
-                {1 << setCount} 极小项
-              </span>
-            </div>
-            <div className="flex min-h-[36px] items-center justify-center rounded border border-border/40 bg-canvas/60 px-3 py-1 text-center font-mono">
-              <InlineMath tex={derivedFormula} />
-            </div>
-          </div>
-
-          {/* De Morgan & Dual Laws Insight */}
-          <div className="flex flex-col gap-1.5 rounded-lg border border-border/80 bg-surface/60 p-2.5 text-xs">
-            <span className="font-semibold text-text">
-              对偶律与布尔位操作视角：
-            </span>
-            <div className="flex flex-col gap-1 text-[11px] text-text-muted leading-relaxed">
-              {isDeMorganMode ? (
-                <div className="text-accent font-medium">
-                  ★
-                  德·摩根定律保证了：取补操作将交集（AND）完全翻转为并集（OR），阴影区域与右侧对偶形态严格相等。
-                </div>
-              ) : (
-                <div>
-                  在计算机科学中，集合通过特征向量编码：交集对应位与（
-                  <code className="font-mono text-accent">&</code>
-                  ），并集对应位或（
-                  <code className="font-mono text-accent">|</code>
-                  ），对称差对应异或（
-                  <code className="font-mono text-accent">^</code>
-                  ）。
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Minterms Grid Toggle Buttons */}
-        <div className="rounded-lg border border-border/80 bg-surface/40 p-2 text-xs">
-          <div className="mb-1.5 font-semibold text-text-muted">
-            基本析取项（极小项 Minterms）开关阵列：
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-            {mintermInfo.map((m) => {
-              const isSelected = (activeMask & (1 << m.index)) !== 0;
-              return (
-                <button
-                  key={m.index}
-                  type="button"
-                  onClick={() => {
-                    setActiveMask((prev) => prev ^ (1 << m.index));
-                    setPresetId("custom");
-                  }}
-                  onMouseEnter={() => setHoveredMinterm(m.index)}
-                  onMouseLeave={() => setHoveredMinterm(null)}
-                  className={`flex flex-col items-start rounded border px-2 py-1 transition-all ${
-                    isSelected
-                      ? "border-accent/80 bg-accent/15 text-text shadow-sm"
-                      : "border-border/60 bg-surface/80 text-text-muted hover:border-border"
-                  }`}
-                >
-                  <div className="flex w-full items-center justify-between text-[11px]">
-                    <span className="font-mono font-bold text-accent">
-                      {m.label}
-                    </span>
-                    <span className="font-mono text-[10px] text-text-muted">
-                      [{m.bits}]
-                    </span>
+              <div className="flex flex-col gap-1 text-[11px] text-text-muted leading-relaxed">
+                {isDeMorganMode ? (
+                  <div className="text-accent font-medium">
+                    ★
+                    德·摩根定律保证了：取补操作将交集（AND）完全翻转为并集（OR），阴影区域与右侧对偶形态严格相等。
                   </div>
-                  <span className="truncate text-[10px]">{m.name}</span>
-                </button>
-              );
-            })}
+                ) : (
+                  <div>
+                    在计算机科学中，集合通过特征向量编码：交集对应位与（
+                    <code className="font-mono text-accent">&</code>
+                    ），并集对应位或（
+                    <code className="font-mono text-accent">|</code>
+                    ），对称差对应异或（
+                    <code className="font-mono text-accent">^</code>
+                    ）。
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Minterms Grid Toggle Buttons */}
+          <div className="rounded-lg border border-border/80 bg-surface/40 p-2 text-xs">
+            <div className="mb-1.5 font-semibold text-text-muted">
+              基本析取项（极小项 Minterms）开关阵列：
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {mintermInfo.map((m) => {
+                const isSelected = (activeMask & (1 << m.index)) !== 0;
+                return (
+                  <button
+                    key={m.index}
+                    type="button"
+                    onClick={() => {
+                      setActiveMask((prev) => prev ^ (1 << m.index));
+                      setPresetId("custom");
+                    }}
+                    onMouseEnter={() => setHoveredMinterm(m.index)}
+                    onMouseLeave={() => setHoveredMinterm(null)}
+                    className={`flex flex-col items-start rounded border px-2 py-1 transition-all ${
+                      isSelected
+                        ? "border-accent/80 bg-accent/15 text-text shadow-sm"
+                        : "border-border/60 bg-surface/80 text-text-muted hover:border-border"
+                    }`}
+                  >
+                    <div className="flex w-full items-center justify-between text-[11px]">
+                      <span className="font-mono font-bold text-accent">
+                        {m.label}
+                      </span>
+                      <span className="font-mono text-[10px] text-text-muted">
+                        [{m.bits}]
+                      </span>
+                    </div>
+                    <span className="truncate text-[10px]">{m.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

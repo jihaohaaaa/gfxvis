@@ -1,4 +1,4 @@
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 
 export default function FastMatrixInverseDiagram() {
   const cards = [
@@ -29,44 +29,48 @@ export default function FastMatrixInverseDiagram() {
   ];
 
   return (
-    <div className="not-prose my-6 overflow-hidden rounded-2xl border border-border bg-surface/80 p-4 shadow-xs backdrop-blur-xs transition-colors md:p-6">
-      <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-2.5">
-        <div className="flex items-center gap-2">
-          <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent" />
-          <span className="text-xs font-semibold tracking-wider text-foreground uppercase">
-            图形学与工程实践：特殊矩阵极速解析求逆
+    <AutoMath>
+      <div className="not-prose my-6 overflow-hidden rounded-2xl border border-border bg-surface/80 p-4 shadow-xs backdrop-blur-xs transition-colors md:p-6">
+        <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent" />
+            <span className="text-xs font-semibold tracking-wider text-foreground uppercase">
+              图形学与工程实践：特殊矩阵极速解析求逆
+            </span>
+          </div>
+          <span className="rounded-md bg-surface-hover px-2 py-0.5 font-mono text-[11px] text-muted">
+            告别 O(n³) 高斯消元
           </span>
         </div>
-        <span className="rounded-md bg-surface-hover px-2 py-0.5 font-mono text-[11px] text-muted">
-          告别 O(n³) 高斯消元
-        </span>
-      </div>
 
-      <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
-        {cards.map((c, i) => (
-          <div
-            key={i}
-            className={`flex flex-col justify-between rounded-xl border bg-surface p-4 transition-all hover:shadow-xs ${c.accent}`}
-          >
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground">
-                  {c.title}
-                </span>
-                <span
-                  className={`rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${c.perfColor}`}
-                >
-                  {c.perf}
-                </span>
+        <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
+          {cards.map((c, i) => (
+            <div
+              key={i}
+              className={`flex flex-col justify-between rounded-xl border bg-surface p-4 transition-all hover:shadow-xs ${c.accent}`}
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground">
+                    {c.title}
+                  </span>
+                  <span
+                    className={`rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${c.perfColor}`}
+                  >
+                    {c.perf}
+                  </span>
+                </div>
+                <div className="my-3 rounded-lg bg-background/90 p-2 text-center font-mono text-xs font-bold text-accent border border-border/60">
+                  {`$${c.formula}$`}
+                </div>
               </div>
-              <div className="my-3 rounded-lg bg-background/90 p-2 text-center font-mono text-xs font-bold text-accent border border-border/60">
-                <InlineMath tex={c.formula} />
-              </div>
+              <p className="text-[11px] text-muted leading-relaxed">
+                {c.detail}
+              </p>
             </div>
-            <p className="text-[11px] text-muted leading-relaxed">{c.detail}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </AutoMath>
   );
 }

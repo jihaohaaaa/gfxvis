@@ -42,6 +42,13 @@ const toc = enrichedHeadings.filter((h) => h.depth === 2 || h.depth === 3);
     <div class="prose prose-slate max-w-none dark:prose-invert">
       <slot />
     </div>
+    <div
+      id="interactive-only-empty"
+      class="hidden rounded-xl border border-border bg-surface p-6 text-sm text-muted"
+      role="status"
+    >
+      这篇文章没有可交互组件。
+    </div>
 
     <!-- Floating Copy Permalink Toast Notification -->
     <div

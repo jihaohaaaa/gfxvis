@@ -43,9 +43,9 @@ const LANG_CONFIG: Record<
     hint: "调用本地 rustc -O 优化编译并执行",
   },
   cpp: {
-    label: "C++ 20 (Clang / GCC)",
+    label: "C++",
     fileSuffix: "main.cpp",
-    hint: "调用本地 clang++ / g++ -std=c++20 -O2 编译并执行",
+    hint: "调用本地 clang++ / g++ -std=c++23 -O2 编译并执行",
   },
 };
 
@@ -225,7 +225,7 @@ export default function CodePlayground({
   }, []);
 
   const hasOutput = output !== null;
-  const isSuccess = output?.exitCode === 0 && !output.stderr;
+  const isSuccess = output?.exitCode === 0;
 
   return (
     <div

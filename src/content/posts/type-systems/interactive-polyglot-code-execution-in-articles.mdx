@@ -143,7 +143,7 @@ export const cppSnippet = [
   "#include <numeric>",
   "#include <algorithm>",
   "",
-  "// C++ 20 编译期函数",
+  "// 现代 C++ 编译期函数",
   "constexpr unsigned long long factorial(unsigned int n) {",
   "    return (n <= 1) ? 1 : n * factorial(n - 1);",
   "}",
@@ -169,7 +169,7 @@ export const cppSnippet = [
 
 传统的技术博客与学术文档通常只将代码视为“静态文本”。读者在阅读涉及编译器原理、图形学管线、系统调用或并发数据结构的深度文章时，往往需要手动把代码复制到本地终端中创建工程、配置编译器才能验证结果。
 
-为了彻底打通<strong>“阅读、思考与现场验证”</strong>之间的鸿沟，我们在本站技术栈中构建了一套轻量级<strong>全栈多语言即时执行引擎（Polyglot Execution Engine）</strong>。它依托 Astro Actions 的端到端类型安全 RPC 机制，使文章不仅能直接调度宿主机安装的 <strong>Rust（`rustc`）</strong> 与 <strong>C++ 20（`clang++`）</strong> 进行本地原生编译，还能<strong>在文章里直接调用 Node.js 原生系统级 API</strong>（如 `node:fs`、`node:os`）。
+为了彻底打通<strong>“阅读、思考与现场验证”</strong>之间的鸿沟，我们在本站技术栈中构建了一套轻量级<strong>全栈多语言即时执行引擎（Polyglot Execution Engine）</strong>。它依托 Astro Actions 的端到端类型安全 RPC 机制，使文章不仅能直接调度宿主机安装的 <strong>Rust（`rustc`）</strong> 与 <strong>C++（`clang++`）</strong> 进行本地原生编译，还能<strong>在文章里直接调用 Node.js 原生系统级 API</strong>（如 `node:fs`、`node:os`）。
 
 本文将通过现场可交互示例，全面展示这一能力在不同语言场景下的应用。
 
@@ -235,15 +235,15 @@ export const cppSnippet = [
 
 ---
 
-## 四、现代 C++ 20：常量求值与高性能并行算法
+## 四、现代 C++：常量求值与高性能并行算法
 
-图形学核心算法与高性能并行计算几乎离不开现代 C++。下方代码直接调用本地的 <strong>`clang++ -std=c++20 -O2`</strong> 进行编译链接：
+图形学核心算法与高性能并行计算几乎离不开现代 C++。下方代码直接调用本地的 <strong>`clang++ -std=c++23 -O2`</strong> 进行编译链接：
 
 <CodePlayground
   client:visible
   lang="cpp"
-  title="C++ 20 Constexpr 编译期计算与 STL 管道"
-  description="演示 C++ 20 编译期阶乘与运行时容器算法聚合。"
+  title="现代 C++ Constexpr 编译期计算与 STL 管道"
+  description="演示现代 C++ 编译期阶乘与运行时容器算法聚合。"
   initialCode={cppSnippet}
 />
 
@@ -255,4 +255,4 @@ export const cppSnippet = [
 
 1. <strong>唯一随机沙箱隔离</strong>：每次请求均由 `randomUUID()` 生成专用的临时文件目录，执行结束无论成败立即递归擦除，杜绝磁盘文件残留；
 2. <strong>8 秒超时强杀熔断</strong>：如果读者在编辑代码时不小心写了 `while(true)` 或死递归，子进程监视器将在 <strong>8000 毫秒</strong> 后自动发送 `SIGTERM` 强杀子进程并向前端输出拦截报告，确保不会占满或阻塞服务器资源；
-3. <strong>环境探针自适应</strong>：在执行 C++ 或 Rust 前，Action 会首先进行环境变量与命令行探针检查；若宿主机未预装编译环境，将友好提供包管理器安装指令，而非抛出粗糙的崩溃信息。
+3. <strong>环境探针自适应</strong>：在执行 C++ 或 Rust 前，Action 会按宿主系统从 `PATH` 探测编译器（Windows 使用 `where.exe`，macOS 与 Linux 使用 `which`）；若没有找到，会给出对应系统的安装提示，而非误报或抛出进程启动错误。

@@ -1,0 +1,96 @@
+.interactive-layout {
+  --interactive-layout-gap: 0.65rem;
+  display: grid;
+  min-width: 0;
+  gap: var(--interactive-layout-gap);
+  grid-template-areas: var(--interactive-desktop-areas, "main");
+}
+
+.interactive-layout__region {
+  min-width: 0;
+}
+
+.interactive-layout__region--main,
+.interactive-layout__region--secondary {
+  min-height: 0;
+}
+
+.interactive-layout--side-right {
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 0.42fr);
+}
+
+.interactive-layout--bottom-split {
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 0.42fr);
+}
+
+.interactive-layout--three-column {
+  grid-template-columns: minmax(10rem, 0.24fr) minmax(0, 1fr) minmax(
+      15rem,
+      0.34fr
+    );
+}
+
+.interactive-layout--dense-dock {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.interactive-layout--dual-view {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(15rem, 0.42fr);
+}
+
+.interactive-layout--side-left {
+  grid-template-columns: minmax(15rem, 0.42fr) minmax(0, 1fr);
+}
+
+.interactive-layout__region--top {
+  grid-area: top;
+}
+
+.interactive-layout__region--navigation {
+  grid-area: navigation;
+}
+
+.interactive-layout__region--main {
+  grid-area: main;
+}
+
+.interactive-layout__region--secondary {
+  grid-area: secondary;
+}
+
+.interactive-layout__region--side {
+  grid-area: side;
+  min-width: 0;
+}
+
+.interactive-layout__region--bottom {
+  grid-area: bottom;
+  min-width: 0;
+}
+
+.interactive-layout__region--footer {
+  grid-area: footer;
+  min-width: 0;
+}
+
+.interactive-layout:not(.interactive-layout--dual-view)
+  > .interactive-layout__region--secondary {
+  display: none;
+}
+
+.interactive-layout:not(.interactive-layout--three-column)
+  > .interactive-layout__region--navigation {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .interactive-layout--side-right,
+  .interactive-layout--bottom-split,
+  .interactive-layout--three-column,
+  .interactive-layout--dense-dock,
+  .interactive-layout--dual-view,
+  .interactive-layout--side-left {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: var(--interactive-mobile-areas, "main") !important;
+  }
+}

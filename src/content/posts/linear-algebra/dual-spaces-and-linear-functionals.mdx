@@ -218,11 +218,15 @@ $$
 
 ### 4.1 Riesz 表现定理（Riesz Representation Theorem）
 
-设 $(V, \langle \cdot, \cdot \rangle)$ 是一个实内积空间。对于 $V^*$ 中的 <strong>任意</strong> 线性泛函 $f$，都 <strong>存在且仅存在一个</strong> 确定的向量 $\mathbf{v}_f \in V$，使得对所有的 $\mathbf{x} \in V$，泛函求值都可以通过与该向量做内积得到：
+先看向量如何产生泛函。在实内积空间中，固定一个向量 $\mathbf{c}\in V$，令 $f_{\mathbf{c}}(\mathbf{x})=\langle\mathbf{x},\mathbf{c}\rangle$。内积对 $\mathbf{x}$ 线性，因此 $f_{\mathbf{c}}:V\to\mathbb{R}$ 是一个线性泛函，也就是 $V^*$ 的元素。
+
+Riesz 表现定理进一步说明：在有限维实内积空间或实 Hilbert 空间中，<strong>每一个</strong>线性泛函都能由唯一的向量如此表示。设 $(V, \langle \cdot, \cdot \rangle)$ 是这样的空间，则对于 $V^*$ 中的 <strong>任意</strong> 线性泛函 $f$，都 <strong>存在且仅存在一个</strong> 确定的向量 $\mathbf{v}_f \in V$，使得对所有的 $\mathbf{x} \in V$，泛函求值都可以通过与该向量做内积得到：
 
 $$
 \boxed{f(\mathbf{x}) = \langle \mathbf{v}_f, \mathbf{x} \rangle, \quad \forall \mathbf{x} \in V}
 $$
+
+实内积满足对称性，因此这与前面写成 $\langle\mathbf{x},\mathbf{c}\rangle$ 的形式一致；定理说明向量到线性泛函的对应不仅能构造出一些泛函，而且覆盖整个 $V^*$，并且表示向量唯一。
 
 并且映射 $f \mapsto \mathbf{v}_f$ 构成了从 $V^*$ 到 $V$ 的一个 <strong>保持范数的自然等距同构（Isometry）</strong>。
 

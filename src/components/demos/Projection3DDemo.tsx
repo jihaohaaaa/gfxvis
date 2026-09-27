@@ -11,7 +11,7 @@ import { attachGizmo3D } from "../../visualizations/core/3d/gizmo3d";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import { useViewer3D } from "../framework/useViewer3D";
 
@@ -138,119 +138,109 @@ export default function Projection3DDemo({ height }: { height?: string }) {
   }, [vector, targetId, modeId, mode, viewerRef, containerRef]);
 
   return (
-    <ExpandableDemo id="projection-3d" height={height}>
-      <div className="space-y-3">
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,24rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar />
+    <AutoMath>
+      <ExpandableDemo id="projection-3d" height={height}>
+        <div className="space-y-3">
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,24rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar />
 
-          {/* 3D Floating Vector Badges */}
-          {screenPos.xTip.visible && (
-            <div
-              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-slate-900/90 px-2.5 py-0.5 text-xs font-bold text-white shadow-md backdrop-blur-xs select-none"
-              style={{ left: screenPos.xTip.x, top: screenPos.xTip.y - 14 }}
-            >
-              x = ({vector.x.toFixed(2)}, {vector.y.toFixed(2)},{" "}
-              {vector.z.toFixed(2)})
-            </div>
-          )}
+            {/* 3D Floating Vector Badges */}
+            {screenPos.xTip.visible && (
+              <div
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-slate-900/90 px-2.5 py-0.5 text-xs font-bold text-white shadow-md backdrop-blur-xs select-none"
+                style={{ left: screenPos.xTip.x, top: screenPos.xTip.y - 14 }}
+              >
+                x = ({vector.x.toFixed(2)}, {vector.y.toFixed(2)},{" "}
+                {vector.z.toFixed(2)})
+              </div>
+            )}
 
-          {screenPos.pxTip.visible && (
-            <div
-              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25 bg-blue-600/90 px-2.5 py-0.5 text-xs font-bold text-white shadow-md backdrop-blur-xs select-none"
-              style={{ left: screenPos.pxTip.x, top: screenPos.pxTip.y + 14 }}
-            >
-              Px = ({px.toFixed(2)}, {py.toFixed(2)}, {pz.toFixed(2)})
-            </div>
-          )}
+            {screenPos.pxTip.visible && (
+              <div
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25 bg-blue-600/90 px-2.5 py-0.5 text-xs font-bold text-white shadow-md backdrop-blur-xs select-none"
+                style={{ left: screenPos.pxTip.x, top: screenPos.pxTip.y + 14 }}
+              >
+                Px = ({px.toFixed(2)}, {py.toFixed(2)}, {pz.toFixed(2)})
+              </div>
+            )}
 
-          {screenPos.midRes.visible && (
-            <div
-              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-slate-600/90 px-2 py-0.5 text-[11px] font-bold text-white shadow-md backdrop-blur-xs select-none"
-              style={{ left: screenPos.midRes.x, top: screenPos.midRes.y }}
-            >
-              (I - P)x = ({rx.toFixed(2)}, {ry.toFixed(2)}, {rz.toFixed(2)})
-            </div>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <CapsuleTabs
-              options={TARGET_OPTIONS}
-              value={targetId}
-              onChange={(id: ProjectionTargetId) => setTargetId(id)}
-              label="目标平面:"
-            />
-            <CapsuleTabs
-              options={modeOptions}
-              value={modeId}
-              onChange={(id: ProjectionModeId) => setModeId(id)}
-            />
-            <ParamSlider
-              label={<InlineMath tex="x" />}
-              min={SLIDER_MIN}
-              max={SLIDER_MAX}
-              step={0.05}
-              value={vector.x}
-              onChange={(v) => setVector((s) => ({ ...s, x: v }))}
-              widthClass="w-32"
-            />
-            <ParamSlider
-              label={<InlineMath tex="y" />}
-              min={SLIDER_MIN}
-              max={SLIDER_MAX}
-              step={0.05}
-              value={vector.y}
-              onChange={(v) => setVector((s) => ({ ...s, y: v }))}
-              widthClass="w-32"
-            />
-            <ParamSlider
-              label={<InlineMath tex="z" />}
-              min={SLIDER_MIN}
-              max={SLIDER_MAX}
-              step={0.05}
-              value={vector.z}
-              onChange={(v) => setVector((s) => ({ ...s, z: v }))}
-              widthClass="w-32"
-            />
+            {screenPos.midRes.visible && (
+              <div
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-slate-600/90 px-2 py-0.5 text-[11px] font-bold text-white shadow-md backdrop-blur-xs select-none"
+                style={{ left: screenPos.midRes.x, top: screenPos.midRes.y }}
+              >
+                (I - P)x = ({rx.toFixed(2)}, {ry.toFixed(2)}, {rz.toFixed(2)})
+              </div>
+            )}
           </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <CapsuleTabs
+                options={TARGET_OPTIONS}
+                value={targetId}
+                onChange={(id: ProjectionTargetId) => setTargetId(id)}
+                label="目标平面:"
+              />
+              <CapsuleTabs
+                options={modeOptions}
+                value={modeId}
+                onChange={(id: ProjectionModeId) => setModeId(id)}
+              />
+              <ParamSlider
+                label="$x$"
+                min={SLIDER_MIN}
+                max={SLIDER_MAX}
+                step={0.05}
+                value={vector.x}
+                onChange={(v) => setVector((s) => ({ ...s, x: v }))}
+                widthClass="w-32"
+              />
+              <ParamSlider
+                label="$y$"
+                min={SLIDER_MIN}
+                max={SLIDER_MAX}
+                step={0.05}
+                value={vector.y}
+                onChange={(v) => setVector((s) => ({ ...s, y: v }))}
+                widthClass="w-32"
+              />
+              <ParamSlider
+                label="$z$"
+                min={SLIDER_MIN}
+                max={SLIDER_MAX}
+                step={0.05}
+                value={vector.z}
+                onChange={(v) => setVector((s) => ({ ...s, z: v }))}
+                widthClass="w-32"
+              />
+            </div>
+          </div>
+          <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
+            <p>目标平面 {`$${target.tex}$`}</p>
+            <p>
+              {`$x = (${vector.x.toFixed(2)}, ${vector.y.toFixed(2)}, ${vector.z.toFixed(2)})$`}
+            </p>
+            <p>{`$P = ${mode.tex}$`}</p>
+            <p>
+              {`$Px = ${mode.texPx} = (${px.toFixed(2)}, ${py.toFixed(2)}, ${pz.toFixed(2)})$`}
+            </p>
+            <p>
+              {`$(I-P)x = ${mode.texResidual} = (${rx.toFixed(2)}, ${ry.toFixed(2)}, ${rz.toFixed(2)})$`}
+            </p>
+            <p>
+              {`$P^2x = Px = (${px.toFixed(2)}, ${py.toFixed(2)}, ${pz.toFixed(2)})$`}
+            </p>
+          </div>
+          <p className="text-xs text-muted">
+            左键/中键旋转 · 滚轮缩放 · 右键平移;用滑块调整
+            x=(x,y,z),切换目标平面(xy 平面或
+            x+y+z=0)与投影方式(正交/斜);空心环为再投影一次的落点 P²x=Px。
+          </p>
         </div>
-        <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
-          <p>
-            目标平面 <InlineMath tex={target.tex} />
-          </p>
-          <p>
-            <InlineMath
-              tex={`x = (${vector.x.toFixed(2)}, ${vector.y.toFixed(2)}, ${vector.z.toFixed(2)})`}
-            />
-          </p>
-          <p>
-            <InlineMath tex={`P = ${mode.tex}`} />
-          </p>
-          <p>
-            <InlineMath
-              tex={`Px = ${mode.texPx} = (${px.toFixed(2)}, ${py.toFixed(2)}, ${pz.toFixed(2)})`}
-            />
-          </p>
-          <p>
-            <InlineMath
-              tex={`(I-P)x = ${mode.texResidual} = (${rx.toFixed(2)}, ${ry.toFixed(2)}, ${rz.toFixed(2)})`}
-            />
-          </p>
-          <p>
-            <InlineMath
-              tex={`P^2x = Px = (${px.toFixed(2)}, ${py.toFixed(2)}, ${pz.toFixed(2)})`}
-            />
-          </p>
-        </div>
-        <p className="text-xs text-muted">
-          左键/中键旋转 · 滚轮缩放 · 右键平移;用滑块调整
-          x=(x,y,z),切换目标平面(xy 平面或
-          x+y+z=0)与投影方式(正交/斜);空心环为再投影一次的落点 P²x=Px。
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

@@ -14,7 +14,10 @@ interface CapsuleTabsProps<T extends string> {
   className?: string;
 }
 
-/** Theme-styled pill button group for switching between a few options. */
+/**
+ * @deprecated Legacy pill tab component. Use `KdeTabs` for new components and KDE Breeze unified designs.
+ * Theme-styled pill button group for switching between a few options.
+ */
 export default function CapsuleTabs<T extends string>({
   options,
   value,

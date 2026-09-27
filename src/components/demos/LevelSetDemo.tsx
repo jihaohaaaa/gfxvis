@@ -10,7 +10,7 @@ import {
 import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import { useCanvas2D } from "../framework/useCanvas2D";
 
@@ -68,49 +68,47 @@ export default function LevelSetDemo({ height }: { height?: string }) {
   };
 
   return (
-    <ExpandableDemo id="level-set" height={height}>
-      <div className="space-y-3">
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar onReset={resetBounds} />
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 h-full w-full cursor-crosshair"
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <CapsuleTabs
-            options={FIELD_OPTIONS}
-            value={fieldId}
-            onChange={handleFieldChange}
-          />
-          <ParamSlider
-            label={<InlineMath tex="c" />}
-            min={field.cMin}
-            max={field.cMax}
-            step={0.01}
-            value={c}
-            onChange={setC}
-            widthClass="w-44"
-          />
-        </div>
-        <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
-          <p>
-            <InlineMath tex={`F(x,y) = ${field.tex}`} />
-          </p>
-          <p>
-            <InlineMath
-              tex={`F(x,y) = ${c.toFixed(2)} \\Rightarrow ${field.levelTex(c)}`}
+    <AutoMath>
+      <ExpandableDemo id="level-set" height={height}>
+        <div className="space-y-3">
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar onReset={resetBounds} />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full cursor-crosshair"
             />
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <CapsuleTabs
+              options={FIELD_OPTIONS}
+              value={fieldId}
+              onChange={handleFieldChange}
+            />
+            <ParamSlider
+              label="$c$"
+              min={field.cMin}
+              max={field.cMax}
+              step={0.01}
+              value={c}
+              onChange={setC}
+              widthClass="w-44"
+            />
+          </div>
+          <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
+            <p>{`$F(x,y) = ${field.tex}$`}</p>
+            <p>
+              {`$F(x,y) = ${c.toFixed(2)} \\Rightarrow ${field.levelTex(c)}$`}
+            </p>
+          </div>
+          <p className="text-xs text-muted">
+            拖动 c 滑块扫描一族等值线:实线为当前
+            F(x,y)=c,虚线为参考等值线;滚轮缩放,中键平移。
           </p>
         </div>
-        <p className="text-xs text-muted">
-          拖动 c 滑块扫描一族等值线:实线为当前
-          F(x,y)=c,虚线为参考等值线;滚轮缩放,中键平移。
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

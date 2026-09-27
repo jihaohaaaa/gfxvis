@@ -4,10 +4,8 @@ import { useExpandable } from "./ExpandableDemo";
 export interface CanvasToolbarProps {
   /** Optional callback to reset viewport/camera back to default */
   onReset?: () => void;
-  /** Whether to show the expand/fullscreen button (defaults to true) */
+  /** Whether to show the expand/fullscreen button (defaults to false, since expand is placed on external card header) */
   showExpand?: boolean;
-  /** Whether to show S/M/L height preset controls (defaults to true) */
-  showHeightPresets?: boolean;
   /** Custom label for the reset button (defaults to '复位') */
   resetLabel?: string;
   /** Extra custom controls / buttons */
@@ -18,12 +16,11 @@ export interface CanvasToolbarProps {
 
 /**
  * Standard floating toolbar placed at the top-right corner of 2D/3D canvas containers.
- * Uses backdrop blur glass styling, isolates pointer events, and provides viewport size & reset controls.
+ * Uses backdrop blur glass styling, isolates pointer events, and provides viewport reset controls.
  */
 export default function CanvasToolbar({
   onReset,
-  showExpand = true,
-  showHeightPresets = true,
+  showExpand = false,
   resetLabel = "复位",
   children,
   className = "",
@@ -36,7 +33,6 @@ export default function CanvasToolbar({
 
   const isExpanded = expandable?.isExpanded ?? false;
   const canToggleExpand = showExpand && Boolean(expandable) && !isExpanded;
-  const canSetHeight = showHeightPresets && Boolean(expandable) && !isExpanded;
 
   return (
     <div
@@ -60,42 +56,6 @@ export default function CanvasToolbar({
           </span>
           <span className="hidden sm:inline">{resetLabel}</span>
         </button>
-      )}
-
-      {canSetHeight && (
-        <div
-          className="flex items-center rounded-md bg-surface-hover/70 p-0.5 text-[11px] font-mono"
-          title="快速切换画布视口高度"
-        >
-          {(["sm", "md", "lg"] as const).map((pid) => {
-            const isActive = expandable?.activePresetId === pid;
-            const labels = { sm: "S", md: "M", lg: "L" };
-            const titles = {
-              sm: "标准视口高度 (300px)",
-              md: "中等视口高度 (420px)",
-              lg: "大视口高度 (560px)",
-            };
-            return (
-              <button
-                key={pid}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  expandable?.setPresetHeight(pid);
-                }}
-                className={`flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-all duration-150 active:scale-90 ${
-                  isActive
-                    ? "bg-accent font-bold text-accent-foreground shadow-xs"
-                    : "text-muted hover:bg-surface hover:text-foreground"
-                }`}
-                title={titles[pid]}
-                aria-label={titles[pid]}
-              >
-                {labels[pid]}
-              </button>
-            );
-          })}
-        </div>
       )}
 
       {canToggleExpand && (

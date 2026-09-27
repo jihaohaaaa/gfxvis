@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 
 type MatrixViewType = "laplacian" | "adjacency" | "degree";
 
@@ -484,401 +484,394 @@ export default function GraphTopologyDemo() {
   }, [matrixView, adjMatrix, degMatrix, lapMatrix]);
 
   return (
-    <ExpandableDemo label="展开图论探针">
-      <div className="flex flex-col gap-4">
-        {/* Controls header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-muted">图预设:</span>
-            <CapsuleTabs
-              options={PRESET_OPTIONS}
-              value={selectedPreset}
-              onChange={(val) => handlePresetChange(val)}
-              size="xs"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted hover:text-ink select-none">
-              <input
-                type="checkbox"
-                checked={enablePhysics}
-                onChange={(e) => setEnablePhysics(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-border accent-accent"
-              />
-              物理力导向
-            </label>
-          </div>
-        </div>
-
-        {/* Preset brief intro */}
-        <p className="text-xs text-muted leading-relaxed">
-          {PRESET_CONFIGS[selectedPreset]?.description}
-        </p>
-
-        {/* Main Canvas / SVG container */}
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border/80 bg-surface/50 shadow-inner"
-        >
-          {/* Canvas Toolbar directly inside canvas container */}
-          <CanvasToolbar
-            onReset={handleReset}
-            showExpand={true}
-            showHeightPresets={true}
-          />
-
-          {/* Topology SVG Viewport */}
-          <svg
-            ref={svgRef}
-            viewBox="-200 -150 400 300"
-            className="h-full w-full select-none"
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-          >
-            <defs>
-              {/* Arrow marker for DAG */}
-              <marker
-                id="dag-arrow"
-                viewBox="0 0 10 10"
-                refX="22"
-                refY="5"
-                markerWidth="6"
-                markerHeight="6"
-                orient="auto-start-reverse"
-              >
-                <path
-                  d="M 0 1 L 10 5 L 0 9 z"
-                  fill="var(--color-muted, #888)"
-                />
-              </marker>
-              {/* Highlight arrow */}
-              <marker
-                id="dag-arrow-active"
-                viewBox="0 0 10 10"
-                refX="22"
-                refY="5"
-                markerWidth="6"
-                markerHeight="6"
-                orient="auto-start-reverse"
-              >
-                <path
-                  d="M 0 1 L 10 5 L 0 9 z"
-                  fill="var(--color-accent, #3b82f6)"
-                />
-              </marker>
-            </defs>
-
-            {/* Background subtle grid */}
-            <g opacity="0.15">
-              <circle
-                cx="0"
-                cy="0"
-                r="140"
-                fill="none"
-                stroke="currentColor"
-                strokeDasharray="3 3"
-              />
-              <circle
-                cx="0"
-                cy="0"
-                r="80"
-                fill="none"
-                stroke="currentColor"
-                strokeDasharray="3 3"
-              />
-              <line
-                x1="-180"
-                y1="0"
-                x2="180"
-                y2="0"
-                stroke="currentColor"
-                strokeWidth="0.5"
-              />
-              <line
-                x1="0"
-                y1="-130"
-                x2="0"
-                y2="130"
-                stroke="currentColor"
-                strokeWidth="0.5"
-              />
-            </g>
-
-            {/* Edges */}
-            <g className="edges-layer">
-              {edges.map((e, idx) => {
-                const u = nodes.find((n) => n.id === e.source);
-                const v = nodes.find((n) => n.id === e.target);
-                if (!u || !v) return null;
-                const isConnectedToHover =
-                  hoveredNode !== null &&
-                  (e.source === hoveredNode || e.target === hoveredNode);
-
-                return (
-                  <line
-                    key={`edge-${idx}`}
-                    x1={u.x}
-                    y1={u.y}
-                    x2={v.x}
-                    y2={v.y}
-                    stroke={
-                      isConnectedToHover
-                        ? "var(--color-accent, #3b82f6)"
-                        : "var(--color-border, #999)"
-                    }
-                    strokeWidth={isConnectedToHover ? 2.5 : 1.5}
-                    strokeOpacity={
-                      hoveredNode !== null
-                        ? isConnectedToHover
-                          ? 1
-                          : 0.25
-                        : 0.75
-                    }
-                    markerEnd={
-                      isDirected
-                        ? isConnectedToHover
-                          ? "url(#dag-arrow-active)"
-                          : "url(#dag-arrow)"
-                        : undefined
-                    }
-                    className="transition-colors duration-150"
-                  />
-                );
-              })}
-            </g>
-
-            {/* Nodes */}
-            <g className="nodes-layer">
-              {nodes.map((node) => {
-                const isHovered = hoveredNode === node.id;
-                const isGroup1 = node.group === 1;
-                const isGroup2 = node.group === 2;
-
-                let strokeColor = "var(--color-accent, #3b82f6)";
-                if (isGroup1) {
-                  strokeColor = "var(--color-chart-2, #10b981)";
-                } else if (isGroup2) {
-                  strokeColor = "var(--color-chart-3, #f59e0b)";
-                }
-
-                return (
-                  <g
-                    key={`node-${node.id}`}
-                    transform={`translate(${node.x}, ${node.y})`}
-                    className="cursor-grab active:cursor-grabbing"
-                    onPointerDown={(e) => handlePointerDown(node.id, e)}
-                    onMouseEnter={() => setHoveredNode(node.id)}
-                    onMouseLeave={() => setHoveredNode(null)}
-                  >
-                    {/* Ripple on hover */}
-                    {isHovered && (
-                      <circle
-                        r="20"
-                        fill={strokeColor}
-                        opacity="0.2"
-                        className="animate-pulse"
-                      />
-                    )}
-
-                    {/* Node circle */}
-                    <circle
-                      r="14"
-                      fill="var(--color-surface, #ffffff)"
-                      stroke={strokeColor}
-                      strokeWidth={isHovered ? 3 : 2}
-                      className="transition-all duration-150"
-                    />
-
-                    {/* Node label */}
-                    <text
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      className="text-[10px] font-mono font-semibold pointer-events-none fill-ink"
-                    >
-                      {node.label}
-                    </text>
-                  </g>
-                );
-              })}
-            </g>
-          </svg>
-
-          {/* Interactive Hint */}
-          <div className="absolute left-3 bottom-3 pointer-events-none rounded bg-surface/80 px-2 py-1 text-[11px] text-muted backdrop-blur-sm border border-border/40">
-            💡 点击拖拽任意节点可物理重排；悬停高亮关联边与矩阵行列
-          </div>
-        </div>
-
-        {/* Matrix Inspector & Diagnostic Cards */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          {/* Matrix Card (7 cols) */}
-          <div className="flex flex-col gap-2 rounded-xl border border-border/80 bg-surface/40 p-3.5 lg:col-span-7">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-ink">
-                代数矩阵表示 (Matrix Inspector)
-              </span>
+    <AutoMath>
+      <ExpandableDemo label="展开图论探针">
+        <div className="flex flex-col gap-4">
+          {/* Controls header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted">图预设:</span>
               <CapsuleTabs
-                options={MATRIX_VIEW_OPTIONS}
-                value={matrixView}
-                onChange={(id) => setMatrixView(id as MatrixViewType)}
+                options={PRESET_OPTIONS}
+                value={selectedPreset}
+                onChange={(val) => handlePresetChange(val)}
                 size="xs"
               />
             </div>
+            <div className="flex items-center gap-2">
+              <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted hover:text-ink select-none">
+                <input
+                  type="checkbox"
+                  checked={enablePhysics}
+                  onChange={(e) => setEnablePhysics(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-border accent-accent"
+                />
+                物理力导向
+              </label>
+            </div>
+          </div>
 
-            {/* Matrix View Container */}
-            <div className="overflow-x-auto rounded-lg border border-border/60 bg-surface/80 p-2 font-mono text-xs">
-              <div className="flex flex-col gap-1 min-w-[240px]">
-                {/* Header row with column labels */}
-                <div className="flex items-center gap-1 border-b border-border/40 pb-1 text-[11px] text-muted">
-                  <div className="w-8 text-center font-bold"></div>
-                  {nodes.map((n) => (
+          {/* Preset brief intro */}
+          <p className="text-xs text-muted leading-relaxed">
+            {PRESET_CONFIGS[selectedPreset]?.description}
+          </p>
+
+          {/* Main Canvas / SVG container */}
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border/80 bg-surface/50 shadow-inner"
+          >
+            {/* Canvas Toolbar directly inside canvas container */}
+            <CanvasToolbar onReset={handleReset} />
+
+            {/* Topology SVG Viewport */}
+            <svg
+              ref={svgRef}
+              viewBox="-200 -150 400 300"
+              className="h-full w-full select-none"
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+            >
+              <defs>
+                {/* Arrow marker for DAG */}
+                <marker
+                  id="dag-arrow"
+                  viewBox="0 0 10 10"
+                  refX="22"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path
+                    d="M 0 1 L 10 5 L 0 9 z"
+                    fill="var(--color-muted, #888)"
+                  />
+                </marker>
+                {/* Highlight arrow */}
+                <marker
+                  id="dag-arrow-active"
+                  viewBox="0 0 10 10"
+                  refX="22"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path
+                    d="M 0 1 L 10 5 L 0 9 z"
+                    fill="var(--color-accent, #3b82f6)"
+                  />
+                </marker>
+              </defs>
+
+              {/* Background subtle grid */}
+              <g opacity="0.15">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="140"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeDasharray="3 3"
+                />
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="80"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeDasharray="3 3"
+                />
+                <line
+                  x1="-180"
+                  y1="0"
+                  x2="180"
+                  y2="0"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                />
+                <line
+                  x1="0"
+                  y1="-130"
+                  x2="0"
+                  y2="130"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                />
+              </g>
+
+              {/* Edges */}
+              <g className="edges-layer">
+                {edges.map((e, idx) => {
+                  const u = nodes.find((n) => n.id === e.source);
+                  const v = nodes.find((n) => n.id === e.target);
+                  if (!u || !v) return null;
+                  const isConnectedToHover =
+                    hoveredNode !== null &&
+                    (e.source === hoveredNode || e.target === hoveredNode);
+
+                  return (
+                    <line
+                      key={`edge-${idx}`}
+                      x1={u.x}
+                      y1={u.y}
+                      x2={v.x}
+                      y2={v.y}
+                      stroke={
+                        isConnectedToHover
+                          ? "var(--color-accent, #3b82f6)"
+                          : "var(--color-border, #999)"
+                      }
+                      strokeWidth={isConnectedToHover ? 2.5 : 1.5}
+                      strokeOpacity={
+                        hoveredNode !== null
+                          ? isConnectedToHover
+                            ? 1
+                            : 0.25
+                          : 0.75
+                      }
+                      markerEnd={
+                        isDirected
+                          ? isConnectedToHover
+                            ? "url(#dag-arrow-active)"
+                            : "url(#dag-arrow)"
+                          : undefined
+                      }
+                      className="transition-colors duration-150"
+                    />
+                  );
+                })}
+              </g>
+
+              {/* Nodes */}
+              <g className="nodes-layer">
+                {nodes.map((node) => {
+                  const isHovered = hoveredNode === node.id;
+                  const isGroup1 = node.group === 1;
+                  const isGroup2 = node.group === 2;
+
+                  let strokeColor = "var(--color-accent, #3b82f6)";
+                  if (isGroup1) {
+                    strokeColor = "var(--color-chart-2, #10b981)";
+                  } else if (isGroup2) {
+                    strokeColor = "var(--color-chart-3, #f59e0b)";
+                  }
+
+                  return (
+                    <g
+                      key={`node-${node.id}`}
+                      transform={`translate(${node.x}, ${node.y})`}
+                      className="cursor-grab active:cursor-grabbing"
+                      onPointerDown={(e) => handlePointerDown(node.id, e)}
+                      onMouseEnter={() => setHoveredNode(node.id)}
+                      onMouseLeave={() => setHoveredNode(null)}
+                    >
+                      {/* Ripple on hover */}
+                      {isHovered && (
+                        <circle
+                          r="20"
+                          fill={strokeColor}
+                          opacity="0.2"
+                          className="animate-pulse"
+                        />
+                      )}
+
+                      {/* Node circle */}
+                      <circle
+                        r="14"
+                        fill="var(--color-surface, #ffffff)"
+                        stroke={strokeColor}
+                        strokeWidth={isHovered ? 3 : 2}
+                        className="transition-all duration-150"
+                      />
+
+                      {/* Node label */}
+                      <text
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        className="text-[10px] font-mono font-semibold pointer-events-none fill-ink"
+                      >
+                        {node.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            </svg>
+
+            {/* Interactive Hint */}
+            <div className="absolute left-3 bottom-3 pointer-events-none rounded bg-surface/80 px-2 py-1 text-[11px] text-muted backdrop-blur-sm border border-border/40">
+              💡 点击拖拽任意节点可物理重排；悬停高亮关联边与矩阵行列
+            </div>
+          </div>
+
+          {/* Matrix Inspector & Diagnostic Cards */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+            {/* Matrix Card (7 cols) */}
+            <div className="flex flex-col gap-2 rounded-xl border border-border/80 bg-surface/40 p-3.5 lg:col-span-7">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-ink">
+                  代数矩阵表示 (Matrix Inspector)
+                </span>
+                <CapsuleTabs
+                  options={MATRIX_VIEW_OPTIONS}
+                  value={matrixView}
+                  onChange={(id) => setMatrixView(id as MatrixViewType)}
+                  size="xs"
+                />
+              </div>
+
+              {/* Matrix View Container */}
+              <div className="overflow-x-auto rounded-lg border border-border/60 bg-surface/80 p-2 font-mono text-xs">
+                <div className="flex flex-col gap-1 min-w-[240px]">
+                  {/* Header row with column labels */}
+                  <div className="flex items-center gap-1 border-b border-border/40 pb-1 text-[11px] text-muted">
+                    <div className="w-8 text-center font-bold"></div>
+                    {nodes.map((n) => (
+                      <div
+                        key={`col-${n.id}`}
+                        className={`flex-1 text-center font-bold transition-colors ${
+                          hoveredNode === n.id
+                            ? "text-accent bg-accent/10 rounded"
+                            : ""
+                        }`}
+                      >
+                        {n.label}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Rows */}
+                  {currentMatrix.map((row, rIdx) => (
                     <div
-                      key={`col-${n.id}`}
-                      className={`flex-1 text-center font-bold transition-colors ${
-                        hoveredNode === n.id
-                          ? "text-accent bg-accent/10 rounded"
-                          : ""
+                      key={`row-${rIdx}`}
+                      className={`flex items-center gap-1 py-0.5 rounded transition-colors ${
+                        hoveredNode === rIdx ? "bg-accent/10" : ""
                       }`}
                     >
-                      {n.label}
+                      <div
+                        className={`w-8 text-center font-bold text-[11px] transition-colors ${
+                          hoveredNode === rIdx ? "text-accent" : "text-muted"
+                        }`}
+                      >
+                        {nodes[rIdx]?.label}
+                      </div>
+                      {row.map((val, cIdx) => {
+                        const isHoverIntersect =
+                          hoveredNode !== null &&
+                          (hoveredNode === rIdx || hoveredNode === cIdx);
+                        const isDiagonal = rIdx === cIdx;
+                        const valColor =
+                          val > 0
+                            ? isDiagonal
+                              ? "text-chart-2 font-bold"
+                              : "text-ink font-semibold"
+                            : val < 0
+                              ? "text-rose-500 font-bold"
+                              : "text-muted/40";
+
+                        return (
+                          <div
+                            key={`cell-${rIdx}-${cIdx}`}
+                            className={`flex-1 text-center text-xs py-0.5 rounded transition-all ${valColor} ${
+                              isHoverIntersect ? "bg-accent/15" : ""
+                            }`}
+                          >
+                            {val}
+                          </div>
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
+              </div>
 
-                {/* Rows */}
-                {currentMatrix.map((row, rIdx) => (
-                  <div
-                    key={`row-${rIdx}`}
-                    className={`flex items-center gap-1 py-0.5 rounded transition-colors ${
-                      hoveredNode === rIdx ? "bg-accent/10" : ""
-                    }`}
-                  >
-                    <div
-                      className={`w-8 text-center font-bold text-[11px] transition-colors ${
-                        hoveredNode === rIdx ? "text-accent" : "text-muted"
-                      }`}
-                    >
-                      {nodes[rIdx]?.label}
-                    </div>
-                    {row.map((val, cIdx) => {
-                      const isHoverIntersect =
-                        hoveredNode !== null &&
-                        (hoveredNode === rIdx || hoveredNode === cIdx);
-                      const isDiagonal = rIdx === cIdx;
-                      const valColor =
-                        val > 0
-                          ? isDiagonal
-                            ? "text-chart-2 font-bold"
-                            : "text-ink font-semibold"
-                          : val < 0
-                            ? "text-rose-500 font-bold"
-                            : "text-muted/40";
-
-                      return (
-                        <div
-                          key={`cell-${rIdx}-${cIdx}`}
-                          className={`flex-1 text-center text-xs py-0.5 rounded transition-all ${valColor} ${
-                            isHoverIntersect ? "bg-accent/15" : ""
-                          }`}
-                        >
-                          {val}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+              <div className="text-[11px] text-muted leading-relaxed">
+                {matrixView === "laplacian" && (
+                  <span>
+                    拉普拉斯算子性质：对角线为顶点度数 {"$L_{ii} = \\deg(v_i)$"}
+                    ，非对角元为 {"$-A_{ij}$"}
+                    。行和严格恒等于 0，半正定二次型{" "}
+                    {"$x^T L x = \\sum (x_i-x_j)^2 \\ge 0$"}。
+                  </span>
+                )}
+                {matrixView === "adjacency" && (
+                  <span>
+                    邻接矩阵性质：
+                    {"$A_{ij}=1$"} 表示从 $i$ 到 $j$ 存在边。其 $k$ 次幂 $A^k$
+                    的元素 {"$(A^k)_{ij}$"} 精确等于从 $i$ 到 $j$ 长度为 $k$
+                    的通路总数。
+                  </span>
+                )}
+                {matrixView === "degree" && (
+                  <span>
+                    度数对角矩阵：
+                    {"$D_{ii} = \\deg(v_i)$"}
+                    。由握手引理可知{" "}
+                    {"$\\operatorname{tr}(D) = \\sum \\deg(v_i) = 2|E|$"}。
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="text-[11px] text-muted leading-relaxed">
-              {matrixView === "laplacian" && (
-                <span>
-                  拉普拉斯算子性质：对角线为顶点度数{" "}
-                  <InlineMath tex="L_{ii} = \deg(v_i)" />
-                  ，非对角元为 <InlineMath tex="-A_{ij}" />
-                  。行和严格恒等于 0，半正定二次型{" "}
-                  <InlineMath tex="x^T L x = \sum (x_i-x_j)^2 \ge 0" />。
-                </span>
-              )}
-              {matrixView === "adjacency" && (
-                <span>
-                  邻接矩阵性质：
-                  <InlineMath tex="A_{ij}=1" /> 表示从 <InlineMath tex="i" /> 到{" "}
-                  <InlineMath tex="j" /> 存在边。其 <InlineMath tex="k" /> 次幂{" "}
-                  <InlineMath tex="A^k" /> 的元素{" "}
-                  <InlineMath tex="(A^k)_{ij}" /> 精确等于从{" "}
-                  <InlineMath tex="i" /> 到 <InlineMath tex="j" /> 长度为{" "}
-                  <InlineMath tex="k" /> 的通路总数。
-                </span>
-              )}
-              {matrixView === "degree" && (
-                <span>
-                  度数对角矩阵：
-                  <InlineMath tex="D_{ii} = \deg(v_i)" />
-                  。由握手引理可知{" "}
-                  <InlineMath tex="\operatorname{tr}(D) = \sum \deg(v_i) = 2|E|" />
-                  。
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Graph Theory Diagnostics Card (5 cols) */}
-          <div className="flex flex-col gap-2.5 rounded-xl border border-border/80 bg-surface/40 p-3.5 lg:col-span-5">
-            <span className="text-xs font-semibold text-ink">
-              拓扑图论核心诊断 (Topology Diagnostic)
-            </span>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex flex-col rounded-lg border border-border/60 bg-surface/70 p-2">
-                <span className="text-[11px] text-muted">顶点数 |V|</span>
-                <span className="text-base font-bold font-mono text-ink">
-                  {numVertices}
-                </span>
-              </div>
-              <div className="flex flex-col rounded-lg border border-border/60 bg-surface/70 p-2">
-                <span className="text-[11px] text-muted">边数 |E|</span>
-                <span className="text-base font-bold font-mono text-ink">
-                  {numEdges}
-                </span>
-              </div>
-              <div className="flex flex-col rounded-lg border border-border/60 bg-surface/70 p-2">
-                <span className="text-[11px] text-muted">度数总和 ∑ deg</span>
-                <span className="text-base font-bold font-mono text-chart-2">
-                  {degrees.reduce((a, b) => a + b, 0)} (2|E|)
-                </span>
-              </div>
-              <div className="flex flex-col rounded-lg border border-border/60 bg-surface/70 p-2">
-                <span className="text-[11px] text-muted">奇度数顶点数</span>
-                <span className="text-base font-bold font-mono text-chart-3">
-                  {oddDegreeCount} 个
-                </span>
-              </div>
-            </div>
-
-            {/* Eulerian property badge */}
-            <div className="flex flex-col gap-1 rounded-lg border border-border/60 bg-surface/70 p-2 text-xs">
-              <span className="text-[11px] text-muted font-medium">
-                欧拉性质 (Eulerian Trail)
+            {/* Graph Theory Diagnostics Card (5 cols) */}
+            <div className="flex flex-col gap-2.5 rounded-xl border border-border/80 bg-surface/40 p-3.5 lg:col-span-5">
+              <span className="text-xs font-semibold text-ink">
+                拓扑图论核心诊断 (Topology Diagnostic)
               </span>
-              <span className="font-semibold text-ink">{eulerianStatus}</span>
-            </div>
 
-            {/* Laplacian spectral note */}
-            <div className="flex flex-col gap-1 rounded-lg border border-accent/30 bg-accent/5 p-2 text-xs">
-              <span className="text-[11px] font-semibold text-accent">
-                代数连通度 (Fiedler 谱理论)
-              </span>
-              <span className="text-muted leading-snug">
-                零特征值代数重数 <InlineMath tex="\dim \ker(L) = 1" />
-                （图连通）。第二小特征值 <InlineMath tex="\lambda_2" />{" "}
-                称为代数连通度（Fiedler
-                Value），其特征向量直接指导流形网格划分与谱聚类。
-              </span>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex flex-col rounded-lg border border-border/60 bg-surface/70 p-2">
+                  <span className="text-[11px] text-muted">顶点数 |V|</span>
+                  <span className="text-base font-bold font-mono text-ink">
+                    {numVertices}
+                  </span>
+                </div>
+                <div className="flex flex-col rounded-lg border border-border/60 bg-surface/70 p-2">
+                  <span className="text-[11px] text-muted">边数 |E|</span>
+                  <span className="text-base font-bold font-mono text-ink">
+                    {numEdges}
+                  </span>
+                </div>
+                <div className="flex flex-col rounded-lg border border-border/60 bg-surface/70 p-2">
+                  <span className="text-[11px] text-muted">度数总和 ∑ deg</span>
+                  <span className="text-base font-bold font-mono text-chart-2">
+                    {degrees.reduce((a, b) => a + b, 0)} (2|E|)
+                  </span>
+                </div>
+                <div className="flex flex-col rounded-lg border border-border/60 bg-surface/70 p-2">
+                  <span className="text-[11px] text-muted">奇度数顶点数</span>
+                  <span className="text-base font-bold font-mono text-chart-3">
+                    {oddDegreeCount} 个
+                  </span>
+                </div>
+              </div>
+
+              {/* Eulerian property badge */}
+              <div className="flex flex-col gap-1 rounded-lg border border-border/60 bg-surface/70 p-2 text-xs">
+                <span className="text-[11px] text-muted font-medium">
+                  欧拉性质 (Eulerian Trail)
+                </span>
+                <span className="font-semibold text-ink">{eulerianStatus}</span>
+              </div>
+
+              {/* Laplacian spectral note */}
+              <div className="flex flex-col gap-1 rounded-lg border border-accent/30 bg-accent/5 p-2 text-xs">
+                <span className="text-[11px] font-semibold text-accent">
+                  代数连通度 (Fiedler 谱理论)
+                </span>
+                <span className="text-muted leading-snug">
+                  零特征值代数重数 {"$\\dim \\ker(L) = 1$"}
+                  （图连通）。第二小特征值 {"$\\lambda_2$"}{" "}
+                  称为代数连通度（Fiedler
+                  Value），其特征向量直接指导流形网格划分与谱聚类。
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

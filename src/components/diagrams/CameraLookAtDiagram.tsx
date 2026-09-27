@@ -4,7 +4,7 @@ import ExpandableDemo from "../framework/ExpandableDemo";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import PresetSelector, { type PresetOption } from "../framework/PresetSelector";
 import ParamSlider from "../framework/ParamSlider";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import { mathToWorld } from "../../visualizations/core/3d/coords";
 import { createControls } from "../../visualizations/core/3d/controls";
 import { type Vec3, length, normalize, cross, dot } from "@math";
@@ -436,220 +436,215 @@ export default function CameraLookAtDiagram({
   }, [eye, target, upTiltAngle]);
 
   return (
-    <ExpandableDemo id="camera-lookat-basis-3d-diagram" height={height}>
-      <div className="space-y-4">
-        {/* Preset Selector */}
-        <PresetSelector
-          label="相机观察姿态预设:"
-          options={PRESETS}
-          value={presetKey}
-          onChange={handlePreset}
-        />
+    <AutoMath>
+      <ExpandableDemo id="camera-lookat-basis-3d-diagram" height={height}>
+        <div className="space-y-4">
+          {/* Preset Selector */}
+          <PresetSelector
+            label="相机观察姿态预设:"
+            options={PRESETS}
+            value={presetKey}
+            onChange={handlePreset}
+          />
 
-        {/* 3D WebGL Canvas Viewport */}
-        <div className="relative flex flex-col rounded-xl border border-border bg-surface overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border/80 bg-surface-hover/80 px-3 py-2 text-xs font-semibold text-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" />
-              三维相机坐标系与 Gram-Schmidt 正交化基底交互视图
-            </span>
-            <span className="text-[11px] text-muted font-normal">
-              左键旋转 / 右键平移 / 滚轮缩放
-            </span>
+          {/* 3D WebGL Canvas Viewport */}
+          <div className="relative flex flex-col rounded-xl border border-border bg-surface overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border/80 bg-surface-hover/80 px-3 py-2 text-xs font-semibold text-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" />
+                三维相机坐标系与 Gram-Schmidt 正交化基底交互视图
+              </span>
+              <span className="text-[11px] text-muted font-normal">
+                左键旋转 / 右键平移 / 滚轮缩放
+              </span>
+            </div>
+
+            <div
+              ref={containerRef}
+              className="relative h-[20rem] md:h-[26rem] w-full"
+            >
+              <CanvasToolbar />
+
+              {/* In-canvas Legend */}
+              <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded bg-surface/90 p-2 text-[11px] text-muted backdrop-blur-xs border border-border/60">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-500 font-bold">
+                    ● f (Forward 视线)
+                  </span>
+                  <span className="text-red-500 font-bold">
+                    ● r (Right 右向轴)
+                  </span>
+                  <span className="text-emerald-500 font-bold">
+                    ● u (True Up 实际上方向)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 pt-0.5 border-t border-border/40 text-[10px]">
+                  <span className="text-amber-500 font-medium">
+                    ● up_raw (参考世界上方向)
+                  </span>
+                  <span className="text-muted">
+                    （金色虚线为 Gram-Schmidt 正交纠偏投影）
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div
-            ref={containerRef}
-            className="relative h-[20rem] md:h-[26rem] w-full"
-          >
-            <CanvasToolbar />
-
-            {/* In-canvas Legend */}
-            <div className="pointer-events-none absolute bottom-2 left-2 z-10 flex flex-col gap-1 rounded bg-surface/90 p-2 text-[11px] text-muted backdrop-blur-xs border border-border/60">
-              <div className="flex items-center gap-2">
-                <span className="text-blue-500 font-bold">
-                  ● f (Forward 视线)
-                </span>
-                <span className="text-red-500 font-bold">
-                  ● r (Right 右向轴)
-                </span>
-                <span className="text-emerald-500 font-bold">
-                  ● u (True Up 实际上方向)
-                </span>
-              </div>
-              <div className="flex items-center gap-2 pt-0.5 border-t border-border/40 text-[10px]">
-                <span className="text-amber-500 font-medium">
-                  ● up_raw (参考世界上方向)
-                </span>
-                <span className="text-muted">
-                  （金色虚线为 Gram-Schmidt 正交纠偏投影）
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Real-time Math Breakdown & Sliders Controls */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {/* Controls Sliders */}
-          <div className="space-y-3 rounded-xl border border-border bg-surface p-4 text-xs">
-            <div className="space-y-2">
-              <p className="font-semibold text-foreground">
-                相机视点位置 <InlineMath tex="\mathbf{eye} = (x, y, z)" />
-              </p>
-              <ParamSlider
-                label="Eye X"
-                value={eye.x}
-                min={-6}
-                max={6}
-                step={0.1}
-                onChange={(v) => {
-                  setEye({ ...eye, x: v });
-                  setPresetKey("custom");
-                }}
-              />
-              <ParamSlider
-                label="Eye Y"
-                value={eye.y}
-                min={-8}
-                max={2}
-                step={0.1}
-                onChange={(v) => {
-                  setEye({ ...eye, y: v });
-                  setPresetKey("custom");
-                }}
-              />
-              <ParamSlider
-                label="Eye Z (高度)"
-                value={eye.z}
-                min={0}
-                max={6}
-                step={0.1}
-                onChange={(v) => {
-                  setEye({ ...eye, z: v });
-                  setPresetKey("custom");
-                }}
-              />
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-border/50">
-              <p className="font-semibold text-foreground">
-                注视目标点 <InlineMath tex="\mathbf{target} = (x, y, z)" />
-              </p>
-              <ParamSlider
-                label="Target X"
-                value={target.x}
-                min={-4}
-                max={4}
-                step={0.1}
-                onChange={(v) => {
-                  setTarget({ ...target, x: v });
-                  setPresetKey("custom");
-                }}
-              />
-              <ParamSlider
-                label="Target Y"
-                value={target.y}
-                min={-3}
-                max={4}
-                step={0.1}
-                onChange={(v) => {
-                  setTarget({ ...target, y: v });
-                  setPresetKey("custom");
-                }}
-              />
-              <ParamSlider
-                label="Target Z"
-                value={target.z}
-                min={-1}
-                max={4}
-                step={0.1}
-                onChange={(v) => {
-                  setTarget({ ...target, z: v });
-                  setPresetKey("custom");
-                }}
-              />
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-border/50">
-              <div className="flex items-center justify-between">
+          {/* Real-time Math Breakdown & Sliders Controls */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Controls Sliders */}
+            <div className="space-y-3 rounded-xl border border-border bg-surface p-4 text-xs">
+              <div className="space-y-2">
                 <p className="font-semibold text-foreground">
-                  参考上方向倾角 <InlineMath tex="\mathbf{up}_{\text{raw}}" />{" "}
-                  偏角
+                  相机视点位置 {"$\\mathbf{eye} = (x, y, z)$"}
                 </p>
-                <span className="font-mono text-[11px] text-amber-500 font-bold">
-                  {upTiltAngle}°
-                </span>
+                <ParamSlider
+                  label="Eye X"
+                  value={eye.x}
+                  min={-6}
+                  max={6}
+                  step={0.1}
+                  onChange={(v) => {
+                    setEye({ ...eye, x: v });
+                    setPresetKey("custom");
+                  }}
+                />
+                <ParamSlider
+                  label="Eye Y"
+                  value={eye.y}
+                  min={-8}
+                  max={2}
+                  step={0.1}
+                  onChange={(v) => {
+                    setEye({ ...eye, y: v });
+                    setPresetKey("custom");
+                  }}
+                />
+                <ParamSlider
+                  label="Eye Z (高度)"
+                  value={eye.z}
+                  min={0}
+                  max={6}
+                  step={0.1}
+                  onChange={(v) => {
+                    setEye({ ...eye, z: v });
+                    setPresetKey("custom");
+                  }}
+                />
               </div>
-              <ParamSlider
-                label="Up 倾角 (度)"
-                value={upTiltAngle}
-                min={-60}
-                max={60}
-                step={1}
-                onChange={(v) => {
-                  setUpTiltAngle(v);
-                  setPresetKey("custom");
-                }}
-              />
-            </div>
-          </div>
 
-          {/* Gram-Schmidt Math Calculation Output */}
-          <div className="flex flex-col justify-between rounded-xl border border-border bg-surface p-4 text-xs space-y-3">
-            <div>
-              <p className="font-semibold text-foreground mb-2">
-                Gram-Schmidt 实时三步正交归一化推导
-              </p>
-              <div className="space-y-2 font-mono text-[11px]">
-                {/* Step 1: Forward */}
-                <div className="rounded border border-blue-500/30 bg-blue-500/5 p-2.5 space-y-1">
-                  <div className="flex items-center justify-between text-blue-500 font-bold">
-                    <span>1. 前向视线单位向量 f</span>
-                    <span>‖f‖ = 1.00</span>
-                  </div>
-                  <InlineMath
-                    tex={`\\mathbf{f} = \\frac{\\mathbf{target} - \\mathbf{eye}}{\\|\\dots\\|} = (${fmt(f.x)},\\, ${fmt(f.y)},\\, ${fmt(f.z)})^\\top`}
-                  />
-                </div>
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <p className="font-semibold text-foreground">
+                  注视目标点 {"$\\mathbf{target} = (x, y, z)$"}
+                </p>
+                <ParamSlider
+                  label="Target X"
+                  value={target.x}
+                  min={-4}
+                  max={4}
+                  step={0.1}
+                  onChange={(v) => {
+                    setTarget({ ...target, x: v });
+                    setPresetKey("custom");
+                  }}
+                />
+                <ParamSlider
+                  label="Target Y"
+                  value={target.y}
+                  min={-3}
+                  max={4}
+                  step={0.1}
+                  onChange={(v) => {
+                    setTarget({ ...target, y: v });
+                    setPresetKey("custom");
+                  }}
+                />
+                <ParamSlider
+                  label="Target Z"
+                  value={target.z}
+                  min={-1}
+                  max={4}
+                  step={0.1}
+                  onChange={(v) => {
+                    setTarget({ ...target, z: v });
+                    setPresetKey("custom");
+                  }}
+                />
+              </div>
 
-                {/* Step 2: Right */}
-                <div className="rounded border border-red-500/30 bg-red-500/5 p-2.5 space-y-1">
-                  <div className="flex items-center justify-between text-red-500 font-bold">
-                    <span>2. 右向单位向量 r</span>
-                    <span>‖r‖ = 1.00</span>
-                  </div>
-                  <InlineMath
-                    tex={`\\mathbf{r} = \\frac{\\mathbf{f} \\times \\mathbf{up}_{\\text{raw}}}{\\|\\dots\\|} = (${fmt(r.x)},\\, ${fmt(r.y)},\\, ${fmt(r.z)})^\\top`}
-                  />
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-foreground">
+                    参考上方向倾角 {"$\\mathbf{up}_{\\text{raw}}$"} 偏角
+                  </p>
+                  <span className="font-mono text-[11px] text-amber-500 font-bold">
+                    {upTiltAngle}°
+                  </span>
                 </div>
-
-                {/* Step 3: True Up */}
-                <div className="rounded border border-emerald-500/30 bg-emerald-500/5 p-2.5 space-y-1">
-                  <div className="flex items-center justify-between text-emerald-500 font-bold">
-                    <span>3. 严格正交的实际上方向 u</span>
-                    <span>‖u‖ = 1.00</span>
-                  </div>
-                  <InlineMath
-                    tex={`\\mathbf{u} = \\mathbf{r} \\times \\mathbf{f} = (${fmt(u.x)},\\, ${fmt(u.y)},\\, ${fmt(u.z)})^\\top`}
-                  />
-                </div>
+                <ParamSlider
+                  label="Up 倾角 (度)"
+                  value={upTiltAngle}
+                  min={-60}
+                  max={60}
+                  step={1}
+                  onChange={(v) => {
+                    setUpTiltAngle(v);
+                    setPresetKey("custom");
+                  }}
+                />
               </div>
             </div>
 
-            {/* Dot Product Orthogonality Verification */}
-            <div className="pt-2 border-t border-border/50">
-              <div className="flex items-center justify-between text-muted text-[11px]">
-                <span>正交归一性点积检验：</span>
-                <span className="font-mono text-foreground font-semibold">
-                  r·u = {fmt(dot(r, u))} | r·f = {fmt(dot(r, f))} | u·f ={" "}
-                  {fmt(dot(u, f))}
-                </span>
+            {/* Gram-Schmidt Math Calculation Output */}
+            <div className="flex flex-col justify-between rounded-xl border border-border bg-surface p-4 text-xs space-y-3">
+              <div>
+                <p className="font-semibold text-foreground mb-2">
+                  Gram-Schmidt 实时三步正交归一化推导
+                </p>
+                <div className="space-y-2 font-mono text-[11px]">
+                  {/* Step 1: Forward */}
+                  <div className="rounded border border-blue-500/30 bg-blue-500/5 p-2.5 space-y-1">
+                    <div className="flex items-center justify-between text-blue-500 font-bold">
+                      <span>1. 前向视线单位向量 f</span>
+                      <span>‖f‖ = 1.00</span>
+                    </div>
+                    {`$\\mathbf{f} = \\frac{\\mathbf{target} - \\mathbf{eye}}{\\|\\dots\\|} = (${fmt(f.x)},\\, ${fmt(f.y)},\\, ${fmt(f.z)})^\\top$`}
+                  </div>
+
+                  {/* Step 2: Right */}
+                  <div className="rounded border border-red-500/30 bg-red-500/5 p-2.5 space-y-1">
+                    <div className="flex items-center justify-between text-red-500 font-bold">
+                      <span>2. 右向单位向量 r</span>
+                      <span>‖r‖ = 1.00</span>
+                    </div>
+                    {`$\\mathbf{r} = \\frac{\\mathbf{f} \\times \\mathbf{up}_{\\text{raw}}}{\\|\\dots\\|} = (${fmt(r.x)},\\, ${fmt(r.y)},\\, ${fmt(r.z)})^\\top$`}
+                  </div>
+
+                  {/* Step 3: True Up */}
+                  <div className="rounded border border-emerald-500/30 bg-emerald-500/5 p-2.5 space-y-1">
+                    <div className="flex items-center justify-between text-emerald-500 font-bold">
+                      <span>3. 严格正交的实际上方向 u</span>
+                      <span>‖u‖ = 1.00</span>
+                    </div>
+                    {`$\\mathbf{u} = \\mathbf{r} \\times \\mathbf{f} = (${fmt(u.x)},\\, ${fmt(u.y)},\\, ${fmt(u.z)})^\\top$`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Dot Product Orthogonality Verification */}
+              <div className="pt-2 border-t border-border/50">
+                <div className="flex items-center justify-between text-muted text-[11px]">
+                  <span>正交归一性点积检验：</span>
+                  <span className="font-mono text-foreground font-semibold">
+                    r·u = {fmt(dot(r, u))} | r·f = {fmt(dot(r, f))} | u·f ={" "}
+                    {fmt(dot(u, f))}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

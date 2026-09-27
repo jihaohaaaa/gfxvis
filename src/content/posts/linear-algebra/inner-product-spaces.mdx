@@ -51,6 +51,21 @@ $$
 \langle \alpha \mathbf{u} + \beta \mathbf{v}, \mathbf{w} \rangle = \alpha \langle \mathbf{u}, \mathbf{w} \rangle + \beta \langle \mathbf{v}, \mathbf{w} \rangle
 $$
 
+固定第二个向量 $\mathbf{c}\in V$，内积便给出一个单输入函数：
+
+$$
+f_{\mathbf{c}}:V\to\mathbb{F},\qquad f_{\mathbf{c}}(\mathbf{x})=\langle\mathbf{x},\mathbf{c}\rangle.
+$$
+
+由于内积对第一变元线性，
+
+$$
+f_{\mathbf{c}}(\alpha\mathbf{x}+\beta\mathbf{y})
+=\alpha f_{\mathbf{c}}(\mathbf{x})+\beta f_{\mathbf{c}}(\mathbf{y}),
+$$
+
+所以 $f_{\mathbf{c}}$ 是线性泛函。在实内积空间中，这就是一个双线性配对固定一个参数后的结果；本文采用第一变元线性的复内积约定，因此复数情形下内积是半双线性的，但 $\mathbf{x}\mapsto\langle\mathbf{x},\mathbf{c}\rangle$ 仍然对 $\mathbf{x}$ 线性。内积与对偶空间之间的完整对应见[《对偶空间、对偶基与线性泛函》](/posts/linear-algebra/dual-spaces-and-linear-functionals)中的 Riesz 表现定理。
+
 > 💡 <strong>范数与距离的天然诱导</strong>：
 >
 > 任何内积都会 <strong>天然诱导（Induce）一个范数</strong>：$\lVert\mathbf{v}\rVert = \sqrt{\langle \mathbf{v}, \mathbf{v} \rangle}$，以及由范数诱导的向量间欧氏拓扑距离 $d(\mathbf{u}, \mathbf{v}) = \lVert\mathbf{u} - \mathbf{v}\rVert$。

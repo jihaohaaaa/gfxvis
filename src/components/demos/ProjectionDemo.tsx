@@ -19,7 +19,7 @@ import {
 import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import { clamp } from "@math";
 import { useCanvas2D } from "../framework/useCanvas2D";
@@ -302,78 +302,68 @@ export default function ProjectionDemo({ height }: { height?: string }) {
   const ry = probe.y - py;
 
   return (
-    <ExpandableDemo id="projection-2d" height={height}>
-      <div className="space-y-3">
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar onReset={resetBounds} />
-          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-        </div>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <CapsuleTabs
-            options={TARGET_OPTIONS}
-            value={targetId}
-            onChange={(id: ProjectionTargetId) => setTargetId(id)}
-            label="投到:"
-          />
-          <CapsuleTabs
-            options={MODE_OPTIONS}
-            value={modeId}
-            onChange={(id: ProjectionModeId) => setModeId(id)}
-          />
-          <ParamSlider
-            label={<InlineMath tex="x" />}
-            min={PROBE_CLAMP.xMin}
-            max={PROBE_CLAMP.xMax}
-            step={0.05}
-            value={probe.x}
-            onChange={(v: number) => setProbe((s) => ({ ...s, x: v }))}
-            widthClass="w-32"
-          />
-          <ParamSlider
-            label={<InlineMath tex="y" />}
-            min={PROBE_CLAMP.yMin}
-            max={PROBE_CLAMP.yMax}
-            step={0.05}
-            value={probe.y}
-            onChange={(v: number) => setProbe((s) => ({ ...s, y: v }))}
-            widthClass="w-32"
-          />
-        </div>
-        <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
-          <p>
-            <InlineMath
-              tex={`x = (${probe.x.toFixed(2)}, ${probe.y.toFixed(2)})`}
+    <AutoMath>
+      <ExpandableDemo id="projection-2d" height={height}>
+        <div className="space-y-3">
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,20rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar onReset={resetBounds} />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full"
             />
-          </p>
-          <p>
-            <InlineMath tex={`P = ${mode.tex}`} />
-          </p>
-          <p>
-            <InlineMath
-              tex={`Px = ${mode.texPx} = (${px.toFixed(2)}, ${py.toFixed(2)})`}
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <CapsuleTabs
+              options={TARGET_OPTIONS}
+              value={targetId}
+              onChange={(id: ProjectionTargetId) => setTargetId(id)}
+              label="投到:"
             />
-          </p>
-          <p>
-            <InlineMath
-              tex={`(I-P)x = ${mode.texResidual} = (${rx.toFixed(2)}, ${ry.toFixed(2)})`}
+            <CapsuleTabs
+              options={MODE_OPTIONS}
+              value={modeId}
+              onChange={(id: ProjectionModeId) => setModeId(id)}
             />
-          </p>
-          <p>
-            <InlineMath
-              tex={`P^2x = Px = (${px.toFixed(2)}, ${py.toFixed(2)})`}
+            <ParamSlider
+              label="$x$"
+              min={PROBE_CLAMP.xMin}
+              max={PROBE_CLAMP.xMax}
+              step={0.05}
+              value={probe.x}
+              onChange={(v: number) => setProbe((s) => ({ ...s, x: v }))}
+              widthClass="w-32"
             />
+            <ParamSlider
+              label="$y$"
+              min={PROBE_CLAMP.yMin}
+              max={PROBE_CLAMP.yMax}
+              step={0.05}
+              value={probe.y}
+              onChange={(v: number) => setProbe((s) => ({ ...s, y: v }))}
+              widthClass="w-32"
+            />
+          </div>
+          <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
+            <p>{`$x = (${probe.x.toFixed(2)}, ${probe.y.toFixed(2)})$`}</p>
+            <p>{`$P = ${mode.tex}$`}</p>
+            <p>
+              {`$Px = ${mode.texPx} = (${px.toFixed(2)}, ${py.toFixed(2)})$`}
+            </p>
+            <p>
+              {`$(I-P)x = ${mode.texResidual} = (${rx.toFixed(2)}, ${ry.toFixed(2)})$`}
+            </p>
+            <p>{`$P^2x = Px = (${px.toFixed(2)}, ${py.toFixed(2)})$`}</p>
+          </div>
+          <p className="text-xs text-muted">
+            提示：拖动端点黑心圆点进行 2D 自由移动；拖动蓝色箭头沿子空间 $L$
+            滑动；拖动灰色箭头沿残差法向 {"$L^\\perp$"} 滑动（落点 $Px${" "}
+            保持恒定不变！）。支持滚轮缩放与中键/右键平移。
           </p>
         </div>
-        <p className="text-xs text-muted">
-          提示：拖动端点黑心圆点进行 2D 自由移动；拖动蓝色箭头沿子空间{" "}
-          <InlineMath tex="L" /> 滑动；拖动灰色箭头沿残差法向{" "}
-          <InlineMath tex="L^\perp" /> 滑动（落点 <InlineMath tex="Px" />{" "}
-          保持恒定不变！）。支持滚轮缩放与中键/右键平移。
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

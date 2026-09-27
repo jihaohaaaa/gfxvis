@@ -3,7 +3,7 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import type { Stats } from "node:fs";
 import { dirname, extname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const port = parseInt(process.env.PORT || "51731", 10);
@@ -37,7 +37,7 @@ async function main() {
   if (serverStat && serverStat.isFile()) {
     process.env.HOST = "127.0.0.1";
     process.env.PORT = String(port);
-    await import(serverEntry);
+    await import(pathToFileURL(serverEntry).href);
     console.log(
       `[PreviewServer] Astro Standalone Server running at http://localhost:${port}/`,
     );

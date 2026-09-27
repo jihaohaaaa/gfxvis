@@ -1,0 +1,40 @@
+.param-slider {
+  min-width: 0;
+}
+
+.param-slider__label {
+  min-width: 0;
+}
+
+.param-slider__label .katex {
+  white-space: nowrap;
+}
+
+.param-slider__controls {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.param-slider__input {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.param-slider__value {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.param-slider--adaptive {
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.param-slider--adaptive .param-slider__label {
+  max-width: 100%;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}

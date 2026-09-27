@@ -135,13 +135,62 @@ $$
 
 ### 1. 欧拉角（Euler Angles）与万向节死锁（Gimbal Lock）
 
-经典欧拉角将任意 3D 旋转分解为绕三个主轴的连续旋转：偏航角（Yaw $\psi$ 绕 $Z$ 轴）、俯仰角（Pitch $\theta$ 绕 $X$ 轴）与翻滚角（Roll $\phi$ 绕 $Y$ 轴）：
+为明确万向节死锁的计算，以下采用列向量、右手系下的 ZYX 欧拉角约定：翻滚角（Roll $\phi$）绕 $X$ 轴，俯仰角（Pitch $\theta$）绕 $Y$ 轴，偏航角（Yaw $\psi$）绕 $Z$ 轴。矩阵从右向左作用，因此：
 
 $$
-R = R_z(\psi) R_x(\theta) R_y(\phi)
+R(\phi,\theta,\psi)=R_z(\psi)R_y(\theta)R_x(\phi)
 $$
 
-虽然直观，但当俯仰角到达 $\pm 90^\circ$ 时，前后两个旋转轴会重合为同一轴向，丢失一个旋转自由度，即 <strong>万向节死锁（Gimbal Lock）</strong>。
+当俯仰角到达 $\pm 90^\circ$ 时，滚转与偏航对应的旋转轴重合，三个角速度无法再生成三个独立的瞬时旋转方向。这就是<strong>万向节死锁（Gimbal Lock）</strong>。下面用角速度 Jacobian 简洁地看出这种退化。
+
+令空间坐标系中的角速度 $\boldsymbol{\omega}$ 由 $\dot{R}R^\top=[\boldsymbol{\omega}]_\times$ 定义。对欧拉角矩阵求导，三个角速度分别沿当前姿态下对应的旋转轴：
+
+$$
+\boldsymbol{\omega}
+=\dot{\phi}\,R_z(\psi)R_y(\theta)\mathbf{e}_x
++\dot{\theta}\,R_z(\psi)\mathbf{e}_y
++\dot{\psi}\,\mathbf{e}_z
+=J(\phi,\theta,\psi)
+\begin{pmatrix}
+\dot{\phi}\\
+\dot{\theta}\\
+\dot{\psi}
+\end{pmatrix}.
+$$
+
+将这三个旋转轴写成列向量，就得到角速度 Jacobian：
+
+$$
+J(\phi,\theta,\psi)=
+\begin{pmatrix}
+\cos\psi\cos\theta & -\sin\psi & 0\\
+\sin\psi\cos\theta & \cos\psi & 0\\
+-\sin\theta & 0 & 1
+\end{pmatrix},
+\qquad
+\det J=\cos\theta.
+$$
+
+当 $\theta=\pm\frac{\pi}{2}$ 时，$\det J=0$，所以 $\operatorname{rank}(J)<3$。例如 $\theta=\frac{\pi}{2}$ 时：
+
+$$
+J=
+\begin{pmatrix}
+0 & -\sin\psi & 0\\
+0 & \cos\psi & 0\\
+-1 & 0 & 1
+\end{pmatrix}.
+$$
+
+第一列是 $\begin{pmatrix}0&0&-1\end{pmatrix}^{\!\top}$，第三列是 $\begin{pmatrix}0&0&1\end{pmatrix}^{\!\top}$，两者互为相反数；第二列非零且与它们线性无关，因此 $\operatorname{rank}(J)=2$。此时
+
+$$
+\boldsymbol{\omega}
+=\dot{\theta}\begin{pmatrix}-\sin\psi\\\cos\psi\\0\end{pmatrix}
++(\dot{\psi}-\dot{\phi})\begin{pmatrix}0\\0\\1\end{pmatrix},
+$$
+
+滚转与偏航速度只能以差值共同产生同一个旋转方向，三个角参数因此只提供两个独立的瞬时旋转方向。
 
 ### 2. 轴角旋转与罗德里格斯公式（Rodrigues' Rotation Formula）
 
@@ -173,6 +222,8 @@ $$
 $$
 R(\mathbf{k}, \theta) = I + (\sin\theta)[\mathbf{k}]_\times + (1 - \cos\theta)[\mathbf{k}]_\times^2 = \exp\big(\theta [\mathbf{k}]_\times\big)
 $$
+
+固定旋转轴 $\mathbf{k}$ 后，$\mathbf{v}\mapsto\mathbf{k}\times\mathbf{v}=[\mathbf{k}]_\times\mathbf{v}$ 是一个从 $\mathbb{R}^3$ 到自身的线性变换；矩阵 $[\mathbf{k}]_\times$ 正是它的矩阵表示。这是双线性运算固定一个参数后成为线性映射的实例，相关的一般原理见[《抽象向量空间与线性映射》](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps)。
 
 这正是现代李群（Lie Group $SO(3)$）与李代数（Lie Algebra $\mathfrak{so}(3)$）之间的 <strong>指数映射（Exponential Map）</strong>！
 

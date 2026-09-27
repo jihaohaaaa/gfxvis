@@ -10,7 +10,7 @@ import {
 import CanvasToolbar from "../framework/CanvasToolbar";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useVectorDrag } from "../framework/useVectorDrag";
 
@@ -282,75 +282,79 @@ export default function BasisFittingDemo({ height }: { height?: string }) {
   };
 
   return (
-    <ExpandableDemo id="basis-fitting" height={height}>
-      <div className="space-y-4">
-        {/* Controls Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <CapsuleTabs
-            options={[
-              { id: "poly", label: "多项式基 (Polynomial)" },
-              { id: "fourier", label: "傅里叶基 (Fourier)" },
-              { id: "rbf", label: "径向基 (RBF)" },
-            ]}
-            value={family}
-            onChange={(val) => setFamily(val as BasisFamily)}
-          />
-
-          {family === "poly" && (
+    <AutoMath>
+      <ExpandableDemo id="basis-fitting" height={height}>
+        <div className="space-y-4">
+          {/* Controls Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CapsuleTabs
-              label="多项式最高阶数："
-              options={[1, 2, 3, 4, 5].map((deg) => ({
-                id: String(deg),
-                label: `${deg} 阶`,
-              }))}
-              value={String(polyDegree)}
-              onChange={(val) => setPolyDegree(Number(val))}
-              size="xs"
+              options={[
+                { id: "poly", label: "多项式基 (Polynomial)" },
+                { id: "fourier", label: "傅里叶基 (Fourier)" },
+                { id: "rbf", label: "径向基 (RBF)" },
+              ]}
+              value={family}
+              onChange={(val) => setFamily(val as BasisFamily)}
             />
-          )}
-        </div>
 
-        {/* 2D Canvas */}
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,24rem)] w-full overflow-hidden rounded-xl border border-border bg-surface"
-        >
-          <CanvasToolbar onReset={resetBounds} />
-          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-        </div>
+            {family === "poly" && (
+              <CapsuleTabs
+                label="多项式最高阶数："
+                options={[1, 2, 3, 4, 5].map((deg) => ({
+                  id: String(deg),
+                  label: `${deg} 阶`,
+                }))}
+                value={String(polyDegree)}
+                onChange={(val) => setPolyDegree(Number(val))}
+                size="xs"
+              />
+            )}
+          </div>
 
-        {/* Real-time Math & Analysis Cards */}
-        <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <p className="font-semibold text-foreground">
-              实时拟合函数解析式{" "}
-              <span className="text-xs font-normal text-muted">
-                （对参数 <InlineMath tex="\boldsymbol\theta" /> 严格线性）
-              </span>
-            </p>
-            <div className="overflow-x-auto rounded bg-surface p-2 font-mono text-xs text-primary">
-              <InlineMath tex={`f(x) = ${formatFormula()}`} />
+          {/* 2D Canvas */}
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,24rem)] w-full overflow-hidden rounded-xl border border-border bg-surface"
+          >
+            <CanvasToolbar onReset={resetBounds} />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full"
+            />
+          </div>
+
+          {/* Real-time Math & Analysis Cards */}
+          <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <p className="font-semibold text-foreground">
+                实时拟合函数解析式{" "}
+                <span className="text-xs font-normal text-muted">
+                  （对参数 {"$\\boldsymbol\\theta$"} 严格线性）
+                </span>
+              </p>
+              <div className="overflow-x-auto rounded bg-surface p-2 font-mono text-xs text-primary">
+                {`$f(x) = ${formatFormula()}$`}
+              </div>
+              <p className="text-xs text-muted">
+                残差平方和 RSS {`$\\sum e_i^2 = ${fitResult.rss.toFixed(4)}$`}
+              </p>
             </div>
-            <p className="text-xs text-muted">
-              残差平方和 RSS{" "}
-              <InlineMath tex={`\\sum e_i^2 = ${fitResult.rss.toFixed(4)}`} />
-            </p>
-          </div>
 
-          <div className="space-y-1.5 border-t border-border pt-2 text-xs text-muted sm:border-t-0 sm:border-l sm:pt-0 sm:pl-3">
-            <p className="font-semibold text-foreground">
-              💡 核心结论：非线性曲线 vs 线性参数
-            </p>
-            <p>
-              虽然屏幕上的拟合曲线呈现高度弯曲的非线性形态，但由于所有基函数{" "}
-              <InlineMath tex="\phi_j(x)" /> 不含未知参数，模型对权重{" "}
-              <InlineMath tex="\boldsymbol\theta" /> 构成严格的线性方程组{" "}
-              <InlineMath tex="A\boldsymbol\theta \approx \mathbf{b}" />。
-            </p>
-            <p>求解只需一次标准的正规方程或 QR 投影，无需任何非线性迭代！</p>
+            <div className="space-y-1.5 border-t border-border pt-2 text-xs text-muted sm:border-t-0 sm:border-l sm:pt-0 sm:pl-3">
+              <p className="font-semibold text-foreground">
+                💡 核心结论：非线性曲线 vs 线性参数
+              </p>
+              <p>
+                虽然屏幕上的拟合曲线呈现高度弯曲的非线性形态，但由于所有基函数{" "}
+                {"$\\phi_j(x)$"} 不含未知参数，模型对权重{" "}
+                {"$\\boldsymbol\\theta$"} 构成严格的线性方程组{" "}
+                {"$A\\boldsymbol\\theta \\approx \\mathbf{b}$"}。
+              </p>
+              <p>求解只需一次标准的正规方程或 QR 投影，无需任何非线性迭代！</p>
+            </div>
           </div>
         </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

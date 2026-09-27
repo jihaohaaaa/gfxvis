@@ -243,6 +243,68 @@ $$
 3. <strong>仿射平坦流形（Flats）</strong>：
    商集中的每一个抽象等价类，在几何空间展开后对应一条无曲率的仿射平行平坦叶片（详见 [《仿射空间与仿射映射》](/posts/linear-algebra/affine-spaces-and-affine-maps#62-仿射子空间与商空间-vu-陪集的几何同构)）。
 
+### 4.4 编程语言中的等价关系：对象相等与 Hash 容器
+
+等价关系也直接出现在程序如何判断对象“相同”的规则中。
+
+#### Java：对象身份与逻辑相等
+
+对于引用类型，`a == b` 判断两个引用是否指向同一个对象。它比较的是<strong>对象身份（object identity）</strong>，不是对象当前的物理内存地址；垃圾回收器可以移动对象，但不会因此改变对象身份。
+
+`a.equals(b)` 则调用类定义的相等规则。`Object.equals()` 默认仍比较对象身份；类可以覆写它，让相等关系反映对象的逻辑内容。例如，若 `Person` 按姓名和年龄判断相等：
+
+```java
+Person a = new Person("Lin", 20);
+Person b = new Person("Lin", 20);
+
+a == b        // false：这是两个不同对象
+a.equals(b)   // true：假设 equals 按姓名和年龄比较
+```
+
+对应的数学关系可以写成：
+
+$$
+x\sim y
+\iff
+x.\mathrm{name}=y.\mathrm{name}
+\land
+x.\mathrm{age}=y.\mathrm{age}.
+$$
+
+因此，`a` 与 `b` 可以是两个不同对象，却属于同一个等价类 $[a]_{\sim}$。一个正确实现的 `equals()` 应满足自反、对称与传递；覆写时还需遵守 Java 的相等性约定。
+
+#### C++：Hash 分组与 key 等价类
+
+C++ 的 `std::unordered_map` 将“key 是否相等”和“如何快速分组”交给两个独立的函数对象：
+
+```cpp
+std::unordered_map<Key, Value, Hash, KeyEqual> table;
+```
+
+`KeyEqual` 定义 key 的等价关系 $\sim$，`Hash` 定义哈希函数 $h$。二者必须兼容：
+
+$$
+\boxed{x\sim y\Rightarrow h(x)=h(y)}
+$$
+
+反向推论不成立：不同 key 可以得到相同哈希值，这就是<strong>哈希碰撞（hash collision）</strong>。容器用哈希定位候选范围，再用 `KeyEqual` 判断 key 是否真的等价。
+
+可以把两层分组分别写成：
+
+$$
+x\sim_h y\iff h(x)=h(y),
+\qquad
+x\sim_b y\iff \beta(h(x))=\beta(h(y)),
+$$
+
+其中 $\beta$ 表示容器把哈希值映射到实际 bucket 的规则。于是：
+
+$$
+\boxed{\sim\;\subseteq\;\sim_h\;\subseteq\;\sim_b}
+$$
+
+key 等价关系最细，同一哈希值形成的分组更粗，而实际 bucket 还可能把不同哈希值的 key 放在一起。因此，哈希值相同或 bucket 相同，都不能单独证明两个 key 等价；最终仍由 `KeyEqual` 判定。真正表达“哪些 key 算同一个 key”的商集是 $K/{\sim}$，Hash 分组只是查找时的加速结构。
+
 ---
 
 ## 五、交互体验：二元关系矩阵、等价商集聚类与哈斯图

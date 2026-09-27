@@ -6,7 +6,6 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import CanvasResizer from "./CanvasResizer";
 
 export interface HeightPreset {
   id: "sm" | "md" | "lg";
@@ -26,6 +25,8 @@ export interface ExpandableContextValue {
   toggleExpanded: () => void;
   customHeight: number | null;
   setCustomHeight: (height: number | null) => void;
+  isAdaptive: boolean;
+  resetToAdaptive: () => void;
   activePresetId?: "sm" | "md" | "lg" | null;
   setPresetHeight: (id: "sm" | "md" | "lg") => void;
 }
@@ -46,7 +47,9 @@ interface Props {
   storageKey?: string;
   label?: string;
   height?: string;
-  /** Whether to show external fallback expand button (default: false since CanvasToolbar handles it) */
+  /** Whether to show external expand button in the card top-right (default: true) */
+  showExternalExpandButton?: boolean;
+  /** Legacy alias for backward compatibility */
   showFallbackButton?: boolean;
 }
 
@@ -63,6 +66,7 @@ export default function ExpandableDemo({
   storageKey,
   label = "展开",
   height,
+  showExternalExpandButton = false,
   showFallbackButton = false,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
@@ -129,6 +133,12 @@ export default function ExpandableDemo({
     }
   };
 
+  const resetToAdaptive = () => {
+    updateCustomHeight(null);
+  };
+
+  const isAdaptive = customHeight === null;
+
   let activePresetId: "sm" | "md" | "lg" | null = null;
   if (customHeight === 300) activePresetId = "sm";
   else if (customHeight === 420) activePresetId = "md";
@@ -146,6 +156,8 @@ export default function ExpandableDemo({
     },
     customHeight,
     setCustomHeight: updateCustomHeight,
+    isAdaptive,
+    resetToAdaptive,
     activePresetId,
     setPresetHeight,
   };
@@ -169,6 +181,9 @@ export default function ExpandableDemo({
   } else if (height) {
     activeHeightStyle = { ["--demo-height" as string]: height };
   }
+
+  const shouldShowExternalExpand =
+    !expanded && (showExternalExpandButton || showFallbackButton);
 
   return (
     <ExpandableContext.Provider value={contextValue}>
@@ -205,30 +220,28 @@ export default function ExpandableDemo({
               </button>
             </div>
           )}
-          <div style={activeHeightStyle}>{children}</div>
+          <div
+            className="transition-[height] duration-200 ease-out"
+            style={activeHeightStyle}
+          >
+            {children}
+          </div>
         </div>
 
-        {!expanded && (
-          <>
-            {showFallbackButton && (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  openExpanded();
-                }}
-                onPointerDown={(event) => event.stopPropagation()}
-                className="absolute right-3 top-3 z-10 cursor-pointer rounded-full border border-border bg-surface/80 px-3 py-1 text-xs text-muted backdrop-blur transition-colors hover:border-accent hover:text-accent"
-                aria-label="展开交互区"
-                title="展开交互区"
-              >
-                ⛶ {label}
-              </button>
-            )}
-
-            {/* Bottom Resizer Handle */}
-            <CanvasResizer className="mt-1" />
-          </>
+        {!expanded && shouldShowExternalExpand && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              openExpanded();
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+            className="absolute right-3 top-3 z-10 cursor-pointer rounded-full border border-border bg-surface/80 px-3 py-1 text-xs text-muted backdrop-blur transition-colors hover:border-accent hover:text-accent"
+            aria-label="展开交互区"
+            title="展开交互区"
+          >
+            ⛶ {label}
+          </button>
         )}
       </div>
     </ExpandableContext.Provider>

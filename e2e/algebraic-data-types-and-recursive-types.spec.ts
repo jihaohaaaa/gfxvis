@@ -190,7 +190,7 @@ test.describe("代数数据类型（ADT）与递归类型文章与 AdtRecursiveT
     ).toBeVisible();
   });
 
-  test("6. CanvasToolbar S/M/L 视口高度切换与复位按钮断言", async ({
+  test("6. CanvasToolbar 复位与底部 CanvasResizer 自适应/双击复位断言", async ({
     page,
   }) => {
     await page.goto(
@@ -203,18 +203,14 @@ test.describe("代数数据类型（ADT）与递归类型文章与 AdtRecursiveT
       .first();
     await diagram.scrollIntoViewIfNeeded();
 
-    // 测试 S/M/L 按钮
-    const btnL = page
-      .locator("button[aria-label='大视口高度 (560px)']")
-      .first();
-    await expect(btnL).toBeVisible();
-    await btnL.click();
+    // 检查底部 CanvasResizer 处于自适应状态
+    const resizer = page.getByTestId("canvas-resizer").first();
+    await expect(resizer).toBeVisible();
+    await expect(resizer).toHaveAttribute("data-mode", "adaptive");
 
-    const btnS = page
-      .locator("button[aria-label='标准视口高度 (300px)']")
-      .first();
-    await expect(btnS).toBeVisible();
-    await btnS.click();
+    // 双击底部横条恢复/保持自适应
+    await resizer.dblclick();
+    await expect(resizer).toHaveAttribute("data-mode", "adaptive");
 
     // 展开一步后点击复位视野按钮
     const unfoldBtn = page

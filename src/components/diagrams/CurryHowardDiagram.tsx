@@ -1,8 +1,9 @@
 import { useState } from "react";
 import CanvasToolbar from "../framework/CanvasToolbar";
+import CanvasResizer from "../framework/CanvasResizer";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import PresetSelector from "../framework/PresetSelector";
 
 // ============================================================================
@@ -433,246 +434,249 @@ export default function CurryHowardDiagram() {
   };
 
   return (
-    <ExpandableDemo id="curry-howard-mirror">
-      <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
-        {/* Header */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Curry–Howard 逻辑与计算对偶镜像探针
+    <AutoMath>
+      <ExpandableDemo id="curry-howard-mirror">
+        <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
+          {/* Header */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                Curry–Howard 逻辑与计算对偶镜像探针
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                ✨ <strong>命题即类型，证明即程序，证明化简即 β-归约</strong>
+                ：直观感受数理逻辑与程序语言理论之间天衣无缝的同构宇宙
+              </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              ✨ <strong>命题即类型，证明即程序，证明化简即 β-归约</strong>
-              ：直观感受数理逻辑与程序语言理论之间天衣无缝的同构宇宙
+          </div>
+
+          {/* View Mode Switcher */}
+          <div className="mb-4 overflow-x-auto pb-1">
+            <CapsuleTabs
+              onChange={(val) => setViewMode(val as "dual" | "logic" | "stlc")}
+              options={VIEW_OPTIONS}
+              value={viewMode}
+            />
+          </div>
+
+          {/* Preset Selector */}
+          <div className="mb-5">
+            <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              精选 Curry–Howard 经典逻辑定理与程序对偶预设：
+            </div>
+            <PresetSelector
+              onChange={handlePresetChange}
+              options={PRESETS.map((p) => ({
+                id: p.id,
+                label: p.label,
+                description: p.desc,
+              }))}
+              value={activePresetId}
+            />
+          </div>
+
+          {/* Theorem Summary Banner */}
+          <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
+                    preset.isConstructive
+                      ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300"
+                      : "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300"
+                  }`}
+                >
+                  {preset.isConstructive ? "✅ 构造性定理" : "⚠️ 直觉主义边界"}
+                </span>
+                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  {preset.label}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-slate-500 dark:text-slate-400">
+                  推导进度：
+                  <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                    {currentStepIndex + 1} / {maxSteps}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  逻辑学命题 (Proposition)
+                </div>
+                <div className="mt-1 font-mono text-xs font-bold text-sky-600 dark:text-sky-300">
+                  {`$${preset.propTex}$`}
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  STLC 类型签名 (Type)
+                </div>
+                <div className="mt-1 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
+                  {`$${preset.typeTex}$`}
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  证明证据 / λ 项 (Term / Proof)
+                </div>
+                <div className="mt-1 font-mono text-xs font-bold text-amber-600 dark:text-amber-300">
+                  {`$${preset.termTex}$`}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Viewport Container with CanvasToolbar */}
+          <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
+            <CanvasToolbar onReset={handleReset} />
+
+            {/* Stepper Controller */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                  disabled={currentStepIndex <= 0}
+                  onClick={() => setCurrentStepIndex(0)}
+                  title="回到初始假说"
+                  type="button"
+                >
+                  ⏮ 初始
+                </button>
+                <button
+                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                  disabled={currentStepIndex <= 0}
+                  onClick={() =>
+                    setCurrentStepIndex((prev) => Math.max(0, prev - 1))
+                  }
+                  title="回退上一步"
+                  type="button"
+                >
+                  ◀ 单步回退
+                </button>
+                <button
+                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                  disabled={currentStepIndex >= maxSteps - 1}
+                  onClick={() =>
+                    setCurrentStepIndex((prev) =>
+                      Math.min(maxSteps - 1, prev + 1),
+                    )
+                  }
+                  title="推导下一步"
+                  type="button"
+                >
+                  推导下一步 ▶
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="rounded-full border border-indigo-500/40 bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-300">
+                  步骤 {currentStepIndex + 1}：{currentStep.name}
+                </span>
+              </div>
+            </div>
+
+            {/* Stepper Main Display: Mirror Split */}
+            <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto">
+              <div
+                className={`grid gap-4 ${
+                  viewMode === "dual"
+                    ? "grid-cols-1 lg:grid-cols-2"
+                    : "grid-cols-1"
+                }`}
+              >
+                {/* Left / Top: Logic Natural Deduction Tree */}
+                {(viewMode === "dual" || viewMode === "logic") && (
+                  <div className="flex flex-col rounded-xl border border-sky-900/60 bg-sky-950/20 p-4 backdrop-blur-sm">
+                    <div className="mb-3 flex items-center justify-between border-b border-sky-800/40 pb-2">
+                      <span className="text-xs font-bold text-sky-400">
+                        📜 逻辑世界：自然推导树 (Natural Deduction)
+                      </span>
+                      <span className="rounded border border-sky-700/50 bg-sky-900/50 px-2 py-0.5 text-[10px] text-sky-300">
+                        推理法则：
+                        {`$${currentStep.logicRule}$`}
+                      </span>
+                    </div>
+
+                    <div className="my-auto flex flex-col items-center justify-center py-3 text-center">
+                      {/* Logic Premise */}
+                      <div className="font-mono text-xs text-slate-300">
+                        {`$${currentStep.logicPremise}$`}
+                      </div>
+
+                      {/* Inference Line */}
+                      <div className="my-2 flex w-full max-w-[280px] items-center justify-center">
+                        <div className="h-0.5 w-full bg-sky-500/70 shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
+                      </div>
+
+                      {/* Logic Conclusion */}
+                      <div className="font-mono text-sm font-bold text-sky-200">
+                        {`$${currentStep.logicConclusion}$`}
+                      </div>
+                    </div>
+
+                    <div className="mt-2 text-[11px] text-slate-400">
+                      💡 <strong>逻辑直觉</strong>：{currentStep.desc}
+                    </div>
+                  </div>
+                )}
+
+                {/* Right / Bottom: STLC Typing Derivation Tree */}
+                {(viewMode === "dual" || viewMode === "stlc") && (
+                  <div className="flex flex-col rounded-xl border border-indigo-900/60 bg-indigo-950/20 p-4 backdrop-blur-sm">
+                    <div className="mb-3 flex items-center justify-between border-b border-indigo-800/40 pb-2">
+                      <span className="text-xs font-bold text-indigo-400">
+                        💻 程序世界：STLC 类型派生树 (Typing Derivation)
+                      </span>
+                      <span className="rounded border border-indigo-700/50 bg-indigo-900/50 px-2 py-0.5 text-[10px] text-indigo-300">
+                        打字规则：
+                        {`$${currentStep.stlcRule}$`}
+                      </span>
+                    </div>
+
+                    <div className="my-auto flex flex-col items-center justify-center py-3 text-center">
+                      {/* STLC Premise */}
+                      <div className="font-mono text-xs text-slate-300">
+                        {`$${currentStep.stlcPremise}$`}
+                      </div>
+
+                      {/* Inference Line */}
+                      <div className="my-2 flex w-full max-w-[280px] items-center justify-center">
+                        <div className="h-0.5 w-full bg-indigo-500/70 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                      </div>
+
+                      {/* STLC Conclusion */}
+                      <div className="font-mono text-sm font-bold text-indigo-200">
+                        {`$${currentStep.stlcConclusion}$`}
+                      </div>
+                    </div>
+
+                    <div className="mt-2 text-[11px] text-slate-400">
+                      💡 <strong>计算直觉</strong>：打字上下文与项构造
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
+          </div>
+
+          {/* Deep Theoretical Insight Card */}
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
+            <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
+              🔍 本步对偶深邃洞见 (Curry–Howard Correspondence Insight)
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
+              {preset.insight}
             </p>
           </div>
         </div>
-
-        {/* View Mode Switcher */}
-        <div className="mb-4 overflow-x-auto pb-1">
-          <CapsuleTabs
-            onChange={(val) => setViewMode(val as "dual" | "logic" | "stlc")}
-            options={VIEW_OPTIONS}
-            value={viewMode}
-          />
-        </div>
-
-        {/* Preset Selector */}
-        <div className="mb-5">
-          <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            精选 Curry–Howard 经典逻辑定理与程序对偶预设：
-          </div>
-          <PresetSelector
-            onChange={handlePresetChange}
-            options={PRESETS.map((p) => ({
-              id: p.id,
-              label: p.label,
-              description: p.desc,
-            }))}
-            value={activePresetId}
-          />
-        </div>
-
-        {/* Theorem Summary Banner */}
-        <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <span
-                className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
-                  preset.isConstructive
-                    ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300"
-                    : "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300"
-                }`}
-              >
-                {preset.isConstructive ? "✅ 构造性定理" : "⚠️ 直觉主义边界"}
-              </span>
-              <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                {preset.label}
-              </span>
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="text-slate-500 dark:text-slate-400">
-                推导进度：
-                <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                  {currentStepIndex + 1} / {maxSteps}
-                </span>
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                逻辑学命题 (Proposition)
-              </div>
-              <div className="mt-1 font-mono text-xs font-bold text-sky-600 dark:text-sky-300">
-                <InlineMath tex={preset.propTex} />
-              </div>
-            </div>
-
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                STLC 类型签名 (Type)
-              </div>
-              <div className="mt-1 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
-                <InlineMath tex={preset.typeTex} />
-              </div>
-            </div>
-
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                证明证据 / λ 项 (Term / Proof)
-              </div>
-              <div className="mt-1 font-mono text-xs font-bold text-amber-600 dark:text-amber-300">
-                <InlineMath tex={preset.termTex} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Viewport Container with CanvasToolbar */}
-        <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
-          <CanvasToolbar onReset={handleReset} />
-
-          {/* Stepper Controller */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2">
-              <button
-                className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                disabled={currentStepIndex <= 0}
-                onClick={() => setCurrentStepIndex(0)}
-                title="回到初始假说"
-                type="button"
-              >
-                ⏮ 初始
-              </button>
-              <button
-                className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                disabled={currentStepIndex <= 0}
-                onClick={() =>
-                  setCurrentStepIndex((prev) => Math.max(0, prev - 1))
-                }
-                title="回退上一步"
-                type="button"
-              >
-                ◀ 单步回退
-              </button>
-              <button
-                className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                disabled={currentStepIndex >= maxSteps - 1}
-                onClick={() =>
-                  setCurrentStepIndex((prev) =>
-                    Math.min(maxSteps - 1, prev + 1),
-                  )
-                }
-                title="推导下一步"
-                type="button"
-              >
-                推导下一步 ▶
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="rounded-full border border-indigo-500/40 bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-300">
-                步骤 {currentStepIndex + 1}：{currentStep.name}
-              </span>
-            </div>
-          </div>
-
-          {/* Stepper Main Display: Mirror Split */}
-          <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto">
-            <div
-              className={`grid gap-4 ${
-                viewMode === "dual"
-                  ? "grid-cols-1 lg:grid-cols-2"
-                  : "grid-cols-1"
-              }`}
-            >
-              {/* Left / Top: Logic Natural Deduction Tree */}
-              {(viewMode === "dual" || viewMode === "logic") && (
-                <div className="flex flex-col rounded-xl border border-sky-900/60 bg-sky-950/20 p-4 backdrop-blur-sm">
-                  <div className="mb-3 flex items-center justify-between border-b border-sky-800/40 pb-2">
-                    <span className="text-xs font-bold text-sky-400">
-                      📜 逻辑世界：自然推导树 (Natural Deduction)
-                    </span>
-                    <span className="rounded border border-sky-700/50 bg-sky-900/50 px-2 py-0.5 text-[10px] text-sky-300">
-                      推理法则：
-                      <InlineMath tex={currentStep.logicRule} />
-                    </span>
-                  </div>
-
-                  <div className="my-auto flex flex-col items-center justify-center py-3 text-center">
-                    {/* Logic Premise */}
-                    <div className="font-mono text-xs text-slate-300">
-                      <InlineMath tex={currentStep.logicPremise} />
-                    </div>
-
-                    {/* Inference Line */}
-                    <div className="my-2 flex w-full max-w-[280px] items-center justify-center">
-                      <div className="h-0.5 w-full bg-sky-500/70 shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
-                    </div>
-
-                    {/* Logic Conclusion */}
-                    <div className="font-mono text-sm font-bold text-sky-200">
-                      <InlineMath tex={currentStep.logicConclusion} />
-                    </div>
-                  </div>
-
-                  <div className="mt-2 text-[11px] text-slate-400">
-                    💡 <strong>逻辑直觉</strong>：{currentStep.desc}
-                  </div>
-                </div>
-              )}
-
-              {/* Right / Bottom: STLC Typing Derivation Tree */}
-              {(viewMode === "dual" || viewMode === "stlc") && (
-                <div className="flex flex-col rounded-xl border border-indigo-900/60 bg-indigo-950/20 p-4 backdrop-blur-sm">
-                  <div className="mb-3 flex items-center justify-between border-b border-indigo-800/40 pb-2">
-                    <span className="text-xs font-bold text-indigo-400">
-                      💻 程序世界：STLC 类型派生树 (Typing Derivation)
-                    </span>
-                    <span className="rounded border border-indigo-700/50 bg-indigo-900/50 px-2 py-0.5 text-[10px] text-indigo-300">
-                      打字规则：
-                      <InlineMath tex={currentStep.stlcRule} />
-                    </span>
-                  </div>
-
-                  <div className="my-auto flex flex-col items-center justify-center py-3 text-center">
-                    {/* STLC Premise */}
-                    <div className="font-mono text-xs text-slate-300">
-                      <InlineMath tex={currentStep.stlcPremise} />
-                    </div>
-
-                    {/* Inference Line */}
-                    <div className="my-2 flex w-full max-w-[280px] items-center justify-center">
-                      <div className="h-0.5 w-full bg-indigo-500/70 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                    </div>
-
-                    {/* STLC Conclusion */}
-                    <div className="font-mono text-sm font-bold text-indigo-200">
-                      <InlineMath tex={currentStep.stlcConclusion} />
-                    </div>
-                  </div>
-
-                  <div className="mt-2 text-[11px] text-slate-400">
-                    💡 <strong>计算直觉</strong>：打字上下文与项构造
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Deep Theoretical Insight Card */}
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
-          <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
-            🔍 本步对偶深邃洞见 (Curry–Howard Correspondence Insight)
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
-            {preset.insight}
-          </p>
-        </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

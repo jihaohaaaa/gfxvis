@@ -16,6 +16,8 @@ draft: false
 ---
 
 import AffineSpaceDiagram from "../../../components/diagrams/AffineSpaceDiagram";
+import AffineHullConvexRedundancyDemo from "../../../components/demos/AffineHullConvexRedundancyDemo";
+import EdgeFunctionRasterizerDemo from "../../../components/demos/EdgeFunctionRasterizerDemo";
 
 在初等数学与编程实践中，我们经常不加区分地混用“点（Point）”与“向量（Vector）”：在代码里，它们都被写成 `struct Vec3 { float x, y, z; }`；在二维坐标系中，点 $(3, 2)$ 与从原点出发的箭头 $(3, 2)^T$ 看起来完全重合。
 
@@ -256,6 +258,52 @@ $$
 
 则称点集 $\{P_0, P_1, \dots, P_k\}$ 在几何上是 <strong>仿射无关的（Affinely Independent）</strong>；反之，若存在不全为零且和为 $0$ 的标量使组合为零向量，则称点集是 <strong>仿射相关的（Affinely Dependent）</strong>。
 
+上述定义还直接揭示了仿射相关所代表的<strong>点集冗余</strong>。若点集仿射相关，就存在不全为零的系数 $\alpha_0,\dots,\alpha_k$，满足：
+
+$$
+\sum_{i=0}^k\alpha_i=0,
+\qquad
+\sum_{i=0}^k\alpha_iP_i=\mathbf{0}.
+$$
+
+选取一个 $\alpha_j\ne0$ 的下标 $j$。从第二个等式解出 $P_j$，并令 $\beta_i=-\frac{\alpha_i}{\alpha_j}$：
+
+$$
+P_j=-\frac{1}{\alpha_j}\sum_{i\ne j}\alpha_iP_i
+=\sum_{i\ne j}\beta_iP_i.
+$$
+
+由于系数总和为零，
+
+$$
+\sum_{i\ne j}\beta_i
+=-\frac{1}{\alpha_j}\sum_{i\ne j}\alpha_i
+=-\frac{-\alpha_j}{\alpha_j}
+=1.
+$$
+
+所以 $P_j$ 是其余点的仿射组合，加入它不会扩大仿射包：
+
+$$
+\boxed{
+\operatorname{aff}\{P_0,\dots,P_k\}
+=\operatorname{aff}\{P_i:i\ne j\}
+}.
+$$
+
+这说明 $k+1$ 个仿射相关点至少有一个冗余点，其仿射包维数至多为 $k-1$，低于仿射无关时的最大维数 $k$。
+
+再与线性相关作一个区分。任取原点 $O$，令位置向量 $\mathbf{v}_i=P_i-O$。仿射相关给出的非平凡关系会使这些位置向量也线性相关：
+
+$$
+\sum_{i=0}^k\alpha_i\mathbf{v}_i
+=\sum_{i=0}^k\alpha_i(P_i-O)
+=\sum_{i=0}^k\alpha_iP_i-\left(\sum_{i=0}^k\alpha_i\right)O
+=\mathbf{0}.
+$$
+
+反向不成立，因为位置向量的线性相关性依赖原点。例如相对于原点 $O=(0,0)$，位置向量 $(1,0)$ 与 $(2,0)$ 线性相关；它们代表的两个不同点却仿射无关。
+
 ---
 
 #### 4.3.2 两组重心坐标做差的自然产物：唯一性视角的代数差分结构
@@ -363,34 +411,7 @@ $$
 
 一言以蔽之：<strong>“仿射相关，就是点集之间存在一个非平凡的、原点无关的零向量关系。”</strong>
 
-##### 4. 经典算例：一维直线上的三点共线
-
-取一维仿射直线上的三个点坐标：
-
-$$
-P_0 = (0, 0), \qquad P_1 = (1, 0), \qquad P_2 = (2, 0).
-$$
-
-我们直观上清楚它们共线（应该相关）。选取系数 $\lambda_0 = 1, \; \lambda_1 = -2, \; \lambda_2 = 1$：
-
-1. <strong>检验原点无关性</strong>：
-   $$
-   \sum_{i=0}^2 \lambda_i = 1 - 2 + 1 = 0;
-   $$
-2. <strong>计算点组合</strong>：
-   $$
-   1 \cdot P_0 - 2 \cdot P_1 + 1 \cdot P_2 = (0, 0) - 2(1, 0) + (2, 0) = (0, 0) = \mathbf{0}.
-   $$
-
-我们得到了一个非平凡的零向量关系：$P_0 - 2P_1 + P_2 = \mathbf{0}$！将其移项改写：
-
-$$
-P_2 - P_1 = P_1 - P_0.
-$$
-
-几何意义跃然纸上：<strong>从 $P_0$ 到 $P_1$ 的位移，与从 $P_1$ 到 $P_2$ 的位移完全相等</strong>！第三个点 $P_2$ 顺着前两点的方向延展，并没有为空间贡献任何新的独立几何维度，因此这三个点仿射相关。
-
-##### 5. 核心对称对比框
+##### 4. 核心对称对比框
 
 > | 运算对象           | 相关性判定核心 | 本质要求                                                                                                          |
 > | :----------------- | :------------- | :---------------------------------------------------------------------------------------------------------------- |
@@ -685,20 +706,36 @@ $$
 
 ### 5.2 几何划分：仿射包、凸包与单纯形（Simplex）
 
-重心坐标的大小与符号完全决定了点 $P$ 在几何空间中的相对位置：
+这些“包”可以统一理解为允许不同的系数组合。设 $V$ 是实向量空间，$A$ 是其伴随仿射空间；向量用 $\mathbf{v}_i$ 表示，点用 $P_i$ 表示：
 
-- <strong>仿射包（Affine Hull）</strong>：所有满足 $\sum_{i=0}^n \lambda_i = 1$ 的点集合构成了由顶点张成的整个 $n$ 维仿射空间：
-  $$
-  \mathrm{aff}(P_0, \dots, P_n) = \left\{ \sum_{i=0}^n \lambda_i P_i \;\middle|\; \sum_{i=0}^n \lambda_i = 1 \right\} = A.
-  $$
-- <strong>凸包（Convex Hull / 单纯形）</strong>：若进一步附加非负约束 $\lambda_i \ge 0 \quad (\forall i)$，则所有点构成顶点张成的 <strong>单纯形凸多面体（Simplex）</strong>：
-  $$
-  \mathrm{conv}(P_0, \dots, P_n) = \left\{ \sum_{i=0}^n \lambda_i P_i \;\middle|\; \sum_{i=0}^n \lambda_i = 1, \; \lambda_i \ge 0 \right\}.
-  $$
-- <strong>边界与内部判断</strong>：
-  - 当所有 $\lambda_i > 0$ 时，点 $P$ 严格位于单纯形<strong>内部</strong>；
-  - 当某个 $\lambda_k = 0$ 时，点 $P$ 位于相对面（例如三角形的一条边或四面体的一个面）上；
-  - 当存在 $\lambda_k < 0$ 时，点 $P$ 位于单纯形<strong>外部</strong>。
+| 名称 | 组合形式 | 系数条件 | 输入对象与几何含义 |
+|---|---|---|---|
+| <strong>线性包（Linear Span）</strong> | $\mathbf{x}=\sum_i \alpha_i\mathbf{v}_i$ | $\alpha_i\in\mathbb{R}$ 任意 | 向量生成的最小线性子空间，必含原点 |
+| <strong>仿射包（Affine Hull）</strong> | $X=\sum_i \lambda_iP_i$ | $\sum_i\lambda_i=1$，系数可为负 | 点集生成的最小仿射子空间，不依赖原点 |
+| <strong>凸包（Convex Hull）</strong> | $X=\sum_i \lambda_iP_i$ | $\sum_i\lambda_i=1$ 且 $\lambda_i\ge0$ | 点集生成的最小凸集；仿射无关顶点的凸包是单纯形 |
+| <strong>锥包（Conic Hull）</strong> | $\mathbf{x}=\sum_i \alpha_i\mathbf{v}_i$ | $\alpha_i\ge0$，不要求系数和为 $1$ | 向量生成的最小凸锥，顶点在原点 |
+
+线性包与锥包是向量空间中的构造，依赖原点；仿射包与凸包作用于点集，具有仿射几何意义。对任意非空点集 $S$，凸组合是仿射组合的特例，因此：
+
+$$
+\boxed{\operatorname{conv}(S)\subseteq\operatorname{aff}(S)}
+$$
+
+例如两个点 $P_0,P_1$ 的仿射组合可写成：
+
+$$
+X(t)=(1-t)P_0+tP_1=P_0+t(P_1-P_0).
+$$
+
+当 $t\in\mathbb{R}$ 时得到经过两点的整条直线；再要求两个系数非负，即 $0\le t\le1$，就只得到线段。这与前文允许负系数的仿射组合例子相呼应。
+
+术语上，本文分别称<strong>仿射包（Affine Hull）</strong>与<strong>凸包（Convex Hull）</strong>，不将两者混称为“仿射凸包”。仿射包本身也是凸集，但它通常比凸包大得多，例如三个不共线点的仿射包是整个平面，凸包则是三角形。
+
+对单纯形顶点的重心坐标，系数的大小与符号决定点 $P$ 的位置：
+
+- 当所有 $\lambda_i > 0$ 时，点 $P$ 严格位于单纯形<strong>内部</strong>；
+- 当某个 $\lambda_k = 0$ 时，点 $P$ 位于相对面（例如三角形的一条边或四面体的一个面）上；
+- 当存在 $\lambda_k < 0$ 时，点 $P$ 位于单纯形<strong>外部</strong>。
 
 #### 5.2.1 空间维度与单纯形顶点对应关系
 
@@ -712,6 +749,57 @@ $$
 | <strong>$n$ 维</strong>   | $n$-单纯形（$n$-Simplex） | $n+1$ 个点 $(P_0, \dots, P_n)$  | $n+1$ 个标量 $(\lambda_0, \dots, \lambda_n)$              | $\sum_{i=0}^n \lambda_i = 1$            |
 
 因此，平面三角形的 3 点重心坐标正是 $n$ 维空间重心坐标在 $n=2$ 时的自然特例。
+
+#### 仿射冗余、凸冗余与凸包顶点
+
+对有限非空点集 $S$，把凸包的维数定义为它所在的最小仿射空间的维数。由于 $S\subseteq\operatorname{conv}(S)\subseteq\operatorname{aff}(S)$，两者张成的最小仿射空间相同：
+
+$$
+\boxed{\dim\operatorname{conv}(S):=\dim\operatorname{aff}(\operatorname{conv}(S))=\dim\operatorname{aff}(S)}
+$$
+
+删除一个点后，若仿射包不变，称该点<strong>仿射冗余</strong>；若凸包不变，称该点<strong>凸冗余</strong>。等价地：
+
+$$
+\begin{aligned}
+P_i\text{ 仿射冗余} &\iff P_i\in\operatorname{aff}(S\setminus\{P_i\}),\\
+P_i\text{ 凸冗余} &\iff P_i\in\operatorname{conv}(S\setminus\{P_i\}).
+\end{aligned}
+$$
+
+凸组合也是仿射组合，因此<strong>凸冗余必然推出仿射冗余，反向则不成立</strong>。例如直线上 $P_1=0, P_2=1, P_3=2$：中间点 $P_2=\frac12P_1+\frac12P_3$ 是凸冗余点；而端点 $P_3=-P_1+2P_2$ 虽然是另外两点的仿射组合，却因系数 $-1$ 为负而不属于它们的凸包。
+
+对有限点集，$P_i$ 是凸包的顶点（极点），当且仅当它不能由其余点的凸组合表示：
+
+$$
+\boxed{P_i\text{ 是顶点}\iff P_i\notin\operatorname{conv}(S\setminus\{P_i\})}
+$$
+
+这也说明在 $\mathbb{R}^2$ 中，四个点总是仿射相关，但仍可能四个都是凸包顶点。以单位正方形的四个顶点为例：
+
+$$
+p_1=(0,0),\quad p_2=(1,0),\quad p_3=(1,1),\quad p_4=(0,1).
+$$
+
+它们满足非平凡的仿射依赖关系：
+
+$$
+p_1-p_2+p_3-p_4=0.
+$$
+
+解出 $p_1$，得到：
+
+$$
+p_1=p_2-p_3+p_4.
+$$
+
+右侧系数 $1,-1,1$ 的和为 $1$，所以这是仿射组合；但其中有负系数，因此不是凸组合。事实上，正方形的四个顶点都不能由另外三个顶点的凸组合表示，它们全都是凸包的必要顶点。相反，若四点中有一点落在另外三点构成的三角形内，该点才是凸冗余点。
+
+这个区别在高维中仍然成立。在 $\mathbb{R}^d$ 中，超过 $d+1$ 个点必然仿射相关；但当 $d\ge2$ 时，凸多面体可以有远多于 $d+1$ 个顶点，而且这些顶点仍可全部是凸包的极点。例如，平面上的凸 $n$ 边形有 $n$ 个极点，即使 $n>3$，这些顶点也必然仿射相关。因此，$d$-单纯形由 $d+1$ 个仿射无关顶点张成，而一般凸多面体可以有更多顶点，且它的顶点集合可以仿射相关。
+
+下面可拖动点集并切换预设，观察采样得到的凸包、仿射维数和可删除的凸冗余点：
+
+<AffineHullConvexRedundancyDemo client:visible />
 
 #### 5.2.2 高维推广：重心坐标的子单纯形体积比与行列式
 
@@ -1579,8 +1667,6 @@ $$
 
 在探讨 3D 属性插值之前，我们必须先直面现代 GPU 渲染流水线中一个更为底层的基石问题：<strong>在屏幕 2D 像素空间中，GPU 究竟是如何判断一个像素（或采样点）是否落在三角形内部，并计算其重心坐标的？</strong>
 
-初学者常常设想 GPU 会在每个像素上显式建立并求解一个 $2 \times 2$ 线性方程组来反解重心坐标。但在每秒吞吐数十亿像素的现代图形硬件中，这种解法极度昂贵且不可接受。
-
 GPU 固定功能光栅化器（Fixed-Function Rasterizer）所采用的，正是基于 <strong>Edge Function（边缘函数）</strong> 的极速判定架构：
 
 $$
@@ -1611,39 +1697,145 @@ $$
 E_{ij}(P) = \det \begin{pmatrix} x_j - x_i & y_j - y_i \\ x - x_i & y - y_i \end{pmatrix} = \det \begin{pmatrix} \mathbf{v}_{\text{edge}} \\ \mathbf{v}_{P} \end{pmatrix}.
 $$
 
+把三个点记作 $A,B,C$，并定义 $E(A,B,C)=\operatorname{cross}(B-A,\;C-A)$。循环置换这三个点不会改变 edge function 的值：
+
+$$
+\begin{aligned}
+E(A,B,C)
+&=\operatorname{cross}(B-A,\;C-A)\\
+&=\operatorname{cross}(C-B,\;A-B)\\
+&=\operatorname{cross}(A-C,\;B-C)\\
+&=E(B,C,A)=E(C,A,B).
+\end{aligned}
+$$
+
+这是因为循环置换保留三角形的顶点绕序；等价地，利用叉积的双线性与反交换性，上述三个行列式相等。后文的 $E_{12}(P_0)=E_{20}(P_1)=E_{01}(P_2)$ 正是这一性质的应用。
+
+更一般地，对任意三点置换 $\sigma\in S_3$，偶置换保持绕序，奇置换反转绕序，因此：
+
+$$
+\boxed{
+E\bigl(\sigma(a,b,c)\bigr)
+=\operatorname{sgn}(\sigma)\,E(a,b,c)
+}
+$$
+
+其中 $\operatorname{sgn}(\sigma)=1$ 表示偶置换，$\operatorname{sgn}(\sigma)=-1$ 表示奇置换；循环置换是偶置换，所以不改变 edge function 的值。
+
+更一般地，一个 $k$-循环 $(a_1\ a_2\ \dots\ a_k)$ 可分解成 $k-1$ 个对换，因此它的符号为：
+
+$$
+\boxed{
+\operatorname{sgn}(a_1\,a_2\,\dots\,a_k)=(-1)^{k-1}
+}
+\qquad\Longrightarrow\qquad
+\boxed{
+k\text{-循环为偶置换}\iff k\text{ 为奇数}
+}
+$$
+
+置换的循环分解、符号与奇偶性的详细推导，参见[《置换矩阵》](/posts/linear-algebra/permutation-matrices)中的“对称群、奇偶性与行列式”一节。
+
 在几何学中，这一行列式的值严格等于<strong>由边向量 $P_j - P_i$ 与位移向量 $P - P_i$ 所张成的二维平行四边形有向面积，也就是子三角形有向面积的整整 2 倍</strong>！
+
+因此，$E_{ij}(P)$ 的符号表示 $P$ 位于有向边 $P_i\to P_j$ 的哪一侧；其绝对值则等于边长乘以点到该直线的垂直距离。它既提供覆盖测试所需的侧别信息，也提供与该边相对顶点对应的未归一化重心权重。
+
+下面的交互画布把 Edge Function 的几何含义放进光栅化流程：在“几何探针”视图中拖动采样点和三角形顶点，观察有向双面积、重心坐标与覆盖判定；切换到“MSAA 覆盖”视图，可调整每像素采样率、编辑多个三角形并逐样本观察深度测试结果。采样位置采用用于说明原理的规则布局。
+
+<EdgeFunctionRasterizerDemo client:visible />
 
 #### 8.4.2 硬件 Inside Test：符号判断与重心坐标分子的统一
 
-假设屏幕三角形的三个顶点采用逆时针（Counter-Clockwise, CCW）绕序排列。定义三条边对应的边缘函数为：
+这里讨论的是由三个顶点组成的二维单纯形（三角形，即 2-simplex），定义三条边对应的边缘函数为：
 
 $$
 E_0(P) \equiv E_{12}(P), \qquad E_1(P) \equiv E_{20}(P), \qquad E_2(P) \equiv E_{01}(P).
 $$
 
-此时，对于非退化的 CCW 屏幕三角形，点 $P$ 位于三角形内部的几何充要条件极为纯粹：
+下文将这些屏幕空间重心坐标记作 $\lambda_i'$，与 8.5 节的记号保持一致。设 $P=\lambda_0'P_0+\lambda_1'P_1+\lambda_2'P_2$ 且 $\lambda_0'+\lambda_1'+\lambda_2'=1$，则坐标分量满足线性方程组：
+
+$$
+\begin{pmatrix}
+x_0 & x_1 & x_2 \\
+y_0 & y_1 & y_2 \\
+1 & 1 & 1
+\end{pmatrix}
+\begin{pmatrix}
+\lambda_0' \\
+\lambda_1' \\
+\lambda_2'
+\end{pmatrix}
+=
+\begin{pmatrix}
+x \\
+y \\
+1
+\end{pmatrix}.
+$$
+
+更适合计算的做法是消去 $\lambda_0'$。令二维叉积（标量形式）为 $\operatorname{cross}(a,b)=a_xb_y-a_yb_x$，并定义三角形的有向双面积：
+
+$$
+D = \operatorname{cross}(P_1-P_0,\;P_2-P_0).
+$$
+
+由 $P-P_0=\lambda_1'(P_1-P_0)+\lambda_2'(P_2-P_0)$，当且仅当三角形非退化（$D\ne0$）时，解唯一：
 
 $$
 \boxed{
-P \text{ 位于三角形内部} \iff E_0(P) \ge 0 \quad \text{且} \quad E_1(P) \ge 0 \quad \text{且} \quad E_2(P) \ge 0
+\lambda_1'=\frac{\operatorname{cross}(P-P_0,\;P_2-P_0)}{D}, \qquad
+\lambda_2'=\frac{\operatorname{cross}(P_1-P_0,\;P-P_0)}{D}, \qquad
+\lambda_0'=1-\lambda_1'-\lambda_2'
 }
 $$
 
-若三角形为顺时针（CW）排列，则三个符号同时反号（$\le 0$）。
-
-更令人惊叹的是它与重心坐标的恒等关系。设整个三角形的有向面积之 2 倍为常量标量 $A$：
+这也说明 edge function 为什么正好是重心坐标的未归一化分子。以 $\lambda_0'$ 为例，先从重心坐标表示中减去 $P_1$。由于 $\lambda_0'+\lambda_1'+\lambda_2'=1$，减去的 $P_1$ 可以写成 $ (\lambda_0'+\lambda_1'+\lambda_2')P_1$，于是：
 
 $$
-A = E_{12}(P_0) = E_{20}(P_1) = E_{01}(P_2) = \det \begin{pmatrix} x_1 - x_0 & y_1 - y_0 \\ x_2 - x_0 & y_2 - y_0 \end{pmatrix}.
+\begin{aligned}
+P-P_1
+&=\lambda_0'P_0+\lambda_1'P_1+\lambda_2'P_2
+ -(\lambda_0'+\lambda_1'+\lambda_2')P_1\\
+&=\lambda_0'(P_0-P_1)+\lambda_2'(P_2-P_1).
+\end{aligned}
 $$
 
-由 5.2.2 节的面积比公式，点 $P$ 在屏幕空间中的三个重心坐标分量 $\lambda_0', \lambda_1', \lambda_2'$ 恰好为：
+这里 $\lambda_1'$ 对应的 $P_1$ 项抵消了。接着把这个差向量代入 edge function，并利用叉积对加法和数乘的分配律：
+
+$$
+\begin{aligned}
+E_{12}(P)
+&=\operatorname{cross}(P_2-P_1,\;P-P_1) \\
+&=\operatorname{cross}(P_2-P_1,\;\lambda_0'(P_0-P_1)+\lambda_2'(P_2-P_1)) \\
+&=\lambda_0'\operatorname{cross}(P_2-P_1,\;P_0-P_1)
+ +\lambda_2'\operatorname{cross}(P_2-P_1,\;P_2-P_1) \\
+&=\lambda_0'\operatorname{cross}(P_2-P_1,\;P_0-P_1)+0 \\
+&=\lambda_0' E_{12}(P_0).
+\end{aligned}
+$$
+
+循环地，令 $D=E_{12}(P_0)=E_{20}(P_1)=E_{01}(P_2)$，便有：
+
+$$
+D = \det \begin{pmatrix} x_1-x_0 & y_1-y_0 \\ x_2-x_0 & y_2-y_0 \end{pmatrix}, \qquad
+\boxed{
+\lambda_0'=\frac{E_0(P)}{D},\quad
+\lambda_1'=\frac{E_1(P)}{D},\quad
+\lambda_2'=\frac{E_2(P)}{D}
+}.
+$$
+
+上述重心坐标公式对平面上的任意点 $P$ 都成立；若 $P$ 在三角形外，至少有一个分量为负。
+
+因此，对任意非退化绕序，点 $P$ 位于三角形（含边界）内的充要条件都是三个重心坐标非负：
 
 $$
 \boxed{
-\lambda_0' = \frac{E_0(P)}{A}, \qquad \lambda_1' = \frac{E_1(P)}{A}, \qquad \lambda_2' = \frac{E_2(P)}{A}
+P \text{ 位于三角形（含边界）内} \iff \lambda_k'\ge0 \ (k=0,1,2) \iff E_k(P)D\ge0 \ (k=0,1,2)
 }
 $$
+
+若 $D>0$，三个 $E_k(P)$ 都非负；若 $D<0$，三个 $E_k(P)$ 都非正。交换顶点绕序会改变相应坐标的顺序，而不会改变点的几何位置；若屏幕坐标由 $y$ 向上改为 $y$ 向下，相当于反射 $(x,y)\mapsto(x,-y)$，$D$ 与三个 edge function 的符号会同时反转，商 $E_k(P)/D$ 保持不变。因此，重心坐标不依赖坐标平面的定向或顶点顺、逆时针绕序；单个 edge function 的符号则依赖这些约定。唯一的退化情形是 $D=0$，即三个顶点共线。
 
 这就引出了现代图形硬件中最核心的统一洞察：
 
@@ -1655,8 +1847,8 @@ $$
 
 <strong>GPU 的 Inside 覆盖测试与重心坐标计算根本不是两个分离的步骤</strong>：
 
-- <strong>进行覆盖判定时</strong>：硬件只需检查 $E_k(P)$ 的符号位（Sign Bit），<strong>全程无需执行任何浮点除法</strong>！
-- <strong>真正需要重心坐标数值时</strong>：硬件只需预先计算一次全局标量倒数 $\frac{1}{A}$，随后的各重心坐标分量仅需做一次标量乘法：$\lambda_k' = E_k(P) \cdot \frac{1}{A}$。
+- <strong>进行覆盖判定时</strong>：硬件只需比较 $E_k(P)$ 与 $D$ 的符号（$E_k(P)=0$ 时采样点落在边上），<strong>全程无需执行任何浮点除法</strong>！
+- <strong>真正需要重心坐标数值时</strong>：硬件只需预先计算一次全局标量倒数 $\frac{1}{D}$，随后的各重心坐标分量仅需做一次标量乘法：$\lambda_k' = E_k(P) \cdot \frac{1}{D}$。
 
 #### 8.4.3 为什么硬件偏爱 Edge Function？平面方程与增量扫描（Incremental Stepping）
 
@@ -1686,7 +1878,7 @@ $$
   $$
   E(x + 1, y) = E(x, y) + A_{ij};
   $$
-- <strong>沿垂直方向向下移动一个像素</strong> $(y \to y + 1)$：
+- <strong>沿 $y$ 正方向移动一个像素</strong> $(y \to y + 1)$（$y$ 向下的屏幕坐标中即向下，$y$ 向上的坐标中即向上）：
   $$
   E(x, y + 1) = E(x, y) + B_{ij}
   $$
@@ -1720,9 +1912,9 @@ $$
 \downarrow \\
 \text{硬件增量扫描累加（Incremental Stepping，纯加法）} \\
 \downarrow \\
-\text{符号位比对 } \implies \text{覆盖测试（Coverage Mask / Inside Test，无除法）} \\
+\text{符号与 } D \text{ 的符号比对 } \implies \text{覆盖测试（Coverage Mask / Inside Test，无除法）} \\
 \downarrow \\
-\text{乘以全局面积倒数 } \frac{1}{A} \implies \text{获取屏幕重心坐标 } \lambda_i' \\
+\text{乘以全局面积倒数 } \frac{1}{D} \implies \text{获取屏幕重心坐标 } \lambda_i' \\
 \downarrow \\
 \text{顶点属性屏幕平面插值与透视校正（Perspective Correction）} \\
 \downarrow \\
@@ -1964,6 +2156,18 @@ $$
 
 在 GLSL / HLSL 中声明的 `smooth in vec2 uv;`，底层硬件正是完全遵循这一代数公式自动完成逐像素透视校正的！
 
+把光栅化与插值中的量放在同一张屏幕平面图景下看，哪些值能用固定增量更新就很清楚：
+
+| 量 | 屏幕空间形式 | 像素步进 |
+|---|---|---|
+| Edge function $E_k$、屏幕重心坐标 $\lambda_i'$ | $ax+by+c$ | 向右一步加 $a$，沿 $y$ 正方向一步加 $b$ |
+| `noperspective` 属性，以及分别插值的 $A/w$、$1/w$ | $ax+by+c$ | 可用固定增量更新 |
+| 透视校正后的属性 $A=(A/w)/(1/w)$ | $\dfrac{a_1x+b_1y+c_1}{a_2x+b_2y+c_2}$ | 一般不能用固定增量精确更新 |
+
+因此，硬件可以分别增量推进 $A/w$ 与 $1/w$，再求它们的比值；相除后的透视校正属性通常不再是屏幕坐标的一次函数。
+
+还要区分数学上的平面方程与执行分组：常见的 `2×2 quad` 将相邻片元着色器调用组织在一起，便于用邻近片元计算屏幕导数；它不是覆盖判定或属性插值变成线性的原因。覆盖仍由边函数在采样位置的取值决定，插值仍由屏幕空间平面方程决定。
+
 #### 8.5.7 工程实战盲区：视锥裁剪（Clipping）对顶点的处理
 
 在真实 Vulkan / GPU 渲染管线中，还存在一个至关重要的工程环节 —— <strong>视锥裁剪（Clipping）</strong>：
@@ -1994,7 +2198,7 @@ $$
 >    - 任意仿射变换可通过 SVD 分解为“旋转 $\to$ 轴向拉伸 $\to$ 旋转 $\to$ 平移”；两组单纯形唯一确定仿射变换；
 > 6. <strong>齐次坐标的代数本质</strong>：$n$ 维仿射空间是 $(n+1)$ 维向量空间中 $w=1$ 的切片超平面，$w=1$ 表示点、$w=0$ 表示方向向量。高维线性矩阵无缝统一了仿射复合与求逆；
 > 7. <strong>渲染管线与光栅化硬件架构</strong>：
->    - 屏幕空间 Edge Function 本质是有向面积的 2 倍及屏幕重心坐标的分子；利用对 $(x,y)$ 的线性平面方程，GPU 采用纯整数/定点加法的增量扫描（Incremental Stepping）与比较器阵列并行判定覆盖（Inside Test / MSAA Mask），全程无需除法；
+>    - 屏幕空间 Edge Function 本质是有向面积的 2 倍及屏幕重心坐标的分子；比较各边缘函数与三角形有向双面积的符号即可判定覆盖（Inside Test / MSAA Mask），再利用对 $(x,y)$ 的线性平面方程，GPU 采用纯整数/定点加法的增量扫描（Incremental Stepping）与比较器阵列，全程无需除法；
 >    - Local 到 View 以及 NDC 到 Screen 均为仿射变换，重心坐标严格守恒；
 >    - 透视除法破坏了仿射性，屏幕重心坐标发生非线性扭曲：$\lambda_i' = \frac{\lambda_i w_i}{\sum \lambda_j w_j}$；
 >    - 引入公共因子 $S = \sum \lambda_j w_j$，利用归一化条件 $\sum \lambda_i = 1$ 严格消元，导出恢复公式 $\lambda_i = \frac{\lambda_i' / w_i}{\sum \lambda_j' / w_j}$；

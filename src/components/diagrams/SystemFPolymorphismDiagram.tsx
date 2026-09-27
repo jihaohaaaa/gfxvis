@@ -1,8 +1,9 @@
 import { useState } from "react";
 import CanvasToolbar from "../framework/CanvasToolbar";
+import CanvasResizer from "../framework/CanvasResizer";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import PresetSelector from "../framework/PresetSelector";
 
 // ============================================================================
@@ -366,212 +367,218 @@ export default function SystemFPolymorphismDiagram() {
   };
 
   return (
-    <ExpandableDemo id="system-f-polymorphism-explorer">
-      <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
-        {/* Header */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              System F 参数多态与二阶两阶段求值探针
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              ✨ <strong>二阶类型抽象、非直谓实例化与免费定理</strong>
-              ：单步追踪类型代换与值代换，直观观测全称量化带来的强大表达力
-            </p>
-          </div>
-        </div>
-
-        {/* View Mode Switcher */}
-        <div className="mb-4 overflow-x-auto pb-1">
-          <CapsuleTabs
-            onChange={(val) => setViewMode(val as "two_phase" | "free_theorem")}
-            options={VIEW_OPTIONS}
-            value={viewMode}
-          />
-        </div>
-
-        {/* Preset Selector */}
-        <div className="mb-4">
-          <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            精选 System F 经典多态演算与理论预设：
-          </div>
-          <PresetSelector
-            onChange={handlePresetChange}
-            options={PRESETS.map((p) => ({
-              id: p.id,
-              label: p.label,
-              description: p.desc,
-            }))}
-            value={activePresetId}
-          />
-        </div>
-
-        {/* Dynamic Type Instantiation Picker */}
-        <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-            <span>动态具象化类型实参注入 (Type Instantiation [X ↦ T])：</span>
-            <span className="font-mono text-indigo-600 dark:text-indigo-400">
-              当前实参: [X ↦ {instType === "PolyId" ? "∀Y. Y → Y" : instType}]
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {TYPE_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                  instType === opt.id
-                    ? "border border-indigo-500 bg-indigo-600 text-white shadow-sm"
-                    : "border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                }`}
-                onClick={() => {
-                  setInstType(opt.id);
-                  setCurrentStepIndex(0);
-                }}
-                type="button"
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Term & Type Overview Card */}
-        <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                多态项全称类型签名 (Universal Type)
+    <AutoMath>
+      <ExpandableDemo id="system-f-polymorphism-explorer">
+        <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
+          {/* Header */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                System F 参数多态与二阶两阶段求值探针
               </div>
-              <div className="mt-1 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
-                <InlineMath tex={preset.typeSignatureTex} />
-              </div>
-            </div>
-
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                System F 源码实现 (Term)
-              </div>
-              <div className="mt-1 font-mono text-xs font-bold text-amber-600 dark:text-amber-300">
-                <InlineMath tex={preset.termTex} />
-              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                ✨ <strong>二阶类型抽象、非直谓实例化与免费定理</strong>
+                ：单步追踪类型代换与值代换，直观观测全称量化带来的强大表达力
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Viewport Container with CanvasToolbar */}
-        <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
-          <CanvasToolbar onReset={handleReset} />
+          {/* View Mode Switcher */}
+          <div className="mb-4 overflow-x-auto pb-1">
+            <CapsuleTabs
+              onChange={(val) =>
+                setViewMode(val as "two_phase" | "free_theorem")
+              }
+              options={VIEW_OPTIONS}
+              value={viewMode}
+            />
+          </div>
 
-          {/* Stepper Toolbar */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2">
-              <button
-                className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                disabled={currentStepIndex <= 0}
-                onClick={() => setCurrentStepIndex(0)}
-                title="回到初始多态表达式"
-                type="button"
-              >
-                ⏮ 初始
-              </button>
-              <button
-                className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                disabled={currentStepIndex <= 0}
-                onClick={() =>
-                  setCurrentStepIndex((prev) => Math.max(0, prev - 1))
-                }
-                title="回退一步"
-                type="button"
-              >
-                ◀ 单步回退
-              </button>
-              <button
-                className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                disabled={currentStepIndex >= maxSteps - 1}
-                onClick={() =>
-                  setCurrentStepIndex((prev) =>
-                    Math.min(maxSteps - 1, prev + 1),
-                  )
-                }
-                title="推进归约"
-                type="button"
-              >
-                二阶归约步进 ▶
-              </button>
+          {/* Preset Selector */}
+          <div className="mb-4">
+            <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              精选 System F 经典多态演算与理论预设：
             </div>
+            <PresetSelector
+              onChange={handlePresetChange}
+              options={PRESETS.map((p) => ({
+                id: p.id,
+                label: p.label,
+                description: p.desc,
+              }))}
+              value={activePresetId}
+            />
+          </div>
 
-            <div className="flex items-center gap-2">
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${currentStep.badgeColor}`}
-              >
-                {currentStep.phaseBadge}
-              </span>
-              <span className="font-mono text-xs text-slate-400">
-                步数：{currentStepIndex + 1} / {maxSteps}
+          {/* Dynamic Type Instantiation Picker */}
+          <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <span>动态具象化类型实参注入 (Type Instantiation [X ↦ T])：</span>
+              <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                当前实参: [X ↦ {instType === "PolyId" ? "∀Y. Y → Y" : instType}]
               </span>
             </div>
+            <div className="flex flex-wrap gap-2">
+              {TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                    instType === opt.id
+                      ? "border border-indigo-500 bg-indigo-600 text-white shadow-sm"
+                      : "border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                  }`}
+                  onClick={() => {
+                    setInstType(opt.id);
+                    setCurrentStepIndex(0);
+                  }}
+                  type="button"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Stepper View Area */}
-          <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
-            {viewMode === "two_phase" ? (
-              <div className="space-y-4 py-2">
-                <div className="text-xs font-semibold text-slate-400">
-                  {currentStep.phaseTitle}
+          {/* Term & Type Overview Card */}
+          <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  多态项全称类型签名 (Universal Type)
                 </div>
+                <div className="mt-1 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
+                  {`$${preset.typeSignatureTex}$`}
+                </div>
+              </div>
 
-                {/* Main Expression Box */}
-                <div className="flex items-center justify-center overflow-x-auto px-4 py-3">
-                  <div className="rounded-2xl border border-indigo-700/60 bg-slate-800/60 px-6 py-4 shadow-xl backdrop-blur-md">
-                    <div className="font-mono text-lg text-slate-100 sm:text-xl">
-                      <InlineMath tex={currentStep.expressionTex} />
+              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  System F 源码实现 (Term)
+                </div>
+                <div className="mt-1 font-mono text-xs font-bold text-amber-600 dark:text-amber-300">
+                  {`$${preset.termTex}$`}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Viewport Container with CanvasToolbar */}
+          <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
+            <CanvasToolbar onReset={handleReset} />
+            <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
+
+            {/* Stepper Toolbar */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                  disabled={currentStepIndex <= 0}
+                  onClick={() => setCurrentStepIndex(0)}
+                  title="回到初始多态表达式"
+                  type="button"
+                >
+                  ⏮ 初始
+                </button>
+                <button
+                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                  disabled={currentStepIndex <= 0}
+                  onClick={() =>
+                    setCurrentStepIndex((prev) => Math.max(0, prev - 1))
+                  }
+                  title="回退一步"
+                  type="button"
+                >
+                  ◀ 单步回退
+                </button>
+                <button
+                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
+                  disabled={currentStepIndex >= maxSteps - 1}
+                  onClick={() =>
+                    setCurrentStepIndex((prev) =>
+                      Math.min(maxSteps - 1, prev + 1),
+                    )
+                  }
+                  title="推进归约"
+                  type="button"
+                >
+                  二阶归约步进 ▶
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${currentStep.badgeColor}`}
+                >
+                  {currentStep.phaseBadge}
+                </span>
+                <span className="font-mono text-xs text-slate-400">
+                  步数：{currentStepIndex + 1} / {maxSteps}
+                </span>
+              </div>
+            </div>
+
+            {/* Stepper View Area */}
+            <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
+              {viewMode === "two_phase" ? (
+                <div className="space-y-4 py-2">
+                  <div className="text-xs font-semibold text-slate-400">
+                    {currentStep.phaseTitle}
+                  </div>
+
+                  {/* Main Expression Box */}
+                  <div className="flex items-center justify-center overflow-x-auto px-4 py-3">
+                    <div className="rounded-2xl border border-indigo-700/60 bg-slate-800/60 px-6 py-4 shadow-xl backdrop-blur-md">
+                      <div className="font-mono text-lg text-slate-100 sm:text-xl">
+                        {`$${currentStep.expressionTex}$`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action & Rule Banner */}
+                  <div className="mx-auto flex max-w-xl flex-col items-center gap-1.5 rounded-xl border border-slate-700/60 bg-slate-800/40 p-3 text-xs">
+                    <div className="font-mono text-indigo-300">
+                      {`$${currentStep.ruleTex}$`}
+                    </div>
+                    <p className="text-slate-400">{currentStep.actionDesc}</p>
+                  </div>
+                </div>
+              ) : (
+                /* Free Theorem Commutative Diagram Mode */
+                <div className="space-y-4 py-3 text-center">
+                  <div className="text-xs font-semibold text-amber-400">
+                    Reynolds 关系参数化定理与自然性交换图
+                  </div>
+
+                  <div className="mx-auto max-w-lg rounded-2xl border border-amber-600/40 bg-amber-950/20 p-5 shadow-lg backdrop-blur-sm">
+                    <div className="mb-2 text-xs font-medium text-slate-300">
+                      {`$${preset.freeTheoremPropTex}$`}
+                    </div>
+                    <div className="my-3 font-mono text-base font-bold text-amber-200">
+                      {`$${preset.freeTheoremEquationTex}$`}
+                    </div>
+                    <div className="text-[11px] leading-relaxed text-slate-400">
+                      💡 <strong>核心直觉</strong>
+                      ：纯参数多态函数无法检查具象类型的内部构造，因此它与任何类型间的任意转换函数{" "}
+                      $g$ 完全交换（Commutes）。
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
+          </div>
 
-                {/* Action & Rule Banner */}
-                <div className="mx-auto flex max-w-xl flex-col items-center gap-1.5 rounded-xl border border-slate-700/60 bg-slate-800/40 p-3 text-xs">
-                  <div className="font-mono text-indigo-300">
-                    <InlineMath tex={currentStep.ruleTex} />
-                  </div>
-                  <p className="text-slate-400">{currentStep.actionDesc}</p>
-                </div>
-              </div>
-            ) : (
-              /* Free Theorem Commutative Diagram Mode */
-              <div className="space-y-4 py-3 text-center">
-                <div className="text-xs font-semibold text-amber-400">
-                  Reynolds 关系参数化定理与自然性交换图
-                </div>
-
-                <div className="mx-auto max-w-lg rounded-2xl border border-amber-600/40 bg-amber-950/20 p-5 shadow-lg backdrop-blur-sm">
-                  <div className="mb-2 text-xs font-medium text-slate-300">
-                    <InlineMath tex={preset.freeTheoremPropTex} />
-                  </div>
-                  <div className="my-3 font-mono text-base font-bold text-amber-200">
-                    <InlineMath tex={preset.freeTheoremEquationTex} />
-                  </div>
-                  <div className="text-[11px] leading-relaxed text-slate-400">
-                    💡 <strong>核心直觉</strong>
-                    ：纯参数多态函数无法检查具象类型的内部构造，因此它与任何类型间的任意转换函数{" "}
-                    <InlineMath tex="g" /> 完全交换（Commutes）。
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* Theoretical Insight Card */}
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
+            <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
+              🔍 本多态构造深度理论洞见 (Parametricity & Impredicativity
+              Insight)
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
+              {preset.insight}
+            </p>
           </div>
         </div>
-
-        {/* Theoretical Insight Card */}
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
-          <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
-            🔍 本多态构造深度理论洞见 (Parametricity & Impredicativity Insight)
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
-            {preset.insight}
-          </p>
-        </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

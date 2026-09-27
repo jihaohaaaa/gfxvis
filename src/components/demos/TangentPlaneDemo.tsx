@@ -8,7 +8,7 @@ import { attachGizmo3D } from "../../visualizations/core/3d/gizmo3d";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import { useViewer3D } from "../framework/useViewer3D";
 
 export default function TangentPlaneDemo({ height }: { height?: string }) {
@@ -59,46 +59,39 @@ export default function TangentPlaneDemo({ height }: { height?: string }) {
   const fy = SURFACE_FN.fy(x, y);
 
   return (
-    <ExpandableDemo id="tangent-plane" height={height}>
-      <div className="space-y-3">
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar />
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
-            <p>
-              <InlineMath
-                tex={`f(${x.toFixed(2)}, ${y.toFixed(2)}) = ${z.toFixed(3)}`}
-              />
-            </p>
-            <p>
-              <InlineMath
-                tex={`\\frac{\\partial f}{\\partial x} = ${fx.toFixed(3)}, \\quad \\frac{\\partial f}{\\partial y} = ${fy.toFixed(3)}`}
-              />
-            </p>
-            <p>
-              法向量{" "}
-              <InlineMath
-                tex={`n = (${(-fx).toFixed(2)}, ${(-fy).toFixed(2)}, 1)`}
-              />
-            </p>
+    <AutoMath>
+      <ExpandableDemo id="tangent-plane" height={height}>
+        <div className="space-y-3">
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Checkbox
-              label="曲面透明"
-              checked={surfaceTransparent}
-              onChange={setSurfaceTransparent}
-            />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
+              <p>{`$f(${x.toFixed(2)}, ${y.toFixed(2)}) = ${z.toFixed(3)}$`}</p>
+              <p>
+                {`$\\frac{\\partial f}{\\partial x} = ${fx.toFixed(3)}, \\quad \\frac{\\partial f}{\\partial y} = ${fy.toFixed(3)}$`}
+              </p>
+              <p>
+                法向量 {`$n = (${(-fx).toFixed(2)}, ${(-fy).toFixed(2)}, 1)$`}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Checkbox
+                label="曲面透明"
+                checked={surfaceTransparent}
+                onChange={setSurfaceTransparent}
+              />
+            </div>
           </div>
+          <p className="text-xs text-muted">
+            左键/中键旋转 · 滚轮缩放 ·
+            右键平移;在曲面上拖拽移动切点;曲面默认半透明便于观察法线与切平面。
+          </p>
         </div>
-        <p className="text-xs text-muted">
-          左键/中键旋转 · 滚轮缩放 ·
-          右键平移;在曲面上拖拽移动切点;曲面默认半透明便于观察法线与切平面。
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

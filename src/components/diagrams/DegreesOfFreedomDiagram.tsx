@@ -1,4 +1,4 @@
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 
 export default function DegreesOfFreedomDiagram() {
   const cards = [
@@ -19,13 +19,13 @@ export default function DegreesOfFreedomDiagram() {
             </p>
             <p>
               • <strong>代数约束</strong>：3 个列向量单位长度（
-              <InlineMath tex="\|\mathbf{c}_i\|=1" />
+              {"$\\|\\mathbf{c}_i\\|=1$"}
               ）+ 3 个列向量两两正交（
-              <InlineMath tex="\mathbf{c}_i \cdot \mathbf{c}_j = 0" />
-              ）+ 行列式为 <InlineMath tex="+1" />。
+              {"$\\mathbf{c}_i \\cdot \\mathbf{c}_j = 0$"}
+              ）+ 行列式为 $+1$。
             </p>
             <p>
-              • <strong>自由度计算</strong>：<InlineMath tex="9 - 6 = 3" />。
+              • <strong>自由度计算</strong>：$9 - 6 = 3$。
             </p>
             <p>
               • <strong>优缺点</strong>
@@ -53,11 +53,10 @@ export default function DegreesOfFreedomDiagram() {
             </p>
             <p>
               • <strong>代数约束</strong>：仅 1 个超球面单位模长约束（
-              <InlineMath tex="w^2+x^2+y^2+z^2 = 1" />
-              ）。
+              $w^2+x^2+y^2+z^2 = 1$ ）。
             </p>
             <p>
-              • <strong>自由度计算</strong>：<InlineMath tex="4 - 1 = 3" />。
+              • <strong>自由度计算</strong>：$4 - 1 = 3$。
             </p>
             <p>
               • <strong>优缺点</strong>
@@ -88,7 +87,7 @@ export default function DegreesOfFreedomDiagram() {
               ：参数量等于空间自由度，无冗余代数约束。
             </p>
             <p>
-              • <strong>自由度计算</strong>：<InlineMath tex="3 - 0 = 3" />。
+              • <strong>自由度计算</strong>：$3 - 0 = 3$。
             </p>
             <p>
               • <strong>优缺点</strong>
@@ -102,59 +101,61 @@ export default function DegreesOfFreedomDiagram() {
   ];
 
   return (
-    <div className="not-prose my-6 overflow-hidden rounded-2xl border border-border bg-surface/80 p-4 shadow-xs backdrop-blur-xs transition-colors md:p-6">
-      <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-2.5">
-        <div className="flex items-center gap-2">
-          <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent" />
-          <span className="text-xs font-semibold tracking-wider text-foreground uppercase">
-            三维旋转三大数学表象体系与自由度（DoF）全景对比
+    <AutoMath>
+      <div className="not-prose my-6 overflow-hidden rounded-2xl border border-border bg-surface/80 p-4 shadow-xs backdrop-blur-xs transition-colors md:p-6">
+        <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent" />
+            <span className="text-xs font-semibold tracking-wider text-foreground uppercase">
+              三维旋转三大数学表象体系与自由度（DoF）全景对比
+            </span>
+          </div>
+          <span className="rounded-md bg-surface-hover px-2 py-0.5 font-mono text-[11px] text-muted">
+            3D Rotation DoF = 3
           </span>
         </div>
-        <span className="rounded-md bg-surface-hover px-2 py-0.5 font-mono text-[11px] text-muted">
-          3D Rotation DoF = 3
-        </span>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {cards.map((c, i) => (
-          <div
-            key={i}
-            className={`flex flex-col justify-between rounded-xl border bg-surface p-4 transition-all hover:shadow-xs ${c.accent} relative`}
-          >
-            {c.featured && (
-              <span className="absolute -top-2.5 right-3 rounded-full bg-emerald-500 px-2 py-0.5 font-sans text-[10px] font-bold text-white shadow-xs">
-                图形学黄金标准
-              </span>
-            )}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-foreground">
-                  {c.title}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {cards.map((c, i) => (
+            <div
+              key={i}
+              className={`flex flex-col justify-between rounded-xl border bg-surface p-4 transition-all hover:shadow-xs ${c.accent} relative`}
+            >
+              {c.featured && (
+                <span className="absolute -top-2.5 right-3 rounded-full bg-emerald-500 px-2 py-0.5 font-sans text-[10px] font-bold text-white shadow-xs">
+                  图形学黄金标准
                 </span>
-                <span
-                  className={`rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${c.badgeColor}`}
-                >
-                  {c.dof}
-                </span>
+              )}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-foreground">
+                    {c.title}
+                  </span>
+                  <span
+                    className={`rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${c.badgeColor}`}
+                  >
+                    {c.dof}
+                  </span>
+                </div>
+
+                <div className="mb-3 flex items-center gap-2 rounded-lg bg-background/80 px-2.5 py-1.5 font-mono text-[11px] border border-border/50">
+                  <span className="text-muted">参数:</span>
+                  <span className="font-semibold text-foreground">
+                    {c.params}
+                  </span>
+                  <span className="text-muted">|</span>
+                  <span className="text-muted">约束:</span>
+                  <span className="font-semibold text-accent">
+                    {c.constraints}
+                  </span>
+                </div>
+
+                {c.detail}
               </div>
-
-              <div className="mb-3 flex items-center gap-2 rounded-lg bg-background/80 px-2.5 py-1.5 font-mono text-[11px] border border-border/50">
-                <span className="text-muted">参数:</span>
-                <span className="font-semibold text-foreground">
-                  {c.params}
-                </span>
-                <span className="text-muted">|</span>
-                <span className="text-muted">约束:</span>
-                <span className="font-semibold text-accent">
-                  {c.constraints}
-                </span>
-              </div>
-
-              {c.detail}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </AutoMath>
   );
 }

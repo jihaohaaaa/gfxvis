@@ -6,10 +6,10 @@
 
 - **数学约定**:右手系,z 轴向上。曲面/场等数学对象一律用数学坐标 (x, y, z) 定义,例如曲面 z = f(x, y)。
 - **Three 世界**:右手系,y 轴向上(Three 原生约定)。相机统一使用 `createCamera` + `OrbitControls`(带阻尼)。
-- **唯一映射**:数学坐标进入 Three 世界必须经过 `src/visualizations/core/coords.ts` 的 `mathToWorld(x, y, z) = (x, z, -y)`,禁止在 3D 场景里手写等价坐标。
+- **唯一映射**:数学坐标进入 Three 世界必须经过 `src/visualizations/core/3d/coords.ts` 的 `mathToWorld(x, y, z) = (x, z, -y)`,禁止在 3D 场景里手写等价坐标。
   - 该映射 det = +1,保右手系;数学 +z(上)映射为世界 +y(上)。
   - 点与方向向量共用同一线性映射;射线拾取需按逆映射换算(数学 x = world x,数学 y = −world z)。
-- **2D 画布**:使用数学坐标,屏幕 y 向上;坐标变换统一走 `core/plot2d.ts` 的 `createPlot2D`。
+- **2D 画布**:使用数学坐标,屏幕 y 向上;坐标变换统一走 `core/2d/plot2d.ts` 的 `createPlot2D`。
 
 ## 方向与符号
 
@@ -21,9 +21,10 @@
 ## 记号与命名
 
 - 记号:标量场 φ(x, y);向量场 F = (P, Q);函数 f 及其偏导 f_x、f_y;微分算子用 ∇(grad / div / curl)。
-- 目录与文件:demo 场景放 `src/visualizations/demos/<kebab-name>/`;框架基础设施组件/Hook 放 `src/components/framework/<PascalCase>.tsx`;React island Demos 放 `src/components/demos/<PascalCase>.tsx`;共享工具放 `src/visualizations/core/`(math / colormap / plot2d / coords);预设场 id 用 kebab-case。
-- 框架与共享层:Three 工具集中在 `core/three-utils.ts`(灯光 / 网格 / 标记 / 曲面材质与透明度 / `disposeObject` / `buildColoredGrid`),2D 绘制辅助在 `core/plot2d.ts`(`drawAxes` / `drawPolyline` / `drawPoint` / `drawSegment` / `drawArrow`),数值与网格采样在 `core/math.ts`(`sampleGrid` / `forEachCube`);React 侧复用 `components/framework/` 下的 `useCanvas2D` / `useViewer3D` / `useVectorDrag` hooks 与 `ExpandableDemo` / `PresetSelector` / `CapsuleTabs` / `ParamSlider` / `Checkbox` / `InlineMath` 组件;预设场唯一来源是 `demos/scalar-field/field.ts` 的 `FIELDS2D`(圆族 / 抛物线族自带可选 `levelCurve`)。
-  - **InlineMath 属性转义**: JSX 静态双引号属性中传 TeX 必须用**单个反斜杠**（`<InlineMath tex="\mathbb{R}^3" />`），严禁双反斜杠；JS 表达式/模板字符串中才使用**双反斜杠**（``tex={`\\hat{\\mathbf{x}} = ${v}`}``）。
+- 目录与文件:领域场景放 `src/visualizations/scenes/<topic>/<scene-name>.ts`;框架基础设施组件/Hook 放 `src/components/framework/<PascalCase>.tsx`;React island Demos 放 `src/components/demos/<PascalCase>.tsx`;共享工具按职责放在 `src/visualizations/core/2d/`、`core/3d/` 与 `core/common/`;预设场 id 用 kebab-case。
+- 框架与共享层:Three 工具集中在 `core/3d/three-utils.ts`(灯光 / 网格 / 标记 / 曲面材质与透明度 / `disposeObject` / `buildColoredGrid`),2D 绘制辅助在 `core/2d/plot2d.ts`(`drawAxes` / `drawPolyline` / `drawPoint` / `drawSegment` / `drawArrow`),数值与网格采样在 `core/common/math.ts`(`sampleGrid` / `forEachCube`);React 侧复用 `components/framework/` 下的 `useCanvas2D` / `useViewer3D` / `useVectorDrag` hooks 与 `ExpandableDemo` / `KdeWindowShell` / `PresetSelector` / `CapsuleTabs` / `ParamSlider` / `Checkbox` / `AutoMath` 组件;预设场 `FIELDS2D` 定义在 `scenes/calculus/scalar-field-2d.ts`(圆族 / 抛物线族自带可选 `levelCurve`)。
+  - **交互区域布局与视窗外壳**: 跨演示的区域结构统一使用 `components/framework/KdeWindowShell.tsx`（KDE Breeze 桌面视窗外壳）或 `components/framework/InteractiveLayout.tsx` 的 `top` / `main` / `navigation` / `secondary` / `side` / `bottom` / `footer` 槽位与 `side-right` / `bottom-split` / `three-column` / `dense-dock` / `dual-view` / `side-left` 预设。`side` 默认是紧凑控制架，只有显式选择 `dense-dock` 时才占据整行；空槽不应留下占位空白。画布工具栏仍必须留在 `main` 画布容器内。
+  - **AutoMath 自动 LaTeX 渲染**: 交互 Island 顶层统一使用 `<AutoMath>`（`KdeWindowShell` 已内建包裹），组件内部所有 JSX 节点、自定义属性（如 `ParamSlider label="$x$"`）及字符串均可直接写 `$ ... $` / `$$ ... $$`，自动完成 KaTeX 解析并自带全局渲染缓存。
 - 文章放 `src/content/posts/<category>/<slug>.mdx`,frontmatter 沿用现有 schema。
 - MDX 排版(加粗与重点统一使用 <strong>):
   - **统一使用 `<strong>` 标签（严禁使用 `**...**`）**: 文章中一律使用标准 HTML/MDX 标签 `<strong>重点内容</strong>` 进行加粗强调，**严禁使用 Markdown `**...**`**。彻底消除 CommonMark 规范中由内外侧空格、中英文紧贴或全角引号引发的定界符误配与乱码风险。CI 及 `pnpm validate` 会自动执行 `scripts/format-bold.ts --check` 拦截裸 `**`。
@@ -32,7 +33,7 @@
 ## 渲染与交互
 
 - 交互组件一律以 `client:visible` 挂载;SSR 无副作用(DOM 访问只发生在 `useEffect` 内)。
-- 交互手势统一:2D 画布 = 左键拖拽(探针 / 切点等自身交互)、滚轮 = 光标中心缩放、中键拖拽 = 平移(`core/canvas2d.ts`);3D = 左键/中键拖拽旋转、滚轮缩放、右键平移(`core/viewer3d.ts` + `core/controls.ts` 统一参数)。
+- 交互手势统一:2D 画布 = 左键拖拽(探针 / 切点等自身交互)、滚轮 = 光标中心缩放、中键拖拽 = 平移(`core/2d/canvas2d.ts`);3D = 左键/中键拖拽旋转、滚轮缩放、右键平移(`core/3d/viewer3d.ts` + `core/3d/controls.ts` 统一参数)。
 - **Transform Gizmo 拖拽体系 (2D & 3D 对偶规范)**:
   - **核心层**: `src/visualizations/core/common/interaction.ts` 统一定义交互常数(`FADE_DELAY_MS = 1200`, `FADE_DURATION_MS = 500`, `FADE_EASE_EXPONENT = 1.2`)、淡出动画解算器 `computeFadeOpacity` 与零跳变(Zero-jump)相对位移约束投影。
   - **视觉层级规范**:
@@ -41,14 +42,15 @@
     - **悬浮与聚焦明暗 (Focus & Dimming)**: 当前鼠标悬停或抓取的轴/平面/中心点强高亮(自发光 `1.0` / 亮金色 `#facc15` / 尺寸 `1.15x`)，其余未激活控件适度暗化，形成鲜明焦点。
   - **2D Transform Gizmo**: 通过 `useVectorDrag` + `core/2d/plot2d.ts` 的 `drawDragGizmo` 实现，支持 `"free"`(自由平面拖动)、`"axes"`(XY 坐标轴双向箭头)与 `"directions"`(自定义子空间/切线方向箭头与 Badge)。
   - **3D Transform Gizmo**: 通过 `core/3d/gizmo3d.ts` 的 `createTransformGizmo3D` + `attachGizmo3D` 实现，支持 `"volume"`(自由空间 3 轴箭头 + 3 平面色块 + 中心球体)与 `"surface"`(曲面约束点 + XY 平面色块 + $z=f(x,y)$ 自动吸附)。
-- 2D 画布默认等比例轴(`canvas2d` 的 `equalScale` 默认开启,无 UI 开关):视图恒为画布等比的居中矩形,xy 每单位像素相同,请求区域完整可见;缩放按同一系数作用于两轴,平移/尺寸变化保持比例。非等比(`equalScale: false`)仅作内部回退,当前无 demo 使用。
-- 3D 交互统一走共享层:`core/viewer3d.ts`(renderer/camera/controls/resize/主题/清理)与 `core/3d/gizmo3d.ts` / `core/3d/drag3d.ts`(raycast 拖拽,拖拽时禁用 controls);3D 场景的坐标由 `core/3d/coords.ts` 的 `mathToWorld` 唯一映射。
+- 2D 画布默认等比例轴(`core/2d/canvas2d.ts` 的 `equalScale` 默认开启,无 UI 开关):视图恒为画布等比的居中矩形,xy 每单位像素相同,请求区域完整可见;缩放按同一系数作用于两轴,平移/尺寸变化保持比例。非等比(`equalScale: false`)仅作内部回退,当前无 demo 使用。
+- 3D 交互统一走共享层:`core/3d/viewer3d.ts`(renderer/camera/controls/resize/主题/清理)与 `core/3d/gizmo3d.ts` / `core/3d/drag3d.ts`(raycast 拖拽,拖拽时禁用 controls);3D 场景的坐标由 `core/3d/coords.ts` 的 `mathToWorld` 唯一映射。
 - 每个 demo 自带"坐标轴"开关(默认开启):2D 用 `drawAxes`(含刻度 / 网格),3D 用 `core/3d/axes3d.ts` 的彩色轴线组(x 红 / y 绿 / z 蓝),scene API 提供 `setAxesVisible(v)`。
 - 交互区增强:每个 demo 由 `ExpandableDemo` 包裹,右上角"展开"进入伪全屏固定浮层(非 Fullscreen API),× 关闭恢复;同一实例状态保留;画布高度用 CSS 变量 `--demo-height`(默认 2D 20rem / 3D 28rem,展开 70vh)。
-  - **CanvasToolbar 放置规范（严防 UI 重叠）**:
-    - `<CanvasToolbar>` **必须且只能**作为 Canvas 画布容器（具备 `relative overflow-hidden` 类）的**直接子元素**，严禁放置在外部的 Card/Flex 顶层容器中；
-    - 画布容器高度必须绑定 `h-[var(--demo-height,28rem)]`（2D 为 `20rem`），确保 S/M/L 预设与拖拽缩放正常工作；
-    - 严禁在 Demo 顶部控制栏自制重复的“复位”或“关闭/全屏”按钮，统一由 `CanvasToolbar`（画布视野复位 + 展开）与 `ExpandableDemo`（全局模态关闭）分别承载。
+  - **CanvasToolbar 与视口高度/展开规范**:
+    - `<CanvasToolbar>` **必须且只能**作为 Canvas 画布容器（具备 `relative overflow-hidden` 类）的**直接子元素**，统一承载「↺ 复位」视野功能；
+    - 画布容器高度绑定 `h-[var(--demo-height,20rem)]`（3D/机箱为 `28rem`）；
+    - **视口高度控制与自适应**: 画布底部横条（`CanvasResizer`）支持**双击恢复自适应高度**与**按住上下拖拽进入手动固定高度**（自适应态为半透明虚线条，手动态为主题色强调实线并悬停展示 px 数值与重置提示）；
+    - **展开全屏按钮**: 统一置于外层组件卡片/视窗标题栏右上角（如 `KdeWindowShell` 头部或 `ExpandableDemo` 外层），与画布内部视口控制解耦。
   - **选项卡与预设选择控件规范（CapsuleTabs & PresetSelector）**:
     - **严禁裸写切换按钮**: 严禁在组件内部使用裸 `<button>` 配合手写背景色（如 `bg-accent text-accent-foreground` 等）自制多选一切换控件，深浅主题下极易发生文字发虚、对比度失衡或视觉割裂；
     - **CapsuleTabs 尺寸与层级规范**:

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import CanvasToolbar from "../framework/CanvasToolbar";
+import CanvasResizer from "../framework/CanvasResizer";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import PresetSelector from "../framework/PresetSelector";
 
 // ============================================================================
@@ -238,13 +239,14 @@ const VIEW_OPTIONS = [
   { id: "lsp", label: "LSP 与函数子类型验证 (LSP & Function Subtyping)" },
   { id: "polarity", label: "极性符号代数推导 (Polarity Calculus)" },
   { id: "safety", label: "内存安全与破坏沙盒 (Safety & Pitfall Sandbox)" },
+  { id: "variance_matrix", label: "四大语言型变矩阵全景 (Variance Matrix)" },
 ];
 
 export default function SubtypingVarianceDiagram() {
   const [activePresetId, setActivePresetId] = useState<string>("fn_subtyping");
-  const [viewMode, setViewMode] = useState<"lsp" | "polarity" | "safety">(
-    "lsp",
-  );
+  const [viewMode, setViewMode] = useState<
+    "lsp" | "polarity" | "safety" | "variance_matrix"
+  >("lsp");
   const [activeAssignmentType, setActiveAssignmentType] = useState<
     "valid" | "invalid"
   >("valid");
@@ -252,6 +254,8 @@ export default function SubtypingVarianceDiagram() {
   const preset = PRESETS.find((p) => p.id === activePresetId) ?? PRESETS[0];
 
   const handleReset = () => {
+    setActivePresetId("fn_subtyping");
+    setViewMode("lsp");
     setActiveAssignmentType("valid");
   };
 
@@ -261,213 +265,378 @@ export default function SubtypingVarianceDiagram() {
   };
 
   return (
-    <ExpandableDemo id="subtyping-variance-sandbox">
-      <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
-        {/* Header */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              子类型与型变（Subtyping & Variance）交互探针
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              ✨ <strong>逆变入参与协变出参、极性代数与可变内存防线</strong>
-              ：单步探究里氏替换（LSP）与物理内存安全之间的深邃张力
-            </p>
-          </div>
-        </div>
-
-        {/* View Mode Switcher */}
-        <div className="mb-4 overflow-x-auto pb-1">
-          <CapsuleTabs
-            onChange={(val) =>
-              setViewMode(val as "lsp" | "polarity" | "safety")
-            }
-            options={VIEW_OPTIONS}
-            value={viewMode}
-          />
-        </div>
-
-        {/* Preset Selector */}
-        <div className="mb-4">
-          <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            精选子类型公理与型变工程预设：
-          </div>
-          <PresetSelector
-            onChange={handlePresetChange}
-            options={PRESETS.map((p) => ({
-              id: p.id,
-              label: p.label,
-              description: p.desc,
-            }))}
-            value={activePresetId}
-          />
-        </div>
-
-        {/* Axiom Rule Banner */}
-        <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              形式化公理规则 (Formal Subtyping Rule)：
-            </span>
-            <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
-              {preset.label}
-            </span>
-          </div>
-          <div className="mt-3 flex items-center justify-center overflow-x-auto py-2">
-            <div className="font-mono text-sm font-bold text-indigo-700 dark:text-indigo-300">
-              <InlineMath tex={preset.ruleTex} />
-            </div>
-          </div>
-        </div>
-
-        {/* Viewport Container with CanvasToolbar */}
-        <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
-          <CanvasToolbar onReset={handleReset} />
-
-          {/* Stepper / Toggle Toolbar in LSP Mode */}
-          {viewMode === "lsp" && (
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
-                    activeAssignmentType === "valid"
-                      ? "border border-emerald-500 bg-emerald-600 text-white shadow-sm"
-                      : "border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700"
-                  }`}
-                  onClick={() => setActiveAssignmentType("valid")}
-                  type="button"
-                >
-                  ✅ 合法替换 (LSP Subtype)
-                </button>
-                <button
-                  className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
-                    activeAssignmentType === "invalid"
-                      ? "border border-rose-500 bg-rose-600 text-white shadow-sm"
-                      : "border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700"
-                  }`}
-                  onClick={() => setActiveAssignmentType("invalid")}
-                  type="button"
-                >
-                  ❌ 非法替换 (Rejected Subtype)
-                </button>
+    <AutoMath>
+      <ExpandableDemo id="subtyping-variance-sandbox">
+        <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
+          {/* Header */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                子类型与型变（Subtyping & Variance）交互探针
               </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                ✨ <strong>逆变入参与协变出参、极性代数与可变内存防线</strong>
+                ：单步探究里氏替换（LSP）与物理内存安全之间的深邃张力
+              </p>
+            </div>
+          </div>
 
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                    activeAssignmentType === "valid"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                      : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                  }`}
-                >
-                  {activeAssignmentType === "valid"
-                    ? "通过类型检查"
-                    : "拦截类型错误"}
-                </span>
+          {/* View Mode Switcher */}
+          <div className="mb-4 overflow-x-auto pb-1">
+            <CapsuleTabs
+              onChange={(val) =>
+                setViewMode(
+                  val as "lsp" | "polarity" | "safety" | "variance_matrix",
+                )
+              }
+              options={VIEW_OPTIONS}
+              value={viewMode}
+            />
+          </div>
+
+          {/* Preset Selector */}
+          <div className="mb-4">
+            <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              精选子类型公理与型变工程预设：
+            </div>
+            <PresetSelector
+              onChange={handlePresetChange}
+              options={PRESETS.map((p) => ({
+                id: p.id,
+                label: p.label,
+                description: p.desc,
+              }))}
+              value={activePresetId}
+            />
+          </div>
+
+          {/* Axiom Rule Banner */}
+          <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                形式化公理规则 (Formal Subtyping Rule)：
+              </span>
+              <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                {preset.label}
+              </span>
+            </div>
+            <div className="mt-3 flex items-center justify-center overflow-x-auto py-2">
+              <div className="font-mono text-sm font-bold text-indigo-700 dark:text-indigo-300">
+                {`$${preset.ruleTex}$`}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Main View Area */}
-          <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
+          {/* Viewport Container with CanvasToolbar */}
+          <div className="relative mb-5 flex h-[var(--demo-height,28rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
+            <CanvasToolbar onReset={handleReset} />
+
+            {/* Stepper / Toggle Toolbar in LSP Mode */}
             {viewMode === "lsp" && (
-              <div className="space-y-4 py-2">
-                {/* Assignment Display */}
-                <div className="flex items-center justify-center overflow-x-auto px-4 py-2">
-                  <div className="rounded-2xl border border-slate-700/60 bg-slate-800/60 px-6 py-4 shadow-xl backdrop-blur-md">
-                    <div className="font-mono text-sm font-bold text-slate-100 sm:text-base">
-                      <InlineMath
-                        tex={
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
+                      activeAssignmentType === "valid"
+                        ? "border border-emerald-500 bg-emerald-600 text-white shadow-sm"
+                        : "border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700"
+                    }`}
+                    onClick={() => setActiveAssignmentType("valid")}
+                    type="button"
+                  >
+                    ✅ 合法替换 (LSP Subtype)
+                  </button>
+                  <button
+                    className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
+                      activeAssignmentType === "invalid"
+                        ? "border border-rose-500 bg-rose-600 text-white shadow-sm"
+                        : "border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700"
+                    }`}
+                    onClick={() => setActiveAssignmentType("invalid")}
+                    type="button"
+                  >
+                    ❌ 非法替换 (Rejected Subtype)
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                      activeAssignmentType === "valid"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                        : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                    }`}
+                  >
+                    {activeAssignmentType === "valid"
+                      ? "通过类型检查"
+                      : "拦截类型错误"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Main View Area */}
+            <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
+              {viewMode === "lsp" && (
+                <div className="space-y-4 py-2">
+                  {/* Assignment Display */}
+                  <div className="flex items-center justify-center overflow-x-auto px-4 py-2">
+                    <div className="rounded-2xl border border-slate-700/60 bg-slate-800/60 px-6 py-4 shadow-xl backdrop-blur-md">
+                      <div className="font-mono text-sm font-bold text-slate-100 sm:text-base">
+                        {`$${
                           activeAssignmentType === "valid"
                             ? preset.validAssignmentTex
                             : preset.invalidAssignmentTex
-                        }
-                      />
+                        }$`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Explanation Banner */}
+                  <div
+                    className={`mx-auto max-w-xl rounded-xl p-3.5 text-xs text-left leading-relaxed ${
+                      activeAssignmentType === "valid"
+                        ? "border border-emerald-500/30 bg-emerald-950/20 text-emerald-200"
+                        : "border border-rose-500/30 bg-rose-950/20 text-rose-200"
+                    }`}
+                  >
+                    {activeAssignmentType === "valid"
+                      ? preset.validReason
+                      : preset.invalidReason}
+                  </div>
+                </div>
+              )}
+
+              {viewMode === "polarity" && (
+                <div className="space-y-4 py-3 text-center">
+                  <div className="text-xs font-semibold text-amber-400">
+                    极性符号运算法则 (Polarity Multiplication)
+                  </div>
+
+                  <div className="mx-auto max-w-xl rounded-2xl border border-amber-600/40 bg-amber-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
+                    <div className="mb-2 font-mono text-xs text-amber-200">
+                      {preset.codeSnippet}
+                    </div>
+                    <div className="mt-3 text-xs leading-relaxed text-slate-300">
+                      💡 <strong>符号相乘推演</strong>：
+                      {preset.polarityExplanation}
                     </div>
                   </div>
                 </div>
+              )}
 
-                {/* Explanation Banner */}
-                <div
-                  className={`mx-auto max-w-xl rounded-xl p-3.5 text-xs text-left leading-relaxed ${
-                    activeAssignmentType === "valid"
-                      ? "border border-emerald-500/30 bg-emerald-950/20 text-emerald-200"
-                      : "border border-rose-500/30 bg-rose-950/20 text-rose-200"
-                  }`}
-                >
-                  {activeAssignmentType === "valid"
-                    ? preset.validReason
-                    : preset.invalidReason}
-                </div>
-              </div>
-            )}
-
-            {viewMode === "polarity" && (
-              <div className="space-y-4 py-3 text-center">
-                <div className="text-xs font-semibold text-amber-400">
-                  极性符号运算法则 (Polarity Multiplication)
-                </div>
-
-                <div className="mx-auto max-w-xl rounded-2xl border border-amber-600/40 bg-amber-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
-                  <div className="mb-2 font-mono text-xs text-amber-200">
-                    {preset.codeSnippet}
-                  </div>
-                  <div className="mt-3 text-xs leading-relaxed text-slate-300">
-                    💡 <strong>符号相乘推演</strong>：
-                    {preset.polarityExplanation}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {viewMode === "safety" && (
-              <div className="space-y-4 py-3 text-center">
-                <div className="text-xs font-semibold text-sky-400">
-                  物理内存安全沙盒与运行时行为
-                </div>
-
-                <div className="mx-auto max-w-xl rounded-2xl border border-sky-600/40 bg-sky-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
-                  <div className="flex items-center justify-between border-b border-sky-800/40 pb-2">
-                    <span className="text-xs font-bold text-sky-300">
-                      目标系统：{preset.safetySandbox.language}
-                    </span>
-                    <span
-                      className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
-                        preset.safetySandbox.isSafe
-                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                          : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                      }`}
-                    >
-                      {preset.safetySandbox.isSafe
-                        ? "🛡️ 静态内存安全"
-                        : "💥 破坏类型安全性"}
-                    </span>
+              {viewMode === "safety" && (
+                <div className="space-y-4 py-3 text-center">
+                  <div className="text-xs font-semibold text-sky-400">
+                    物理内存安全沙盒与运行时行为
                   </div>
 
-                  <div className="mt-3 font-mono text-xs text-slate-200 whitespace-pre-wrap bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-                    {preset.safetySandbox.scenario}
-                  </div>
+                  <div className="mx-auto max-w-xl rounded-2xl border border-sky-600/40 bg-sky-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
+                    <div className="flex items-center justify-between border-b border-sky-800/40 pb-2">
+                      <span className="text-xs font-bold text-sky-300">
+                        目标系统：{preset.safetySandbox.language}
+                      </span>
+                      <span
+                        className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                          preset.safetySandbox.isSafe
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                            : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                        }`}
+                      >
+                        {preset.safetySandbox.isSafe
+                          ? "🛡️ 静态内存安全"
+                          : "💥 破坏类型安全性"}
+                      </span>
+                    </div>
 
-                  <div className="mt-3 text-[11px] leading-relaxed text-slate-400">
-                    💡 <strong>真实影响分析</strong>：
-                    {preset.safetySandbox.runtimeEffect}
+                    <div className="mt-3 font-mono text-xs text-slate-200 whitespace-pre-wrap bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                      {preset.safetySandbox.scenario}
+                    </div>
+
+                    <div className="mt-3 text-[11px] leading-relaxed text-slate-400">
+                      💡 <strong>真实影响分析</strong>：
+                      {preset.safetySandbox.runtimeEffect}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {viewMode === "variance_matrix" && (
+                <div className="flex-1 flex flex-col gap-3 py-1 overflow-y-auto text-left text-xs">
+                  <div className="text-center max-w-xl mx-auto py-0.5">
+                    <div className="text-xs font-bold text-indigo-400">
+                      四大主流语言型变（Covariance / Contravariance /
+                      Invariance）全景矩阵
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      从 C# 声明点型变、TypeScript 结构妥协，到 Rust
+                      生命周期防线与 C++ 模板不变性
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* C# */}
+                    <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between pb-1.5 border-b border-purple-500/20 mb-1.5 font-bold text-purple-300">
+                          <span>C#：声明点型变 (out / in)</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-200">
+                            Declaration-site
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-[11px] text-slate-300">
+                          <p>
+                            <strong className="text-purple-200">
+                              协变 (out T)
+                            </strong>
+                            ：只充当返回值，如{" "}
+                            <code>IEnumerable&lt;out T&gt;</code>、
+                            <code>Func&lt;out R&gt;</code>；
+                          </p>
+                          <p>
+                            <strong className="text-purple-200">
+                              逆变 (in T)
+                            </strong>
+                            ：只充当入参，如{" "}
+                            <code>IComparable&lt;in T&gt;</code>、
+                            <code>Action&lt;in T&gt;</code>；
+                          </p>
+                          <p>
+                            <strong className="text-purple-200">不变</strong>
+                            ：普通类、结构体、读写接口；数组历史性保留可变协变（带运行时检查）。
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-[10px] font-mono text-purple-400 border-t border-purple-500/20 pt-1">
+                        IEnumerable&lt;Dog&gt; 可以安全赋给
+                        IEnumerable&lt;Animal&gt;
+                      </div>
+                    </div>
+
+                    {/* TypeScript */}
+                    <div className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between pb-1.5 border-b border-blue-500/20 mb-1.5 font-bold text-blue-300">
+                          <span>TypeScript：结构化推导与双向协变</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-200">
+                            Structural Inferred
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-[11px] text-slate-300">
+                          <p>
+                            <strong className="text-blue-200">协变</strong>
+                            ：对象只读属性、函数返回值；
+                          </p>
+                          <p>
+                            <strong className="text-blue-200">逆变</strong>
+                            ：开启 <code>--strictFunctionTypes</code>{" "}
+                            后的函数参数；
+                          </p>
+                          <p>
+                            <strong className="text-blue-200">
+                              双向协变 (Bivariant)
+                            </strong>
+                            ：对象方法形参默认双向协变，以兼容{" "}
+                            <code>addEventListener</code> 等 DOM 历史代码。
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-[10px] font-mono text-blue-400 border-t border-blue-500/20 pt-1">
+                        (x: Animal) =&gt; Dog 可以赋给 (x: Dog) =&gt; Animal
+                      </div>
+                    </div>
+
+                    {/* Rust */}
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between pb-1.5 border-b border-emerald-500/20 mb-1.5 font-bold text-emerald-300">
+                          <span>Rust：生命周期型变与内存安全</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200">
+                            Lifetime Subtyping
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-[11px] text-slate-300">
+                          <p>
+                            <strong className="text-emerald-200">协变</strong>
+                            ：不可变引用 <code>&amp;'a T</code> 对{" "}
+                            <code>'a</code> 和 <code>T</code> 均协变；
+                          </p>
+                          <p>
+                            <strong className="text-emerald-200">
+                              严格不变
+                            </strong>
+                            ：<code>&amp;'a mut T</code> 对 <code>'a</code>{" "}
+                            协变，但对 <code>T</code>{" "}
+                            严格不变（消灭悬垂指针！）；
+                          </p>
+                          <p>
+                            <strong className="text-emerald-200">逆变</strong>
+                            ：函数指针 <code>fn(T)</code> 对入参 <code>T</code>{" "}
+                            逆变；可用 <code>PhantomData&lt;fn(T)&gt;</code>{" "}
+                            标记。
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-[10px] font-mono text-emerald-400 border-t border-emerald-500/20 pt-1">
+                        'static 可以收窄为短生命周期 'a（长寿命可假装短寿命）
+                      </div>
+                    </div>
+
+                    {/* C++ */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between pb-1.5 border-b border-amber-500/20 mb-1.5 font-bold text-amber-300">
+                          <span>C++：模板不变性与虚函数协变</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200">
+                            Template Invariance
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-[11px] text-slate-300">
+                          <p>
+                            <strong className="text-amber-200">协变返回</strong>
+                            ：虚函数派生重写允许返回更具体的派生类指针{" "}
+                            <code>Derived*</code>；
+                          </p>
+                          <p>
+                            <strong className="text-amber-200">
+                              入参拒绝逆变
+                            </strong>
+                            ：派生类改写参数类型直接判定为重载隐藏（Method
+                            Hiding）；
+                          </p>
+                          <p>
+                            <strong className="text-amber-200">
+                              模板严格不变
+                            </strong>
+                            ：<code>vector&lt;Dog*&gt;</code> 与{" "}
+                            <code>vector&lt;Animal*&gt;</code>{" "}
+                            绝无继承关系；智能指针靠转换构造函数模拟。
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-[10px] font-mono text-amber-400 border-t border-amber-500/20 pt-1">
+                        std::unique_ptr&lt;Derived&gt; 通过移动转换构造转移给
+                        Base
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
+          </div>
+
+          {/* Theoretical Insight Card */}
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
+            <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
+              🔍 子类型与型变深邃理论洞见 (Subtyping & Variance Insight)
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
+              {preset.insight}
+            </p>
           </div>
         </div>
-
-        {/* Theoretical Insight Card */}
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
-          <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
-            🔍 子类型与型变深邃理论洞见 (Subtyping & Variance Insight)
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
-            {preset.insight}
-          </p>
-        </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

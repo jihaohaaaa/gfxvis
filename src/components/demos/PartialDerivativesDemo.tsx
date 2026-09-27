@@ -14,7 +14,7 @@ import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import Checkbox from "../framework/Checkbox";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import { useViewer3D } from "../framework/useViewer3D";
 
 const MODE_OPTIONS: { id: FixMode; label: string }[] = [
@@ -108,62 +108,55 @@ export default function PartialDerivativesDemo({
     mode === "x" ? SURFACE_FN.fy(fixed, free) : SURFACE_FN.fx(free, fixed);
 
   return (
-    <ExpandableDemo id="partial-derivatives" height={height}>
-      <div className="space-y-3">
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar />
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <CapsuleTabs
-              options={MODE_OPTIONS}
-              value={mode}
-              onChange={(id: FixMode) => setMode(id)}
-              label="固定:"
-            />
+    <AutoMath>
+      <ExpandableDemo id="partial-derivatives" height={height}>
+        <div className="space-y-3">
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Checkbox
-              label="曲面透明"
-              checked={surfaceTransparent}
-              onChange={setSurfaceTransparent}
-            />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <CapsuleTabs
+                options={MODE_OPTIONS}
+                value={mode}
+                onChange={(id: FixMode) => setMode(id)}
+                label="固定:"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Checkbox
+                label="曲面透明"
+                checked={surfaceTransparent}
+                onChange={setSurfaceTransparent}
+              />
+            </div>
           </div>
-        </div>
-        <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
-          <p>
-            <InlineMath
-              tex={`f(${fixed.toFixed(2)}, ${free.toFixed(2)}) = ${value.toFixed(3)}`}
-            />
-          </p>
-          {mode === "x" ? (
+          <div className="grid gap-2 text-sm text-muted sm:grid-cols-3">
             <p>
-              <InlineMath
-                tex={`\\frac{\\partial f}{\\partial y}(${fixed.toFixed(2)}, ${free.toFixed(2)}) = ${slope.toFixed(3)}`}
-              />
+              {`$f(${fixed.toFixed(2)}, ${free.toFixed(2)}) = ${value.toFixed(3)}$`}
             </p>
-          ) : (
+            {mode === "x" ? (
+              <p>
+                {`$\\frac{\\partial f}{\\partial y}(${fixed.toFixed(2)}, ${free.toFixed(2)}) = ${slope.toFixed(3)}$`}
+              </p>
+            ) : (
+              <p>
+                {`$\\frac{\\partial f}{\\partial x}(${free.toFixed(2)}, ${fixed.toFixed(2)}) = ${slope.toFixed(3)}$`}
+              </p>
+            )}
             <p>
-              <InlineMath
-                tex={`\\frac{\\partial f}{\\partial x}(${free.toFixed(2)}, ${fixed.toFixed(2)}) = ${slope.toFixed(3)}`}
-              />
+              自由变量 {`$${mode === "x" ? "y" : "x"} = ${free.toFixed(2)}$`}
             </p>
-          )}
-          <p>
-            自由变量{" "}
-            <InlineMath
-              tex={`${mode === "x" ? "y" : "x"} = ${free.toFixed(2)}`}
-            />
+          </div>
+          <p className="text-xs text-muted">
+            拖拽蓝色切片平面改变固定值,拖拽红色圆点沿切片曲线移动(青色为切线);曲面默认半透明便于观察切片曲线与切线。
+            左键/中键旋转 · 滚轮缩放 · 右键平移。
           </p>
         </div>
-        <p className="text-xs text-muted">
-          拖拽蓝色切片平面改变固定值,拖拽红色圆点沿切片曲线移动(青色为切线);曲面默认半透明便于观察切片曲线与切线。
-          左键/中键旋转 · 滚轮缩放 · 右键平移。
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

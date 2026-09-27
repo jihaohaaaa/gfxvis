@@ -1,4 +1,33 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+async function runArticleSample(
+  page: Page,
+  languageLabel: string,
+  expectedOutput: string[],
+) {
+  await page.goto(
+    "/posts/type-systems/interactive-polyglot-code-execution-in-articles",
+  );
+
+  const playground = page
+    .locator("div.my-6")
+    .filter({ hasText: languageLabel })
+    .first();
+  await expect(playground).toBeVisible();
+  await playground.scrollIntoViewIfNeeded();
+  await expect(playground.locator(".cm-editor")).toBeVisible();
+  await playground.getByRole("button", { name: /运行代码/ }).click();
+
+  await expect(
+    playground.getByText("执行成功 (Exit: 0)", { exact: true }),
+  ).toBeVisible({ timeout: 15000 });
+
+  const output = playground.locator("pre").last();
+  for (const text of expectedOutput) {
+    await expect(output).toContainText(text);
+  }
+  await expect(output).not.toContainText(/ENOENT|环境缺失/);
+}
 
 test.describe("CodePlayground (CodeMirror 6) 交互与执行测试", () => {
   let consoleErrors: string[] = [];
@@ -59,6 +88,24 @@ test.describe("CodePlayground (CodeMirror 6) 交互与执行测试", () => {
     await expect(outputConsole).toBeVisible({ timeout: 10000 });
   });
 
+  test("TypeScript 示例通过本地 TSX CLI 成功运行", async ({ page }) => {
+    await runArticleSample(page, "TypeScript (TSX)", [
+      "中序升序遍历结果:",
+      "5, 17, 23, 42, 67, 89, 100",
+    ]);
+  });
+
+  test("Rust 示例能探测 rustc 并编译运行", async ({ page }) => {
+    await runArticleSample(page, "Rust", ["初始向量:", "模长 = 5"]);
+  });
+
+  test("C++ 示例能探测编译器并编译运行", async ({ page }) => {
+    await runArticleSample(page, "C++", [
+      "10! = 3628800",
+      "1^2 + ... + 10^2 = 385",
+    ]);
+  });
+
   test("C++ 预处理指令 #include 具有鲜明的高亮着色（红/蓝区分）", async ({
     page,
   }) => {
@@ -67,11 +114,11 @@ test.describe("CodePlayground (CodeMirror 6) 交互与执行测试", () => {
     );
     await page.waitForLoadState("domcontentloaded");
 
-    // 找到包含 C++ 20 的 CodePlayground 组件
+    // 找到包含 C++ 的 CodePlayground 组件
     const cppPlayground = page
       .locator("div.my-6")
       .filter({
-        hasText: "C++ 20",
+        hasText: "C++",
       })
       .first();
     await expect(cppPlayground).toBeVisible();

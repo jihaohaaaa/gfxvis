@@ -58,7 +58,7 @@ import "katex/dist/katex.min.css";
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | 直接依赖降级到 katex 0.16.47                | 可行但退回旧版;且这只是绕开问题                                                                                |
 | pnpm override 强制 rehype-katex 用 0.18.2   | 超出其声明范围(`^0.16.0`),无人测试,风险高                                                                      |
-| 换成 rehype-mathjax(MathJax)                | 要换渲染器,与 demo 里 InlineMath 的 KaTeX 视觉不统一                                                           |
+| 换成 rehype-mathjax(MathJax)                | 要换渲染器,与 demo 里 AutoMath 的 KaTeX 视觉不统一                                                             |
 | **自写 remark 插件调 katex 0.18.2(已采用)** | rehype-katex 全部实现仅 127 行,核心就是 `katex.renderToString` + 替换节点;自写后渲染器与 CSS 同版本,零停更依赖 |
 
 ## 实现方式(现状)

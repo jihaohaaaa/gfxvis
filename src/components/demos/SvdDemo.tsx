@@ -8,7 +8,7 @@ import React, {
 import { useCanvas2D } from "../framework/useCanvas2D";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ParamSlider from "../framework/ParamSlider";
 import PresetSelector from "../framework/PresetSelector";
@@ -448,439 +448,396 @@ export default function SvdDemo({ height }: { height?: string }) {
   const finalProbeAngle = Math.atan2(finalProbeY, finalProbeX);
 
   return (
-    <ExpandableDemo id="singular-value-decomposition" height={height}>
-      <div className="space-y-4">
-        {/* Preset Selector */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <PresetSelector
-            label="预设矩阵:"
-            options={PRESETS}
-            value={presetKey}
-            onChange={(key) => {
-              handlePresetChange(key);
-              redraw();
-            }}
-          />
-        </div>
-
-        {/* Step Capsule Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <CapsuleTabs
-            options={STEPS}
-            value={currentStepId}
-            onChange={(id) => {
-              setIsPlaying(false);
-              const found = STEPS.find((s) => s.id === id);
-              if (found) {
-                setStageProgress(found.stepVal);
+    <AutoMath>
+      <ExpandableDemo id="singular-value-decomposition" height={height}>
+        <div className="space-y-4">
+          {/* Preset Selector */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <PresetSelector
+              label="预设矩阵:"
+              options={PRESETS}
+              value={presetKey}
+              onChange={(key) => {
+                handlePresetChange(key);
                 redraw();
-              }
-            }}
-          />
-        </div>
-
-        {/* Canvas Section */}
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar onReset={resetBounds} />
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 h-full w-full cursor-crosshair"
-          />
-        </div>
-
-        {/* Stage Progress Slider & Controls */}
-        <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={() => {
-                if (stageProgress >= 3) setStageProgress(0);
-                setIsPlaying(!isPlaying);
               }}
-              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-md transition-colors flex items-center gap-2"
-            >
-              {isPlaying ? "⏸ 暂停动画" : "▶ 连续播放三阶段"}
-            </button>
-            <span className="text-xs text-muted font-mono">
-              变换进度: {stageProgress.toFixed(2)} / 3.00
-            </span>
+            />
           </div>
 
-          <ParamSlider
-            label="连续变换进度 (t: 0 ➔ 1 ➔ 2 ➔ 3)"
-            value={stageProgress}
-            min={0}
-            max={3}
-            step={0.02}
-            onChange={(val) => {
-              setIsPlaying(false);
-              setStageProgress(val);
-              redraw();
-            }}
-          />
-          <ParamSlider
-            label="探测向量角度 θ"
-            value={probeAngle}
-            min={0}
-            max={Math.PI * 2}
-            step={0.02}
-            onChange={(val) => {
-              setProbeAngle(val);
-              redraw();
-            }}
-          />
+          {/* Step Capsule Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CapsuleTabs
+              options={STEPS}
+              value={currentStepId}
+              onChange={(id) => {
+                setIsPlaying(false);
+                const found = STEPS.find((s) => s.id === id);
+                if (found) {
+                  setStageProgress(found.stepVal);
+                  redraw();
+                }
+              }}
+            />
+          </div>
 
-          {/* Probe Vector Live Transformation Card */}
-          <div className="mt-1 rounded-md border border-purple-500/30 bg-surface/80 p-3 space-y-2 text-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-1.5">
-              <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-500" />
-                探测向量实时变换追踪（紫色向量 <InlineMath tex="\mathbf{x}" />
-                ）：
+          {/* Canvas Section */}
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar onReset={resetBounds} />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full cursor-crosshair"
+            />
+          </div>
+
+          {/* Stage Progress Slider & Controls */}
+          <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (stageProgress >= 3) setStageProgress(0);
+                  setIsPlaying(!isPlaying);
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-md transition-colors flex items-center gap-2"
+              >
+                {isPlaying ? "⏸ 暂停动画" : "▶ 连续播放三阶段"}
+              </button>
+              <span className="text-xs text-muted font-mono">
+                变换进度: {stageProgress.toFixed(2)} / 3.00
+              </span>
+            </div>
+
+            <ParamSlider
+              label="连续变换进度 (t: 0 ➔ 1 ➔ 2 ➔ 3)"
+              value={stageProgress}
+              min={0}
+              max={3}
+              step={0.02}
+              onChange={(val) => {
+                setIsPlaying(false);
+                setStageProgress(val);
+                redraw();
+              }}
+            />
+            <ParamSlider
+              label="探测向量角度 θ"
+              value={probeAngle}
+              min={0}
+              max={Math.PI * 2}
+              step={0.02}
+              onChange={(val) => {
+                setProbeAngle(val);
+                redraw();
+              }}
+            />
+
+            {/* Probe Vector Live Transformation Card */}
+            <div className="mt-1 rounded-md border border-purple-500/30 bg-surface/80 p-3 space-y-2 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-1.5">
+                <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-500" />
+                  探测向量实时变换追踪（紫色向量 {"$\\mathbf{x}$"}
+                  ）：
+                </span>
+                <span className="text-[11px] text-muted font-mono">
+                  输入角{" "}
+                  {`$\\theta = ${probeAngle.toFixed(3)}\\text{ rad} = ${((probeAngle * 180) / Math.PI).toFixed(3)}^\\circ$`}
+                </span>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-3 text-[11px]">
+                {/* Box 1: Input Vector */}
+                <div className="p-2 rounded bg-surface/90 border border-border/60">
+                  <div className="font-semibold text-foreground mb-1">
+                    1. 原输入向量 {"$\\mathbf{x} \\in \\text{单位圆}$"}
+                  </div>
+                  <div className="my-1 text-ink text-center">
+                    {`$\\mathbf{x} = \\begin{pmatrix} \\cos \\theta \\\\ \\sin \\theta \\end{pmatrix} = \\begin{pmatrix} ${probeX.toFixed(3)} \\\\ ${probeY.toFixed(3)} \\end{pmatrix}$`}
+                  </div>
+                  <div className="text-muted text-[10px] mt-1 text-center font-mono">
+                    模长 ‖x‖ = 1.000 · 方向角{" "}
+                    {`$\\theta = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${probeY.toFixed(3)}, ${probeX.toFixed(3)}) = ${probeAngle.toFixed(3)}\\text{ rad} = ${((probeAngle * 180) / Math.PI).toFixed(3)}^\\circ$`}
+                  </div>
+                </div>
+
+                {/* Box 2: Current Transient Vector */}
+                <div className="p-2 rounded bg-surface/90 border border-purple-500/30">
+                  <div className="font-semibold text-purple-600 dark:text-purple-400 mb-1">
+                    2. 瞬时变换向量{" "}
+                    {`$\\mathbf{x}(t = ${stageProgress.toFixed(2)})$`}
+                  </div>
+                  <div className="my-1 text-ink text-center">
+                    {`$\\mathbf{x}(t) = \\begin{pmatrix} ${currentProbeX.toFixed(3)} \\\\ ${currentProbeY.toFixed(3)} \\end{pmatrix}$`}
+                  </div>
+                  <div className="text-muted text-[10px] mt-1 text-center font-mono">
+                    模长 = {currentProbeLen.toFixed(3)} · 瞬时角{" "}
+                    {`$\\phi(t) = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${currentProbeY.toFixed(3)}, ${currentProbeX.toFixed(3)}) = ${currentProbeAngle.toFixed(3)}\\text{ rad} = ${((currentProbeAngle * 180) / Math.PI).toFixed(3)}^\\circ$`}
+                  </div>
+                </div>
+
+                {/* Box 3: Final Image Vector */}
+                <div className="p-2 rounded bg-surface/90 border border-border/60">
+                  <div className="font-semibold text-foreground mb-1">
+                    3. 最终变换像向量 {"$A\\mathbf{x} \\in \\text{椭圆}$"}
+                  </div>
+                  <div className="my-1 text-ink text-center">
+                    {`$A\\mathbf{x} = \\begin{pmatrix} ${finalProbeX.toFixed(3)} \\\\ ${finalProbeY.toFixed(3)} \\end{pmatrix}$`}
+                  </div>
+                  <div className="text-muted text-[10px] mt-1 text-center font-mono">
+                    模长 = {finalProbeLen.toFixed(3)} · 像方向角{" "}
+                    {`$\\phi_{A\\mathbf{x}} = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${finalProbeY.toFixed(3)}, ${finalProbeX.toFixed(3)}) = ${finalProbeAngle.toFixed(3)}\\text{ rad} = ${((finalProbeAngle * 180) / Math.PI).toFixed(3)}^\\circ$`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Numerical SVD Breakdown */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="p-3 bg-surface-hover/50 rounded-lg border border-border text-center">
+              <div className="text-xs text-muted">第一奇异值 σ₁ (长半轴)</div>
+              <div className="text-base font-bold text-red-500 font-mono mt-1">
+                {svd.sigma1.toFixed(3)}
+              </div>
+              <div className="text-[11px] text-muted mt-0.5">主轴拉伸倍率</div>
+            </div>
+            <div className="p-3 bg-surface-hover/50 rounded-lg border border-border text-center">
+              <div className="text-xs text-muted">第二奇异值 σ₂ (短半轴)</div>
+              <div className="text-base font-bold text-emerald-500 font-mono mt-1">
+                {svd.sigma2.toFixed(3)}
+              </div>
+              <div className="text-[11px] text-muted mt-0.5">次轴拉伸倍率</div>
+            </div>
+            <div className="p-3 bg-surface-hover/50 rounded-lg border border-border text-center">
+              <div className="text-xs text-muted">条件数 κ(A) = σ₁ / σ₂</div>
+              <div className="text-base font-bold text-amber-500 font-mono mt-1">
+                {Number.isFinite(svd.conditionNumber)
+                  ? svd.conditionNumber.toFixed(3)
+                  : "∞ (退化奇异)"}
+              </div>
+              <div className="text-[11px] text-muted mt-0.5">
+                各向异性畸变度
+              </div>
+            </div>
+            <div className="p-3 bg-surface-hover/50 rounded-lg border border-border text-center">
+              <div className="text-xs text-muted">面积缩放 |det(A)| = σ₁σ₂</div>
+              <div className="text-base font-bold text-blue-500 font-mono mt-1">
+                {Math.abs(svd.detA).toFixed(3)}
+              </div>
+              <div className="text-[11px] text-muted mt-0.5">
+                椭圆面积 / 单位圆面积
+              </div>
+            </div>
+          </div>
+
+          {/* Full SVD Matrix Equation Card: A = U Sigma V^T */}
+          <div className="rounded-lg border border-border bg-surface-hover/50 p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
+              <span className="text-xs font-semibold text-foreground">
+                实时矩阵数值分解等式：
+                {"$A = U \\cdot \\Sigma \\cdot V^\\top$"}
               </span>
               <span className="text-[11px] text-muted font-mono">
-                输入角{" "}
-                <InlineMath
-                  tex={`\\theta = ${probeAngle.toFixed(3)}\\text{ rad} = ${((probeAngle * 180) / Math.PI).toFixed(3)}^\\circ`}
-                />
+                正交性校验: det(U) ={" "}
+                {(svd.u1[0] * svd.u2[1] - svd.u1[1] * svd.u2[0]).toFixed(3)},
+                det(V) = 1.000
               </span>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-3 text-[11px]">
-              {/* Box 1: Input Vector */}
-              <div className="p-2 rounded bg-surface/90 border border-border/60">
-                <div className="font-semibold text-foreground mb-1">
-                  1. 原输入向量{" "}
-                  <InlineMath tex="\mathbf{x} \in \text{单位圆}" />
-                </div>
-                <div className="my-1 text-ink text-center">
-                  <InlineMath
-                    tex={`\\mathbf{x} = \\begin{pmatrix} \\cos \\theta \\\\ \\sin \\theta \\end{pmatrix} = \\begin{pmatrix} ${probeX.toFixed(3)} \\\\ ${probeY.toFixed(3)} \\end{pmatrix}`}
-                  />
-                </div>
-                <div className="text-muted text-[10px] mt-1 text-center font-mono">
-                  模长 ‖x‖ = 1.000 · 方向角{" "}
-                  <InlineMath
-                    tex={`\\theta = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${probeY.toFixed(3)}, ${probeX.toFixed(3)}) = ${probeAngle.toFixed(3)}\\text{ rad} = ${((probeAngle * 180) / Math.PI).toFixed(3)}^\\circ`}
-                  />
-                </div>
-              </div>
-
-              {/* Box 2: Current Transient Vector */}
-              <div className="p-2 rounded bg-surface/90 border border-purple-500/30">
-                <div className="font-semibold text-purple-600 dark:text-purple-400 mb-1">
-                  2. 瞬时变换向量{" "}
-                  <InlineMath
-                    tex={`\\mathbf{x}(t = ${stageProgress.toFixed(2)})`}
-                  />
-                </div>
-                <div className="my-1 text-ink text-center">
-                  <InlineMath
-                    tex={`\\mathbf{x}(t) = \\begin{pmatrix} ${currentProbeX.toFixed(3)} \\\\ ${currentProbeY.toFixed(3)} \\end{pmatrix}`}
-                  />
-                </div>
-                <div className="text-muted text-[10px] mt-1 text-center font-mono">
-                  模长 = {currentProbeLen.toFixed(3)} · 瞬时角{" "}
-                  <InlineMath
-                    tex={`\\phi(t) = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${currentProbeY.toFixed(3)}, ${currentProbeX.toFixed(3)}) = ${currentProbeAngle.toFixed(3)}\\text{ rad} = ${((currentProbeAngle * 180) / Math.PI).toFixed(3)}^\\circ`}
-                  />
-                </div>
-              </div>
-
-              {/* Box 3: Final Image Vector */}
-              <div className="p-2 rounded bg-surface/90 border border-border/60">
-                <div className="font-semibold text-foreground mb-1">
-                  3. 最终变换像向量{" "}
-                  <InlineMath tex="A\mathbf{x} \in \text{椭圆}" />
-                </div>
-                <div className="my-1 text-ink text-center">
-                  <InlineMath
-                    tex={`A\\mathbf{x} = \\begin{pmatrix} ${finalProbeX.toFixed(3)} \\\\ ${finalProbeY.toFixed(3)} \\end{pmatrix}`}
-                  />
-                </div>
-                <div className="text-muted text-[10px] mt-1 text-center font-mono">
-                  模长 = {finalProbeLen.toFixed(3)} · 像方向角{" "}
-                  <InlineMath
-                    tex={`\\phi_{A\\mathbf{x}} = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${finalProbeY.toFixed(3)}, ${finalProbeX.toFixed(3)}) = ${finalProbeAngle.toFixed(3)}\\text{ rad} = ${((finalProbeAngle * 180) / Math.PI).toFixed(3)}^\\circ`}
-                  />
-                </div>
+            {/* Full Large Equation Display */}
+            <div className="overflow-x-auto py-2 flex items-center justify-center text-center">
+              <div className="inline-block text-ink text-sm sm:text-base font-medium">
+                {`$\\begin{pmatrix} ${matrix.a.toFixed(3)} & ${matrix.b.toFixed(3)} \\\\ ${matrix.c.toFixed(3)} & ${matrix.d.toFixed(3)} \\end{pmatrix} = \\underbrace{\\begin{pmatrix} ${svd.u1[0].toFixed(3)} & ${svd.u2[0].toFixed(3)} \\\\ ${svd.u1[1].toFixed(3)} & ${svd.u2[1].toFixed(3)} \\end{pmatrix}}_{U \\text{ (左奇异矩阵)}} \\cdot \\underbrace{\\begin{pmatrix} ${svd.sigma1.toFixed(3)} & 0.000 \\\\ 0.000 & ${svd.sigma2.toFixed(3)} \\end{pmatrix}}_{\\Sigma \\text{ (奇异值对角阵)}} \\cdot \\underbrace{\\begin{pmatrix} ${svd.v1[0].toFixed(3)} & ${svd.v1[1].toFixed(3)} \\\\ ${svd.v2[0].toFixed(3)} & ${svd.v2[1].toFixed(3)} \\end{pmatrix}}_{V^\\top \\text{ (右奇异基转置)}}$`}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Numerical SVD Breakdown */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-3 bg-surface-hover/50 rounded-lg border border-border text-center">
-            <div className="text-xs text-muted">第一奇异值 σ₁ (长半轴)</div>
-            <div className="text-base font-bold text-red-500 font-mono mt-1">
-              {svd.sigma1.toFixed(3)}
-            </div>
-            <div className="text-[11px] text-muted mt-0.5">主轴拉伸倍率</div>
-          </div>
-          <div className="p-3 bg-surface-hover/50 rounded-lg border border-border text-center">
-            <div className="text-xs text-muted">第二奇异值 σ₂ (短半轴)</div>
-            <div className="text-base font-bold text-emerald-500 font-mono mt-1">
-              {svd.sigma2.toFixed(3)}
-            </div>
-            <div className="text-[11px] text-muted mt-0.5">次轴拉伸倍率</div>
-          </div>
-          <div className="p-3 bg-surface-hover/50 rounded-lg border border-border text-center">
-            <div className="text-xs text-muted">条件数 κ(A) = σ₁ / σ₂</div>
-            <div className="text-base font-bold text-amber-500 font-mono mt-1">
-              {Number.isFinite(svd.conditionNumber)
-                ? svd.conditionNumber.toFixed(3)
-                : "∞ (退化奇异)"}
-            </div>
-            <div className="text-[11px] text-muted mt-0.5">各向异性畸变度</div>
-          </div>
-          <div className="p-3 bg-surface-hover/50 rounded-lg border border-border text-center">
-            <div className="text-xs text-muted">面积缩放 |det(A)| = σ₁σ₂</div>
-            <div className="text-base font-bold text-blue-500 font-mono mt-1">
-              {Math.abs(svd.detA).toFixed(3)}
-            </div>
-            <div className="text-[11px] text-muted mt-0.5">
-              椭圆面积 / 单位圆面积
-            </div>
-          </div>
-        </div>
+            {/* 3-Column Breakdown Details with Specific Vectors u and v */}
+            <div className="grid gap-3 pt-2 border-t border-border/60 text-xs sm:grid-cols-3">
+              {/* Column 1: U & u1, u2 */}
+              <div className="p-3 rounded-md bg-surface/60 border border-border/50 space-y-2">
+                <div className="font-semibold text-foreground flex items-center justify-between">
+                  <span>
+                    左奇异矩阵 {"$U = [\\mathbf{u}_1, \\mathbf{u}_2]$"}
+                  </span>
+                  <span className="text-[10px] text-blue-500 font-mono">
+                    输出正交基 (旋转)
+                  </span>
+                </div>
+                <div className="text-ink text-center">
+                  {`$U = \\begin{pmatrix} ${svd.u1[0].toFixed(3)} & ${svd.u2[0].toFixed(3)} \\\\ ${svd.u1[1].toFixed(3)} & ${svd.u2[1].toFixed(3)} \\end{pmatrix}$`}
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
+                  <div className="p-1.5 rounded bg-red-500/10 border border-red-500/20 text-center">
+                    <span className="text-red-500 font-bold block mb-0.5">
+                      主轴向量 {"$\\mathbf{u}_1$"}
+                    </span>
+                    {`$\\begin{pmatrix} ${svd.u1[0].toFixed(3)} \\\\ ${svd.u1[1].toFixed(3)} \\end{pmatrix}$`}
+                  </div>
+                  <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-center">
+                    <span className="text-emerald-500 font-bold block mb-0.5">
+                      次轴向量 {"$\\mathbf{u}_2$"}
+                    </span>
+                    {`$\\begin{pmatrix} ${svd.u2[0].toFixed(3)} \\\\ ${svd.u2[1].toFixed(3)} \\end{pmatrix}$`}
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted leading-relaxed">
+                  列向量 {"$\\mathbf{u}_1, \\mathbf{u}_2$"}{" "}
+                  构成输出空间标准正交基，决定椭圆长短主轴朝向（旋转角{" "}
+                  {`$\\theta_U = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${svd.u1[1].toFixed(3)}, ${svd.u1[0].toFixed(3)}) = ${svd.thetaU.toFixed(3)}\\text{ rad} = ${((svd.thetaU * 180) / Math.PI).toFixed(3)}^\\circ$`}
+                  ）。
+                </p>
+              </div>
 
-        {/* Full SVD Matrix Equation Card: A = U Sigma V^T */}
-        <div className="rounded-lg border border-border bg-surface-hover/50 p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
-            <span className="text-xs font-semibold text-foreground">
-              实时矩阵数值分解等式：
-              <InlineMath tex="A = U \cdot \Sigma \cdot V^\top" />
-            </span>
-            <span className="text-[11px] text-muted font-mono">
-              正交性校验: det(U) ={" "}
-              {(svd.u1[0] * svd.u2[1] - svd.u1[1] * svd.u2[0]).toFixed(3)},
-              det(V) = 1.000
-            </span>
+              {/* Column 2: Sigma & sigma1, sigma2 */}
+              <div className="p-3 rounded-md bg-surface/60 border border-border/50 space-y-2">
+                <div className="font-semibold text-foreground flex items-center justify-between">
+                  <span>奇异值对角阵 {"$\\Sigma$"}</span>
+                  <span className="text-[10px] text-amber-500 font-mono">
+                    坐标主轴拉伸
+                  </span>
+                </div>
+                <div className="text-ink text-center">
+                  {`$\\Sigma = \\begin{pmatrix} ${svd.sigma1.toFixed(3)} & 0.000 \\\\ 0.000 & ${svd.sigma2.toFixed(3)} \\end{pmatrix}$`}
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
+                  <div className="p-1.5 rounded bg-red-500/10 border border-red-500/20 text-center">
+                    <span className="text-red-500 font-bold block mb-0.5">
+                      奇异值 {"$\\sigma_1$"}
+                    </span>
+                    <span className="font-mono text-red-500 font-bold">
+                      {svd.sigma1.toFixed(3)}
+                    </span>
+                  </div>
+                  <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-center">
+                    <span className="text-emerald-500 font-bold block mb-0.5">
+                      奇异值 {"$\\sigma_2$"}
+                    </span>
+                    <span className="font-mono text-emerald-500 font-bold">
+                      {svd.sigma2.toFixed(3)}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted leading-relaxed">
+                  对角元素 {"$\\sigma_1 \\ge \\sigma_2 \\ge 0$"}{" "}
+                  表示沿正交主轴的纯拉伸倍率，对应椭圆长短半轴长度。
+                </p>
+              </div>
+
+              {/* Column 3: V, V^T & v1, v2 */}
+              <div className="p-3 rounded-md bg-surface/60 border border-border/50 space-y-2">
+                <div className="font-semibold text-foreground flex items-center justify-between">
+                  <span>
+                    右奇异矩阵 {"$V = [\\mathbf{v}_1, \\mathbf{v}_2]$"}
+                  </span>
+                  <span className="text-[10px] text-purple-500 font-mono">
+                    输入对齐基 (旋转)
+                  </span>
+                </div>
+                <div className="text-ink text-center">
+                  {`$V = \\begin{pmatrix} ${svd.v1[0].toFixed(3)} & ${svd.v2[0].toFixed(3)} \\\\ ${svd.v1[1].toFixed(3)} & ${svd.v2[1].toFixed(3)} \\end{pmatrix}$`}
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
+                  <div className="p-1.5 rounded bg-red-500/10 border border-red-500/20 text-center">
+                    <span className="text-red-500 font-bold block mb-0.5">
+                      原像主向 {"$\\mathbf{v}_1$"}
+                    </span>
+                    {`$\\begin{pmatrix} ${svd.v1[0].toFixed(3)} \\\\ ${svd.v1[1].toFixed(3)} \\end{pmatrix}$`}
+                  </div>
+                  <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-center">
+                    <span className="text-emerald-500 font-bold block mb-0.5">
+                      原像次向 {"$\\mathbf{v}_2$"}
+                    </span>
+                    {`$\\begin{pmatrix} ${svd.v2[0].toFixed(3)} \\\\ ${svd.v2[1].toFixed(3)} \\end{pmatrix}$`}
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted leading-relaxed">
+                  输入空间标准正交基（旋转角{" "}
+                  {`$\\theta_V = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${svd.v1[1].toFixed(3)}, ${svd.v1[0].toFixed(3)}) = ${svd.thetaV.toFixed(3)}\\text{ rad} = ${((svd.thetaV * 180) / Math.PI).toFixed(3)}^\\circ$`}
+                  ），在变换中将被直接映射到椭圆主轴。
+                </p>
+              </div>
+            </div>
+
+            {/* Singular Vector Mapping Verification: A v_i = sigma_i u_i */}
+            <div className="pt-2 border-t border-border/60">
+              <div className="text-xs font-semibold text-foreground mb-2 flex items-center justify-between">
+                <span>
+                  基底向量映射校验：
+                  {"$A\\mathbf{v}_i = \\sigma_i \\mathbf{u}_i$"}
+                </span>
+                <span className="text-[11px] text-muted font-mono">
+                  正交性: {"$\\mathbf{v}_1^\\top \\mathbf{v}_2 = 0.000$"},{" "}
+                  {"$\\mathbf{u}_1^\\top \\mathbf{u}_2 = 0.000$"}
+                </span>
+              </div>
+              <div className="grid gap-2 grid-cols-1 text-xs">
+                <div className="p-2.5 rounded bg-surface/80 border border-red-500/30 flex items-center justify-center text-center overflow-x-auto">
+                  {`$A\\mathbf{v}_1 = \\begin{pmatrix} ${matrix.a.toFixed(3)} & ${matrix.b.toFixed(3)} \\\\ ${matrix.c.toFixed(3)} & ${matrix.d.toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${svd.v1[0].toFixed(3)} \\\\ ${svd.v1[1].toFixed(3)} \\end{pmatrix} = \\begin{pmatrix} ${(matrix.a * svd.v1[0] + matrix.b * svd.v1[1]).toFixed(3)} \\\\ ${(matrix.c * svd.v1[0] + matrix.d * svd.v1[1]).toFixed(3)} \\end{pmatrix}, \\quad \\sigma_1 \\mathbf{u}_1 = ${svd.sigma1.toFixed(3)} \\begin{pmatrix} ${svd.u1[0].toFixed(3)} \\\\ ${svd.u1[1].toFixed(3)} \\end{pmatrix} = \\begin{pmatrix} ${(svd.sigma1 * svd.u1[0]).toFixed(3)} \\\\ ${(svd.sigma1 * svd.u1[1]).toFixed(3)} \\end{pmatrix}$`}
+                </div>
+                <div className="p-2.5 rounded bg-surface/80 border border-emerald-500/30 flex items-center justify-center text-center overflow-x-auto">
+                  {`$A\\mathbf{v}_2 = \\begin{pmatrix} ${matrix.a.toFixed(3)} & ${matrix.b.toFixed(3)} \\\\ ${matrix.c.toFixed(3)} & ${matrix.d.toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${svd.v2[0].toFixed(3)} \\\\ ${svd.v2[1].toFixed(3)} \\end{pmatrix} = \\begin{pmatrix} ${(matrix.a * svd.v2[0] + matrix.b * svd.v2[1]).toFixed(3)} \\\\ ${(matrix.c * svd.v2[0] + matrix.d * svd.v2[1]).toFixed(3)} \\end{pmatrix}, \\quad \\sigma_2 \\mathbf{u}_2 = ${svd.sigma2.toFixed(3)} \\begin{pmatrix} ${svd.u2[0].toFixed(3)} \\\\ ${svd.u2[1].toFixed(3)} \\end{pmatrix} = \\begin{pmatrix} ${(svd.sigma2 * svd.u2[0]).toFixed(3)} \\\\ ${(svd.sigma2 * svd.u2[1]).toFixed(3)} \\end{pmatrix}$`}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Full Large Equation Display */}
-          <div className="overflow-x-auto py-2 flex items-center justify-center text-center">
-            <div className="inline-block text-ink text-sm sm:text-base font-medium">
-              <InlineMath
-                tex={`\\begin{pmatrix} ${matrix.a.toFixed(3)} & ${matrix.b.toFixed(3)} \\\\ ${matrix.c.toFixed(3)} & ${matrix.d.toFixed(3)} \\end{pmatrix} = \\underbrace{\\begin{pmatrix} ${svd.u1[0].toFixed(3)} & ${svd.u2[0].toFixed(3)} \\\\ ${svd.u1[1].toFixed(3)} & ${svd.u2[1].toFixed(3)} \\end{pmatrix}}_{U \\text{ (左奇异矩阵)}} \\cdot \\underbrace{\\begin{pmatrix} ${svd.sigma1.toFixed(3)} & 0.000 \\\\ 0.000 & ${svd.sigma2.toFixed(3)} \\end{pmatrix}}_{\\Sigma \\text{ (奇异值对角阵)}} \\cdot \\underbrace{\\begin{pmatrix} ${svd.v1[0].toFixed(3)} & ${svd.v1[1].toFixed(3)} \\\\ ${svd.v2[0].toFixed(3)} & ${svd.v2[1].toFixed(3)} \\end{pmatrix}}_{V^\\top \\text{ (右奇异基转置)}}`}
+          {/* Matrix Parameters */}
+          <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 flex flex-col gap-3">
+            <div className="text-xs font-semibold text-foreground">
+              自定义 2×2 变换矩阵参数：
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ParamSlider
+                label="a₁₁"
+                value={matrix.a}
+                min={-2.5}
+                max={2.5}
+                step={0.1}
+                onChange={(v) => {
+                  handleCustomParam("a", v);
+                  redraw();
+                }}
+              />
+              <ParamSlider
+                label="a₁₂"
+                value={matrix.b}
+                min={-2.5}
+                max={2.5}
+                step={0.1}
+                onChange={(v) => {
+                  handleCustomParam("b", v);
+                  redraw();
+                }}
+              />
+              <ParamSlider
+                label="a₂₁"
+                value={matrix.c}
+                min={-2.5}
+                max={2.5}
+                step={0.1}
+                onChange={(v) => {
+                  handleCustomParam("c", v);
+                  redraw();
+                }}
+              />
+              <ParamSlider
+                label="a₂₂"
+                value={matrix.d}
+                min={-2.5}
+                max={2.5}
+                step={0.1}
+                onChange={(v) => {
+                  handleCustomParam("d", v);
+                  redraw();
+                }}
               />
             </div>
           </div>
-
-          {/* 3-Column Breakdown Details with Specific Vectors u and v */}
-          <div className="grid gap-3 pt-2 border-t border-border/60 text-xs sm:grid-cols-3">
-            {/* Column 1: U & u1, u2 */}
-            <div className="p-3 rounded-md bg-surface/60 border border-border/50 space-y-2">
-              <div className="font-semibold text-foreground flex items-center justify-between">
-                <span>
-                  左奇异矩阵{" "}
-                  <InlineMath tex="U = [\mathbf{u}_1, \mathbf{u}_2]" />
-                </span>
-                <span className="text-[10px] text-blue-500 font-mono">
-                  输出正交基 (旋转)
-                </span>
-              </div>
-              <div className="text-ink text-center">
-                <InlineMath
-                  tex={`U = \\begin{pmatrix} ${svd.u1[0].toFixed(3)} & ${svd.u2[0].toFixed(3)} \\\\ ${svd.u1[1].toFixed(3)} & ${svd.u2[1].toFixed(3)} \\end{pmatrix}`}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
-                <div className="p-1.5 rounded bg-red-500/10 border border-red-500/20 text-center">
-                  <span className="text-red-500 font-bold block mb-0.5">
-                    主轴向量 <InlineMath tex="\mathbf{u}_1" />
-                  </span>
-                  <InlineMath
-                    tex={`\\begin{pmatrix} ${svd.u1[0].toFixed(3)} \\\\ ${svd.u1[1].toFixed(3)} \\end{pmatrix}`}
-                  />
-                </div>
-                <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-center">
-                  <span className="text-emerald-500 font-bold block mb-0.5">
-                    次轴向量 <InlineMath tex="\mathbf{u}_2" />
-                  </span>
-                  <InlineMath
-                    tex={`\\begin{pmatrix} ${svd.u2[0].toFixed(3)} \\\\ ${svd.u2[1].toFixed(3)} \\end{pmatrix}`}
-                  />
-                </div>
-              </div>
-              <p className="text-[11px] text-muted leading-relaxed">
-                列向量 <InlineMath tex="\mathbf{u}_1, \mathbf{u}_2" />{" "}
-                构成输出空间标准正交基，决定椭圆长短主轴朝向（旋转角{" "}
-                <InlineMath
-                  tex={`\\theta_U = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${svd.u1[1].toFixed(3)}, ${svd.u1[0].toFixed(3)}) = ${svd.thetaU.toFixed(3)}\\text{ rad} = ${((svd.thetaU * 180) / Math.PI).toFixed(3)}^\\circ`}
-                />
-                ）。
-              </p>
-            </div>
-
-            {/* Column 2: Sigma & sigma1, sigma2 */}
-            <div className="p-3 rounded-md bg-surface/60 border border-border/50 space-y-2">
-              <div className="font-semibold text-foreground flex items-center justify-between">
-                <span>
-                  奇异值对角阵 <InlineMath tex="\Sigma" />
-                </span>
-                <span className="text-[10px] text-amber-500 font-mono">
-                  坐标主轴拉伸
-                </span>
-              </div>
-              <div className="text-ink text-center">
-                <InlineMath
-                  tex={`\\Sigma = \\begin{pmatrix} ${svd.sigma1.toFixed(3)} & 0.000 \\\\ 0.000 & ${svd.sigma2.toFixed(3)} \\end{pmatrix}`}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
-                <div className="p-1.5 rounded bg-red-500/10 border border-red-500/20 text-center">
-                  <span className="text-red-500 font-bold block mb-0.5">
-                    奇异值 <InlineMath tex="\sigma_1" />
-                  </span>
-                  <span className="font-mono text-red-500 font-bold">
-                    {svd.sigma1.toFixed(3)}
-                  </span>
-                </div>
-                <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-center">
-                  <span className="text-emerald-500 font-bold block mb-0.5">
-                    奇异值 <InlineMath tex="\sigma_2" />
-                  </span>
-                  <span className="font-mono text-emerald-500 font-bold">
-                    {svd.sigma2.toFixed(3)}
-                  </span>
-                </div>
-              </div>
-              <p className="text-[11px] text-muted leading-relaxed">
-                对角元素 <InlineMath tex="\sigma_1 \ge \sigma_2 \ge 0" />{" "}
-                表示沿正交主轴的纯拉伸倍率，对应椭圆长短半轴长度。
-              </p>
-            </div>
-
-            {/* Column 3: V, V^T & v1, v2 */}
-            <div className="p-3 rounded-md bg-surface/60 border border-border/50 space-y-2">
-              <div className="font-semibold text-foreground flex items-center justify-between">
-                <span>
-                  右奇异矩阵{" "}
-                  <InlineMath tex="V = [\mathbf{v}_1, \mathbf{v}_2]" />
-                </span>
-                <span className="text-[10px] text-purple-500 font-mono">
-                  输入对齐基 (旋转)
-                </span>
-              </div>
-              <div className="text-ink text-center">
-                <InlineMath
-                  tex={`V = \\begin{pmatrix} ${svd.v1[0].toFixed(3)} & ${svd.v2[0].toFixed(3)} \\\\ ${svd.v1[1].toFixed(3)} & ${svd.v2[1].toFixed(3)} \\end{pmatrix}`}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
-                <div className="p-1.5 rounded bg-red-500/10 border border-red-500/20 text-center">
-                  <span className="text-red-500 font-bold block mb-0.5">
-                    原像主向 <InlineMath tex="\mathbf{v}_1" />
-                  </span>
-                  <InlineMath
-                    tex={`\\begin{pmatrix} ${svd.v1[0].toFixed(3)} \\\\ ${svd.v1[1].toFixed(3)} \\end{pmatrix}`}
-                  />
-                </div>
-                <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-center">
-                  <span className="text-emerald-500 font-bold block mb-0.5">
-                    原像次向 <InlineMath tex="\mathbf{v}_2" />
-                  </span>
-                  <InlineMath
-                    tex={`\\begin{pmatrix} ${svd.v2[0].toFixed(3)} \\\\ ${svd.v2[1].toFixed(3)} \\end{pmatrix}`}
-                  />
-                </div>
-              </div>
-              <p className="text-[11px] text-muted leading-relaxed">
-                输入空间标准正交基（旋转角{" "}
-                <InlineMath
-                  tex={`\\theta_V = \\operatorname{atan2}(y, x) = \\operatorname{atan2}(${svd.v1[1].toFixed(3)}, ${svd.v1[0].toFixed(3)}) = ${svd.thetaV.toFixed(3)}\\text{ rad} = ${((svd.thetaV * 180) / Math.PI).toFixed(3)}^\\circ`}
-                />
-                ），在变换中将被直接映射到椭圆主轴。
-              </p>
-            </div>
-          </div>
-
-          {/* Singular Vector Mapping Verification: A v_i = sigma_i u_i */}
-          <div className="pt-2 border-t border-border/60">
-            <div className="text-xs font-semibold text-foreground mb-2 flex items-center justify-between">
-              <span>
-                基底向量映射校验：
-                <InlineMath tex="A\mathbf{v}_i = \sigma_i \mathbf{u}_i" />
-              </span>
-              <span className="text-[11px] text-muted font-mono">
-                正交性:{" "}
-                <InlineMath tex="\mathbf{v}_1^\top \mathbf{v}_2 = 0.000" />,{" "}
-                <InlineMath tex="\mathbf{u}_1^\top \mathbf{u}_2 = 0.000" />
-              </span>
-            </div>
-            <div className="grid gap-2 grid-cols-1 text-xs">
-              <div className="p-2.5 rounded bg-surface/80 border border-red-500/30 flex items-center justify-center text-center overflow-x-auto">
-                <InlineMath
-                  tex={`A\\mathbf{v}_1 = \\begin{pmatrix} ${matrix.a.toFixed(3)} & ${matrix.b.toFixed(3)} \\\\ ${matrix.c.toFixed(3)} & ${matrix.d.toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${svd.v1[0].toFixed(3)} \\\\ ${svd.v1[1].toFixed(3)} \\end{pmatrix} = \\begin{pmatrix} ${(matrix.a * svd.v1[0] + matrix.b * svd.v1[1]).toFixed(3)} \\\\ ${(matrix.c * svd.v1[0] + matrix.d * svd.v1[1]).toFixed(3)} \\end{pmatrix}, \\quad \\sigma_1 \\mathbf{u}_1 = ${svd.sigma1.toFixed(3)} \\begin{pmatrix} ${svd.u1[0].toFixed(3)} \\\\ ${svd.u1[1].toFixed(3)} \\end{pmatrix} = \\begin{pmatrix} ${(svd.sigma1 * svd.u1[0]).toFixed(3)} \\\\ ${(svd.sigma1 * svd.u1[1]).toFixed(3)} \\end{pmatrix}`}
-                />
-              </div>
-              <div className="p-2.5 rounded bg-surface/80 border border-emerald-500/30 flex items-center justify-center text-center overflow-x-auto">
-                <InlineMath
-                  tex={`A\\mathbf{v}_2 = \\begin{pmatrix} ${matrix.a.toFixed(3)} & ${matrix.b.toFixed(3)} \\\\ ${matrix.c.toFixed(3)} & ${matrix.d.toFixed(3)} \\end{pmatrix} \\begin{pmatrix} ${svd.v2[0].toFixed(3)} \\\\ ${svd.v2[1].toFixed(3)} \\end{pmatrix} = \\begin{pmatrix} ${(matrix.a * svd.v2[0] + matrix.b * svd.v2[1]).toFixed(3)} \\\\ ${(matrix.c * svd.v2[0] + matrix.d * svd.v2[1]).toFixed(3)} \\end{pmatrix}, \\quad \\sigma_2 \\mathbf{u}_2 = ${svd.sigma2.toFixed(3)} \\begin{pmatrix} ${svd.u2[0].toFixed(3)} \\\\ ${svd.u2[1].toFixed(3)} \\end{pmatrix} = \\begin{pmatrix} ${(svd.sigma2 * svd.u2[0]).toFixed(3)} \\\\ ${(svd.sigma2 * svd.u2[1]).toFixed(3)} \\end{pmatrix}`}
-                />
-              </div>
-            </div>
-          </div>
         </div>
-
-        {/* Matrix Parameters */}
-        <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 flex flex-col gap-3">
-          <div className="text-xs font-semibold text-foreground">
-            自定义 2×2 变换矩阵参数：
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <ParamSlider
-              label="a₁₁"
-              value={matrix.a}
-              min={-2.5}
-              max={2.5}
-              step={0.1}
-              onChange={(v) => {
-                handleCustomParam("a", v);
-                redraw();
-              }}
-            />
-            <ParamSlider
-              label="a₁₂"
-              value={matrix.b}
-              min={-2.5}
-              max={2.5}
-              step={0.1}
-              onChange={(v) => {
-                handleCustomParam("b", v);
-                redraw();
-              }}
-            />
-            <ParamSlider
-              label="a₂₁"
-              value={matrix.c}
-              min={-2.5}
-              max={2.5}
-              step={0.1}
-              onChange={(v) => {
-                handleCustomParam("c", v);
-                redraw();
-              }}
-            />
-            <ParamSlider
-              label="a₂₂"
-              value={matrix.d}
-              min={-2.5}
-              max={2.5}
-              step={0.1}
-              onChange={(v) => {
-                handleCustomParam("d", v);
-                redraw();
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

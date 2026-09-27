@@ -18,17 +18,17 @@ export interface UseCanvas2DResult {
 }
 
 /**
- * Mounts the shared 2D canvas controller (createCanvas2D) once and disposes it
- * on unmount. The options object is captured at mount; callers keep mutable
- * state in refs and call `redraw()` to repaint. SSR-safe: DOM work happens
- * only inside the effect.
+ * Mounts the shared 2D canvas controller (createCanvas2D) and disposes it
+ * on unmount or when the underlying DOM elements change. The options object
+ * is captured dynamically; callers keep mutable state in refs and call `redraw()` to repaint.
+ * SSR-safe: DOM work happens only inside the effect.
  */
 export function useCanvas2D(
   options: Canvas2DOptions,
   deps?: unknown[],
 ): UseCanvas2DResult {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const controllerRef = useRef<Canvas2DController | null>(null);
   const optionsRef = useRef(options);
   optionsRef.current = options;
@@ -37,6 +37,7 @@ export function useCanvas2D(
     const container = containerRef.current;
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
+
     const controller = createCanvas2D(container, canvas, {
       get initialBounds() {
         return optionsRef.current.initialBounds;

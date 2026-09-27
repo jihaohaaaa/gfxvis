@@ -2,16 +2,19 @@ import { defineAction } from "astro:actions";
 import { z } from "astro/zod";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { join, resolve as pathResolve } from "node:path";
+import { delimiter, join, resolve as pathResolve } from "node:path";
 import { performance } from "node:perf_hooks";
+
+const require = createRequire(import.meta.url);
 
 /** Check if a CLI command is available on PATH */
 function checkCommandAvailable(cmd: string): Promise<boolean> {
   return new Promise((resolve) => {
-    const probe = spawn("which", [cmd]);
+    const lookupCommand = process.platform === "win32" ? "where.exe" : "which";
+    const probe = spawn(lookupCommand, [cmd], { windowsHide: true });
     probe.on("close", (code) => {
       resolve(code === 0);
     });
@@ -19,6 +22,48 @@ function checkCommandAvailable(cmd: string): Promise<boolean> {
       resolve(false);
     });
   });
+}
+
+function getExecutionEnvironment(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  const pathKey =
+    Object.keys(env).find((key) => key.toLowerCase() === "path") ?? "PATH";
+  const localBin = pathResolve(process.cwd(), "node_modules/.bin");
+
+  env[pathKey] = [localBin, env[pathKey]]
+    .filter((entry): entry is string => Boolean(entry))
+    .join(delimiter);
+  delete env.FORCE_COLOR;
+  env.NO_COLOR ??= "1";
+  env.CI = "true";
+  env.PAGER = "cat";
+
+  return env;
+}
+
+function getMissingCompilerMessage(lang: "rust" | "cpp"): string {
+  const platform =
+    process.platform === "win32"
+      ? "Windows"
+      : process.platform === "darwin"
+        ? "macOS"
+        : "Linux";
+
+  if (lang === "rust") {
+    const compiler = process.platform === "win32" ? "rustc.exe" : "rustc";
+    return `[环境缺失]: ${platform} 宿主机的 PATH 中未检测到 ${compiler}。\n安装 Rust 工具链（rustup），并确认编译器已加入 PATH 后重启服务。`;
+  }
+
+  const compiler =
+    process.platform === "win32" ? "clang++.exe 或 g++.exe" : "clang++ 或 g++";
+  const installHint =
+    process.platform === "win32"
+      ? "安装 Visual Studio C++ Build Tools、LLVM 或 MinGW-w64 中的一种，并确认编译器已加入 PATH。"
+      : process.platform === "darwin"
+        ? "安装 Xcode Command Line Tools 或 LLVM，并确认编译器已加入 PATH。"
+        : "使用发行版的包管理器安装 clang++ 或 g++，并确认编译器已加入 PATH。";
+
+  return `[环境缺失]: ${platform} 宿主机的 PATH 中未检测到 ${compiler}。\n${installHint}`;
 }
 
 interface RunResult {
@@ -42,13 +87,8 @@ function executeProcess(
     const proc = spawn(cmd, args, {
       cwd,
       timeout: timeoutMs,
-      env: {
-        ...process.env,
-        PATH: `${pathResolve(process.cwd(), "node_modules/.bin")}:${process.env.PATH || ""}`,
-        // Ensure non-interactive mode
-        CI: "true",
-        PAGER: "cat",
-      },
+      env: getExecutionEnvironment(),
+      windowsHide: true,
     });
 
     proc.stdout.on("data", (chunk: Buffer) => {
@@ -96,7 +136,11 @@ export const server = {
           case "node": {
             const filePath = join(workDir, "main.mjs");
             await writeFile(filePath, code, "utf-8");
-            const res = await executeProcess("node", [filePath], workDir);
+            const res = await executeProcess(
+              process.execPath,
+              [filePath],
+              workDir,
+            );
             stdout = res.stdout;
             stderr = res.stderr;
             exitCode = res.exitCode;
@@ -106,12 +150,12 @@ export const server = {
           case "ts": {
             const filePath = join(workDir, "main.ts");
             await writeFile(filePath, code, "utf-8");
-            const localTsx = pathResolve(
-              process.cwd(),
-              "node_modules/.bin/tsx",
+            const tsxCli = require.resolve("tsx/cli");
+            const res = await executeProcess(
+              process.execPath,
+              [tsxCli, filePath],
+              workDir,
             );
-            const tsxCmd = existsSync(localTsx) ? localTsx : "tsx";
-            const res = await executeProcess(tsxCmd, [filePath], workDir);
             stdout = res.stdout;
             stderr = res.stderr;
             exitCode = res.exitCode;
@@ -123,8 +167,7 @@ export const server = {
             if (!hasRustc) {
               return {
                 stdout: "",
-                stderr:
-                  "[环境缺失]: 本地未检测到 rustc 编译器。\n安装指南: 在终端运行 `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` 安装 Rust 工具链。",
+                stderr: getMissingCompilerMessage("rust"),
                 exitCode: 127,
                 durationMs: Math.round(performance.now() - startTime),
                 language: "rust",
@@ -132,7 +175,10 @@ export const server = {
             }
 
             const srcFile = join(workDir, "main.rs");
-            const binFile = join(workDir, "main_bin");
+            const binFile = join(
+              workDir,
+              process.platform === "win32" ? "main_bin.exe" : "main_bin",
+            );
             await writeFile(srcFile, code, "utf-8");
 
             // 1. Compile with rustc
@@ -163,8 +209,7 @@ export const server = {
             if (!hasClang && !hasGpp) {
               return {
                 stdout: "",
-                stderr:
-                  "[环境缺失]: 本地未检测到 clang++ 或 g++ 编译器。\n安装指南: macOS 用户请在终端运行 `xcode-select --install` 或 `brew install llvm`。",
+                stderr: getMissingCompilerMessage("cpp"),
                 exitCode: 127,
                 durationMs: Math.round(performance.now() - startTime),
                 language: "cpp",
@@ -173,13 +218,16 @@ export const server = {
 
             const compiler = hasClang ? "clang++" : "g++";
             const srcFile = join(workDir, "main.cpp");
-            const binFile = join(workDir, "main_bin");
+            const binFile = join(
+              workDir,
+              process.platform === "win32" ? "main_bin.exe" : "main_bin",
+            );
             await writeFile(srcFile, code, "utf-8");
 
-            // 1. Compile with C++20 standard
+            // 1. Compile with C++23 standard
             const compileRes = await executeProcess(
               compiler,
-              ["-std=c++20", "-O2", srcFile, "-o", binFile],
+              ["-std=c++23", "-O2", srcFile, "-o", binFile],
               workDir,
             );
 

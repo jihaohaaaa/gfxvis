@@ -16,7 +16,7 @@ import ExpandableDemo from "../framework/ExpandableDemo";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ParamSlider from "../framework/ParamSlider";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import PresetSelector from "../framework/PresetSelector";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useVectorDrag } from "../framework/useVectorDrag";
@@ -393,82 +393,70 @@ function View2D({ showAxes }: { showAxes: boolean }) {
   );
 
   return (
-    <div className="space-y-4">
-      {/* 2D Presets */}
-      <PresetSelector
-        label={
-          <>
-            新基 <InlineMath tex="\mathcal{C}" /> 预设:
-          </>
-        }
-        options={PRESETS_2D}
-        value={presetKey}
-        onChange={setPresetKey}
-      />
+    <AutoMath>
+      <div className="space-y-4">
+        {/* 2D Presets */}
+        <PresetSelector
+          label={<>新基 {"$\\mathcal{C}$"} 预设:</>}
+          options={PRESETS_2D}
+          value={presetKey}
+          onChange={setPresetKey}
+        />
 
-      {/* 2D Canvas Container */}
-      <div
-        ref={containerRef}
-        className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
-      >
-        <CanvasToolbar onReset={resetBounds} />
-        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-      </div>
-
-      {/* 2D Coordinate & Matrix Panel */}
-      <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
-        <div className="space-y-2">
-          <p className="font-semibold text-foreground">
-            同一向量在两组基下的坐标快照
-          </p>
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-muted">标准基坐标：</span>
-              <span className="font-semibold text-amber-600 dark:text-amber-400">
-                <InlineMath
-                  tex={`[v]_{\\mathcal{B}} = (${vVec.x.toFixed(2)},\\, ${vVec.y.toFixed(2)})^\\top`}
-                />
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted">新基坐标：</span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400">
-                <InlineMath
-                  tex={`[v]_{\\mathcal{C}} = P_{\\mathcal{C}}^{-1} [v]_{\\mathcal{B}} = (${vC.x.toFixed(2)},\\, ${vC.y.toFixed(2)})^\\top`}
-                />
-              </span>
-            </div>
-            <div className="text-muted text-[11px] pt-1 border-t border-border/50">
-              <span className="mr-1">几何恒等验证：</span>
-              <InlineMath
-                tex={`${vC.x.toFixed(2)} c_1 + ${vC.y.toFixed(2)} c_2 = (${vVec.x.toFixed(2)},\\, ${vVec.y.toFixed(2)})^\\top`}
-              />
-            </div>
-          </div>
+        {/* 2D Canvas Container */}
+        <div
+          ref={containerRef}
+          className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
+        >
+          <CanvasToolbar onReset={resetBounds} />
+          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
         </div>
 
-        <div className="space-y-2">
-          <p className="font-semibold text-foreground">基矩阵与过渡矩阵</p>
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-muted">基矩阵：</span>
-              <InlineMath
-                tex={`P_{\\mathcal{C}} = \\begin{pmatrix} ${c1.x.toFixed(2)} & ${c2.x.toFixed(2)} \\\\ ${c1.y.toFixed(2)} & ${c2.y.toFixed(2)} \\end{pmatrix}`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted">过渡矩阵：</span>
-              <InlineMath
-                tex={`P_{\\mathcal{C} \\leftarrow \\mathcal{B}} = P_{\\mathcal{C}}^{-1} = \\begin{pmatrix} ${invP.a11.toFixed(2)} & ${invP.a12.toFixed(2)} \\\\ ${invP.a21.toFixed(2)} & ${invP.a22.toFixed(2)} \\end{pmatrix}`}
-              />
-            </div>
-            <p className="text-[11px] text-muted leading-normal pt-1 border-t border-border/50">
-              {activePreset.desc}
+        {/* 2D Coordinate & Matrix Panel */}
+        <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
+          <div className="space-y-2">
+            <p className="font-semibold text-foreground">
+              同一向量在两组基下的坐标快照
             </p>
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-muted">标准基坐标：</span>
+                <span className="font-semibold text-amber-600 dark:text-amber-400">
+                  {`$[v]_{\\mathcal{B}} = (${vVec.x.toFixed(2)},\\, ${vVec.y.toFixed(2)})^\\top$`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted">新基坐标：</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">
+                  {`$[v]_{\\mathcal{C}} = P_{\\mathcal{C}}^{-1} [v]_{\\mathcal{B}} = (${vC.x.toFixed(2)},\\, ${vC.y.toFixed(2)})^\\top$`}
+                </span>
+              </div>
+              <div className="text-muted text-[11px] pt-1 border-t border-border/50">
+                <span className="mr-1">几何恒等验证：</span>
+                {`$${vC.x.toFixed(2)} c_1 + ${vC.y.toFixed(2)} c_2 = (${vVec.x.toFixed(2)},\\, ${vVec.y.toFixed(2)})^\\top$`}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="font-semibold text-foreground">基矩阵与过渡矩阵</p>
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-muted">基矩阵：</span>
+                {`$P_{\\mathcal{C}} = \\begin{pmatrix} ${c1.x.toFixed(2)} & ${c2.x.toFixed(2)} \\\\ ${c1.y.toFixed(2)} & ${c2.y.toFixed(2)} \\end{pmatrix}$`}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted">过渡矩阵：</span>
+                {`$P_{\\mathcal{C} \\leftarrow \\mathcal{B}} = P_{\\mathcal{C}}^{-1} = \\begin{pmatrix} ${invP.a11.toFixed(2)} & ${invP.a12.toFixed(2)} \\\\ ${invP.a21.toFixed(2)} & ${invP.a22.toFixed(2)} \\end{pmatrix}$`}
+              </div>
+              <p className="text-[11px] text-muted leading-normal pt-1 border-t border-border/50">
+                {activePreset.desc}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AutoMath>
   );
 }
 
@@ -816,167 +804,163 @@ function View3D({ showAxes }: { showAxes: boolean }) {
   const matrixValueTex = `R = \\begin{pmatrix} ${fmt(cosY)} & ${fmt(-sinY)} & 0.00 \\\\ ${fmt(sinY)} & ${fmt(cosY)} & 0.00 \\\\ 0.00 & 0.00 & 1.00 \\end{pmatrix} \\begin{pmatrix} 1.00 & 0.00 & 0.00 \\\\ 0.00 & ${fmt(cosP)} & ${fmt(-sinP)} \\\\ 0.00 & ${fmt(sinP)} & ${fmt(cosP)} \\end{pmatrix} \\begin{pmatrix} ${fmt(cosR)} & 0.00 & ${fmt(sinR)} \\\\ 0.00 & 1.00 & 0.00 \\\\ ${fmt(-sinR)} & 0.00 & ${fmt(cosR)} \\end{pmatrix} = \\begin{pmatrix} \\color{#ef4444}{${fmt(rVec.x)}} & \\color{#10b981}{${fmt(fVec.x)}} & \\color{#3b82f6}{${fmt(uVec.x)}} \\\\ \\color{#ef4444}{${fmt(rVec.y)}} & \\color{#10b981}{${fmt(fVec.y)}} & \\color{#3b82f6}{${fmt(uVec.y)}} \\\\ \\color{#ef4444}{${fmt(rVec.z)}} & \\color{#10b981}{${fmt(fVec.z)}} & \\color{#3b82f6}{${fmt(uVec.z)}} \\end{pmatrix}`;
 
   return (
-    <div className="space-y-4">
-      {/* 3D Presets & Model Toggle */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-        <PresetSelector<string>
-          label="典型姿态预设:"
-          options={PRESETS_3D}
-          value={presetKey}
-          onChange={(key) => applyPreset(key as Preset3D)}
-        />
+    <AutoMath>
+      <div className="space-y-4">
+        {/* 3D Presets & Model Toggle */}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <PresetSelector<string>
+            label="典型姿态预设:"
+            options={PRESETS_3D}
+            value={presetKey}
+            onChange={(key) => applyPreset(key as Preset3D)}
+          />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowFrustum(!showFrustum)}
-            className="rounded border border-border px-2.5 py-1 text-xs text-foreground hover:bg-surface-hover transition-colors"
-          >
-            {showFrustum ? "切换为基向量立方体" : "切换为相机视锥台"}
-          </button>
-        </div>
-      </div>
-
-      {/* 3D Sliders (Z-up System) */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <ParamSlider
-          label="偏航角 Yaw (Z轴 / 垂直向上)"
-          value={yaw}
-          min={-180}
-          max={180}
-          step={5}
-          onChange={(v) => {
-            setYaw(v);
-            setPresetKey("custom");
-          }}
-        />
-        <ParamSlider
-          label="俯仰角 Pitch (X轴 / 横向右向)"
-          value={pitch}
-          min={-90}
-          max={90}
-          step={5}
-          onChange={(v) => {
-            setPitch(v);
-            setPresetKey("custom");
-          }}
-        />
-        <ParamSlider
-          label="翻滚角 Roll (Y轴 / 纵向深度)"
-          value={roll}
-          min={-180}
-          max={180}
-          step={5}
-          onChange={(v) => {
-            setRoll(v);
-            setPresetKey("custom");
-          }}
-        />
-      </div>
-
-      {/* 3D Canvas View */}
-      <div
-        ref={containerRef}
-        className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
-      >
-        <CanvasToolbar />
-      </div>
-
-      {/* Full-width 2-Line Matrix Breakdown */}
-      <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-2">
-          <p className="font-semibold text-foreground">
-            3×3 旋转矩阵复合公式与实时数值分解
-          </p>
-          <span className="text-xs text-muted font-mono">
-            R = R_z({yaw}°) R_x({pitch}°) R_y({roll}°)
-          </span>
-        </div>
-
-        {/* Row 1: Trigonometric Formula */}
-        <div className="space-y-1">
-          <div className="text-xs font-medium text-muted">
-            第一行（三角符号公式）：
-          </div>
-          <div className="p-2.5 rounded border border-border bg-surface overflow-x-auto text-xs flex items-center justify-start min-h-[3.5rem]">
-            <InlineMath tex={matrixFormulaTex} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFrustum(!showFrustum)}
+              className="rounded border border-border px-2.5 py-1 text-xs text-foreground hover:bg-surface-hover transition-colors"
+            >
+              {showFrustum ? "切换为基向量立方体" : "切换为相机视锥台"}
+            </button>
           </div>
         </div>
 
-        {/* Row 2: Numerical Matrix Multiplication -> Final R */}
-        <div className="space-y-1">
-          <div className="text-xs font-medium text-muted">
-            第二行（各轴具体矩阵连乘 = 最终复合旋转矩阵）：
-          </div>
-          <div className="p-2.5 rounded border border-border bg-surface overflow-x-auto text-xs flex items-center justify-start min-h-[3.5rem]">
-            <InlineMath tex={matrixValueTex} />
-          </div>
+        {/* 3D Sliders (Z-up System) */}
+        <div className="grid gap-3 sm:grid-cols-3">
+          <ParamSlider
+            label="偏航角 Yaw (Z轴 / 垂直向上)"
+            value={yaw}
+            min={-180}
+            max={180}
+            step={5}
+            onChange={(v) => {
+              setYaw(v);
+              setPresetKey("custom");
+            }}
+          />
+          <ParamSlider
+            label="俯仰角 Pitch (X轴 / 横向右向)"
+            value={pitch}
+            min={-90}
+            max={90}
+            step={5}
+            onChange={(v) => {
+              setPitch(v);
+              setPresetKey("custom");
+            }}
+          />
+          <ParamSlider
+            label="翻滚角 Roll (Y轴 / 纵向深度)"
+            value={roll}
+            min={-180}
+            max={180}
+            step={5}
+            onChange={(v) => {
+              setRoll(v);
+              setPresetKey("custom");
+            }}
+          />
         </div>
-      </div>
 
-      {/* 3D Columns Breakdown & Metric Analysis */}
-      <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
-        <div className="space-y-2">
-          <p className="font-semibold text-foreground">
-            三列对应局部基向量（右手系 Z-up）
-          </p>
-          <div className="space-y-1.5 text-xs">
-            <div className="text-red-600 dark:text-red-400 font-medium">
-              第 1 列 (Right 右轴)：
-              <InlineMath
-                tex={`\\mathbf{r} = R e_x = (${fmt(rVec.x)},\\, ${fmt(rVec.y)},\\, ${fmt(rVec.z)})^\\top`}
-              />
-            </div>
-            <div className="text-emerald-600 dark:text-emerald-400 font-medium">
-              第 2 列 (Forward 前轴)：
-              <InlineMath
-                tex={`\\mathbf{f} = R e_y = (${fmt(fVec.x)},\\, ${fmt(fVec.y)},\\, ${fmt(fVec.z)})^\\top`}
-              />
-            </div>
-            <div className="text-blue-600 dark:text-blue-400 font-medium">
-              第 3 列 (Up 上轴)：
-              <InlineMath
-                tex={`\\mathbf{u} = R e_z = (${fmt(uVec.x)},\\, ${fmt(uVec.y)},\\, ${fmt(uVec.z)})^\\top`}
-              />
-            </div>
-            <p className="text-[11px] text-muted pt-1 border-t border-border/50">
-              {presetKey === "custom"
-                ? "自定义姿态：根据上方滑块实时调整偏航角 Yaw、俯仰角 Pitch 与翻滚角 Roll。"
-                : PRESETS_3D[presetKey].desc}
+        {/* 3D Canvas View */}
+        <div
+          ref={containerRef}
+          className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
+        >
+          <CanvasToolbar />
+        </div>
+
+        {/* Full-width 2-Line Matrix Breakdown */}
+        <div className="rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-2">
+            <p className="font-semibold text-foreground">
+              3×3 旋转矩阵复合公式与实时数值分解
             </p>
+            <span className="text-xs text-muted font-mono">
+              R = R_z({yaw}°) R_x({pitch}°) R_y({roll}°)
+            </span>
+          </div>
+
+          {/* Row 1: Trigonometric Formula */}
+          <div className="space-y-1">
+            <div className="text-xs font-medium text-muted">
+              第一行（三角符号公式）：
+            </div>
+            <div className="p-2.5 rounded border border-border bg-surface overflow-x-auto text-xs flex items-center justify-start min-h-[3.5rem]">
+              {`$${matrixFormulaTex}$`}
+            </div>
+          </div>
+
+          {/* Row 2: Numerical Matrix Multiplication -> Final R */}
+          <div className="space-y-1">
+            <div className="text-xs font-medium text-muted">
+              第二行（各轴具体矩阵连乘 = 最终复合旋转矩阵）：
+            </div>
+            <div className="p-2.5 rounded border border-border bg-surface overflow-x-auto text-xs flex items-center justify-start min-h-[3.5rem]">
+              {`$${matrixValueTex}$`}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <p className="font-semibold text-foreground">代数与几何性质验证</p>
-          <div className="space-y-1.5 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-muted">正交行列式（体积不变）：</span>
-              <span className="font-mono font-semibold text-foreground">
-                <InlineMath tex={`\\det(R) = ${detR.toFixed(2)}`} />
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted">基向量模长（单位长度）：</span>
-              <span className="font-mono text-foreground">
-                ‖r‖={lenR.toFixed(2)}, ‖f‖={lenF.toFixed(2)}, ‖u‖=
-                {lenU.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted">两两正交点积（垂直）：</span>
-              <span className="font-mono text-foreground">
-                r·f={dotRF.toFixed(2)}, r·u={dotRU.toFixed(2)}, f·u=
-                {dotFU.toFixed(2)}
-              </span>
-            </div>
-            <p className="text-[11px] text-muted pt-1 border-t border-border/50 leading-normal">
-              图形学金句：“矩阵的列就是变换后的基向量。” 在 3D
-              视图中拖动鼠标旋转视角观察。
+        {/* 3D Columns Breakdown & Metric Analysis */}
+        <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
+          <div className="space-y-2">
+            <p className="font-semibold text-foreground">
+              三列对应局部基向量（右手系 Z-up）
             </p>
+            <div className="space-y-1.5 text-xs">
+              <div className="text-red-600 dark:text-red-400 font-medium">
+                第 1 列 (Right 右轴)：
+                {`$\\mathbf{r} = R e_x = (${fmt(rVec.x)},\\, ${fmt(rVec.y)},\\, ${fmt(rVec.z)})^\\top$`}
+              </div>
+              <div className="text-emerald-600 dark:text-emerald-400 font-medium">
+                第 2 列 (Forward 前轴)：
+                {`$\\mathbf{f} = R e_y = (${fmt(fVec.x)},\\, ${fmt(fVec.y)},\\, ${fmt(fVec.z)})^\\top$`}
+              </div>
+              <div className="text-blue-600 dark:text-blue-400 font-medium">
+                第 3 列 (Up 上轴)：
+                {`$\\mathbf{u} = R e_z = (${fmt(uVec.x)},\\, ${fmt(uVec.y)},\\, ${fmt(uVec.z)})^\\top$`}
+              </div>
+              <p className="text-[11px] text-muted pt-1 border-t border-border/50">
+                {presetKey === "custom"
+                  ? "自定义姿态：根据上方滑块实时调整偏航角 Yaw、俯仰角 Pitch 与翻滚角 Roll。"
+                  : PRESETS_3D[presetKey].desc}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="font-semibold text-foreground">代数与几何性质验证</p>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-muted">正交行列式（体积不变）：</span>
+                <span className="font-mono font-semibold text-foreground">
+                  {`$\\det(R) = ${detR.toFixed(2)}$`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted">基向量模长（单位长度）：</span>
+                <span className="font-mono text-foreground">
+                  ‖r‖={lenR.toFixed(2)}, ‖f‖={lenF.toFixed(2)}, ‖u‖=
+                  {lenU.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted">两两正交点积（垂直）：</span>
+                <span className="font-mono text-foreground">
+                  r·f={dotRF.toFixed(2)}, r·u={dotRU.toFixed(2)}, f·u=
+                  {dotFU.toFixed(2)}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted pt-1 border-t border-border/50 leading-normal">
+                图形学金句：“矩阵的列就是变换后的基向量。” 在 3D
+                视图中拖动鼠标旋转视角观察。
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AutoMath>
   );
 }
 
@@ -985,31 +969,33 @@ export default function ChangeOfBasisDemo({ height }: { height?: string }) {
   const showAxes = true;
 
   return (
-    <ExpandableDemo id="change-of-basis" height={height}>
-      <div className="space-y-4">
-        {/* Header Mode Switch & Axes Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <CapsuleTabs
-            options={DEMO_MODES}
-            value={demoMode}
-            onChange={(val) => setDemoMode(val as DemoMode)}
-          />
+    <AutoMath>
+      <ExpandableDemo id="change-of-basis" height={height}>
+        <div className="space-y-4">
+          {/* Header Mode Switch & Axes Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CapsuleTabs
+              options={DEMO_MODES}
+              value={demoMode}
+              onChange={(val) => setDemoMode(val as DemoMode)}
+            />
+          </div>
+
+          {/* View content based on mode */}
+          {demoMode === "2d" ? (
+            <View2D showAxes={showAxes} />
+          ) : (
+            <View3D showAxes={showAxes} />
+          )}
+
+          {/* Interaction Hint */}
+          <p className="text-xs text-muted">
+            {demoMode === "2d"
+              ? "提示：拖动画布上的橙色向量 v，观察其在标准基 [v]_B 与变形新基 [v]_C 下的坐标转换。"
+              : "提示：切换上方预设姿态、调节偏航/俯仰/翻滚滑块，按住鼠标左键在 3D 画布中旋转视角，观察相机视锥台与三列基向量的实时联动。"}
+          </p>
         </div>
-
-        {/* View content based on mode */}
-        {demoMode === "2d" ? (
-          <View2D showAxes={showAxes} />
-        ) : (
-          <View3D showAxes={showAxes} />
-        )}
-
-        {/* Interaction Hint */}
-        <p className="text-xs text-muted">
-          {demoMode === "2d"
-            ? "提示：拖动画布上的橙色向量 v，观察其在标准基 [v]_B 与变形新基 [v]_C 下的坐标转换。"
-            : "提示：切换上方预设姿态、调节偏航/俯仰/翻滚滑块，按住鼠标左键在 3D 画布中旋转视角，观察相机视锥台与三列基向量的实时联动。"}
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

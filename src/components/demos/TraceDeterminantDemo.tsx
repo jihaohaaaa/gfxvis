@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ParamSlider from "../framework/ParamSlider";
 import PresetSelector from "../framework/PresetSelector";
@@ -420,197 +420,185 @@ export default function TraceDeterminantDemo({ height }: { height?: string }) {
   const simDet = simA11 * simA22 - simA12 * simA21;
 
   return (
-    <ExpandableDemo id="trace-and-determinant" height={height}>
-      <div className="space-y-4">
-        {/* Mode Switch Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <CapsuleTabs
-            options={MODES}
-            value={mode}
-            onChange={(val) => {
-              setMode(val as DemoMode);
-              redraw();
-            }}
-          />
-        </div>
-
-        {/* 2D Canvas Viewport */}
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar onReset={resetBounds} />
-          <canvas
-            ref={canvasRef}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            className="absolute inset-0 h-full w-full cursor-crosshair"
-          />
-        </div>
-
-        {/* Presets & Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <PresetSelector
-            label="矩阵预设:"
-            options={PRESETS}
-            value={preset}
-            onChange={(p) => {
-              handlePresetChange(p);
-              redraw();
-            }}
-          />
-
-          {mode === "jacobi-flow" && (
-            <ParamSlider
-              label={<InlineMath tex="t" />}
-              min={0}
-              max={1.5}
-              step={0.05}
-              value={flowT}
+    <AutoMath>
+      <ExpandableDemo id="trace-and-determinant" height={height}>
+        <div className="space-y-4">
+          {/* Mode Switch Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CapsuleTabs
+              options={MODES}
+              value={mode}
               onChange={(val) => {
-                setFlowT(val);
+                setMode(val as DemoMode);
                 redraw();
               }}
-              widthClass="w-36"
-              display={`t = ${flowT.toFixed(2)}`}
             />
-          )}
+          </div>
 
-          {mode === "similarity" && (
-            <ParamSlider
-              label="基底旋转 θ"
-              min={0}
-              max={Math.PI}
-              step={0.05}
-              value={basisAngle}
-              onChange={(val) => {
-                setBasisAngle(val);
+          {/* 2D Canvas Viewport */}
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar onReset={resetBounds} />
+            <canvas
+              ref={canvasRef}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              className="absolute inset-0 h-full w-full cursor-crosshair"
+            />
+          </div>
+
+          {/* Presets & Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <PresetSelector
+              label="矩阵预设:"
+              options={PRESETS}
+              value={preset}
+              onChange={(p) => {
+                handlePresetChange(p);
                 redraw();
               }}
-              widthClass="w-36"
-              display={`${((basisAngle * 180) / Math.PI).toFixed(0)}°`}
             />
-          )}
-        </div>
-
-        {/* Real-time Math Invariants Information Panel */}
-        <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-3">
-          {/* Column 1: Matrix A */}
-          <div>
-            <p className="mb-1 font-semibold text-foreground">
-              当前矩阵 <InlineMath tex="A" />
-            </p>
-            <div className="text-xs text-muted leading-relaxed">
-              <div className="my-1.5 text-ink">
-                <InlineMath
-                  tex={`A = \\begin{pmatrix} ${a11.toFixed(1)} & ${a12.toFixed(1)} \\\\ ${a21.toFixed(1)} & ${a22.toFixed(1)} \\end{pmatrix}`}
-                />
-              </div>
-              <p className="mt-1 text-ink">
-                列向量{" "}
-                <InlineMath
-                  tex={`a_1=(${a11.toFixed(1)}, ${a21.toFixed(1)})`}
-                />
-              </p>
-              <p className="text-ink">
-                列向量{" "}
-                <InlineMath
-                  tex={`a_2=(${a12.toFixed(1)}, ${a22.toFixed(1)})`}
-                />
-              </p>
-            </div>
-          </div>
-
-          {/* Column 2: Invariants (Trace & Determinant) */}
-          <div>
-            <p className="mb-1 font-semibold text-foreground">核心固有不变量</p>
-            <div className="space-y-1 text-xs">
-              <p className="text-foreground">
-                <span className="font-semibold text-accent">迹 (Trace)：</span>
-                <InlineMath
-                  tex={`\\operatorname{tr}(A) = ${a11.toFixed(1)} + ${a22.toFixed(1)} = ${tr.toFixed(2)}`}
-                />
-              </p>
-              <p className="text-foreground">
-                <span className="font-semibold text-emerald-500">
-                  行列式 (Det)：
-                </span>
-                <InlineMath tex={`\\det(A) = ${det.toFixed(2)}`} />
-              </p>
-              <p className="text-muted">
-                {det > 0
-                  ? "定向保持 (逆时针)"
-                  : det < 0
-                    ? "定向翻转 (顺时针镜面)"
-                    : "退化奇异 (降维至线)"}
-              </p>
-            </div>
-          </div>
-
-          {/* Column 3: Mode-Specific Insight */}
-          <div>
-            {mode === "signed-area" && (
-              <>
-                <p className="mb-1 font-semibold text-foreground">
-                  几何面积解读
-                </p>
-                <p className="text-xs text-muted leading-relaxed">
-                  单位方格变换后平行四边形面积为{" "}
-                  <span className="font-mono font-bold text-foreground">
-                    |det(A)| = {Math.abs(det).toFixed(2)}
-                  </span>
-                  。拖动蓝色/橙色端点可实时修改列基。
-                </p>
-              </>
-            )}
 
             {mode === "jacobi-flow" && (
-              <>
-                <p className="mb-1 font-semibold text-foreground">
-                  Jacobi 体积展开
-                </p>
-                <div className="font-mono text-xs text-muted leading-relaxed">
-                  <p>实际面积 Area(t) = {jacobiArea.toFixed(3)}</p>
-                  <p>一阶线性近似 ≈ {linearApproximation.toFixed(3)}</p>
-                  <p className="mt-1 text-ink text-[11px]">
-                    t=0 时膨胀率 d(Area)/dt ≡ tr(A) = {tr.toFixed(2)}
-                  </p>
-                </div>
-              </>
+              <ParamSlider
+                label="$t$"
+                min={0}
+                max={1.5}
+                step={0.05}
+                value={flowT}
+                onChange={(val) => {
+                  setFlowT(val);
+                  redraw();
+                }}
+                widthClass="w-36"
+                display={`t = ${flowT.toFixed(2)}`}
+              />
             )}
 
             {mode === "similarity" && (
-              <>
-                <p className="mb-1 font-semibold text-foreground">
-                  新基底下的 <InlineMath tex="A' = P^{-1}AP" />
-                </p>
-                <div className="text-xs text-muted leading-relaxed">
-                  <div className="my-1.5 text-ink">
-                    <InlineMath
-                      tex={`A' = \\begin{pmatrix} ${simA11.toFixed(2)} & ${simA12.toFixed(2)} \\\\ ${simA21.toFixed(2)} & ${simA22.toFixed(2)} \\end{pmatrix}`}
-                    />
-                  </div>
-                  <p className="mt-1 font-semibold text-foreground">
-                    <InlineMath
-                      tex={`\\operatorname{tr}(A') = ${simTr.toFixed(2)} \\equiv ${tr.toFixed(2)}`}
-                    />
-                  </p>
-                  <p className="font-semibold text-foreground">
-                    <InlineMath
-                      tex={`\\det(A') = ${simDet.toFixed(2)} \\equiv ${det.toFixed(2)}`}
-                    />
-                  </p>
-                </div>
-              </>
+              <ParamSlider
+                label="基底旋转 θ"
+                min={0}
+                max={Math.PI}
+                step={0.05}
+                value={basisAngle}
+                onChange={(val) => {
+                  setBasisAngle(val);
+                  redraw();
+                }}
+                widthClass="w-36"
+                display={`${((basisAngle * 180) / Math.PI).toFixed(0)}°`}
+              />
             )}
           </div>
-        </div>
 
-        <p className="text-xs text-muted">
-          提示：在“几何网格与定向面积”模式下可直接在画布中拖拽蓝/橙向量端点；切换至“连续流动”观察微元体积增长；切换至“相似不变性”旋转基底验证迹与行列式的守恒不变性。
-        </p>
-      </div>
-    </ExpandableDemo>
+          {/* Real-time Math Invariants Information Panel */}
+          <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-3">
+            {/* Column 1: Matrix A */}
+            <div>
+              <p className="mb-1 font-semibold text-foreground">当前矩阵 $A$</p>
+              <div className="text-xs text-muted leading-relaxed">
+                <div className="my-1.5 text-ink">
+                  {`$A = \\begin{pmatrix} ${a11.toFixed(1)} & ${a12.toFixed(1)} \\\\ ${a21.toFixed(1)} & ${a22.toFixed(1)} \\end{pmatrix}$`}
+                </div>
+                <p className="mt-1 text-ink">
+                  列向量 {`$a_1=(${a11.toFixed(1)}, ${a21.toFixed(1)})$`}
+                </p>
+                <p className="text-ink">
+                  列向量 {`$a_2=(${a12.toFixed(1)}, ${a22.toFixed(1)})$`}
+                </p>
+              </div>
+            </div>
+
+            {/* Column 2: Invariants (Trace & Determinant) */}
+            <div>
+              <p className="mb-1 font-semibold text-foreground">
+                核心固有不变量
+              </p>
+              <div className="space-y-1 text-xs">
+                <p className="text-foreground">
+                  <span className="font-semibold text-accent">
+                    迹 (Trace)：
+                  </span>
+                  {`$\\operatorname{tr}(A) = ${a11.toFixed(1)} + ${a22.toFixed(1)} = ${tr.toFixed(2)}$`}
+                </p>
+                <p className="text-foreground">
+                  <span className="font-semibold text-emerald-500">
+                    行列式 (Det)：
+                  </span>
+                  {`$\\det(A) = ${det.toFixed(2)}$`}
+                </p>
+                <p className="text-muted">
+                  {det > 0
+                    ? "定向保持 (逆时针)"
+                    : det < 0
+                      ? "定向翻转 (顺时针镜面)"
+                      : "退化奇异 (降维至线)"}
+                </p>
+              </div>
+            </div>
+
+            {/* Column 3: Mode-Specific Insight */}
+            <div>
+              {mode === "signed-area" && (
+                <>
+                  <p className="mb-1 font-semibold text-foreground">
+                    几何面积解读
+                  </p>
+                  <p className="text-xs text-muted leading-relaxed">
+                    单位方格变换后平行四边形面积为{" "}
+                    <span className="font-mono font-bold text-foreground">
+                      |det(A)| = {Math.abs(det).toFixed(2)}
+                    </span>
+                    。拖动蓝色/橙色端点可实时修改列基。
+                  </p>
+                </>
+              )}
+
+              {mode === "jacobi-flow" && (
+                <>
+                  <p className="mb-1 font-semibold text-foreground">
+                    Jacobi 体积展开
+                  </p>
+                  <div className="font-mono text-xs text-muted leading-relaxed">
+                    <p>实际面积 Area(t) = {jacobiArea.toFixed(3)}</p>
+                    <p>一阶线性近似 ≈ {linearApproximation.toFixed(3)}</p>
+                    <p className="mt-1 text-ink text-[11px]">
+                      t=0 时膨胀率 d(Area)/dt ≡ tr(A) = {tr.toFixed(2)}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {mode === "similarity" && (
+                <>
+                  <p className="mb-1 font-semibold text-foreground">
+                    新基底下的 {"$A' = P^{-1}AP$"}
+                  </p>
+                  <div className="text-xs text-muted leading-relaxed">
+                    <div className="my-1.5 text-ink">
+                      {`$A' = \\begin{pmatrix} ${simA11.toFixed(2)} & ${simA12.toFixed(2)} \\\\ ${simA21.toFixed(2)} & ${simA22.toFixed(2)} \\end{pmatrix}$`}
+                    </div>
+                    <p className="mt-1 font-semibold text-foreground">
+                      {`$\\operatorname{tr}(A') = ${simTr.toFixed(2)} \\equiv ${tr.toFixed(2)}$`}
+                    </p>
+                    <p className="font-semibold text-foreground">
+                      {`$\\det(A') = ${simDet.toFixed(2)} \\equiv ${det.toFixed(2)}$`}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <p className="text-xs text-muted">
+            提示：在“几何网格与定向面积”模式下可直接在画布中拖拽蓝/橙向量端点；切换至“连续流动”观察微元体积增长；切换至“相似不变性”旋转基底验证迹与行列式的守恒不变性。
+          </p>
+        </div>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

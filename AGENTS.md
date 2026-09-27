@@ -1,16 +1,15 @@
 # AGENTS.md
 
-GFXVis:本地托管的图形学/可视化技术博客(Astro 静态输出 + MDX + KaTeX + Shiki + Tailwind CSS v4 + React/Three.js)。
+GFXVis:本地托管的图形学/可视化技术博客(Astro Node standalone 服务端 + 预渲染页面 + MDX + KaTeX + Shiki + Tailwind CSS v4 + React/Three.js)。
 
 ## 项目规则
 
 - **可视化约定**:实现或修改可视化前先读 `docs/conventions.md`(坐标系与 `mathToWorld` 映射、方向与符号、记号与命名、渲染与交互约定)。
-  - **CanvasToolbar 放置与 UI 重叠防护**: `<CanvasToolbar>` **必须且只能**放置在 Canvas 画布容器（必须含 `relative overflow-hidden`）内部作为直接子元素，严禁放在外层 Flex/卡片容器；画布容器高度必须使用 `h-[var(--demo-height,28rem)]`（2D 为 `20rem`）；严禁在外部重复实现复位/关闭按钮。
+  - **CanvasToolbar 放置与视口规范**: `<CanvasToolbar>` **必须且只能**放置在 Canvas 画布容器（必须含 `relative overflow-hidden`）内部作为直接子元素，统一承载「↺ 复位」视野功能；画布容器高度必须使用 `h-[var(--demo-height,20rem)]`（3D/机箱为 `28rem`）；画布底部横条（`CanvasResizer`）提供双击自适应与拖拽手动高度控制；全屏展开按钮统一置于外部卡片/机箱标题栏。
   - **多选一选项卡与预设规范**: 严禁手写裸 `<button>` 配合自定义背景自制 Tab / 预设选择器；模式/算法/视图切换必须统一使用 `<CapsuleTabs>`（一级模式用默认 `size="sm"`，参数/细项用 `size="xs"`）；数据场景预设必须统一使用 `<PresetSelector>`。技术细节以 `docs/conventions.md` 为唯一权威来源。
 - **KaTeX 数学渲染**:正文公式由自写插件 `src/plugins/remark-katex.ts` 渲染(直接调用 katex 0.18.2),与 `BaseLayout.astro` 导入的 `katex/dist/katex.min.css` 同版本。**不要重新引入 `rehype-katex`**——它已停更且锁定 `katex ^0.16.0`,曾因类名与 0.18 CSS 不匹配导致 `≠` 显示成 `/=`。详见 `docs/katex-version-mismatch.md`。
-  - **InlineMath 转义规则**: JSX 中使用 `<InlineMath tex="..." />` 时：
-    - **静态字符串属性(双引号)**: 必须使用**单个反斜杠**（如 `tex="\mathbb{R}^3"`、`tex="\mathbf{b}"`），**严禁写成双反斜杠 `tex="\\..."`**（JSX 静态双引号属性不会转义反斜杠，`\\` 会被 KaTeX 解析为换行符导致公式破坏/报错）。
-    - **模板字符串/JS表达式(`{...}`)**: 按 JS 规则使用**双反斜杠**（如 ``tex={`\\hat{\\mathbf{x}} = ${val}`}``，矩阵换行使用 `\\\\`）。
+  - **AutoMath 自动公式渲染**: 交互 Island 顶层统一使用 `<AutoMath>` 包裹一次，组件内部所有 JSX 节点、自定义属性（如 `ParamSlider label="$x$"`）及字符串均可直接写 `$ ... $` / `$$ ... $$`，自动完成 KaTeX 解析并自带全局渲染缓存。严禁在 Island 内部碎片化嵌套多个 `<AutoMath>`。
+    - **JS 表达式/字符串转义**: 在 JS 字符串（如 `{"$\\mathbf{v}$"}` 或 `` `$\\lambda = ${val}$` ``）中，反斜杠需转义为 `\\`；包含 `{...}` 或 `< 0` 的 TeX 公式在 JSX 文本中建议用字符串 `{"$...$"}` 包裹，避免 TSX 语法冲突。
 - **MDX 排版**:
   - **加粗与重点统一使用 `<strong>` 标签（严禁使用 `**...**`）**: 文章中一律使用标准 HTML/MDX 标签 `<strong>重点内容</strong>` 进行加粗强调，**严禁使用 Markdown `**...**`**。这消除了 CommonMark 规范中由内外侧空格、中英文紧贴或全角引号引发的定界符误配与乱码风险。CI 及 `pnpm validate` 会自动执行 `scripts/format-bold.ts --check` 拦截裸 `**`。
   - **标点规范**: **中文语句用全角标点**（`,;:?!` → `，；：？！`、引号用 `“”`），公式/代码/Markdown 链接保持英文标点。详见 `docs/conventions.md`"记号与命名"。
@@ -24,7 +23,7 @@ GFXVis:本地托管的图形学/可视化技术博客(Astro 静态输出 + MDX +
 ## 常用命令
 
 - `pnpm dev` — 本地开发
-- `pnpm build` — 静态构建到 `dist/`
+- `pnpm build` — 校验并构建预渲染页面与 Node standalone 服务端到 `dist/`
 - `pnpm lint` — ESLint 检查
 - `pnpm format` / `pnpm format:check` — 加粗规范自动迁移/检查 + Prettier 格式化 / 校验
 - `pnpm format:bold` / `pnpm format:bold:check` — 独立执行将 `**` 迁移为 `<strong>` / 检查是否存在违规裸 `**`

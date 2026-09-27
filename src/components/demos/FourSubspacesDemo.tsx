@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import PresetSelector from "../framework/PresetSelector";
 import {
   drawAdaptiveAxes,
@@ -483,134 +483,129 @@ export const FourSubspacesDemo: React.FC<{ height?: string }> = ({
   }, [preset, showAxes, xVec, leftCanvas.redraw, rightCanvas.redraw]);
 
   return (
-    <ExpandableDemo id="four-subspaces" height={height}>
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {/* Left Canvas: Input Space */}
-          <div
-            ref={leftCanvas.containerRef}
-            className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border bg-surface"
-          >
-            <CanvasToolbar onReset={leftCanvas.resetBounds} />
-            <canvas
-              ref={leftCanvas.canvasRef}
-              className="absolute inset-0 h-full w-full"
-            />
-            <div className="pointer-events-none absolute top-3 left-3 flex flex-col gap-1 select-none">
-              <span className="font-semibold text-xs text-foreground">
-                输入空间 <InlineMath tex="\mathbb{R}^2" /> (Input Space)
-              </span>
-              <span className="text-xs text-muted">
-                <InlineMath tex="x = x_{\text{row}} + x_{\text{null}}" />
-              </span>
-            </div>
-          </div>
-
-          {/* Right Canvas: Output Space */}
-          <div
-            ref={rightCanvas.containerRef}
-            className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border bg-surface"
-          >
-            <CanvasToolbar onReset={rightCanvas.resetBounds} />
-            <canvas
-              ref={rightCanvas.canvasRef}
-              className="absolute inset-0 h-full w-full"
-            />
-            <div className="pointer-events-none absolute top-3 left-3 flex flex-col gap-1 select-none">
-              <span className="font-semibold text-xs text-foreground">
-                输出空间 <InlineMath tex="\mathbb{R}^2" /> (Output Space)
-              </span>
-              <span className="text-xs text-muted">
-                <InlineMath tex="b = Ax = A x_{\text{row}}" />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Preset Controls */}
-        <PresetSelector
-          label="预设矩阵 A:"
-          options={PRESETS}
-          value={preset}
-          onChange={setPreset}
-        />
-
-        {/* Description & Matrix Formula Panel */}
-        <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
-          <div>
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="font-semibold text-foreground">
-                当前变换矩阵 <InlineMath tex="A" />
-              </p>
-              {isIdempotent && isSymmetric && (
-                <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                  正交投影 (P²=P, Pᵀ=P)
+    <AutoMath>
+      <ExpandableDemo id="four-subspaces" height={height}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {/* Left Canvas: Input Space */}
+            <div
+              ref={leftCanvas.containerRef}
+              className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border bg-surface"
+            >
+              <CanvasToolbar onReset={leftCanvas.resetBounds} />
+              <canvas
+                ref={leftCanvas.canvasRef}
+                className="absolute inset-0 h-full w-full"
+              />
+              <div className="pointer-events-none absolute top-3 left-3 flex flex-col gap-1 select-none">
+                <span className="font-semibold text-xs text-foreground">
+                  输入空间 {"$\\mathbb{R}^2$"} (Input Space)
                 </span>
-              )}
-              {isIdempotent && !isSymmetric && (
-                <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                  斜投影 (P²=P, Pᵀ≠P)
+                <span className="text-xs text-muted">
+                  {"$x = x_{\\text{row}} + x_{\\text{null}}$"}
                 </span>
-              )}
-              {!isIdempotent && (
-                <span className="rounded bg-muted/15 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
-                  非幂等变换 (P²≠P)
-                </span>
-              )}
-            </div>
-
-            <div className="text-xs text-muted leading-relaxed">
-              <div className="my-1.5 text-ink">
-                <InlineMath
-                  tex={`A = \\begin{pmatrix} ${a11.toFixed(1)} & ${a12.toFixed(1)} \\\\ ${a21.toFixed(1)} & ${a22.toFixed(1)} \\end{pmatrix}`}
-                />
               </div>
-              <p className="mt-1 font-medium text-foreground">
-                矩阵的秩{" "}
-                <InlineMath tex={`\\operatorname{rank}(A) = ${rank}`} /> (
-                {isRank1 ? "秩亏退化" : "满秩可逆"})
-              </p>
-              <p className="mt-1 text-muted text-[11px]">{activePreset.desc}</p>
+            </div>
+
+            {/* Right Canvas: Output Space */}
+            <div
+              ref={rightCanvas.containerRef}
+              className="relative h-[var(--demo-height,22rem)] w-full overflow-hidden rounded-xl border border-border bg-surface"
+            >
+              <CanvasToolbar onReset={rightCanvas.resetBounds} />
+              <canvas
+                ref={rightCanvas.canvasRef}
+                className="absolute inset-0 h-full w-full"
+              />
+              <div className="pointer-events-none absolute top-3 left-3 flex flex-col gap-1 select-none">
+                <span className="font-semibold text-xs text-foreground">
+                  输出空间 {"$\\mathbb{R}^2$"} (Output Space)
+                </span>
+                <span className="text-xs text-muted">
+                  {"$b = Ax = A x_{\\text{row}}$"}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div>
-            <p className="mb-1 font-semibold text-foreground">
-              四大子空间维度关系
-            </p>
-            <div className="space-y-1 text-xs text-muted leading-relaxed">
-              <p className="text-blue-600 dark:text-blue-400 font-medium">
-                行空间 <InlineMath tex="\operatorname{Row}(A)" />: 维度{" "}
-                <InlineMath tex={`r = ${rank}`} />
+          {/* Preset Controls */}
+          <PresetSelector
+            label="预设矩阵 A:"
+            options={PRESETS}
+            value={preset}
+            onChange={setPreset}
+          />
+
+          {/* Description & Matrix Formula Panel */}
+          <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
+            <div>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="font-semibold text-foreground">
+                  当前变换矩阵 $A$
+                </p>
+                {isIdempotent && isSymmetric && (
+                  <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                    正交投影 (P²=P, Pᵀ=P)
+                  </span>
+                )}
+                {isIdempotent && !isSymmetric && (
+                  <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                    斜投影 (P²=P, Pᵀ≠P)
+                  </span>
+                )}
+                {!isIdempotent && (
+                  <span className="rounded bg-muted/15 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
+                    非幂等变换 (P²≠P)
+                  </span>
+                )}
+              </div>
+
+              <div className="text-xs text-muted leading-relaxed">
+                <div className="my-1.5 text-ink">
+                  {`$A = \\begin{pmatrix} ${a11.toFixed(1)} & ${a12.toFixed(1)} \\\\ ${a21.toFixed(1)} & ${a22.toFixed(1)} \\end{pmatrix}$`}
+                </div>
+                <p className="mt-1 font-medium text-foreground">
+                  矩阵的秩 {`$\\operatorname{rank}(A) = ${rank}$`} (
+                  {isRank1 ? "秩亏退化" : "满秩可逆"})
+                </p>
+                <p className="mt-1 text-muted text-[11px]">
+                  {activePreset.desc}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-1 font-semibold text-foreground">
+                四大子空间维度关系
               </p>
-              <p className="text-red-600 dark:text-red-400 font-medium">
-                零空间 <InlineMath tex="\operatorname{Null}(A)" />: 维度{" "}
-                <InlineMath tex={`n - r = ${2 - rank}`} />{" "}
-                {isRank1 ? "(垂直于 Row)" : ""}
-              </p>
-              <p className="text-purple-600 dark:text-purple-400 font-medium">
-                列空间 <InlineMath tex="\operatorname{Col}(A)" />: 维度{" "}
-                <InlineMath tex={`r = ${rank}`} />
-              </p>
-              <p className="text-emerald-600 dark:text-emerald-400 font-medium">
-                左零空间 <InlineMath tex="\operatorname{Null}(A^\top)" />: 维度{" "}
-                <InlineMath tex={`m - r = ${2 - rank}`} />{" "}
-                {isRank1 ? "(垂直于 Col)" : ""}
-              </p>
+              <div className="space-y-1 text-xs text-muted leading-relaxed">
+                <p className="text-blue-600 dark:text-blue-400 font-medium">
+                  行空间 {"$\\operatorname{Row}(A)$"}: 维度 {`$r = ${rank}$`}
+                </p>
+                <p className="text-red-600 dark:text-red-400 font-medium">
+                  零空间 {"$\\operatorname{Null}(A)$"}: 维度{" "}
+                  {`$n - r = ${2 - rank}$`} {isRank1 ? "(垂直于 Row)" : ""}
+                </p>
+                <p className="text-purple-600 dark:text-purple-400 font-medium">
+                  列空间 {"$\\operatorname{Col}(A)$"}: 维度 {`$r = ${rank}$`}
+                </p>
+                <p className="text-emerald-600 dark:text-emerald-400 font-medium">
+                  左零空间 {"$\\operatorname{Null}(A^\\top)$"}: 维度{" "}
+                  {`$m - r = ${2 - rank}$`} {isRank1 ? "(垂直于 Col)" : ""}
+                </p>
+              </div>
             </div>
           </div>
+
+          <p className="text-xs text-muted">
+            提示：拖动中心橙色圆点进行 2D 自由移动；拖动蓝色箭头沿{" "}
+            {"$\\operatorname{Row}(A)$"} 行空间定向滑动；拖动红色箭头沿{" "}
+            {"$\\operatorname{Null}(A)$"} 零空间定向滑动（观察右侧输出向量 $b =
+            Ax$ 保持完全静止不变！）。两个视口均支持滚轮缩放与中键/右键平移。
+          </p>
         </div>
-
-        <p className="text-xs text-muted">
-          提示：拖动中心橙色圆点进行 2D 自由移动；拖动蓝色箭头沿{" "}
-          <InlineMath tex="\operatorname{Row}(A)" />{" "}
-          行空间定向滑动；拖动红色箭头沿{" "}
-          <InlineMath tex="\operatorname{Null}(A)" />{" "}
-          零空间定向滑动（观察右侧输出向量 <InlineMath tex="b = Ax" />{" "}
-          保持完全静止不变！）。两个视口均支持滚轮缩放与中键/右键平移。
-        </p>
-      </div>
-    </ExpandableDemo>
+      </ExpandableDemo>
+    </AutoMath>
   );
 };
 

@@ -24,6 +24,15 @@ export default function CanvasResizer({
     return null;
   }
 
+  const isAdaptive = expandable.isAdaptive;
+  const currentHeight = expandable.customHeight;
+
+  const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    expandable.resetToAdaptive();
+  };
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -73,29 +82,57 @@ export default function CanvasResizer({
     window.addEventListener("pointerup", handlePointerUp);
   };
 
+  const titleText = isAdaptive
+    ? "自适应高度 · 按住上下拖拽调整 · 双击保持自适应"
+    : `手动高度 (${currentHeight}px) · 左右通栏 · 双击恢复自适应`;
+
+  const isAbsolute = className.includes("absolute");
+  const positionClass = isAbsolute ? "" : "relative";
+
   return (
     <div
+      onDoubleClick={handleDoubleClick}
       onPointerDown={handlePointerDown}
-      className={`group relative flex h-3.5 w-full cursor-ns-resize items-center justify-center select-none ${
-        isDragging ? "opacity-100" : "opacity-75 hover:opacity-100"
-      } ${className}`}
-      title="按住上下拖拽调节视口高度"
-      aria-label="调节视口高度"
+      className={`group ${positionClass} flex h-4 w-full cursor-ns-resize items-center justify-center select-none py-1 transition-opacity ${
+        isDragging ? "opacity-100" : "opacity-90 hover:opacity-100"
+      } ${className}`.trim()}
+      title={titleText}
+      aria-label={titleText}
+      data-testid="canvas-resizer"
+      data-mode={isAdaptive ? "adaptive" : "manual"}
     >
-      {/* Visual handle bar */}
+      {/* Visual handle bar: normal width in adaptive mode, full width covering left to right in manual mode */}
       <div
-        className={`h-1 rounded-full transition-all duration-150 ${
-          isDragging
-            ? "w-24 bg-accent shadow-sm"
-            : "w-12 bg-border/80 group-hover:w-16 group-hover:bg-accent/80"
-        }`}
+        className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
+          isAdaptive
+            ? "w-20 bg-border hover:w-28 hover:bg-accent/70 dark:bg-border/90"
+            : "w-full bg-accent shadow-xs hover:bg-accent/90"
+        } ${isDragging ? "ring-2 ring-accent/30" : ""}`}
       />
 
       {/* Floating live height badge during drag */}
       {isDragging && dragHeight !== null && (
-        <div className="absolute -top-7 z-30 flex items-center gap-1 rounded-md border border-border/80 bg-surface/95 px-2 py-0.5 text-[11px] font-mono font-medium text-foreground shadow-md backdrop-blur-md">
+        <div className="absolute -top-7 z-30 flex items-center gap-1 rounded-md border border-accent/80 bg-surface/95 px-2 py-0.5 text-[11px] font-mono font-medium text-foreground shadow-md backdrop-blur-md">
           <span>↕</span>
           <span>{dragHeight} px</span>
+        </div>
+      )}
+
+      {/* Hover badge when in manual mode (not dragging) */}
+      {!isDragging && !isAdaptive && currentHeight !== null && (
+        <div className="pointer-events-none absolute -top-7 z-20 hidden items-center gap-1.5 rounded-md border border-accent/40 bg-surface/95 px-2.5 py-0.5 text-[11px] font-mono font-medium text-foreground shadow-sm backdrop-blur-md group-hover:flex">
+          <span className="font-semibold text-accent">{currentHeight}px</span>
+          <span className="text-muted">·</span>
+          <span>双击恢复自适应</span>
+        </div>
+      )}
+
+      {/* Subtle tooltip hint on hover when in adaptive mode (not dragging) */}
+      {!isDragging && isAdaptive && (
+        <div className="pointer-events-none absolute -top-7 z-20 hidden items-center gap-1.5 rounded-md border border-border bg-surface/95 px-2.5 py-0.5 text-[11px] font-sans text-muted shadow-sm backdrop-blur-md group-hover:flex">
+          <span>拖拽调整高度</span>
+          <span>·</span>
+          <span className="font-medium text-accent">默认自适应</span>
         </div>
       )}
     </div>

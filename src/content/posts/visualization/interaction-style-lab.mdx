@@ -1,0 +1,43 @@
+---
+title: "交互式可视化 UI 风格试验场"
+description: "比较 KDE Breeze 窗口外壳在六种交互区域布局下的组织方式。"
+date: 2026-10-02
+tags: ["visualization", "interaction", "ui-ux", "design"]
+draft: false
+---
+
+import InteractionStyleLabDemo from "../../../components/demos/InteractionStyleLabDemo";
+
+本页只保留 KDE Breeze 窗口外壳版。六个样例使用<strong>同一个二维向量投影、相同初始值和相同交互</strong>，样例状态互相独立。
+
+下面将六种区域布局分别展开，共六个独立样例。每个样例拥有独立的投影状态，方便直接比较布局密度、控制架高度和公式区域的阅读空间。
+
+拖动向量端点或调整坐标滑块，切换投影目标和模式。请比较不同的信息组织、控件位置、边界处理和阅读节奏，选择更适合后续全站迁移的方向。
+
+## 01．KDE Breeze · 右侧紧凑控制架
+
+<InteractionStyleLabDemo variant="kde" layout="side-right" preset="side-right" client:visible />
+
+## 02．KDE Breeze · 画布下方左右分区
+
+<InteractionStyleLabDemo variant="kde" layout="bottom-split" preset="bottom-split" client:visible />
+
+## 03．KDE Breeze · 三栏工作台
+
+<InteractionStyleLabDemo variant="kde" layout="three-column" preset="three-column" client:visible />
+
+## 04．KDE Breeze · 密集控制 Dock
+
+<InteractionStyleLabDemo variant="kde" layout="dense-dock" preset="dense-dock" client:visible />
+
+## 05．KDE Breeze · 双画布对照
+
+<InteractionStyleLabDemo variant="kde" layout="dual-view" preset="dual-view" client:visible />
+
+## 06．KDE Breeze · 左侧紧凑控制架
+
+<InteractionStyleLabDemo variant="kde" layout="side-left" preset="side-left" client:visible />
+
+## 下一轮风格探索
+
+请比较这六个样例的区域关系和视觉密度。选定方向后，再规划全站迁移的范围和节奏。

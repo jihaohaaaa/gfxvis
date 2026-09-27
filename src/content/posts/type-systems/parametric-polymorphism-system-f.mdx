@@ -36,13 +36,63 @@ System F 引入了<strong>全称类型量化（Universal Quantification, $\foral
 
 ## 一、为什么需要泛型：STLC 的多态贫血症
 
-### 1.1 多态的三种面孔
+### 1.1 多态的分类学：Cardelli-Wegner 谱系与受约束参数多态
 
-在面向对象与现代编程中，“多态（Polymorphism）”是一个被频繁提及的高频词。但在类型论中，多态拥有三种截然不同的哲学面孔：
+在现代软件工程中，“多态（Polymorphism）”是一个被高频提及的核心词汇。1985 年，类型论大师卢卡·卡德利（Luca Cardelli）与彼得·韦格纳（Peter Wegner）发表了奠基性论文《On Understanding Types, Data Abstraction, and Polymorphism》，首次为计算机科学建立了经典的多态分类谱系：
 
-1. <strong>特设多态（Ad-hoc Polymorphism / 重载 / Trait / Type Classes）</strong>：同一个函数名针对不同类型执行完全不同的算法（如 `+` 号既能算整数加法，又能拼字符串）；
-2. <strong>包含多态（Inclusion Polymorphism / 子类型 Subtyping）</strong>：面向对象继承，子类实体可以安全代换父类引用的上下文（如 `Dog <: Animal`）；
-3. <strong>参数多态（Parametric Polymorphism / 泛型 Generics / System F）</strong>：<strong>对所有类型一视同仁！</strong>核心算法与具体数据类型彻底解耦，函数在处理数据时对其具体内部构造毫不在意、完全不依赖特定类型的特殊行为。
+```mermaid
+flowchart TD
+    Poly["多态体系 (Polymorphism)"]
+    Univ["通用多态 (Universal)\n无限类型复用统一代码"]
+    Adhoc["特设多态 (Ad-hoc)\n针对不同类型分派特定实现"]
+
+    Param["参数多态 (Parametric)\n(System F / 泛型 Generics)"]
+    Sub["包含/子类型多态 (Subtype)\n(LSP 代换 / S <: T)"]
+    Over["重载多态 (Overloading)\n(函数与操作符重载)"]
+    Coerc["强制多态 (Coercion)\n(编译器隐式类型转换)"]
+
+    Constrained["受约束的参数多态 (Constrained Parametric)\n(Trait Bounds / C++20 Concepts / 有界量化)"]
+
+    Poly --> Univ
+    Poly --> Adhoc
+
+    Univ --> Param
+    Univ --> Sub
+    Adhoc --> Over
+    Adhoc --> Coerc
+
+    Param -.->|施加能力边界| Constrained
+    Sub -.->|提供继承上界| Constrained
+    Over -.->|规范为类型类契约| Constrained
+```
+
+#### 1. 通用多态（Universal Polymorphism）
+通用多态的本质特征是：<strong>同一段代码能够以相同的形式，安全地作用于潜在无限多的具体类型之上。</strong>
+- <strong>参数多态（Parametric Polymorphism，即本篇主角 System F）</strong>：<strong>对所有类型一视同仁！</strong>核心算法与具体数据类型彻底解耦，函数完全不关心具体类型的内部构造（如恒等函数 `id = \X. \x:X. x`，在 Rust/C++/C#/TypeScript 中即为泛型函数）；
+- <strong>包含多态（Inclusion Polymorphism / 子类型多态 Subtype Polymorphism）</strong>：代码面向抽象基类或形状接口编写，任何具体子类型的实例均可无缝代换（遵循里氏替换原则 LSP，如 `Dog <: Animal`）。
+
+#### 2. 特设多态（Ad-hoc Polymorphism）
+特设多态的本质特征是：<strong>同一函数名称在不同类型下执行截然不同的物理逻辑，仅对有限且显式声明的离散类型集合生效。</strong>
+- <strong>重载多态（Overloading）</strong>：允许同名函数根据参数类型分派不同的物理实现（如 `+` 运算符在整数上执行 CPU 加法指令，在字符串上执行堆内存拼接）；
+- <strong>强制多态（Coercion Polymorphism）</strong>：由编译器在调用点隐式插入类型转换逻辑（例如把整型 `int` 隐式拓宽提升为浮点型 `float`）。
+
+#### 3. 终极集大成者：受约束的参数多态（Constrained Parametric Polymorphism）
+纯粹的参数多态虽然极具通用性，但存在致命的“贫血症”：因为对类型参数一无所知，函数<strong>不能对泛型对象执行任何具有语义的操作</strong>（甚至连 `x == y` 或 `x < y` 都无法假设）。
+
+为了突破纯参数多态的局限，现代程序语言将<strong>参数多态</strong>与<strong>特设多态/子类型多态</strong>深度融合，诞生了<strong>受约束的参数多态（Constrained Parametric Polymorphism）</strong>，亦称<strong>有界量化（Bounded Quantification）</strong>：
+$$
+\forall X <: T. \quad \text{或} \quad \forall X : \text{Trait}.
+$$
+它允许泛型函数在声明类型形参的同时，对其施加明确的能力约束：
+
+| 语言体系 | 受约束参数多态的工程语法 | 核心实现与约束机制 |
+| :--- | :--- | :--- |
+| <strong>Rust</strong> | `fn sort<T: Ord>(v: &mut [T])` | <strong>Trait Bounds（特质约束）</strong>：基于类型类机制，编译期单态化分派 |
+| <strong>C++20</strong> | `template<std::totally_ordered T> void sort(vector<T>& v)` | <strong>Concepts（概念约束）</strong>：编译期谓词检查，不满足约束则 SFINAE 失败 |
+| <strong>C#</strong> | `void Sort<T>(List<T> v) where T : IComparable<T>` | <strong>泛型约束（where 子句）</strong>：名义接口约束，JIT 虚拟机分派 |
+| <strong>TypeScript</strong> | `function sort<T extends { compare(other: T): number }>(v: T[])` | <strong>有界泛型（Bounded Generics）</strong>：结构形状约束，类型擦除 |
+
+受约束的参数多态兼具了参数多态的通用复用能力与特设/包含多态的操作能力，成为了现代静态类型系统中最强韧的生产力工具。
 
 ### 1.2 四大现代语言的多态语法初览
 

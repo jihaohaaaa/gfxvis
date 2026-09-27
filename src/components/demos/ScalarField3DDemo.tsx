@@ -12,7 +12,7 @@ import { attachGizmo3D } from "../../visualizations/core/3d/gizmo3d";
 import Checkbox from "../framework/Checkbox";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import ExpandableDemo from "../framework/ExpandableDemo";
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import PresetSelector from "../framework/PresetSelector";
 import { useViewer3D } from "../framework/useViewer3D";
@@ -108,107 +108,109 @@ export default function ScalarField3DDemo({ height }: { height?: string }) {
   const gradMag = Math.hypot(gx, gy, gz);
 
   return (
-    <ExpandableDemo id="scalar-field-3d" height={height}>
-      <div className="space-y-3">
-        <div
-          ref={containerRef}
-          className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
-        >
-          <CanvasToolbar />
-        </div>
+    <AutoMath>
+      <ExpandableDemo id="scalar-field-3d" height={height}>
+        <div className="space-y-3">
+          <div
+            ref={containerRef}
+            className="relative h-[var(--demo-height,28rem)] w-full overflow-hidden rounded-xl border border-border"
+          >
+            <CanvasToolbar />
+          </div>
 
-        {/* Preset Controls */}
-        <PresetSelector
-          label="空间探针预设:"
-          options={PROBE_PRESETS}
-          value={probePreset}
-          onChange={handlePreset}
-        />
+          {/* Preset Controls */}
+          <PresetSelector
+            label="空间探针预设:"
+            options={PROBE_PRESETS}
+            value={probePreset}
+            onChange={handlePreset}
+          />
 
-        {/* Live Mathematical Analysis Cards */}
-        <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <p className="font-semibold text-foreground">
-              3D 探针位置与标量场值
-            </p>
-            <div className="space-y-1 text-xs text-muted">
-              <p>
-                坐标点 <InlineMath tex="P(x, y, z)" />:{" "}
-                <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">
-                  ({probe.x.toFixed(2)}, {probe.y.toFixed(2)},{" "}
-                  {probe.z.toFixed(2)})
-                </span>
+          {/* Live Mathematical Analysis Cards */}
+          <div className="grid gap-3 rounded-lg border border-border bg-surface-hover/50 p-3.5 text-sm sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <p className="font-semibold text-foreground">
+                3D 探针位置与标量场值
               </p>
-              <p>
-                场值 <InlineMath tex="\varphi = x^2 + y^2 - z^2" />:{" "}
-                <span className="font-mono font-semibold text-foreground">
-                  {val.toFixed(3)}
-                </span>
+              <div className="space-y-1 text-xs text-muted">
+                <p>
+                  坐标点 $P(x, y, z)$:{" "}
+                  <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">
+                    ({probe.x.toFixed(2)}, {probe.y.toFixed(2)},{" "}
+                    {probe.z.toFixed(2)})
+                  </span>
+                </p>
+                <p>
+                  场值 {"$\\varphi = x^2 + y^2 - z^2$"}:{" "}
+                  <span className="font-mono font-semibold text-foreground">
+                    {val.toFixed(3)}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="font-semibold text-foreground">
+                局部梯度向量与最大上升率
               </p>
+              <div className="space-y-1 text-xs text-muted">
+                <p>
+                  梯度 {"$\\nabla \\varphi = (2x, 2y, -2z)$"}:{" "}
+                  <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+                    ({gx.toFixed(2)}, {gy.toFixed(2)}, {gz.toFixed(2)})
+                  </span>
+                </p>
+                <p>
+                  梯度模长 {"$\\|\\nabla \\varphi\\|$"}:{" "}
+                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    {gradMag.toFixed(3)}
+                  </span>
+                  <span className="ml-1 text-[11px] text-muted">
+                    (空间最速上升方向)
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <p className="font-semibold text-foreground">
-              局部梯度向量与最大上升率
-            </p>
-            <div className="space-y-1 text-xs text-muted">
-              <p>
-                梯度 <InlineMath tex="\nabla \varphi = (2x, 2y, -2z)" />:{" "}
-                <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
-                  ({gx.toFixed(2)}, {gy.toFixed(2)}, {gz.toFixed(2)})
-                </span>
-              </p>
-              <p>
-                梯度模长 <InlineMath tex="\|\nabla \varphi\|" />:{" "}
-                <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
-                  {gradMag.toFixed(3)}
-                </span>
-                <span className="ml-1 text-[11px] text-muted">
-                  (空间最速上升方向)
-                </span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Sliders & Toggles */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-2 text-xs text-muted">
-              <span>{stats.min.toFixed(1)}</span>
-              <div
-                className="h-3 w-32 rounded-full border border-border"
-                style={{ background: colormapGradient("coolwarm") }}
+          {/* Sliders & Toggles */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <div className="flex items-center gap-2 text-xs text-muted">
+                <span>{stats.min.toFixed(1)}</span>
+                <div
+                  className="h-3 w-32 rounded-full border border-border"
+                  style={{ background: colormapGradient("coolwarm") }}
+                />
+                <span>{stats.max.toFixed(1)}</span>
+              </div>
+              <ParamSlider
+                label="密度"
+                min={GRID_MIN}
+                max={GRID_MAX}
+                step={2}
+                value={density}
+                onChange={setDensity}
+                widthClass="w-32"
+                display={`${density}³`}
               />
-              <span>{stats.max.toFixed(1)}</span>
             </div>
-            <ParamSlider
-              label="密度"
-              min={GRID_MIN}
-              max={GRID_MAX}
-              step={2}
-              value={density}
-              onChange={setDensity}
-              widthClass="w-32"
-              display={`${density}³`}
-            />
+            <div className="flex flex-wrap items-center gap-3">
+              <Checkbox
+                label="网格梯度场"
+                checked={arrowsVisible}
+                onChange={setArrowsVisible}
+              />
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Checkbox
-              label="网格梯度场"
-              checked={arrowsVisible}
-              onChange={setArrowsVisible}
-            />
-          </div>
-        </div>
 
-        <p className="text-xs text-muted">
-          左键按住金黄色探针直接在 3D 空间拖动 · 左键/中键空白旋转 · 滚轮缩放 ·
-          右键平移；金黄大箭头为探针处的梯度 <InlineMath tex="\nabla \varphi" />{" "}
-          方向，橙色虚线为坐标投影辅助线。
-        </p>
-      </div>
-    </ExpandableDemo>
+          <p className="text-xs text-muted">
+            左键按住金黄色探针直接在 3D 空间拖动 · 左键/中键空白旋转 · 滚轮缩放
+            · 右键平移；金黄大箭头为探针处的梯度 {"$\\nabla \\varphi$"}{" "}
+            方向，橙色虚线为坐标投影辅助线。
+          </p>
+        </div>
+      </ExpandableDemo>
+    </AutoMath>
   );
 }

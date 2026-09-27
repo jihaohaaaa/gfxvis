@@ -134,7 +134,7 @@ test.describe("无类型 λ 演算（UTLC）文章与 LambdaReductionDiagram E2E
     await expect(page.locator("text=达成正规型").first()).toBeVisible();
   });
 
-  test("5. CanvasToolbar S/M/L 视口高度切换与复位按钮断言", async ({
+  test("5. CanvasToolbar 复位与底部 CanvasResizer 自适应/双击复位断言", async ({
     page,
   }) => {
     await page.goto("/posts/type-systems/untyped-lambda-calculus");
@@ -146,18 +146,14 @@ test.describe("无类型 λ 演算（UTLC）文章与 LambdaReductionDiagram E2E
     await diagram.scrollIntoViewIfNeeded();
     await expect(diagram).toBeVisible();
 
-    // 查找 CanvasToolbar 中的 S/M/L 按钮
-    const btnL = page
-      .locator("button[aria-label='大视口高度 (560px)']")
-      .first();
-    await expect(btnL).toBeVisible();
-    await btnL.click();
+    // 检查底部 CanvasResizer 处于自适应状态
+    const resizer = page.getByTestId("canvas-resizer").first();
+    await expect(resizer).toBeVisible();
+    await expect(resizer).toHaveAttribute("data-mode", "adaptive");
 
-    const btnS = page
-      .locator("button[aria-label='标准视口高度 (300px)']")
-      .first();
-    await expect(btnS).toBeVisible();
-    await btnS.click();
+    // 双击底部横条依然保持/恢复自适应
+    await resizer.dblclick();
+    await expect(resizer).toHaveAttribute("data-mode", "adaptive");
 
     // 查找复位按钮
     const resetBtn = page.locator("button[aria-label='复位视野']").first();

@@ -1,4 +1,4 @@
-import InlineMath from "../framework/InlineMath";
+import { AutoMath } from "../framework/AutoMath";
 
 export default function InvertibleEquivalenceDiagram() {
   const items = [
@@ -47,55 +47,57 @@ export default function InvertibleEquivalenceDiagram() {
   ];
 
   return (
-    <div className="not-prose my-6 overflow-hidden rounded-2xl border border-border bg-surface/80 p-4 shadow-xs backdrop-blur-xs transition-colors md:p-6">
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-2.5">
-        <div className="flex items-center gap-2">
-          <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent" />
-          <span className="text-xs font-semibold tracking-wider text-foreground uppercase">
-            可逆矩阵等价定理（The Invertible Matrix Theorem）全景图
+    <AutoMath>
+      <div className="not-prose my-6 overflow-hidden rounded-2xl border border-border bg-surface/80 p-4 shadow-xs backdrop-blur-xs transition-colors md:p-6">
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent" />
+            <span className="text-xs font-semibold tracking-wider text-foreground uppercase">
+              可逆矩阵等价定理（The Invertible Matrix Theorem）全景图
+            </span>
+          </div>
+          <span className="rounded-md bg-accent/15 px-2 py-0.5 font-mono text-[11px] font-bold text-accent">
+            充要条件 ⇔ 逻辑等价
           </span>
         </div>
-        <span className="rounded-md bg-accent/15 px-2 py-0.5 font-mono text-[11px] font-bold text-accent">
-          充要条件 ⇔ 逻辑等价
-        </span>
-      </div>
 
-      {/* Center Root Concept */}
-      <div className="mb-5 flex justify-center">
-        <div className="relative inline-flex items-center gap-2.5 rounded-xl border-2 border-accent bg-accent/10 px-5 py-2.5 text-sm font-bold text-foreground shadow-xs">
-          <span className="text-accent text-base">★</span>
-          <span>方阵 A 存在逆矩阵 A⁻¹（Invertible）</span>
-          <span className="text-accent text-base">★</span>
+        {/* Center Root Concept */}
+        <div className="mb-5 flex justify-center">
+          <div className="relative inline-flex items-center gap-2.5 rounded-xl border-2 border-accent bg-accent/10 px-5 py-2.5 text-sm font-bold text-foreground shadow-xs">
+            <span className="text-accent text-base">★</span>
+            <span>方阵 A 存在逆矩阵 A⁻¹（Invertible）</span>
+            <span className="text-accent text-base">★</span>
+          </div>
+        </div>
+
+        {/* Grid of Equivalent Conditions */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item, idx) => (
+            <div
+              key={idx}
+              className={`flex flex-col justify-between rounded-xl border p-3.5 transition-all hover:scale-[1.01] hover:shadow-xs ${item.color}`}
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground">
+                    {idx + 1}. {item.title}
+                  </span>
+                  <span className="rounded px-1.5 py-0.5 font-mono text-[10px] font-medium opacity-90 border border-current">
+                    {item.tag}
+                  </span>
+                </div>
+                <div className="my-2 rounded bg-background/80 px-2.5 py-1.5 font-mono text-xs font-semibold text-foreground border border-border/50">
+                  {`$${item.math}$`}
+                </div>
+              </div>
+              <p className="text-[11px] text-muted leading-relaxed">
+                {item.desc}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
-
-      {/* Grid of Equivalent Conditions */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item, idx) => (
-          <div
-            key={idx}
-            className={`flex flex-col justify-between rounded-xl border p-3.5 transition-all hover:scale-[1.01] hover:shadow-xs ${item.color}`}
-          >
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground">
-                  {idx + 1}. {item.title}
-                </span>
-                <span className="rounded px-1.5 py-0.5 font-mono text-[10px] font-medium opacity-90 border border-current">
-                  {item.tag}
-                </span>
-              </div>
-              <div className="my-2 rounded bg-background/80 px-2.5 py-1.5 font-mono text-xs font-semibold text-foreground border border-border/50">
-                <InlineMath tex={item.math} />
-              </div>
-            </div>
-            <p className="text-[11px] text-muted leading-relaxed">
-              {item.desc}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
+    </AutoMath>
   );
 }
