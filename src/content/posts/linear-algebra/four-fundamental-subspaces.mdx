@@ -16,9 +16,9 @@ draft: false
 
 import { FourSubspacesDemo } from "../../../components/demos/FourSubspacesDemo";
 
-在现代线性代数与计算机图形学中，任意一个 $m \times n$ 的实数矩阵 $A \in \mathbb{R}^{m \times n}$ 都不止是一个静态的数据表格，它本质上是一个连接输入空间 $\mathbb{R}^n$ 与输出空间 $\mathbb{R}^m$ 的 **多维线性映射（Linear Mapping）**。
+在现代线性代数与计算机图形学中，任意一个 $m \times n$ 的实数矩阵 $A \in \mathbb{R}^{m \times n}$ 都不止是一个静态的数据表格，它本质上是一个连接输入空间 $\mathbb{R}^n$ 与输出空间 $\mathbb{R}^m$ 的 <strong>多维线性映射（Linear Mapping）</strong>。
 
-MIT 的 Gilbert Strang 教授提出了著名的 **线性代数基本定理（The Fundamental Theorem of Linear Algebra）**。该定理指出：任何矩阵都在输入和输出端完美分割出 **四个基本子空间（Four Fundamental Subspaces）**。这四个子空间不仅决定了映射的全部几何形态，更构成了正交投影、[最小二乘法](/posts/linear-algebra/least-squares)、奇异值分解（SVD）与 Moore-Penrose 伪逆的坚实基石。关于左零空间在残差正交投影中的几何实战，详见 [《最小二乘法》](/posts/linear-algebra/least-squares)。
+MIT 的 Gilbert Strang 教授提出了著名的 <strong>线性代数基本定理（The Fundamental Theorem of Linear Algebra）</strong>。该定理指出：任何矩阵都在输入和输出端完美分割出 <strong>四个基本子空间（Four Fundamental Subspaces）</strong>。这四个子空间不仅决定了映射的全部几何形态，更构成了正交投影、[最小二乘法](/posts/linear-algebra/least-squares)、奇异值分解（SVD）与 Moore-Penrose 伪逆的坚实基石。关于左零空间在残差正交投影中的几何实战，详见 [《最小二乘法》](/posts/linear-algebra/least-squares)。
 
 ---
 
@@ -28,14 +28,14 @@ MIT 的 Gilbert Strang 教授提出了著名的 **线性代数基本定理（The
 
 ### 1.1 输入空间 $\mathbb{R}^n$ 中的两个子空间
 
-1. **行空间（Row Space, $\operatorname{Row}(A) = \operatorname{Col}(A^\top)$）**：
-   由矩阵 $A$ 的所有行向量张成的子空间。它是输入空间中**真正参与变换并产生非零有效输出**的维度：
+1. <strong>行空间（Row Space, $\operatorname{Row}(A) = \operatorname{Col}(A^\top)$）</strong>：
+   由矩阵 $A$ 的所有行向量张成的子空间。它是输入空间中<strong>真正参与变换并产生非零有效输出</strong>的维度：
 
    $$
    \operatorname{Row}(A) = \{ A^\top \mathbf{y} \mid \mathbf{y} \in \mathbb{R}^m \} \subseteq \mathbb{R}^n, \quad \dim(\operatorname{Row}(A)) = r
    $$
 
-2. **零空间 / 核（Null Space / Kernel, $\ker(A)$ 或 $\operatorname{Null}(A)$）**：
+2. <strong>零空间 / 核（Null Space / Kernel, $\ker(A)$ 或 $\operatorname{Null}(A)$）</strong>：
    所有被矩阵 $A$ 映射为零向量的输入向量构成的集合：
    $$
    \ker(A) = \{ \mathbf{x} \in \mathbb{R}^n \mid A \mathbf{x} = \mathbf{0} \} \subseteq \mathbb{R}^n, \quad \dim(\ker(A)) = n - r
@@ -45,20 +45,20 @@ MIT 的 Gilbert Strang 教授提出了著名的 **线性代数基本定理（The
 
 ### 1.2 输出空间 $\mathbb{R}^m$ 中的两个子空间
 
-3. **列空间 / 像空间（Column Space / Image, $\operatorname{Col}(A)$ 或 $\operatorname{im}(A)$）**：
-   由矩阵 $A$ 的所有列向量线性组合构成的集合，代表映射**所能抵达的所有输出可能**：
+3. <strong>列空间 / 像空间（Column Space / Image, $\operatorname{Col}(A)$ 或 $\operatorname{im}(A)$）</strong>：
+   由矩阵 $A$ 的所有列向量线性组合构成的集合，代表映射<strong>所能抵达的所有输出可能</strong>：
 
    $$
    \operatorname{Col}(A) = \{ A \mathbf{x} \mid \mathbf{x} \in \mathbb{R}^n \} \subseteq \mathbb{R}^m, \quad \dim(\operatorname{Col}(A)) = r
    $$
 
-4. **左零空间 / 左核（Left Nullspace，$\ker(A^\top)$ 或 $\operatorname{Null}(A^\top)$）**：
+4. <strong>左零空间 / 左核（Left Nullspace，$\ker(A^\top)$ 或 $\operatorname{Null}(A^\top)$）</strong>：
    转置矩阵 $A^\top$ 的零空间，也是所有从左侧左乘矩阵 $A$ 得到零行向量的向量集合（满足 $\mathbf{y}^\top A = \mathbf{0}^\top \iff A^\top \mathbf{y} = \mathbf{0}$）：
    $$
    \ker(A^\top) = \{ \mathbf{y} \in \mathbb{R}^m \mid A^\top \mathbf{y} = \mathbf{0} \} = \{ \mathbf{y} \in \mathbb{R}^m \mid \mathbf{y}^\top A = \mathbf{0}^\top \} \subseteq \mathbb{R}^m, \quad \dim(\ker(A^\top)) = m - r
    $$
 
-> 💡 **核心结论**：行空间与列空间的维度 **严格相等** 且均等于矩阵的秩 $r$（即 $\operatorname{rank}(A^\top) = \operatorname{rank}(A) = r$）。这正是“行秩等于列秩”这一代数奇迹的几何体现。
+> 💡 <strong>核心结论</strong>：行空间与列空间的维度 <strong>严格相等</strong> 且均等于矩阵的秩 $r$（即 $\operatorname{rank}(A^\top) = \operatorname{rank}(A) = r$）。这正是“行秩等于列秩”这一代数奇迹的几何体现。
 
 ---
 
@@ -70,21 +70,21 @@ MIT 的 Gilbert Strang 教授提出了著名的 **线性代数基本定理（The
 
 #### 视角一：左乘行向量线性组合（原初代数视角 $\mathbf{y}^\top A = \mathbf{0}^\top$）
 
-普通零空间 $\ker(A)$ 中的向量 $\mathbf{x} \in \mathbb{R}^n$ 是作为 **右操作数** 作用于矩阵 $A$（列向量从右侧乘）：
+普通零空间 $\ker(A)$ 中的向量 $\mathbf{x} \in \mathbb{R}^n$ 是作为 <strong>右操作数</strong> 作用于矩阵 $A$（列向量从右侧乘）：
 
 $$
 A \mathbf{x} = \begin{bmatrix} | & | & & | \\ \mathbf{a}_1 & \mathbf{a}_2 & \cdots & \mathbf{a}_n \\ | & | & & | \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix} = \sum_{j=1}^n x_j \mathbf{a}_j = \mathbf{0}
 $$
 
-这表示 **列向量的线性组合为零**（列的线性相关性）。
+这表示 <strong>列向量的线性组合为零</strong>（列的线性相关性）。
 
-而对于左零空间，如果我们将行向量 $\mathbf{y}^\top = \begin{bmatrix} y_1 & y_2 & \cdots & y_m \end{bmatrix} \in \mathbb{R}^{1 \times m}$ 作为 **左操作数** 左乘矩阵 $A$：
+而对于左零空间，如果我们将行向量 $\mathbf{y}^\top = \begin{bmatrix} y_1 & y_2 & \cdots & y_m \end{bmatrix} \in \mathbb{R}^{1 \times m}$ 作为 <strong>左操作数</strong> 左乘矩阵 $A$：
 
 $$
 \mathbf{y}^\top A = \begin{bmatrix} y_1 & y_2 & \cdots & y_m \end{bmatrix} \begin{bmatrix} \text{--- }\mathbf{r}_1^\top\text{ ---} \\ \text{--- }\mathbf{r}_2^\top\text{ ---} \\ \vdots \\ \text{--- }\mathbf{r}_m^\top\text{ ---} \end{bmatrix} = \sum_{i=1}^m y_i \mathbf{r}_i^\top = \mathbf{0}^\top
 $$
 
-其中 $\mathbf{r}_i^\top$ 为矩阵 $A$ 的第 $i$ 个行向量。这表明：**左零空间中的非零向量 $\mathbf{y}$，其分量正是矩阵 $A$ 各个行向量之间线性相关性的一组组合系数（Syzygy / Row Linear Dependency）**。因为向量 $\mathbf{y}^\top$ 位于矩阵 $A$ 的 **左侧** ，故名 **左零空间（Left Nullspace）**。
+其中 $\mathbf{r}_i^\top$ 为矩阵 $A$ 的第 $i$ 个行向量。这表明：<strong>左零空间中的非零向量 $\mathbf{y}$，其分量正是矩阵 $A$ 各个行向量之间线性相关性的一组组合系数（Syzygy / Row Linear Dependency）</strong>。因为向量 $\mathbf{y}^\top$ 位于矩阵 $A$ 的 <strong>左侧</strong> ，故名 <strong>左零空间（Left Nullspace）</strong>。
 
 #### 视角二：正交于整个列空间（转置列视角 $A^\top \mathbf{y} = \mathbf{0}$）
 
@@ -100,7 +100,7 @@ $$
 A^\top \mathbf{y} = \begin{bmatrix} \text{--- }\mathbf{a}_1^\top\text{ ---} \\ \text{--- }\mathbf{a}_2^\top\text{ ---} \\ \vdots \\ \text{--- }\mathbf{a}_n^\top\text{ ---} \end{bmatrix} \mathbf{y} = \begin{bmatrix} \mathbf{a}_1^\top \mathbf{y} \\ \mathbf{a}_2^\top \mathbf{y} \\ \vdots \\ \mathbf{a}_n^\top \mathbf{y} \end{bmatrix} = \begin{bmatrix} \langle \mathbf{a}_1, \mathbf{y} \rangle \\ \langle \mathbf{a}_2, \mathbf{y} \rangle \\ \vdots \\ \langle \mathbf{a}_n, \mathbf{y} \rangle \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ \vdots \\ 0 \end{bmatrix}
 $$
 
-这揭示了一个优美的几何事实：**向量 $\mathbf{y}$ 与矩阵 $A$ 的每一个列向量 $\mathbf{a}_j$ 的点积全部为零（$\mathbf{y} \perp \mathbf{a}_j$）**。因为 $\mathbf{y}$ 垂直于张成列空间的全部基向量，所以 $\mathbf{y}$ 必定垂直于整个列空间 $\operatorname{Col}(A)$！
+这揭示了一个优美的几何事实：<strong>向量 $\mathbf{y}$ 与矩阵 $A$ 的每一个列向量 $\mathbf{a}_j$ 的点积全部为零（$\mathbf{y} \perp \mathbf{a}_j$）</strong>。因为 $\mathbf{y}$ 垂直于张成列空间的全部基向量，所以 $\mathbf{y}$ 必定垂直于整个列空间 $\operatorname{Col}(A)$！
 
 $$
 \mathbf{y} \in \ker(A^\top) \iff \mathbf{y} \perp \operatorname{Col}(A) \iff \ker(A^\top) = (\operatorname{Col}(A))^\perp
@@ -110,13 +110,13 @@ $$
 
 在工程与图形学拟合中，当线性系统 $A\mathbf{x} = \mathbf{b}$ 无解时，目标向量 $\mathbf{b} \in \mathbb{R}^m$ 不在列空间 $\operatorname{Col}(A)$ 内。我们将 $\mathbf{b}$ 正交投影到列空间得到最佳近似 $\hat{\mathbf{b}} = A\hat{\mathbf{x}}$。
 
-此时产生的 **误差残差向量（Residual Vector）** $\mathbf{e} = \mathbf{b} - \hat{\mathbf{b}}$ 正是生活在左零空间中：
+此时产生的 <strong>误差残差向量（Residual Vector）</strong> $\mathbf{e} = \mathbf{b} - \hat{\mathbf{b}}$ 正是生活在左零空间中：
 
 $$
 \mathbf{e} \in \ker(A^\top) \iff A^\top \mathbf{e} = \mathbf{0} \iff A^\top (\mathbf{b} - A\hat{\mathbf{x}}) = \mathbf{0} \implies A^\top A \hat{\mathbf{x}} = A^\top \mathbf{b}
 $$
 
-这正是著名的 **正规方程组（Normal Equations）** 的几何起源（详见 [《最小二乘法》](/posts/linear-algebra/least-squares)）。
+这正是著名的 <strong>正规方程组（Normal Equations）</strong> 的几何起源（详见 [《最小二乘法》](/posts/linear-algebra/least-squares)）。
 
 #### 具体数值算例验证
 
@@ -126,9 +126,9 @@ $$
 A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{bmatrix}, \quad \operatorname{rank}(A) = 2
 $$
 
-- **行空间与列空间**：$\dim(\operatorname{Col}(A)) = \dim(\operatorname{Row}(A)) = 2$；
-- **零空间**：$\dim(\ker(A)) = 2 - 2 = 0$（仅包含零向量）；
-- **左零空间**：$\dim(\ker(A^\top)) = 3 - 2 = 1$（一维直线子空间）。
+- <strong>行空间与列空间</strong>：$\dim(\operatorname{Col}(A)) = \dim(\operatorname{Row}(A)) = 2$；
+- <strong>零空间</strong>：$\dim(\ker(A)) = 2 - 2 = 0$（仅包含零向量）；
+- <strong>左零空间</strong>：$\dim(\ker(A^\top)) = 3 - 2 = 1$（一维直线子空间）。
 
 求解 $A^\top \mathbf{y} = \mathbf{0}$：
 
@@ -138,12 +138,12 @@ $$
 
 取基础解 $\mathbf{y} = \begin{bmatrix} 1 & 1 & -1 \end{bmatrix}^\top$：
 
-1. **左乘行视角**：
+1. <strong>左乘行视角</strong>：
    $$
    \mathbf{y}^\top A = 1 \cdot \begin{bmatrix} 1 & 0 \end{bmatrix} + 1 \cdot \begin{bmatrix} 0 & 1 \end{bmatrix} - 1 \cdot \begin{bmatrix} 1 & 1 \end{bmatrix} = \begin{bmatrix} 0 & 0 \end{bmatrix} = \mathbf{0}^\top
    $$
    清晰表明第 1 行与第 2 行之和等于第 3 行。
-2. **转置列内积视角**：
+2. <strong>转置列内积视角</strong>：
    $$
    \mathbf{a}_1^\top \mathbf{y} = 1 \cdot 1 + 0 \cdot 1 + 1 \cdot (-1) = 0, \quad \mathbf{a}_2^\top \mathbf{y} = 0 \cdot 1 + 1 \cdot 1 + 1 \cdot (-1) = 0
    $$
@@ -153,7 +153,7 @@ $$
 
 ## 二、正交直和分解（Orthogonal Decomposition）
 
-线性代数基本定理的核心在于几何上的**相互垂直与正交补（Orthogonal Complement）**。
+线性代数基本定理的核心在于几何上的<strong>相互垂直与正交补（Orthogonal Complement）</strong>。
 
 ### 2.1 输入空间的正交直和 $\mathbb{R}^n = \operatorname{Row}(A) \oplus^\perp \ker(A)$
 
@@ -163,7 +163,7 @@ $$
 \langle A^\top \mathbf{y}, \mathbf{x}_n \rangle = (A^\top \mathbf{y})^\top \mathbf{x}_n = \mathbf{y}^\top (A \mathbf{x}_n) = \mathbf{y}^\top \mathbf{0} = 0
 $$
 
-这严谨证明了**行空间与零空间在几何上处处严格正交**（$\operatorname{Row}(A) \perp \ker(A)$）。根据秩-零化度定理（Rank-Nullity Theorem），它们的维数之和恰好等于输入空间的总维度 $r + (n - r) = n$。因此，输入空间可以唯一地正交直和分解为：
+这严谨证明了<strong>行空间与零空间在几何上处处严格正交</strong>（$\operatorname{Row}(A) \perp \ker(A)$）。根据秩-零化度定理（Rank-Nullity Theorem），它们的维数之和恰好等于输入空间的总维度 $r + (n - r) = n$。因此，输入空间可以唯一地正交直和分解为：
 
 $$
 \boxed{\mathbb{R}^n = \operatorname{Row}(A) \oplus^\perp \ker(A)}
@@ -191,7 +191,7 @@ $$
 A \mathbf{x} = A (\mathbf{x}_r + \mathbf{x}_n) = A \mathbf{x}_r + A \mathbf{x}_n = A \mathbf{x}_r + \mathbf{0} = A \mathbf{x}_r
 $$
 
-这揭示了映射的深层机制：**零空间分量 $\mathbf{x}_n$ 被彻底过滤压缩为零向量，唯有行空间分量 $\mathbf{x}_r$ 真正贡献了非零输出 $\mathbf{b} = A \mathbf{x}$**！并且矩阵 $A$ 实现了从行空间 $\operatorname{Row}(A)$ 到列空间 $\operatorname{Col}(A)$ 的**一一对应双射（Isomorphism）**。
+这揭示了映射的深层机制：<strong>零空间分量 $\mathbf{x}_n$ 被彻底过滤压缩为零向量，唯有行空间分量 $\mathbf{x}_r$ 真正贡献了非零输出 $\mathbf{b} = A \mathbf{x}$</strong>！并且矩阵 $A$ 实现了从行空间 $\operatorname{Row}(A)$ 到列空间 $\operatorname{Col}(A)$ 的<strong>一一对应双射（Isomorphism）</strong>。
 
 在下面的交互演示中，尝试切换预设矩阵并拖动输入向量 $\mathbf{x}$，直观观察四个子空间的正交关系与映射本质：
 
@@ -201,7 +201,7 @@ $$
 
 ## 四、SVD 与伪逆（Moore-Penrose Pseudoinverse）视角
 
-将四大子空间推向极致的是 **奇异值分解（Singular Value Decomposition, SVD）**。对于 $m \times n$ 矩阵 $A$，SVD 将其分解为：
+将四大子空间推向极致的是 <strong>奇异值分解（Singular Value Decomposition, SVD）</strong>。对于 $m \times n$ 矩阵 $A$，SVD 将其分解为：
 
 $$
 A = U \Sigma V^\top
@@ -209,14 +209,14 @@ $$
 
 其中 $V = [\mathbf{v}_1, \dots, \mathbf{v}_r, \dots, \mathbf{v}_n]$ 是输入空间 $\mathbb{R}^n$ 的标准正交基，$\Sigma$ 是对角阵（奇异值 $\sigma_1 \ge \dots \ge \sigma_r > 0$）；$U = [\mathbf{u}_1, \dots, \mathbf{u}_r, \dots, \mathbf{u}_m]$ 是输出空间 $\mathbb{R}^m$ 的标准正交基：
 
-- **$\mathbf{v}_1, \dots, \mathbf{v}_r$** 构成了 **行空间 $\operatorname{Row}(A)$** 的正交基；
-- **$\mathbf{v}_{r+1}, \dots, \mathbf{v}_n$** 构成了 **零空间 $\ker(A)$** 的正交基；
-- **$\mathbf{u}_1, \dots, \mathbf{u}_r$** 构成了 **列空间 $\operatorname{Col}(A)$** 的正交基；
-- **$\mathbf{u}_{r+1}, \dots, \mathbf{u}_m$** 构成了 **左零空间 $\ker(A^\top)$** 的正交基。
+- <strong>$\mathbf{v}_1, \dots, \mathbf{v}_r$</strong> 构成了 <strong>行空间 $\operatorname{Row}(A)$</strong> 的正交基；
+- <strong>$\mathbf{v}_{r+1}, \dots, \mathbf{v}_n$</strong> 构成了 <strong>零空间 $\ker(A)$</strong> 的正交基；
+- <strong>$\mathbf{u}_1, \dots, \mathbf{u}_r$</strong> 构成了 <strong>列空间 $\operatorname{Col}(A)$</strong> 的正交基；
+- <strong>$\mathbf{u}_{r+1}, \dots, \mathbf{u}_m$</strong> 构成了 <strong>左零空间 $\ker(A^\top)$</strong> 的正交基。
 
-> 💡 **SVD 的几何物理本质**：**为四大子空间各自精挑细选了一组完美的正交坐标轴，使得复杂的全空间映射 $A$ 在这些坐标轴上仅仅体现为纯粹的主轴拉伸（乘以奇异值 $\sigma_i$）与维度投影。**
+> 💡 <strong>SVD 的几何物理本质</strong>：<strong>为四大子空间各自精挑细选了一组完美的正交坐标轴，使得复杂的全空间映射 $A$ 在这些坐标轴上仅仅体现为纯粹的主轴拉伸（乘以奇异值 $\sigma_i$）与维度投影。</strong>
 
-而 **Moore-Penrose 伪逆 $A^+$** 则完成了逆向的完美映射：
+而 <strong>Moore-Penrose 伪逆 $A^+$</strong> 则完成了逆向的完美映射：
 
 $$
 A^+ = V \Sigma^+ U^\top
@@ -226,7 +226,7 @@ $$
 
 ---
 
-> 💡 **知识贯通**：
+> 💡 <strong>知识贯通</strong>：
 >
 > - [《抽象向量空间与线性映射》](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps) — 探究向量空间的公理化定义、子空间直和分解与抽象秩-零度定理；
 > - [《矩阵的秩、列空间与行空间》](/posts/linear-algebra/matrix-rank-column-row-space) — 深入探讨矩阵的秩与线性无关维度；

@@ -22,11 +22,11 @@ import QuotientSpaceDemo from "../../../components/demos/QuotientSpaceDemo";
 
 在初等数学和编程入门时，我们常将“向量”简单理解为物理世界中“一根带箭头的几何线段”，或计算机内存中“排成一列的实数数组 `float[n]`”；将“线性变换”简单等同于“矩阵与向量的行列点积相乘”。
 
-然而，现代数学（尤其是泛函分析、量子力学、信号处理与计算机图形学）的真正威力，建立在一个更为广袤、深刻的宏观基石之上——**抽象向量空间（Abstract Vector Space）与抽象线性映射（Abstract Linear Maps）**。
+然而，现代数学（尤其是泛函分析、量子力学、信号处理与计算机图形学）的真正威力，建立在一个更为广袤、深刻的宏观基石之上——<strong>抽象向量空间（Abstract Vector Space）与抽象线性映射（Abstract Linear Maps）</strong>。
 
-在公理化视角下，**标量来自满足加减乘除四则运算封闭的数域（Field）；矩阵、多项式、声音波形信号、微分方程的解、乃至无限维连续函数，在本质上全部都是“向量”**；而微积分中的求导算子、定积分算子与图像模糊卷积，全部都是地地道道的“线性映射”。
+在公理化视角下，<strong>标量来自满足加减乘除四则运算封闭的数域（Field）；矩阵、多项式、声音波形信号、微分方程的解、乃至无限维连续函数，在本质上全部都是“向量”</strong>；而微积分中的求导算子、定积分算子与图像模糊卷积，全部都是地地道道的“线性映射”。
 
-本文将作为全站线性代数理论体系的最底层公理化总纲，首先探本溯源确立标量的代数故乡——**数域（Field）**，随后系统重构现代向量空间与线性映射的公理体系，探讨定义域与陪域划分、单射/满射/双射的代数充要条件、子空间直和分解与抽象秩-零度定理，并揭示连接一切有限维空间的终极桥梁——**同构定理（Isomorphism Theorem）**。
+本文将作为全站线性代数理论体系的最底层公理化总纲，首先探本溯源确立标量的代数故乡——<strong>数域（Field）</strong>，随后系统重构现代向量空间与线性映射的公理体系，探讨定义域与陪域划分、单射/满射/双射的代数充要条件、子空间直和分解与抽象秩-零度定理，并揭示连接一切有限维空间的终极桥梁——<strong>同构定理（Isomorphism Theorem）</strong>。
 
 ---
 
@@ -40,37 +40,37 @@ import QuotientSpaceDemo from "../../../components/demos/QuotientSpaceDemo";
 
 ### 1.1 向量的第一性原理定义
 
-> **核心定义**：
-> 在公理化代数中，**“向量”不是由它的外在表现形式决定的，而是由它所满足的代数运算规则决定的**。
-> 只要一个集合中的元素之间定义了 **加法（Addition）** 与 **标量乘法（Scalar Multiplication）**，且这两种运算在集合内封闭并满足八条基本运算律，这个集合就称为 **向量空间（Vector Space）**，集合中的每一个元素就依法享有 **“向量（Vector）”** 的崇高称号。
+> <strong>核心定义</strong>：
+> 在公理化代数中，<strong>“向量”不是由它的外在表现形式决定的，而是由它所满足的代数运算规则决定的</strong>。
+> 只要一个集合中的元素之间定义了 <strong>加法（Addition）</strong> 与 <strong>标量乘法（Scalar Multiplication）</strong>，且这两种运算在集合内封闭并满足八条基本运算律，这个集合就称为 <strong>向量空间（Vector Space）</strong>，集合中的每一个元素就依法享有 <strong>“向量（Vector）”</strong> 的崇高称号。
 
 ### 1.2 现实中的广义抽象向量实例
 
 | 抽象向量实体     | 集合记号                               | 加法运算定义                | 标量数乘定义                    | 物理 / 工程背景                                |
 | :--------------- | :------------------------------------- | :-------------------------- | :------------------------------ | :--------------------------------------------- |
-| **实数数组向量** | $\mathbb{R}^n$                         | $(u_1+v_1, \dots, u_n+v_n)$ | $(c u_1, \dots, c u_n)$         | 经典几何坐标、力学位移、机器学习特征           |
-| **实矩阵空间**   | $\mathcal{M}_{m \times n}(\mathbb{R})$ | 矩阵对应元素相加 $A + B$    | 标量乘每个元素 $c A$            | 变换算子集合、图像像素矩阵（矩阵也是向量！）   |
-| **多项式空间**   | $\mathcal{P}_n(\mathbb{R})$            | $(p+q)(x) = p(x) + q(x)$    | $(c \cdot p)(x) = c \cdot p(x)$ | 曲线拟合、贝塞尔样条曲线基底                   |
-| **连续函数空间** | $C[a, b]$                              | $(f+g)(t) = f(t) + g(t)$    | $(c \cdot f)(t) = c \cdot f(t)$ | 傅里叶分析、音频信号、波动方程                 |
-| **无穷序列空间** | $\ell^2$                               | $(a_n + b_n)_{n=1}^\infty$  | $(c \cdot a_n)_{n=1}^\infty$    | 离散时间信号处理、量子态波函数（希尔伯特空间） |
+| <strong>实数数组向量</strong> | $\mathbb{R}^n$                         | $(u_1+v_1, \dots, u_n+v_n)$ | $(c u_1, \dots, c u_n)$         | 经典几何坐标、力学位移、机器学习特征           |
+| <strong>实矩阵空间</strong>   | $\mathcal{M}_{m \times n}(\mathbb{R})$ | 矩阵对应元素相加 $A + B$    | 标量乘每个元素 $c A$            | 变换算子集合、图像像素矩阵（矩阵也是向量！）   |
+| <strong>多项式空间</strong>   | $\mathcal{P}_n(\mathbb{R})$            | $(p+q)(x) = p(x) + q(x)$    | $(c \cdot p)(x) = c \cdot p(x)$ | 曲线拟合、贝塞尔样条曲线基底                   |
+| <strong>连续函数空间</strong> | $C[a, b]$                              | $(f+g)(t) = f(t) + g(t)$    | $(c \cdot f)(t) = c \cdot f(t)$ | 傅里叶分析、音频信号、波动方程                 |
+| <strong>无穷序列空间</strong> | $\ell^2$                               | $(a_n + b_n)_{n=1}^\infty$  | $(c \cdot a_n)_{n=1}^\infty$    | 离散时间信号处理、量子态波函数（希尔伯特空间） |
 
 ---
 
 ## 二、标量的栖息地：数域（Field）的公理化定义与代数基石
 
-在构建向量空间之前，必须先回答一个看似简单却至关重要的问题：**线性组合 $c_1 \mathbf{v}_1 + c_2 \mathbf{v}_2$ 中的标量系数 $c_i$，究竟生活在怎样的一个数学集合里？**
+在构建向量空间之前，必须先回答一个看似简单却至关重要的问题：<strong>线性组合 $c_1 \mathbf{v}_1 + c_2 \mathbf{v}_2$ 中的标量系数 $c_i$，究竟生活在怎样的一个数学集合里？</strong>
 
-初学者常常理所当然地认为标量就是“实数”。但现代代数学揭示：标量集合绝非任意数字集合，它必须是一个满足 **四则运算（加、减、乘、除）封闭** 的特殊代数结构 —— **数域（Field，代数记为 $\mathbb{F}$）**。
+初学者常常理所当然地认为标量就是“实数”。但现代代数学揭示：标量集合绝非任意数字集合，它必须是一个满足 <strong>四则运算（加、减、乘、除）封闭</strong> 的特殊代数结构 —— <strong>数域（Field，代数记为 $\mathbb{F}$）</strong>。
 
 ### 2.1 为什么向量空间不能直接建立在“任意数字”上？
 
-设想一下：如果标量集只允许取 **整数 $\mathbb{Z}$**，线性代数的大厦会发生什么坍塌？
+设想一下：如果标量集只允许取 <strong>整数 $\mathbb{Z}$</strong>，线性代数的大厦会发生什么坍塌？
 
-1. **方程无法求解**：即便最简单的单变量线性方程 $2x = 3$，在整数集 $\mathbb{Z}$ 内也根本无解，因为缺少“除法逆元” $\frac{1}{2}$；
-2. **消元法彻底瘫痪**：高斯消元的核心步骤是选定主元后“将整行除以主元系数 $a_{ii}$”，若不能除法，消元法步步受阻；
-3. **几何自由度破碎**：在平面中，若标量只能取整数，两个基向量 $\mathbf{e}_1, \mathbf{e}_2$ 张成的不再是连续致密的完整二维平面 $\mathbb{R}^2$，而是一张布满孔洞的离散点阵（Lattice，晶格网格）。
+1. <strong>方程无法求解</strong>：即便最简单的单变量线性方程 $2x = 3$，在整数集 $\mathbb{Z}$ 内也根本无解，因为缺少“除法逆元” $\frac{1}{2}$；
+2. <strong>消元法彻底瘫痪</strong>：高斯消元的核心步骤是选定主元后“将整行除以主元系数 $a_{ii}$”，若不能除法，消元法步步受阻；
+3. <strong>几何自由度破碎</strong>：在平面中，若标量只能取整数，两个基向量 $\mathbf{e}_1, \mathbf{e}_2$ 张成的不再是连续致密的完整二维平面 $\mathbb{R}^2$，而是一张布满孔洞的离散点阵（Lattice，晶格网格）。
 
-因此，要让几何空间平滑延展、让方程组具备普适求解能力，标量所在的集合必须允许我们 **自由地进行加、减、乘以及除以非零元素**。这个代数摇篮，就是数域。
+因此，要让几何空间平滑延展、让方程组具备普适求解能力，标量所在的集合必须允许我们 <strong>自由地进行加、减、乘以及除以非零元素</strong>。这个代数摇篮，就是数域。
 
 ---
 
@@ -78,25 +78,25 @@ import QuotientSpaceDemo from "../../../components/demos/QuotientSpaceDemo";
 
 设 $\mathbb{F}$ 是一个至少包含两个不同元素（加法零元 $0$ 与乘法单位元 $1$，$0 \ne 1$）的集合。如果集合 $\mathbb{F}$ 上配备了两种代数运算：
 
-- **加法**：$+ : \mathbb{F} \times \mathbb{F} \to \mathbb{F}, \; (a, b) \mapsto a + b$；
-- **乘法**：$\cdot : \mathbb{F} \times \mathbb{F} \to \mathbb{F}, \; (a, b) \mapsto a \cdot b$（常简记为 $ab$）；
+- <strong>加法</strong>：$+ : \mathbb{F} \times \mathbb{F} \to \mathbb{F}, \; (a, b) \mapsto a + b$；
+- <strong>乘法</strong>：$\cdot : \mathbb{F} \times \mathbb{F} \to \mathbb{F}, \; (a, b) \mapsto a \cdot b$（常简记为 $ab$）；
 
-且这两种运算对任意元素 $a, b, c \in \mathbb{F}$ 严格满足以下 **九条公理**，则称集合 $\mathbb{F}$ 为一个 **域（Field / 数域）**：
+且这两种运算对任意元素 $a, b, c \in \mathbb{F}$ 严格满足以下 <strong>九条公理</strong>，则称集合 $\mathbb{F}$ 为一个 <strong>域（Field / 数域）</strong>：
 
 | 公理类别       | 公理名称                  | 代数表达                                                                                                 | 直观意义                                                        |
 | :------------- | :------------------------ | :------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------- |
-| **加法运算律** | 1. 加法交换律             | $a + b = b + a$                                                                                          | 加法次序不影响结果                                              |
+| <strong>加法运算律</strong> | 1. 加法交换律             | $a + b = b + a$                                                                                          | 加法次序不影响结果                                              |
 |                | 2. 加法结合律             | $(a + b) + c = a + (b + c)$                                                                              | 连续相加括号可自由移动                                          |
 |                | 3. 存在加法零元           | $\exists\, 0 \in \mathbb{F}, \quad a + 0 = a$                                                            | 存在唯一的“原点/零”，相加保持原值                               |
-|                | 4. 存在加法逆元（相反数） | $\forall a \in \mathbb{F}, \; \exists\, (-a) \in \mathbb{F}, \quad a + (-a) = 0$                         | 使得 **减法** 具有良定义：$a - b \equiv a + (-b)$               |
-| **乘法运算律** | 5. 乘法交换律             | $a \cdot b = b \cdot a$                                                                                  | 标量相乘可自由对调                                              |
+|                | 4. 存在加法逆元（相反数） | $\forall a \in \mathbb{F}, \; \exists\, (-a) \in \mathbb{F}, \quad a + (-a) = 0$                         | 使得 <strong>减法</strong> 具有良定义：$a - b \equiv a + (-b)$               |
+| <strong>乘法运算律</strong> | 5. 乘法交换律             | $a \cdot b = b \cdot a$                                                                                  | 标量相乘可自由对调                                              |
 |                | 6. 乘法结合律             | $(a \cdot b) \cdot c = a \cdot (b \cdot c)$                                                              | 连续相乘括号可自由移动                                          |
 |                | 7. 存在乘法单位元         | $\exists\, 1 \in \mathbb{F} \; (1 \ne 0), \quad a \cdot 1 = a$                                           | 存在非零的恒等缩放比例 $1$                                      |
-|                | 8. 存在乘法逆元（倒数）   | $\forall a \in \mathbb{F} \setminus \{0\}, \; \exists\, a^{-1} \in \mathbb{F}, \quad a \cdot a^{-1} = 1$ | 使得 **除法** 对非零数完全良定义：$a / b \equiv a \cdot b^{-1}$ |
-| **加乘协同律** | 9. 乘法对加法的分配律     | $a \cdot (b + c) = a \cdot b + a \cdot c$                                                                | 乘法能够穿透加法展开（线性缩放的源泉）                          |
+|                | 8. 存在乘法逆元（倒数）   | $\forall a \in \mathbb{F} \setminus \{0\}, \; \exists\, a^{-1} \in \mathbb{F}, \quad a \cdot a^{-1} = 1$ | 使得 <strong>除法</strong> 对非零数完全良定义：$a / b \equiv a \cdot b^{-1}$ |
+| <strong>加乘协同律</strong> | 9. 乘法对加法的分配律     | $a \cdot (b + c) = a \cdot b + a \cdot c$                                                                | 乘法能够穿透加法展开（线性缩放的源泉）                          |
 
-> 🔑 **第一性原理概括**：  
-> **数域就是一个让“加法、减法、乘法、除法（除数不为零）”畅行无阻且运算结果永不跳出集合边界的数系！**
+> 🔑 <strong>第一性原理概括</strong>：  
+> <strong>数域就是一个让“加法、减法、乘法、除法（除数不为零）”畅行无阻且运算结果永不跳出集合边界的数系！</strong>
 
 ---
 
@@ -104,15 +104,15 @@ import QuotientSpaceDemo from "../../../components/demos/QuotientSpaceDemo";
 
 通过九条公理，我们可以对常见的数学数字集合进行一次严格的“数域体检”：
 
-1. **整数集 $\mathbb{Z} = \{\dots, -2, -1, 0, 1, 2, \dots\}$ $\implies$ 不是数域！**
+1. <strong>整数集 $\mathbb{Z} = \{\dots, -2, -1, 0, 1, 2, \dots\}$ $\implies$ 不是数域！</strong>
    - 整数对加法、减法、乘法都是封闭的；
-   - **致命死穴**：除法不封闭。除了 $\pm 1$ 之外，任意非零整数都不存在整数范围内的乘法逆元（例如 $2 \in \mathbb{Z}$，但其倒数 $\frac{1}{2} \notin \mathbb{Z}$）。
-   - 代数地位：在抽象代数中，$\mathbb{Z}$ 仅仅是一个 **交换环（Commutative Ring）**。
-2. **有理数集 $\mathbb{Q} = \{ \frac{p}{q} \mid p, q \in \mathbb{Z}, q \neq 0 \}$ $\implies$ 是数域！**
+   - <strong>致命死穴</strong>：除法不封闭。除了 $\pm 1$ 之外，任意非零整数都不存在整数范围内的乘法逆元（例如 $2 \in \mathbb{Z}$，但其倒数 $\frac{1}{2} \notin \mathbb{Z}$）。
+   - 代数地位：在抽象代数中，$\mathbb{Z}$ 仅仅是一个 <strong>交换环（Commutative Ring）</strong>。
+2. <strong>有理数集 $\mathbb{Q} = \{ \frac{p}{q} \mid p, q \in \mathbb{Z}, q \neq 0 \}$ $\implies$ 是数域！</strong>
    - 任何两个非零有理数相除仍然是有理数，满足全部九条公理。$\mathbb{Q}$ 是包含整数的最紧凑最小数域（素域）。
-3. **实数集 $\mathbb{R}$ $\implies$ 是数域！**
+3. <strong>实数集 $\mathbb{R}$ $\implies$ 是数域！</strong>
    - 计算机图形学、物理模拟、经典力学与工程几何的核心土壤。不仅满足全部代数公理，还具备拓扑完备性（无柯西序列孔洞）。
-4. **复数集 $\mathbb{C} = \{ a + bi \mid a, b \in \mathbb{R}, i^2 = -1 \}$ $\implies$ 是数域！**
+4. <strong>复数集 $\mathbb{C} = \{ a + bi \mid a, b \in \mathbb{R}, i^2 = -1 \}$ $\implies$ 是数域！</strong>
    - 信号傅里叶变换、量子力学波函数、旋转算子与特征值对角化不可或缺的终极大本营。
 
 $$
@@ -131,26 +131,26 @@ $$
 \begin{bmatrix} 2 & 1 \\ 3 & 4 \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} 5 \\ 6 \end{bmatrix}
 $$
 
-- **在数域 $\mathbb{R}$ 上求解**：  
+- <strong>在数域 $\mathbb{R}$ 上求解</strong>：  
   第一行主元是 $2$。我们在第一行同乘乘法逆元 $2^{-1} = \frac{1}{2}$，将主元化为 $1$，进而消去第二行的 $3$。解是唯一且平滑连续的：
   $$
   x = \frac{14}{5}, \quad y = -\frac{3}{5}.
   $$
-- **若标量集合退化为仅有加乘的整数集 $\mathbb{Z}$**：  
+- <strong>若标量集合退化为仅有加乘的整数集 $\mathbb{Z}$</strong>：  
   因为不存在整数逆元，第一步除法直接非法！我们无法自由化简主元，该方程在 $\mathbb{Z}$ 内直接宣告无解。
 
-> ⚠️ **代数分水岭：向量空间（Vector Space） vs. 模（Module）**
+> ⚠️ <strong>代数分水岭：向量空间（Vector Space） vs. 模（Module）</strong>
 >
-> - 当标量来自 **数域（Field）** 时，建立在上面的线性代数体系称为 **向量空间（Vector Space）**。由于逆元随时可用，每个有限维向量空间都必定存在基底，任意向量都能唯一坐标化；
-> - 若标量只来自 **环（Ring，如整数 $\mathbb{Z}$）**，建立在其上的系统只能称为 **模（Module，具体为 $\mathbb{Z}$-模）**。在模中，即使看似非零的元素也可能无法消元，空间可能完全不存在一组由相同数量元素构成的基底，许多矩阵甚至行列式非零也无法求逆！
+> - 当标量来自 <strong>数域（Field）</strong> 时，建立在上面的线性代数体系称为 <strong>向量空间（Vector Space）</strong>。由于逆元随时可用，每个有限维向量空间都必定存在基底，任意向量都能唯一坐标化；
+> - 若标量只来自 <strong>环（Ring，如整数 $\mathbb{Z}$）</strong>，建立在其上的系统只能称为 <strong>模（Module，具体为 $\mathbb{Z}$-模）</strong>。在模中，即使看似非零的元素也可能无法消元，空间可能完全不存在一组由相同数量元素构成的基底，许多矩阵甚至行列式非零也无法求逆！
 >
-> **可以说：正是因为“域”的存在，线性代数中才有了“维数”、“基底变换”与“高斯消元求逆矩阵”的无上优美与稳定。**
+> <strong>可以说：正是因为“域”的存在，线性代数中才有了“维数”、“基底变换”与“高斯消元求逆矩阵”的无上优美与稳定。</strong>
 
 ---
 
 ### 2.5 实数域 $\mathbb{R}$ 与复数域 $\mathbb{C}$：代数闭包如何主宰特征值与谱分解
 
-既然图形学与物理世界的大多数几何坐标都是实数，为什么现代线性代数依然必须时刻将复数域 $\mathbb{C}$ 奉为上宾？答案深植于一个决定性的代数性质：**代数闭包（Algebraic Closure）与代数基本定理**。
+既然图形学与物理世界的大多数几何坐标都是实数，为什么现代线性代数依然必须时刻将复数域 $\mathbb{C}$ 奉为上宾？答案深植于一个决定性的代数性质：<strong>代数闭包（Algebraic Closure）与代数基本定理</strong>。
 
 #### 1. 2D 纯旋转在实数域中的困局
 
@@ -160,7 +160,7 @@ $$
 R_{90^\circ} = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}
 $$
 
-从几何直觉来看，平面内任何一根非零向量旋转 $90^\circ$ 后，方向必然发生偏转，绝不可能被限制在原来的同一直线上。这意味着：**在二维实几何平面内，找不到任何一个实特征向量，使得 $R_{90^\circ} \mathbf{v} = \lambda \mathbf{v}$！**
+从几何直觉来看，平面内任何一根非零向量旋转 $90^\circ$ 后，方向必然发生偏转，绝不可能被限制在原来的同一直线上。这意味着：<strong>在二维实几何平面内，找不到任何一个实特征向量，使得 $R_{90^\circ} \mathbf{v} = \lambda \mathbf{v}$！</strong>
 
 写出其特征多项式方程：
 
@@ -168,29 +168,29 @@ $$
 \det(\lambda I - R_{90^\circ}) = \lambda^2 + 1 = 0 \implies \lambda^2 = -1
 $$
 
-- **在实数域 $\mathbb{R}$ 中**：$\lambda^2 = -1$ 没有任何实数解！实数域**不是代数闭域**，多项式因式分解在此撞上南墙；
-- **在复数域 $\mathbb{C}$ 中**：方程自然分解出两个共轭虚根 $\lambda_1 = i, \; \lambda_2 = -i$。对应复特征向量为 $\mathbf{v}_1 = \begin{bmatrix} 1 \\ -i \end{bmatrix}$ 与 $\mathbf{v}_2 = \begin{bmatrix} 1 \\ i \end{bmatrix}$。
+- <strong>在实数域 $\mathbb{R}$ 中</strong>：$\lambda^2 = -1$ 没有任何实数解！实数域<strong>不是代数闭域</strong>，多项式因式分解在此撞上南墙；
+- <strong>在复数域 $\mathbb{C}$ 中</strong>：方程自然分解出两个共轭虚根 $\lambda_1 = i, \; \lambda_2 = -i$。对应复特征向量为 $\mathbf{v}_1 = \begin{bmatrix} 1 \\ -i \end{bmatrix}$ 与 $\mathbf{v}_2 = \begin{bmatrix} 1 \\ i \end{bmatrix}$。
 
 #### 2. 代数闭域的威力：谱定理与 Jordan 标准型
 
-根据高斯的 **代数基本定理（Fundamental Theorem of Algebra）**：
+根据高斯的 <strong>代数基本定理（Fundamental Theorem of Algebra）</strong>：
 
-> **复数域 $\mathbb{C}$ 是代数闭域**：在 $\mathbb{C}$ 上的任意 $n$ 次多项式，都必然可以完全因式分解为 $n$ 个一次线性因子的乘积。
+> <strong>复数域 $\mathbb{C}$ 是代数闭域</strong>：在 $\mathbb{C}$ 上的任意 $n$ 次多项式，都必然可以完全因式分解为 $n$ 个一次线性因子的乘积。
 
 这一数域属性对线性代数产生了决定性影响：
 
-1. **特征值必定存在**：在复数域 $\mathbb{C}$ 上，任何一个 $n$ 阶方阵都必然拥有（计入重数的）恰好 $n$ 个特征值；
-2. **不可对角化时的终极兜底**：即使矩阵特征值发生重根且几何重数亏损，在复数域 $\mathbb{C}$ 上矩阵也必然能被化为极其优美的 **Jordan 标准型（Jordan Normal Form）**；
-3. **量子力学与酉变换**：量子态空间（Hilbert 空间）天然必须构建在复数域 $\mathbb{C}$ 上，厄米特矩阵与酉矩阵的谱分解构成了现代量子力学的数学基石。
+1. <strong>特征值必定存在</strong>：在复数域 $\mathbb{C}$ 上，任何一个 $n$ 阶方阵都必然拥有（计入重数的）恰好 $n$ 个特征值；
+2. <strong>不可对角化时的终极兜底</strong>：即使矩阵特征值发生重根且几何重数亏损，在复数域 $\mathbb{C}$ 上矩阵也必然能被化为极其优美的 <strong>Jordan 标准型（Jordan Normal Form）</strong>；
+3. <strong>量子力学与酉变换</strong>：量子态空间（Hilbert 空间）天然必须构建在复数域 $\mathbb{C}$ 上，厄米特矩阵与酉矩阵的谱分解构成了现代量子力学的数学基石。
 
 ---
 
 ### 2.6 计算机世界的离散数域：有限域 $\mathbb{F}_p$（拓展前瞻）
 
-数域中包含的元素一定是无限多个吗？并非如此！在理论计算机科学与密码学中，活跃着一类极其重要的离散数域 —— **有限域（Finite Field，又称伽罗瓦域 Galois Field）**。
+数域中包含的元素一定是无限多个吗？并非如此！在理论计算机科学与密码学中，活跃着一类极其重要的离散数域 —— <strong>有限域（Finite Field，又称伽罗瓦域 Galois Field）</strong>。
 
-设 $p$ 为一个素数，定义集合 $\mathbb{F}_p = \{0, 1, 2, \dots, p-1\}$，其上的加法与乘法均为 **模 $p$ 余数运算**。
-例如当 $p = 2$ 时，我们得到计算机二进制的天然数域 —— **二元有限域 $\mathbb{F}_2 = \{0, 1\}$**：
+设 $p$ 为一个素数，定义集合 $\mathbb{F}_p = \{0, 1, 2, \dots, p-1\}$，其上的加法与乘法均为 <strong>模 $p$ 余数运算</strong>。
+例如当 $p = 2$ 时，我们得到计算机二进制的天然数域 —— <strong>二元有限域 $\mathbb{F}_2 = \{0, 1\}$</strong>：
 
 - 加法等价于异或（XOR）：$1 + 1 = 0 \pmod 2$；
 - 乘法等价于与运算（AND）：$1 \cdot 1 = 1 \pmod 2$。
@@ -198,8 +198,8 @@ $$
 尽管元素只有有限个，但当模数为素数时，每一个非零元素都存在唯一的模乘法逆元（由费马小定理 $a^{p-1} \equiv 1 \implies a \cdot a^{p-2} \equiv 1$ 保证），严格满足全部九条数域公理！
 在 $\mathbb{F}_p$ 上建立的线性代数与向量空间（如矩阵乘法、向量内积），广泛统治着：
 
-- **存储纠错码**：QR 码、固态硬盘与 RAID 磁盘阵列中使用的 Reed-Solomon 纠错算法；
-- **现代密码学**：AES 对称加密算法中的 S-盒混淆变换、椭圆曲线密码学（ECC）与区块链零知识证明。
+- <strong>存储纠错码</strong>：QR 码、固态硬盘与 RAID 磁盘阵列中使用的 Reed-Solomon 纠错算法；
+- <strong>现代密码学</strong>：AES 对称加密算法中的 S-盒混淆变换、椭圆曲线密码学（ECC）与区块链零知识证明。
 
 确立了数域的坚实地基后，我们便可以从容步入抽象向量空间的世界 —— 探索当这些美妙的标量与向量相乘时，所构筑起的宏伟代数宇宙。
 
@@ -207,31 +207,31 @@ $$
 
 ## 三、向量空间（线性空间）的八条公理体系
 
-设 $\mathbb{F}$ 是一个数域（通常为实数域 $\mathbb{R}$ 或复数域 $\mathbb{C}$），其元素称为 **标量（Scalars）**。设 $V$ 是一个非空集合，其元素称为 **向量（Vectors）**。
+设 $\mathbb{F}$ 是一个数域（通常为实数域 $\mathbb{R}$ 或复数域 $\mathbb{C}$），其元素称为 <strong>标量（Scalars）</strong>。设 $V$ 是一个非空集合，其元素称为 <strong>向量（Vectors）</strong>。
 
 在 $V$ 上定义了两种运算：
 
-1. **向量加法**：$+ : V \times V \to V, \; (\mathbf{u}, \mathbf{v}) \mapsto \mathbf{u} + \mathbf{v}$（加法封闭性）；
-2. **标量乘法**：$\cdot : \mathbb{F} \times V \to V, \; (c, \mathbf{v}) \mapsto c\mathbf{v}$（数乘封闭性）。
+1. <strong>向量加法</strong>：$+ : V \times V \to V, \; (\mathbf{u}, \mathbf{v}) \mapsto \mathbf{u} + \mathbf{v}$（加法封闭性）；
+2. <strong>标量乘法</strong>：$\cdot : \mathbb{F} \times V \to V, \; (c, \mathbf{v}) \mapsto c\mathbf{v}$（数乘封闭性）。
 
-若这两种运算对任意向量 $\mathbf{u}, \mathbf{v}, \mathbf{w} \in V$ 和任意标量 $a, b, c \in \mathbb{F}$ 严格满足以下 **八条公理（Axioms）**，则称 $V$ 为数域 $\mathbb{F}$ 上的一个 **向量空间（Vector Space / 线性空间）**：
+若这两种运算对任意向量 $\mathbf{u}, \mathbf{v}, \mathbf{w} \in V$ 和任意标量 $a, b, c \in \mathbb{F}$ 严格满足以下 <strong>八条公理（Axioms）</strong>，则称 $V$ 为数域 $\mathbb{F}$ 上的一个 <strong>向量空间（Vector Space / 线性空间）</strong>：
 
 ### 3.1 向量加法运算公理
 
-1. **加法交换律（Commutativity）**：
+1. <strong>加法交换律（Commutativity）</strong>：
    $$
    \mathbf{u} + \mathbf{v} = \mathbf{v} + \mathbf{u}
    $$
-2. **加法结合律（Associativity）**：
+2. <strong>加法结合律（Associativity）</strong>：
    $$
    (\mathbf{u} + \mathbf{v}) + \mathbf{w} = \mathbf{u} + (\mathbf{v} + \mathbf{w})
    $$
-3. **存在零元（Additive Identity）**：
+3. <strong>存在零元（Additive Identity）</strong>：
    存在唯一的向量 $\mathbf{0} \in V$，使得对任意 $\mathbf{v} \in V$ 均有：
    $$
    \mathbf{v} + \mathbf{0} = \mathbf{v}
    $$
-4. **存在负元（Additive Inverse）**：
+4. <strong>存在负元（Additive Inverse）</strong>：
    对任意 $\mathbf{v} \in V$，存在唯一的向量 $-\mathbf{v} \in V$，使得：
    $$
    \mathbf{v} + (-\mathbf{v}) = \mathbf{0}
@@ -239,19 +239,19 @@ $$
 
 ### 3.2 标量乘法兼容公理（Scalar Multiplication Compatibility）
 
-5. **标量与标量乘法结合律（Associativity of Scalar Multiplication）**：
+5. <strong>标量与标量乘法结合律（Associativity of Scalar Multiplication）</strong>：
    $$
    a(b\mathbf{v}) = (ab)\mathbf{v}
    $$
-6. **标量对向量加法的分配律（Distributivity over Vector Addition）**：
+6. <strong>标量对向量加法的分配律（Distributivity over Vector Addition）</strong>：
    $$
    c(\mathbf{u} + \mathbf{v}) = c\mathbf{u} + c\mathbf{v}
    $$
-7. **向量对标量加法的分配律（Distributivity over Scalar Addition）**：
+7. <strong>向量对标量加法的分配律（Distributivity over Scalar Addition）</strong>：
    $$
    (a + b)\mathbf{v} = a\mathbf{v} + b\mathbf{v}
    $$
-8. **标量乘法单位元（Scalar Multiplicative Identity）**：
+8. <strong>标量乘法单位元（Scalar Multiplicative Identity）</strong>：
    数域 $\mathbb{F}$ 中的乘法单位元 $1$ 满足：
    $$
    1 \cdot \mathbf{v} = \mathbf{v}
@@ -261,7 +261,7 @@ $$
 
 ## 四、线性组合、空间张成（Span）与线性无关
 
-向量空间的公理体系确立了“加法”与“数乘”这两大基本砖石。有了运算规则之后，如何从一组给定的向量出发构建整个空间？一组向量究竟是“各自开辟新方向”还是“彼此重叠存在冗余”？这引出了线性代数最基础、最重要的三部曲：**线性组合（Linear Combination）**、**空间张成（Span）** 与 **线性无关（Linear Independence）**。
+向量空间的公理体系确立了“加法”与“数乘”这两大基本砖石。有了运算规则之后，如何从一组给定的向量出发构建整个空间？一组向量究竟是“各自开辟新方向”还是“彼此重叠存在冗余”？这引出了线性代数最基础、最重要的三部曲：<strong>线性组合（Linear Combination）</strong>、<strong>空间张成（Span）</strong> 与 <strong>线性无关（Linear Independence）</strong>。
 
 ### 4.1 线性组合的代数公理化定义
 
@@ -271,17 +271,17 @@ $$
 c_1 \mathbf{v}_1 + c_2 \mathbf{v}_2 + \dots + c_k \mathbf{v}_k = \sum_{i=1}^k c_i \mathbf{v}_i
 $$
 
-称为这组向量的一个 **线性组合（Linear Combination）**。标量系数 $c_i$ 充当了每个向量方向上的“加权用量”。
+称为这组向量的一个 <strong>线性组合（Linear Combination）</strong>。标量系数 $c_i$ 充当了每个向量方向上的“加权用量”。
 
 根据向量加法与数乘的封闭性公理，任意有限项线性组合的结果仍然必然属于 $V$（封闭于空间内部）。
 
 #### 几何直觉与抽象多项式示例
 
-- **二维几何平面（原材料搭建）**：在 $\mathbb{R}^2$ 中，设标准基向量为 $\mathbf{e}_1 = (1, 0), \mathbf{e}_2 = (0, 1)$。任意向量 $(x, y)$ 都可以唯一表示为基本原材料的线性组合：
+- <strong>二维几何平面（原材料搭建）</strong>：在 $\mathbb{R}^2$ 中，设标准基向量为 $\mathbf{e}_1 = (1, 0), \mathbf{e}_2 = (0, 1)$。任意向量 $(x, y)$ 都可以唯一表示为基本原材料的线性组合：
   $$
   (x, y) = x\mathbf{e}_1 + y\mathbf{e}_2
   $$
-- **抽象多项式空间**：在多项式空间 $\mathcal{P}_2(\mathbb{R})$ 中，以幂基 $(1, x, x^2)$ 为原材料，线性组合：
+- <strong>抽象多项式空间</strong>：在多项式空间 $\mathcal{P}_2(\mathbb{R})$ 中，以幂基 $(1, x, x^2)$ 为原材料，线性组合：
   $$
   p(x) = 3 \cdot 1 + (-2) \cdot x + 5 \cdot x^2 = 5x^2 - 2x + 3
   $$
@@ -291,14 +291,14 @@ $$
 
 ### 4.2 空间张成（Span）的集合视角
 
-给定向量组所能生成的所有可能线性组合的全体，构成了这组向量的 **张成空间（Span）**：
+给定向量组所能生成的所有可能线性组合的全体，构成了这组向量的 <strong>张成空间（Span）</strong>：
 
 $$
 \operatorname{span}\{\mathbf{v}_1, \dots, \mathbf{v}_k\} = \left\{ \sum_{i=1}^k c_i \mathbf{v}_i \;\middle|\; c_1, \dots, c_k \in \mathbb{F} \right\}
 $$
 
-> **定理（极小生成子空间）**：
-> 对任意子集 $S \subseteq V$，$\operatorname{span}(S)$ 必然是包含 $S$ 的 **最小线性子空间**。
+> <strong>定理（极小生成子空间）</strong>：
+> 对任意子集 $S \subseteq V$，$\operatorname{span}(S)$ 必然是包含 $S$ 的 <strong>最小线性子空间</strong>。
 >
 > （例如在矩阵论中，矩阵 $A$ 的列空间 $\operatorname{col}(A)$，本质上正是所有列向量张成的子空间；矩阵方程 $A\mathbf{x} = \mathbf{b}$ 有解，充要条件即为 $\mathbf{b} \in \operatorname{span}(\text{columns of } A)$）。
 
@@ -306,18 +306,18 @@ $$
 
 ### 4.3 线性相关：冗余与非平凡零组合
 
-一组向量 $\mathbf{v}_1, \dots, \mathbf{v}_k \in V$ 称为 **线性相关（Linearly Dependent）**，如果存在 **不全为零** 的标量 $c_1, \dots, c_k \in \mathbb{F}$，使得它们的线性组合恰好等于零向量：
+一组向量 $\mathbf{v}_1, \dots, \mathbf{v}_k \in V$ 称为 <strong>线性相关（Linearly Dependent）</strong>，如果存在 <strong>不全为零</strong> 的标量 $c_1, \dots, c_k \in \mathbb{F}$，使得它们的线性组合恰好等于零向量：
 
 $$
 \boxed{ c_1 \mathbf{v}_1 + c_2 \mathbf{v}_2 + \dots + c_k \mathbf{v}_k = \mathbf{0} \quad (\exists c_i \neq 0) }
 $$
 
-> 💡 **关键辨析：为什么必须是“不全为零”？**
-> 对于任意向量组，令所有系数全取 $0$ 的平凡组合 $\sum 0 \cdot \mathbf{v}_i = \mathbf{0}$ 永远成立；而线性相关断言的是：**存在一种“非平凡的抵消关系”**。
+> 💡 <strong>关键辨析：为什么必须是“不全为零”？</strong>
+> 对于任意向量组，令所有系数全取 $0$ 的平凡组合 $\sum 0 \cdot \mathbf{v}_i = \mathbf{0}$ 永远成立；而线性相关断言的是：<strong>存在一种“非平凡的抵消关系”</strong>。
 
 #### 几何冗余等价定理
 
-“存在非平凡零组合”在代数上完全等价于：**向量组中至少存在一个向量，可以被表示为其余向量的线性组合**。
+“存在非平凡零组合”在代数上完全等价于：<strong>向量组中至少存在一个向量，可以被表示为其余向量的线性组合</strong>。
 
 若存在某个 $c_j \ne 0$（不妨设 $c_1 \ne 0$），移项两端同除以 $c_1$ 即可直接解出：
 
@@ -325,44 +325,44 @@ $$
 \mathbf{v}_1 = -\frac{c_2}{c_1}\mathbf{v}_2 - \dots - \frac{c_k}{c_1}\mathbf{v}_k
 $$
 
-> 📐 **几何本质**：**线性相关 $\iff$ 向量组中存在“多余”的冗余维度。它没有为张成空间贡献任何崭新的独立方向。**
+> 📐 <strong>几何本质</strong>：<strong>线性相关 $\iff$ 向量组中存在“多余”的冗余维度。它没有为张成空间贡献任何崭新的独立方向。</strong>
 
 #### 4.3.1 经典实例
 
-- **共线向量**：$(1, 2)$ 与 $(2, 4)$ 满足 $2(1, 2) - (2, 4) = (0, 0)$，两者线性相关；
-- **平面中的三个向量必相关**：在二维平面 $\mathbb{R}^2$ 中任选三个向量，它们必然线性相关 —— 因为二维空间最多容纳 2 个独立自由度，第三个向量必落在前两个向量张成的平面内；
-- **多项式空间的线性相关**：在 $\mathcal{P}_2$ 中，考虑多项式组 $p_1(x) = 1 + x, \; p_2(x) = x + x^2, \; p_3(x) = 1 + 2x + x^2$。显然 $p_3 = p_1 + p_2 \implies p_1 + p_2 - p_3 = 0$，故该多项式组线性相关。
+- <strong>共线向量</strong>：$(1, 2)$ 与 $(2, 4)$ 满足 $2(1, 2) - (2, 4) = (0, 0)$，两者线性相关；
+- <strong>平面中的三个向量必相关</strong>：在二维平面 $\mathbb{R}^2$ 中任选三个向量，它们必然线性相关 —— 因为二维空间最多容纳 2 个独立自由度，第三个向量必落在前两个向量张成的平面内；
+- <strong>多项式空间的线性相关</strong>：在 $\mathcal{P}_2$ 中，考虑多项式组 $p_1(x) = 1 + x, \; p_2(x) = x + x^2, \; p_3(x) = 1 + 2x + x^2$。显然 $p_3 = p_1 + p_2 \implies p_1 + p_2 - p_3 = 0$，故该多项式组线性相关。
 
 ---
 
 ### 4.4 线性无关：每一维都开辟全新方向
 
-反之，如果想要让线性组合等于零向量，**唯一可能的途径就是全体系数全部为零**，则称这组向量 **线性无关（Linearly Independent）**：
+反之，如果想要让线性组合等于零向量，<strong>唯一可能的途径就是全体系数全部为零</strong>，则称这组向量 <strong>线性无关（Linearly Independent）</strong>：
 
 $$
 \boxed{ c_1 \mathbf{v}_1 + c_2 \mathbf{v}_2 + \dots + c_k \mathbf{v}_k = \mathbf{0} \implies c_1 = c_2 = \dots = c_k = 0 }
 $$
 
-换言之：**向量组中的任何一个向量，都绝对无法被其余向量线性表示 —— 没有任何一个向量是冗余的**。
+换言之：<strong>向量组中的任何一个向量，都绝对无法被其余向量线性表示 —— 没有任何一个向量是冗余的</strong>。
 
-> 📐 **几何本质**：**线性无关 $\iff$ 每一个向量都贡献了一个真正不可替代的新几何维度。**
+> 📐 <strong>几何本质</strong>：<strong>线性无关 $\iff$ 每一个向量都贡献了一个真正不可替代的新几何维度。</strong>
 
 #### 4.4.1 判定实例
 
-- **几何标准基**：$\mathbf{e}_1 = (1, 0), \mathbf{e}_2 = (0, 1)$。由 $c_1(1, 0) + c_2(0, 1) = (c_1, c_2) = (0, 0)$，直接导出唯一解 $c_1 = c_2 = 0$；
-- **旋转基底**：$\mathbf{v}_1 = (1, 1), \mathbf{v}_2 = (1, -1)$。线性方程组 $\begin{cases} c_1 + c_2 = 0 \\ c_1 - c_2 = 0 \end{cases}$ 的唯一解即为 $c_1 = c_2 = 0$；
-- **抽象多项式单项式基**：在 $\mathcal{P}_n$ 中，幂基 $(1, x, x^2, \dots, x^n)$ 是严格线性无关的。因为若恒等式 $c_0 + c_1 x + \dots + c_n x^n \equiv 0$ 对所有实数 $x$ 成立，非零多项式最多只有 $n$ 个实根，因此系数必全为零 $c_0 = c_1 = \dots = c_n = 0$。
+- <strong>几何标准基</strong>：$\mathbf{e}_1 = (1, 0), \mathbf{e}_2 = (0, 1)$。由 $c_1(1, 0) + c_2(0, 1) = (c_1, c_2) = (0, 0)$，直接导出唯一解 $c_1 = c_2 = 0$；
+- <strong>旋转基底</strong>：$\mathbf{v}_1 = (1, 1), \mathbf{v}_2 = (1, -1)$。线性方程组 $\begin{cases} c_1 + c_2 = 0 \\ c_1 - c_2 = 0 \end{cases}$ 的唯一解即为 $c_1 = c_2 = 0$；
+- <strong>抽象多项式单项式基</strong>：在 $\mathcal{P}_n$ 中，幂基 $(1, x, x^2, \dots, x^n)$ 是严格线性无关的。因为若恒等式 $c_0 + c_1 x + \dots + c_n x^n \equiv 0$ 对所有实数 $x$ 成立，非零多项式最多只有 $n$ 个实根，因此系数必全为零 $c_0 = c_1 = \dots = c_n = 0$。
 
 #### 4.4.2 核心等价刻画：线性组合表示的唯一性（坐标化的基石）
 
-在建立坐标系统时，“线性无关”往往可以通过一个极其深刻且实用的命题来等价定义 —— **表示的唯一性**：
+在建立坐标系统时，“线性无关”往往可以通过一个极其深刻且实用的命题来等价定义 —— <strong>表示的唯一性</strong>：
 
-> **定理（表示唯一性等价定理）**：
-> 向量组 $\{\mathbf{v}_1, \dots, \mathbf{v}_k\}$ 线性无关 $\iff$ 对其张成空间中的任意向量 $\mathbf{v} \in \operatorname{span}\{\mathbf{v}_1, \dots, \mathbf{v}_k\}$，写成线性组合 $\mathbf{v} = \sum_{i=1}^k c_i \mathbf{v}_i$ 的**标量系数是唯一确定的**。
+> <strong>定理（表示唯一性等价定理）</strong>：
+> 向量组 $\{\mathbf{v}_1, \dots, \mathbf{v}_k\}$ 线性无关 $\iff$ 对其张成空间中的任意向量 $\mathbf{v} \in \operatorname{span}\{\mathbf{v}_1, \dots, \mathbf{v}_k\}$，写成线性组合 $\mathbf{v} = \sum_{i=1}^k c_i \mathbf{v}_i$ 的<strong>标量系数是唯一确定的</strong>。
 
 #### 4.4.3 严格充要证明（两式相减法）
 
-- **充分性（线性无关 $\implies$ 表示唯一）**：
+- <strong>充分性（线性无关 $\implies$ 表示唯一）</strong>：
   假设同一个向量 $\mathbf{v}$ 拥有两种可能出现的线性组合表示：
 
   $$
@@ -383,7 +383,7 @@ $$
 
   这证明了任何向量的线性表示绝对不可能出现第二种写法，表示严格唯一！
 
-- **必要性（表示唯一 $\implies$ 线性无关）**：
+- <strong>必要性（表示唯一 $\implies$ 线性无关）</strong>：
   设已知张成空间中任意向量的表示均唯一。现考察使得线性组合为零向量的任意一组系数：
   $$
   \sum_{i=1}^k \alpha_i \mathbf{v}_i = \mathbf{0}.
@@ -402,7 +402,7 @@ $$
 
 ### 4.5 空间之基（Basis）与维数的初晓
 
-“空间张成（能覆盖）”与“线性无关（无冗余）”两个概念在此汇聚，诞生了线性代数最根本的几何坐标参照系 —— **基（Basis）**：
+“空间张成（能覆盖）”与“线性无关（无冗余）”两个概念在此汇聚，诞生了线性代数最根本的几何坐标参照系 —— <strong>基（Basis）</strong>：
 
 $$
 \boxed{ \text{基 (Basis)} \equiv \text{既能张成全空间、自身又保持线性无关的极小向量生成集} }
@@ -412,7 +412,7 @@ $$
 
 在深入坐标运算之前，必须建立极其清醒的现代代数认知阶梯：
 
-> **向量不是坐标表示；向量是被坐标表示的对象。**
+> <strong>向量不是坐标表示；向量是被坐标表示的对象。</strong>
 
 设 $\mathbf{v} \in V$ 是向量空间中的一个抽象向量。只有当我们选定了一组有序基底 $B = (\mathbf{v}_1, \dots, \mathbf{v}_n)$ 之后，$\mathbf{v}$ 才能唯一展开为：
 
@@ -420,7 +420,7 @@ $$
 \mathbf{v} = x_1 \mathbf{v}_1 + x_2 \mathbf{v}_2 + \dots + x_n \mathbf{v}_n.
 $$
 
-此时，标量数组 $[\mathbf{v}]_B = (x_1, \dots, x_n)^{\mathsf T} \in \mathbb{F}^n$ 才是向量 $\mathbf{v}$ 在基底 $B$ 下的 **数值坐标**。
+此时，标量数组 $[\mathbf{v}]_B = (x_1, \dots, x_n)^{\mathsf T} \in \mathbb{F}^n$ 才是向量 $\mathbf{v}$ 在基底 $B$ 下的 <strong>数值坐标</strong>。
 
 两者的层次关系绝不可颠倒：
 
@@ -432,7 +432,7 @@ $$
 }
 $$
 
-例如，空间中同一个客观存在的几何向量 $\mathbf{v}$，在基底 $B$ 下的坐标可能是 $[\mathbf{v}]_B = \begin{bmatrix} 1 \\ 2 \end{bmatrix}$，而换到另一组旋转基底 $C$ 下其坐标可能变成了 $[\mathbf{v}]_C = \begin{bmatrix} 5 \\ -1 \end{bmatrix}$。 **客观向量本身并没有发生任何改变，改变的只是观察者选取的参考基底以及投射在其上的坐标数值。**
+例如，空间中同一个客观存在的几何向量 $\mathbf{v}$，在基底 $B$ 下的坐标可能是 $[\mathbf{v}]_B = \begin{bmatrix} 1 \\ 2 \end{bmatrix}$，而换到另一组旋转基底 $C$ 下其坐标可能变成了 $[\mathbf{v}]_C = \begin{bmatrix} 5 \\ -1 \end{bmatrix}$。 <strong>客观向量本身并没有发生任何改变，改变的只是观察者选取的参考基底以及投射在其上的坐标数值。</strong>
 
 #### 矩阵方程视角：求解坐标即求逆矩阵 $V \lambda = \mathbf{v} \implies \lambda = V^{-1}\mathbf{v}$
 
@@ -444,7 +444,7 @@ $$
 V = \begin{bmatrix} \mathbf{v}_1 & \mathbf{v}_2 & \cdots & \mathbf{v}_n \end{bmatrix}.
 $$
 
-根据矩阵乘法按列线性组合的定义，展开式 $\mathbf{v} = \sum_{i=1}^n \lambda_i \mathbf{v}_i$ 可以直接写成优雅紧凑的 **矩阵-向量方程**：
+根据矩阵乘法按列线性组合的定义，展开式 $\mathbf{v} = \sum_{i=1}^n \lambda_i \mathbf{v}_i$ 可以直接写成优雅紧凑的 <strong>矩阵-向量方程</strong>：
 
 $$
 \boxed{
@@ -454,30 +454,30 @@ $$
 
 这揭示了坐标求解与线性方程组理论的完全同一性：
 
-1. **齐次伴随方程与线性无关**：
+1. <strong>齐次伴随方程与线性无关</strong>：
    考虑齐次线性方程组（即矩阵 $V$ 的核空间 / 零空间 $\ker V$）：
    $$
    V \alpha = \mathbf{0} \iff \sum_{i=1}^n \alpha_i \mathbf{v}_i = \mathbf{0}.
    $$
    根据线性无关的定义，各列向量线性无关 $\iff$ 该方程仅有平凡零解 $\alpha = \mathbf{0} \iff \ker(V) = \{\mathbf{0}\}$（零度为 $0$，列满秩，解至多一个）；
-2. **非齐次方程与基底可逆性**：
-   当向量组既线性无关又能张成全空间时，$V$ 是一个满秩可逆方阵（$\det(V) \ne 0$）。因此对于空间中任意给定的目标向量 $\mathbf{v}$，其数值坐标向量恒有 **唯一确定的逆解**：
+2. <strong>非齐次方程与基底可逆性</strong>：
+   当向量组既线性无关又能张成全空间时，$V$ 是一个满秩可逆方阵（$\det(V) \ne 0$）。因此对于空间中任意给定的目标向量 $\mathbf{v}$，其数值坐标向量恒有 <strong>唯一确定的逆解</strong>：
    $$
    \boxed{ \lambda = V^{-1} \mathbf{v} }
    $$
-   **“在基底上分解向量求坐标”在代数上完全等价于“求解线性方程组 / 乘以基矩阵的逆”！**
+   <strong>“在基底上分解向量求坐标”在代数上完全等价于“求解线性方程组 / 乘以基矩阵的逆”！</strong>
 
 从上述“表示唯一性”的代数视角，基底的数学本质展现出一种极致的对称哲学：
 
 > | 概念                        | 代数本质                                                | 几何自由度特征                                               |
 > | :-------------------------- | :------------------------------------------------------ | :----------------------------------------------------------- |
-> | **空间张成（Span）**        | 空间中任意向量的线性表示 **至少存在一个**               | 全面覆盖，不留几何死角（但可能存在重叠冗余）                 |
-> | **线性无关（Independent）** | 空间中任意向量的线性表示 **至多存在一个**               | 绝无冗余，方向各自独立（但可能尚未覆盖全空间）               |
-> | **空间之基（Basis）**       | 空间中任意向量的线性表示 **恰好存在一个（存在且唯一）** | 既覆盖全空间，又无任何冗余 $\implies$ **唯一确定坐标向量！** |
+> | <strong>空间张成（Span）</strong>        | 空间中任意向量的线性表示 <strong>至少存在一个</strong>               | 全面覆盖，不留几何死角（但可能存在重叠冗余）                 |
+> | <strong>线性无关（Independent）</strong> | 空间中任意向量的线性表示 <strong>至多存在一个</strong>               | 绝无冗余，方向各自独立（但可能尚未覆盖全空间）               |
+> | <strong>空间之基（Basis）</strong>       | 空间中任意向量的线性表示 <strong>恰好存在一个（存在且唯一）</strong> | 既覆盖全空间，又无任何冗余 $\implies$ <strong>唯一确定坐标向量！</strong> |
 
-- **极小张成集**：若去掉任何一个向量，便再也无法覆盖全空间（从“至少一个”跌落为“无表示”）；
-- **极大线性无关集**：若再添入空间中任意一个新向量，必定引发线性相关（从“至多一个”蜕变为“多重冗余表示”）；
-- **基所含向量的个数**：是向量空间唯一确定的本质内在特征标 —— **维数（Dimension）**：
+- <strong>极小张成集</strong>：若去掉任何一个向量，便再也无法覆盖全空间（从“至少一个”跌落为“无表示”）；
+- <strong>极大线性无关集</strong>：若再添入空间中任意一个新向量，必定引发线性相关（从“至多一个”蜕变为“多重冗余表示”）；
+- <strong>基所含向量的个数</strong>：是向量空间唯一确定的本质内在特征标 —— <strong>维数（Dimension）</strong>：
   $$
   \dim(V) = n.
   $$
@@ -486,40 +486,40 @@ $$
 
 #### 4.5.1 统一图景延伸：向量基（$n$ 个向量） vs. 仿射基（$n+1$ 个参考点）
 
-坐标本质上是相对于特定几何参考框架的“唯一定位标签”。然而，当几何世界中 **没有绝对的原点** 时，坐标体系会以怎样的形态存在？
+坐标本质上是相对于特定几何参考框架的“唯一定位标签”。然而，当几何世界中 <strong>没有绝对的原点</strong> 时，坐标体系会以怎样的形态存在？
 
 将线性代数与几何学中的仿射空间并置，我们会发现一套完全对偶、结构极致优美的对照法则：
 
 | 对照维度           | 向量空间（线性代数）                                                                     | 仿射空间（仿射几何）                                                                   |
 | :----------------- | :--------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
-| **参考框架选取**   | 选 $n$ 个线性无关向量 $\mathbf{v}_1, \dots, \mathbf{v}_n$                                | 选 $n+1$ 个仿射无关参考点 $P_0, \dots, P_n$                                            |
-| **框架代数名称**   | **向量空间的一组基（Basis）**                                                            | **仿射空间的一组“仿射基”（Affine Basis / 单纯形）**                                    |
-| **组合展开形式**   | $\displaystyle \mathbf{v} = \sum_{i=1}^n \lambda_i \mathbf{v}_i$                         | $\displaystyle P = \sum_{i=0}^n \lambda_i P_i$                                         |
-| **坐标参数形态**   | 线性坐标列向量 $(\lambda_1, \dots, \lambda_n)$                                           | 重心坐标列向量 $(\lambda_0, \dots, \lambda_n)$                                         |
-| **系数代数约束**   | **没有任何额外约束**（全自由）                                                           | **必须严格满足归一化约束** $\displaystyle \sum_{i=0}^n \lambda_i = 1$                  |
-| **表示唯一性保障** | 表示存在且唯一 $\iff$ **线性无关**                                                       | 表示存在且唯一 $\iff$ **仿射无关**                                                     |
-| **矩阵方程求解**   | $\boxed{ V \lambda = \mathbf{v} \implies \lambda = V^{-1}\mathbf{v} }$（$\det V \ne 0$） | $\boxed{ A \lambda = \tilde{P} \implies \lambda = A^{-1}\tilde{P} }$（$\det A \ne 0$） |
+| <strong>参考框架选取</strong>   | 选 $n$ 个线性无关向量 $\mathbf{v}_1, \dots, \mathbf{v}_n$                                | 选 $n+1$ 个仿射无关参考点 $P_0, \dots, P_n$                                            |
+| <strong>框架代数名称</strong>   | <strong>向量空间的一组基（Basis）</strong>                                                            | <strong>仿射空间的一组“仿射基”（Affine Basis / 单纯形）</strong>                                    |
+| <strong>组合展开形式</strong>   | $\displaystyle \mathbf{v} = \sum_{i=1}^n \lambda_i \mathbf{v}_i$                         | $\displaystyle P = \sum_{i=0}^n \lambda_i P_i$                                         |
+| <strong>坐标参数形态</strong>   | 线性坐标列向量 $(\lambda_1, \dots, \lambda_n)$                                           | 重心坐标列向量 $(\lambda_0, \dots, \lambda_n)$                                         |
+| <strong>系数代数约束</strong>   | <strong>没有任何额外约束</strong>（全自由）                                                           | <strong>必须严格满足归一化约束</strong> $\displaystyle \sum_{i=0}^n \lambda_i = 1$                  |
+| <strong>表示唯一性保障</strong> | 表示存在且唯一 $\iff$ <strong>线性无关</strong>                                                       | 表示存在且唯一 $\iff$ <strong>仿射无关</strong>                                                     |
+| <strong>矩阵方程求解</strong>   | $\boxed{ V \lambda = \mathbf{v} \implies \lambda = V^{-1}\mathbf{v} }$（$\det V \ne 0$） | $\boxed{ A \lambda = \tilde{P} \implies \lambda = A^{-1}\tilde{P} }$（$\det A \ne 0$） |
 
 ##### 自由度守恒定律：为什么仿射基恰好需要 $n+1$ 个点？
 
 在 $n$ 维向量空间中，我们拥有天然的绝对原点 $\mathbf{0}$，因此只需 $n$ 个基向量便足以建立坐标系：
 
-- **向量坐标**：拥有 $n$ 个数值坐标，由于系数毫无约束，其自由度为：
+- <strong>向量坐标</strong>：拥有 $n$ 个数值坐标，由于系数毫无约束，其自由度为：
   $$
   \text{自由度} = n.
   $$
 
 但在没有天然原点的仿射空间中，空间中的点不能直接作为“从原点发出的向量”来做自由加法。为了客观标定任意点 $P$，必须借助 $n+1$ 个相互独立的参考点：
 
-- **重心坐标**：拥有 $n+1$ 个标量系数 $(\lambda_0, \dots, \lambda_n)$，看似多了一维，但它同时背负着一条代数求和约束 $\sum_{i=0}^n \lambda_i = 1$。
-- **自由度精确守恒**：
+- <strong>重心坐标</strong>：拥有 $n+1$ 个标量系数 $(\lambda_0, \dots, \lambda_n)$，看似多了一维，但它同时背负着一条代数求和约束 $\sum_{i=0}^n \lambda_i = 1$。
+- <strong>自由度精确守恒</strong>：
   $$
   \boxed{ (n+1) \text{ 个重心坐标分量} - 1 \text{ 个代数求和约束} = n \text{ 个自由度} }
   $$
 
 这一代数约束将多出的一维自由度精准扣除，使仿射坐标系的内在自由度与 $n$ 维空间的几何维度完全守恒！
 
-> 🔗 **前瞻指引**：在后续专篇《仿射空间与仿射变换》中，读者将看到：只要将约束 $\lambda_0 = 1 - \sum_{i=1}^n \lambda_i$ 代入仿射组合，它就会瞬间退化为“以某个参考点 $P_0$ 为原点、其余点差分向量为基底”的普通向量坐标；而在图形学中，重心坐标齐次增广矩阵 $A \lambda = \tilde{P}$，正是通过引入第 $n+1$ 维齐次坐标（嵌入在超平面 $w=1$ 上），将非线性的仿射点方程与求和约束垂直拼合，直接升维还原为这里的标准线性矩阵方程 $V \lambda = \mathbf{v}$！
+> 🔗 <strong>前瞻指引</strong>：在后续专篇《仿射空间与仿射变换》中，读者将看到：只要将约束 $\lambda_0 = 1 - \sum_{i=1}^n \lambda_i$ 代入仿射组合，它就会瞬间退化为“以某个参考点 $P_0$ 为原点、其余点差分向量为基底”的普通向量坐标；而在图形学中，重心坐标齐次增广矩阵 $A \lambda = \tilde{P}$，正是通过引入第 $n+1$ 维齐次坐标（嵌入在超平面 $w=1$ 上），将非线性的仿射点方程与求和约束垂直拼合，直接升维还原为这里的标准线性矩阵方程 $V \lambda = \mathbf{v}$！
 
 ---
 
@@ -527,16 +527,16 @@ $$
 
 ### 5.1 子空间判定三准则
 
-设 $V$ 是一个向量空间，若 $V$ 的一个非空子集 $W \subseteq V$ 在 $V$ 原有的加法和数乘运算下自身也构成一个向量空间，则称 $W$ 是 $V$ 的一个 **线性子空间（Linear Subspace）**。
+设 $V$ 是一个向量空间，若 $V$ 的一个非空子集 $W \subseteq V$ 在 $V$ 原有的加法和数乘运算下自身也构成一个向量空间，则称 $W$ 是 $V$ 的一个 <strong>线性子空间（Linear Subspace）</strong>。
 
-在实际判定中，我们无需逐一验证全部八条公理，只需验证以下 **三准则** 即可：
+在实际判定中，我们无需逐一验证全部八条公理，只需验证以下 <strong>三准则</strong> 即可：
 
-> **子空间充要判定定理**：
+> <strong>子空间充要判定定理</strong>：
 > $W \subseteq V$ 是 $V$ 的子空间 $\iff$ 满足以下三条：
 >
-> 1. **非空且含零元**：$\mathbf{0} \in W$；
-> 2. **加法封闭性（Closure under Addition）**：若 $\mathbf{u}, \mathbf{v} \in W$，则 $\mathbf{u} + \mathbf{v} \in W$；
-> 3. **数乘封闭性（Closure under Scalar Multiplication）**：若 $c \in \mathbb{F}, \mathbf{v} \in W$，则 $c\mathbf{v} \in W$。
+> 1. <strong>非空且含零元</strong>：$\mathbf{0} \in W$；
+> 2. <strong>加法封闭性（Closure under Addition）</strong>：若 $\mathbf{u}, \mathbf{v} \in W$，则 $\mathbf{u} + \mathbf{v} \in W$；
+> 3. <strong>数乘封闭性（Closure under Scalar Multiplication）</strong>：若 $c \in \mathbb{F}, \mathbf{v} \in W$，则 $c\mathbf{v} \in W$。
 >
 > （常合并为一条线性组合封闭性：$\forall a, b \in \mathbb{F}, \; \mathbf{u}, \mathbf{v} \in W \implies a\mathbf{u} + b\mathbf{v} \in W$）。
 
@@ -544,20 +544,20 @@ $$
 
 设 $U, W$ 是向量空间 $V$ 的两个子空间：
 
-1. **子空间的交（Intersection）**：
+1. <strong>子空间的交（Intersection）</strong>：
    $U \cap W$ 必然也是 $V$ 的子空间（两个过原点的平面相交必定是一条过原点的直线或原点点集）；
-2. **子空间和（Sum）**：
+2. <strong>子空间和（Sum）</strong>：
    所有可能线性组合之和构成的集合 $U + W = \{ \mathbf{u} + \mathbf{w} \mid \mathbf{u} \in U, \mathbf{w} \in W \}$ 也是 $V$ 的子空间；
-3. **格拉斯曼维数公式（Grassmann's Dimension Formula）**：
+3. <strong>格拉斯曼维数公式（Grassmann's Dimension Formula）</strong>：
    $$
    \boxed{ \dim(U + W) = \dim(U) + \dim(W) - \dim(U \cap W) }
    $$
-4. **直和（Direct Sum $U \oplus W$）**：
-   当且仅当两个子空间 **仅交于零向量**（$U \cap W = \{\mathbf{0}\}$）时，它们的和称为 **直和**，记作：
+4. <strong>直和（Direct Sum $U \oplus W$）</strong>：
+   当且仅当两个子空间 <strong>仅交于零向量</strong>（$U \cap W = \{\mathbf{0}\}$）时，它们的和称为 <strong>直和</strong>，记作：
    $$
    \boxed{ V = U \oplus W \iff U \cap W = \{\mathbf{0}\} \quad \text{且} \quad V = U + W }
    $$
-   直和保证了空间中任意向量 $\mathbf{v} \in V$ 都能 **唯一分解** 为 $\mathbf{v} = \mathbf{u} + \mathbf{w}$（$\mathbf{u} \in U, \mathbf{w} \in W$）。
+   直和保证了空间中任意向量 $\mathbf{v} \in V$ 都能 <strong>唯一分解</strong> 为 $\mathbf{v} = \mathbf{u} + \mathbf{w}$（$\mathbf{u} \in U, \mathbf{w} \in W$）。
 
 ---
 
@@ -565,7 +565,7 @@ $$
 
 ### 6.1 定义域（Domain $V$）、陪域（Codomain $W$）与像空间（Image）
 
-设 $V$ 与 $W$ 是数域 $\mathbb{F}$ 上的两个向量空间。映射 $T: V \to W$ 如果保持向量加法与标量乘法结构，则称为 **线性映射（Linear Map）**：
+设 $V$ 与 $W$ 是数域 $\mathbb{F}$ 上的两个向量空间。映射 $T: V \to W$ 如果保持向量加法与标量乘法结构，则称为 <strong>线性映射（Linear Map）</strong>：
 
 $$
 \boxed{ T(c\mathbf{u} + \mathbf{v}) = c T(\mathbf{u}) + T(\mathbf{v}), \qquad \forall c \in \mathbb{F}, \; \mathbf{u}, \mathbf{v} \in V }
@@ -573,24 +573,24 @@ $$
 
 在现代代数中，理解一个线性映射必须严密区分以下四个核心集合：
 
-1. **定义域（Domain $V$）**：所有合法输入向量的原生空间；
-2. **陪域（Codomain $W$ / 目标空间）**：映射在形式声明时预先指定的目标宿主空间；
-3. **像空间（Image / Range $\operatorname{im} T$）**：由定义域中所有向量经 $T$ 变换后在陪域中实际命中覆盖的输出子集：
+1. <strong>定义域（Domain $V$）</strong>：所有合法输入向量的原生空间；
+2. <strong>陪域（Codomain $W$ / 目标空间）</strong>：映射在形式声明时预先指定的目标宿主空间；
+3. <strong>像空间（Image / Range $\operatorname{im} T$）</strong>：由定义域中所有向量经 $T$ 变换后在陪域中实际命中覆盖的输出子集：
    $$
    \boxed{ \operatorname{im}(T) = \{ T(\mathbf{v}) \in W \mid \mathbf{v} \in V \} \subseteq W }
    $$
-   $\operatorname{im}(T)$ 是陪域 $W$ 的一个 **线性子空间**。其维数称为 **秩（Rank）**：$\operatorname{rank}(T) = \dim(\operatorname{im} T)$；
-4. **核空间（Kernel / Null Space $\ker T$）**：定义域中所有被 $T$ 压缩压平为陪域零向量 $\mathbf{0}_W$ 的输入子集：
+   $\operatorname{im}(T)$ 是陪域 $W$ 的一个 <strong>线性子空间</strong>。其维数称为 <strong>秩（Rank）</strong>：$\operatorname{rank}(T) = \dim(\operatorname{im} T)$；
+4. <strong>核空间（Kernel / Null Space $\ker T$）</strong>：定义域中所有被 $T$ 压缩压平为陪域零向量 $\mathbf{0}_W$ 的输入子集：
    $$
    \boxed{ \ker(T) = \{ \mathbf{v} \in V \mid T(\mathbf{v}) = \mathbf{0}_W \} \subseteq V }
    $$
-   $\ker(T)$ 是定义域 $V$ 的一个 **线性子空间**。其维数称为 **零度（Nullity）**：$\operatorname{nullity}(T) = \dim(\ker T)$。
+   $\ker(T)$ 是定义域 $V$ 的一个 <strong>线性子空间</strong>。其维数称为 <strong>零度（Nullity）</strong>：$\operatorname{nullity}(T) = \dim(\ker T)$。
 
-> 💡 **核心辨析：陪域 $\neq$ 像空间**
+> 💡 <strong>核心辨析：陪域 $\neq$ 像空间</strong>
 >
 > 陪域 $W$ 是映射在声明时指定的目标大空间，而像空间 $\operatorname{im}(T)$ 是实际命中的输出子集。
 > 例如在 $T: \mathbb{R}^2 \to \mathbb{R}^3, \; (x, y) \mapsto (x, y, 0)$ 中，陪域是三维空间 $\mathbb{R}^3$，而像空间仅仅是其二维 $xy$ 水平子平面 $\mathbb{R}^2 \times \{0\}$。
-> **只有当映射为满射时，像空间才与陪域完全重合（$\operatorname{im} T = W$）**。
+> <strong>只有当映射为满射时，像空间才与陪域完全重合（$\operatorname{im} T = W$）</strong>。
 >
 > （函数的集合论基础、单满双射与逆映射判定，详见 [《函数与映射：从通用语法到范畴论起点》](/posts/discrete-math/functions-and-mappings)）。
 
@@ -608,40 +608,40 @@ $$
 
 #### 1. 单射（Injective / One-to-One / 单态射 Monomorphism）
 
-- **集合定义**：不同输入必然映射到不同输出：$\forall \mathbf{u}, \mathbf{v} \in V, \; \mathbf{u} \neq \mathbf{v} \implies T(\mathbf{u}) \neq T(\mathbf{v})$；
-- **充要代数判定定理**：
+- <strong>集合定义</strong>：不同输入必然映射到不同输出：$\forall \mathbf{u}, \mathbf{v} \in V, \; \mathbf{u} \neq \mathbf{v} \implies T(\mathbf{u}) \neq T(\mathbf{v})$；
+- <strong>充要代数判定定理</strong>：
   $$
   \boxed{ T \text{ 是单射} \iff \ker(T) = \{\mathbf{0}_V\} \iff \operatorname{nullity}(T) = 0 }
   $$
-- **维数约束**：若有限维空间之间存在单射，必有 $\dim(V) \le \dim(W)$（低维无压缩嵌入高维）。
+- <strong>维数约束</strong>：若有限维空间之间存在单射，必有 $\dim(V) \le \dim(W)$（低维无压缩嵌入高维）。
 
 #### 2. 满射（Surjective / Onto / 满态射 Epimorphism）
 
-- **集合定义**：目标陪域中的每一个元素都能被至少一个输入命中：$\forall \mathbf{w} \in W, \; \exists \mathbf{v} \in V \text{ s.t. } T(\mathbf{v}) = \mathbf{w}$；
-- **充要代数判定定理**：
+- <strong>集合定义</strong>：目标陪域中的每一个元素都能被至少一个输入命中：$\forall \mathbf{w} \in W, \; \exists \mathbf{v} \in V \text{ s.t. } T(\mathbf{v}) = \mathbf{w}$；
+- <strong>充要代数判定定理</strong>：
   $$
   \boxed{ T \text{ 是满射} \iff \operatorname{im}(T) = W \iff \operatorname{rank}(T) = \dim(W) }
   $$
-- **维数约束**：若有限维空间之间存在满射，必有 $\dim(V) \ge \dim(W)$（高维覆盖低维）。
+- <strong>维数约束</strong>：若有限维空间之间存在满射，必有 $\dim(V) \ge \dim(W)$（高维覆盖低维）。
 
 #### 3. 双射（Bijective / 双态射 Isomorphism）
 
-- **集合定义**：既是单射又是满射。存在唯一的双向逆映射 $T^{-1}: W \to V$，且 $T^{-1}$ 亦为线性映射；
-- **充要代数判定定理**：
+- <strong>集合定义</strong>：既是单射又是满射。存在唯一的双向逆映射 $T^{-1}: W \to V$，且 $T^{-1}$ 亦为线性映射；
+- <strong>充要代数判定定理</strong>：
   $$
   \boxed{ T \text{ 是双射} \iff \ker(T) = \{\mathbf{0}_V\} \quad \text{且} \quad \operatorname{im}(T) = W \iff \dim(V) = \dim(W) = \operatorname{rank}(T) }
   $$
 
 #### 4. 同维空间特权定理（Equidimensional Theorem）
 
-> **同维空间特权定理**：
-> 设 $V$ 与 $W$ 维数相同且有限（$\dim V = \dim W = n < \infty$），$T: V \to W$ 是线性映射，则以下命题 **等价**：
+> <strong>同维空间特权定理</strong>：
+> 设 $V$ 与 $W$ 维数相同且有限（$\dim V = \dim W = n < \infty$），$T: V \to W$ 是线性映射，则以下命题 <strong>等价</strong>：
 >
 > 1. $T$ 是单射（$\ker T = \{\mathbf{0}\}$）；
 > 2. $T$ 是满射（$\operatorname{im} T = W$）；
 > 3. $T$ 是双射（同构 Isomorphism）。
 >
-> （根据秩-零度定理 $\dim V = \operatorname{nullity}(T) + \operatorname{rank}(T)$，$\operatorname{nullity}=0 \iff \operatorname{rank}=n = \dim W$。**在有限同维空间中，“信息无损失”与“空间全覆盖”同生共死！**）
+> （根据秩-零度定理 $\dim V = \operatorname{nullity}(T) + \operatorname{rank}(T)$，$\operatorname{nullity}=0 \iff \operatorname{rank}=n = \dim W$。<strong>在有限同维空间中，“信息无损失”与“空间全覆盖”同生共死！</strong>）
 
 ---
 
@@ -649,12 +649,12 @@ $$
 
 定义域 $V$ 与陪域 $W$ 内部的子空间并非孤立存在，而是通过 $T$ 形成了完美的正交与直和几何配对：
 
-1. **定义域 $V$ 的子空间直和分解**：
+1. <strong>定义域 $V$ 的子空间直和分解</strong>：
    $$
    V = \ker(T) \oplus V_{\text{coim}} \qquad (\dim V = \dim\ker T + \dim V_{\text{coim}})
    $$
    其中 $V_{\text{coim}} \cong \operatorname{im}(T)$ 是余像子空间（有效工作子空间），所有真正携带信息的几何分量均来自该子空间，而 $\ker(T)$ 则是被彻底丢弃的无效冗余。
-2. **陪域 $W$ 的子空间直和分解**：
+2. <strong>陪域 $W$ 的子空间直和分解</strong>：
    $$
    W = \operatorname{im}(T) \oplus W_{\text{coker}} \qquad (\dim W = \dim\operatorname{im} T + \dim W_{\text{coker}})
    $$
@@ -664,9 +664,9 @@ $$
 
 | 空间维数关系      | 矩阵维度形态 $m \times n$ | 单射可能性                        | 满射可能性                                        | 双射（同构）             | 几何子空间本质                                                                                                    |
 | :---------------- | :------------------------ | :-------------------------------- | :------------------------------------------------ | :----------------------- | :---------------------------------------------------------------------------------------------------------------- |
-| $\dim V < \dim W$ | **瘦高型矩阵 ($m > n$)**  | 可为单射（列满秩 $r=n$）          | 绝不可能满射 ($\operatorname{im} T \subsetneq W$) | 否                       | 将低维空间无损嵌入高维空间；留有未覆盖的余核残差盲区（[详见《最小二乘法》](/posts/linear-algebra/least-squares)） |
-| $\dim V > \dim W$ | **矮胖型矩阵 ($m < n$)**  | 绝不可能单射 ($\dim\ker T \ge 1$) | 可为满射（行满秩 $r=m$）                          | 否                       | 将高维空间压扁投影至低维空间；全覆盖陪域，但必然产生不可逆的核空间信息压缩                                        |
-| $\dim V = \dim W$ | **方阵型矩阵 ($m = n$)**  | 满秩时为单射                      | 满秩时为满射                                      | **满秩时为双射（同构）** | 维度完全匹配。满秩时可逆保真；亏秩时单射与满射同时破灭（[详见《逆矩阵》](/posts/linear-algebra/matrix-inverse)）  |
+| $\dim V < \dim W$ | <strong>瘦高型矩阵 ($m > n$)</strong>  | 可为单射（列满秩 $r=n$）          | 绝不可能满射 ($\operatorname{im} T \subsetneq W$) | 否                       | 将低维空间无损嵌入高维空间；留有未覆盖的余核残差盲区（[详见《最小二乘法》](/posts/linear-algebra/least-squares)） |
+| $\dim V > \dim W$ | <strong>矮胖型矩阵 ($m < n$)</strong>  | 绝不可能单射 ($\dim\ker T \ge 1$) | 可为满射（行满秩 $r=m$）                          | 否                       | 将高维空间压扁投影至低维空间；全覆盖陪域，但必然产生不可逆的核空间信息压缩                                        |
+| $\dim V = \dim W$ | <strong>方阵型矩阵 ($m = n$)</strong>  | 满秩时为单射                      | 满秩时为满射                                      | <strong>满秩时为双射（同构）</strong> | 维度完全匹配。满秩时可逆保真；亏秩时单射与满射同时破灭（[详见《逆矩阵》](/posts/linear-algebra/matrix-inverse)）  |
 
 ---
 
@@ -680,11 +680,11 @@ $$
 D(p(x)) = \frac{\mathrm{d}}{\mathrm{d}x} p(x)
 $$
 
-- **定义域**：$\mathcal{P}_2$（$\dim = 3$）；
-- **陪域**：$\mathcal{P}_2$（$\dim = 3$）；
-- **核空间**：$\ker(D) = \operatorname{span}(1)$（常数项求导为 $0$），$\operatorname{nullity}(D) = 1$ $\implies$ **不是单射**；
-- **像空间**：$\operatorname{im}(D) = \operatorname{span}(1, x)$（导数最高为一次），$\operatorname{rank}(D) = 2 < 3$ $\implies$ **不是满射**；
-- **秩-零度守恒**：$3 = 1 + 2$。
+- <strong>定义域</strong>：$\mathcal{P}_2$（$\dim = 3$）；
+- <strong>陪域</strong>：$\mathcal{P}_2$（$\dim = 3$）；
+- <strong>核空间</strong>：$\ker(D) = \operatorname{span}(1)$（常数项求导为 $0$），$\operatorname{nullity}(D) = 1$ $\implies$ <strong>不是单射</strong>；
+- <strong>像空间</strong>：$\operatorname{im}(D) = \operatorname{span}(1, x)$（导数最高为一次），$\operatorname{rank}(D) = 2 < 3$ $\implies$ <strong>不是满射</strong>；
+- <strong>秩-零度守恒</strong>：$3 = 1 + 2$。
 
 #### 范例 2：定积分泛函（Definite Integral Functional）
 
@@ -694,16 +694,16 @@ $$
 I(f) = \int_a^b f(t) \, \mathrm{d}t
 $$
 
-- **定义域**：$C[a, b]$（无限维空间）；
-- **陪域**：$\mathbb{R}$（一维标量空间）；
-- **像空间**：$\operatorname{im}(I) = \mathbb{R}$（$\operatorname{rank} = 1$ $\implies$ **是满射**）；
-- **核空间**：$\ker(I) = \{ f \in C[a, b] \mid \int_a^b f(t)\mathrm{d}t = 0 \}$（正负面积相消的函数子空间，无限维）。
+- <strong>定义域</strong>：$C[a, b]$（无限维空间）；
+- <strong>陪域</strong>：$\mathbb{R}$（一维标量空间）；
+- <strong>像空间</strong>：$\operatorname{im}(I) = \mathbb{R}$（$\operatorname{rank} = 1$ $\implies$ <strong>是满射</strong>）；
+- <strong>核空间</strong>：$\ker(I) = \{ f \in C[a, b] \mid \int_a^b f(t)\mathrm{d}t = 0 \}$（正负面积相消的函数子空间，无限维）。
 
 ---
 
 ### 6.5 抽象秩-零度定理（Rank-Nullity Theorem）
 
-> **秩-零度定理（主定理）**：
+> <strong>秩-零度定理（主定理）</strong>：
 > 设 $V$ 是有限维向量空间，$T: V \to W$ 是任意线性映射，则必有：
 >
 > $$
@@ -718,9 +718,9 @@ $$
 
 ### 7.1 结构同构的公理化定义：从通用代数语法到线性同构
 
-在现代数学中，“两个对象在结构上完全相同”拥有一个极具辨识度的核心符号：**同构（$\cong$）**。
+在现代数学中，“两个对象在结构上完全相同”拥有一个极具辨识度的核心符号：<strong>同构（$\cong$）</strong>。
 
-但在深入线性代数的具体结论之前，我们必须先回到最纯粹的现代数学范畴，审视**同构最底层的通用代数语法**。
+但在深入线性代数的具体结论之前，我们必须先回到最纯粹的现代数学范畴，审视<strong>同构最底层的通用代数语法</strong>。
 
 #### 7.1.1 最基本的通用代数语法：$A \cong B$
 
@@ -741,15 +741,15 @@ $$
 f \circ g = \operatorname{id}_B \qquad \left(\forall y \in B, \; f(g(y)) = y\right)
 $$
 
-则称结构 $A$ 与结构 $B$ 是 **同构的（Isomorphic）**，记作：
+则称结构 $A$ 与结构 $B$ 是 <strong>同构的（Isomorphic）</strong>，记作：
 
 $$
 \boxed{ A \cong B }
 $$
 
-此时称 $f$ 为从 $A$ 到 $B$ 的一个 **同构映射（Isomorphism）**，而 $g$ 则是其唯一的逆同构（记为 $g = f^{-1}$）。
+此时称 $f$ 为从 $A$ 到 $B$ 的一个 <strong>同构映射（Isomorphism）</strong>，而 $g$ 则是其唯一的逆同构（记为 $g = f^{-1}$）。
 
-这一语法的核心直观极其优美简洁 —— **“绕一圈精准回到原来的东西”**：
+这一语法的核心直观极其优美简洁 —— <strong>“绕一圈精准回到原来的东西”</strong>：
 
 $$
 \boxed{
@@ -763,11 +763,11 @@ B \xrightarrow{\quad g \quad} A \xrightarrow{\quad f \quad} B, \qquad f \circ g 
 }
 $$
 
-它说明：**经过 $f$ 将数据或几何实体送到 $B$ 中后，信息没有发生哪怕一丝一毫的丢失或压缩，我们可以通过 $g$ 100% 毫无偏差地复原初始实体。**
+它说明：<strong>经过 $f$ 将数据或几何实体送到 $B$ 中后，信息没有发生哪怕一丝一毫的丢失或压缩，我们可以通过 $g$ 100% 毫无偏差地复原初始实体。</strong>
 
 #### 7.1.2 向量空间中的线性同构
 
-当上述通用语法落地到 **向量空间范畴** 时，不仅要求 $A, B$ 是数域 $\mathbb{F}$ 上的向量空间 $V, W$，还严格要求穿梭其间的态射必须是 **保持向量加法与数乘结构的线性映射**：
+当上述通用语法落地到 <strong>向量空间范畴</strong> 时，不仅要求 $A, B$ 是数域 $\mathbb{F}$ 上的向量空间 $V, W$，还严格要求穿梭其间的态射必须是 <strong>保持向量加法与数乘结构的线性映射</strong>：
 
 设 $T: V \to W$ 与 $S: W \to V$ 均为线性映射。若满足：
 
@@ -775,22 +775,22 @@ $$
 S \circ T = \operatorname{id}_V \quad \text{且} \quad T \circ S = \operatorname{id}_W
 $$
 
-则称 $T$ 是一个 **线性同构（Linear Isomorphism）**，记作：
+则称 $T$ 是一个 <strong>线性同构（Linear Isomorphism）</strong>，记作：
 
 $$
 \boxed{ V \cong W }
 $$
 
-由代数学定理易知：**存在线性映射 $S$ 满足上述互逆条件，充要于 $T$ 是一个双射（既是单射又是满射）**。单射保证了逆映射 $T^{-1}$ 作为函数的良定义性，满射保证了其定义域覆盖整个 $W$，而线性性则保证了逆映射 $T^{-1}$ 同样自动保加法与数乘。
+由代数学定理易知：<strong>存在线性映射 $S$ 满足上述互逆条件，充要于 $T$ 是一个双射（既是单射又是满射）</strong>。单射保证了逆映射 $T^{-1}$ 作为函数的良定义性，满射保证了其定义域覆盖整个 $W$，而线性性则保证了逆映射 $T^{-1}$ 同样自动保加法与数乘。
 
-同构的深远哲学内涵在于：**空间 $V$ 与空间 $W$ 仅仅是“元素的命名、符号外壳与存储形式不同”，它们的所有内在代数骨架（维数、线性相关性、基底展开、子空间层级）完全 100% 全等镜像！**
+同构的深远哲学内涵在于：<strong>空间 $V$ 与空间 $W$ 仅仅是“元素的命名、符号外壳与存储形式不同”，它们的所有内在代数骨架（维数、线性相关性、基底展开、子空间层级）完全 100% 全等镜像！</strong>
 
 ---
 
 ### 7.2 有限维向量空间终极同构定理
 
-> **有限维同构主定理**：
-> **数域 $\mathbb{F}$ 上任何一个 $n$ 维向量空间 $V$，都必然同构于标准坐标空间 $\mathbb{F}^n$**：
+> <strong>有限维同构主定理</strong>：
+> <strong>数域 $\mathbb{F}$ 上任何一个 $n$ 维向量空间 $V$，都必然同构于标准坐标空间 $\mathbb{F}^n$</strong>：
 >
 > $$
 > \boxed{ V \cong \mathbb{F}^n \qquad (\dim V = n) }
@@ -808,39 +808,39 @@ $$
 
 ### 7.3 空间商结构与第一同构定理（First Isomorphism Theorem）
 
-在深入理解线性映射的本质时，代数学引入了极具洞察力的工具 —— **商空间（Quotient Space）**。
+在深入理解线性映射的本质时，代数学引入了极具洞察力的工具 —— <strong>商空间（Quotient Space）</strong>。
 
 <QuotientSpaceDemo client:visible />
 
 #### 1. 符号 `/` 的本质：模掉（Mod Out）与“把某方向视为没有区别”
 
-在向量空间记号 $V / U$ 中（其中 $U \le V$ 是子空间），斜杠符号 `/` 源自除法，意为 **“模掉（Mod Out）”** 或 **“商掉”** 子空间 $U$：
+在向量空间记号 $V / U$ 中（其中 $U \le V$ 是子空间），斜杠符号 `/` 源自除法，意为 <strong>“模掉（Mod Out）”</strong> 或 <strong>“商掉”</strong> 子空间 $U$：
 
-- **代数定义**：在 $V$ 上定义等价关系：若 $\mathbf{v}_1 - \mathbf{v}_2 \in U$，则称 $\mathbf{v}_1$ 与 $\mathbf{v}_2$ 等价（记作 $\mathbf{v}_1 \sim \mathbf{v}_2$）。所有与 $\mathbf{v}$ 等价的向量集合称为 **陪集（Coset / 等价类）**：
+- <strong>代数定义</strong>：在 $V$ 上定义等价关系：若 $\mathbf{v}_1 - \mathbf{v}_2 \in U$，则称 $\mathbf{v}_1$ 与 $\mathbf{v}_2$ 等价（记作 $\mathbf{v}_1 \sim \mathbf{v}_2$）。所有与 $\mathbf{v}$ 等价的向量集合称为 <strong>陪集（Coset / 等价类）</strong>：
   $$
   [\mathbf{v}] = \mathbf{v} + U = \{ \mathbf{v} + \mathbf{u} \mid \mathbf{u} \in U \}
   $$
   商空间 $V / U$ 就是以这些陪集作为“新元素”构成的向量空间（其母理论为集合论中的 [商集划分基本定理](/posts/discrete-math/set-theory-relations-and-partitions#四等价关系与商集划分基本定理)）。
-- **核心直觉：“把 $U$ 中的方向视为没有区别”**：
-  如果两个向量 $\mathbf{v}_1$ 与 $\mathbf{v}_2$ 仅仅相差一个属于 $U$ 的分量（即差异完全落在 $U$ 所张成的方向上），那么在商空间 $V / U$ 看来，**它们没有任何区别，被完全合并视为同一个点** $[\mathbf{v}_1] = [\mathbf{v}_2]$。
-- **几何形象（压平与降维）**：
-  设原空间为三维空间 $\mathbb{R}^3$，$U$ 可以是 **任意倾斜方向的一维直线或二维平面子空间**（并不局限于特定坐标轴或坐标平面）。在几何上，三维空间总能做正交直和分解 $V = U \oplus U^\perp$。对任意向量 $\mathbf{v} = \mathbf{v}_{\parallel} + \mathbf{v}_{\perp}$（其中 $\mathbf{v}_{\parallel} \in U, \mathbf{v}_{\perp} \in U^\perp$），整条平行于 $U$ 的几何纤维 $\mathbf{v} + U$ 在商空间中都被沿 $U$ 方向收缩压平，并在正交补截面 $U^\perp$ 上汇聚为唯一的代表元 $[\mathbf{v}] = \mathbf{v}_\perp$。我们 **彻底无视了沿倾斜子空间 $U$ 内部的一切分量差异**，将整条倾斜线或倾斜平面压缩为一个单一的代数等价元，维数严格满足：
+- <strong>核心直觉：“把 $U$ 中的方向视为没有区别”</strong>：
+  如果两个向量 $\mathbf{v}_1$ 与 $\mathbf{v}_2$ 仅仅相差一个属于 $U$ 的分量（即差异完全落在 $U$ 所张成的方向上），那么在商空间 $V / U$ 看来，<strong>它们没有任何区别，被完全合并视为同一个点</strong> $[\mathbf{v}_1] = [\mathbf{v}_2]$。
+- <strong>几何形象（压平与降维）</strong>：
+  设原空间为三维空间 $\mathbb{R}^3$，$U$ 可以是 <strong>任意倾斜方向的一维直线或二维平面子空间</strong>（并不局限于特定坐标轴或坐标平面）。在几何上，三维空间总能做正交直和分解 $V = U \oplus U^\perp$。对任意向量 $\mathbf{v} = \mathbf{v}_{\parallel} + \mathbf{v}_{\perp}$（其中 $\mathbf{v}_{\parallel} \in U, \mathbf{v}_{\perp} \in U^\perp$），整条平行于 $U$ 的几何纤维 $\mathbf{v} + U$ 在商空间中都被沿 $U$ 方向收缩压平，并在正交补截面 $U^\perp$ 上汇聚为唯一的代表元 $[\mathbf{v}] = \mathbf{v}_\perp$。我们 <strong>彻底无视了沿倾斜子空间 $U$ 内部的一切分量差异</strong>，将整条倾斜线或倾斜平面压缩为一个单一的代数等价元，维数严格满足：
   $$
   \dim(V / U) = \dim(V) - \dim(U)
   $$
 
 > [!IMPORTANT]
-> **致命混淆避坑辨析：商空间 $V / U$ 本身是“仿射子空间”吗？**
+> <strong>致命混淆避坑辨析：商空间 $V / U$ 本身是“仿射子空间”吗？</strong>
 >
-> **绝对不是！** 这是一个在初学者中极其普遍却具有颠覆性的概念混淆：
+> <strong>绝对不是！</strong> 这是一个在初学者中极其普遍却具有颠覆性的概念混淆：
 >
-> 1. **数学类型与零元归属的本质鸿沟**：
->    - **仿射子空间（$\mathbf{v} + U$）**：是原空间 $V$ 里的一个 **几何子集**（例如一条倾斜不过原点的直线），通常 **不包含原点 $\mathbf{0}$**，因此自身根本不是线性向量空间；
->    - **商空间（$V / U$）**：**不是** 原空间 $V$ 的子集，而是一个满足八大公理的 **正统线性向量空间**！它的零向量是一个真子空间 $\mathbf{0}_{V/U} = \mathbf{0} + U = U$（包含原点并过原点）。
-> 2. **层次与归属关系**：
+> 1. <strong>数学类型与零元归属的本质鸿沟</strong>：
+>    - <strong>仿射子空间（$\mathbf{v} + U$）</strong>：是原空间 $V$ 里的一个 <strong>几何子集</strong>（例如一条倾斜不过原点的直线），通常 <strong>不包含原点 $\mathbf{0}$</strong>，因此自身根本不是线性向量空间；
+>    - <strong>商空间（$V / U$）</strong>：<strong>不是</strong> 原空间 $V$ 的子集，而是一个满足八大公理的 <strong>正统线性向量空间</strong>！它的零向量是一个真子空间 $\mathbf{0}_{V/U} = \mathbf{0} + U = U$（包含原点并过原点）。
+> 2. <strong>层次与归属关系</strong>：
 >    - 原空间中平移得到的几何纤维 $\mathbf{v} + U$ 才是仿射子空间；
 >    - 商空间是把所有这些相互平行的仿射子空间收集起来作为“点（元素）”构建的全新空间。
->    - **一句话断言**：**商空间中的每一个“点”，在原空间中都是一个“仿射子空间”；而商空间本身是一个严格的“线性向量空间”！**
+>    - <strong>一句话断言</strong>：<strong>商空间中的每一个“点”，在原空间中都是一个“仿射子空间”；而商空间本身是一个严格的“线性向量空间”！</strong>
 >
 > 有关等价类、平坦流形（Flats）与商空间的三层完整几何对应，详见 [《仿射空间与仿射映射》第 6.2 节](/posts/linear-algebra/affine-spaces-and-affine-maps#62-仿射子空间与商空间-vu-陪集的几何同构)。
 
@@ -854,16 +854,16 @@ $$
 T(\mathbf{v} + \mathbf{u}) = T(\mathbf{v}) + T(\mathbf{u}) = T(\mathbf{v}) + \mathbf{0} = T(\mathbf{v})
 $$
 
-这意味着：**映射 $T$ 本身根本无法分辨沿着核空间 $\ker(T)$ 方向的任何位移！** 沿着 $\ker(T)$ 方向无论如何移动，输出结果完全一致。
+这意味着：<strong>映射 $T$ 本身根本无法分辨沿着核空间 $\ker(T)$ 方向的任何位移！</strong> 沿着 $\ker(T)$ 方向无论如何移动，输出结果完全一致。
 
-因此，如果我们主动在定义域中**把 $\ker(T)$ 中的所有方向视为没有区别**（即构造商空间 $V / \ker(T)$），就彻底消除了导致映射“不是单射”的全部多对一冗余，从而得到代数学上的 **第一同构定理（First Isomorphism Theorem）**：
+因此，如果我们主动在定义域中<strong>把 $\ker(T)$ 中的所有方向视为没有区别</strong>（即构造商空间 $V / \ker(T)$），就彻底消除了导致映射“不是单射”的全部多对一冗余，从而得到代数学上的 <strong>第一同构定理（First Isomorphism Theorem）</strong>：
 
 $$
 \boxed{ V / \ker(T) \cong \operatorname{im}(T) }
 $$
 
-- **几何直觉**：原空间 $V$ 在“模掉”核空间中被压缩压平的方向后，所保留下来的有效独立维度与几何结构，与映射实际能到达的像空间 $\operatorname{im}(T)$ **完全同构（100% 结构等价）**；
-- **维数守恒**：$\dim(V / \ker T) = \dim(V) - \dim(\ker T) = \dim(\operatorname{im} T)$，再次从商空间代数视角完美呼应了 **秩-零度定理**！（商空间中每一个等价类在几何上对应一个仿射平坦集，详见 [《仿射空间与仿射映射》](/posts/linear-algebra/affine-spaces-and-affine-maps)）。
+- <strong>几何直觉</strong>：原空间 $V$ 在“模掉”核空间中被压缩压平的方向后，所保留下来的有效独立维度与几何结构，与映射实际能到达的像空间 $\operatorname{im}(T)$ <strong>完全同构（100% 结构等价）</strong>；
+- <strong>维数守恒</strong>：$\dim(V / \ker T) = \dim(V) - \dim(\ker T) = \dim(\operatorname{im} T)$，再次从商空间代数视角完美呼应了 <strong>秩-零度定理</strong>！（商空间中每一个等价类在几何上对应一个仿射平坦集，详见 [《仿射空间与仿射映射》](/posts/linear-algebra/affine-spaces-and-affine-maps)）。
 
 ---
 
@@ -871,7 +871,7 @@ $$
 
 ### 8.1 贝塞尔曲线控制空间（多项式子空间基底）
 
-在 3D 建模与字体渲染（TrueType / SVG）中，三次贝塞尔曲线定义在多项式空间 $\mathcal{P}_3$ 中。我们不是使用自然幂基 $(1, t, t^2, t^3)$，而是选用著名的 **Bernstein 基底**：
+在 3D 建模与字体渲染（TrueType / SVG）中，三次贝塞尔曲线定义在多项式空间 $\mathcal{P}_3$ 中。我们不是使用自然幂基 $(1, t, t^2, t^3)$，而是选用著名的 <strong>Bernstein 基底</strong>：
 
 $$
 B_{i, 3}(t) = \binom{3}{i} t^i (1 - t)^{3-i}, \qquad i \in \{0, 1, 2, 3\}
@@ -893,16 +893,16 @@ $$
 
 ## 九、核心总结与知识树定位
 
-> 1. **数域的代数基石**：标量来自满足加减乘除（除数非零）封闭的数域 $\mathbb{F}$。$\mathbb{Q}, \mathbb{R}, \mathbb{C}$ 是数域，而整数集 $\mathbb{Z}$ 因除法不封闭不是数域（若标量退化为整数环，空间退化为模而非向量空间）；$\mathbb{C}$ 的代数闭包性质保证了特征值全分解与 Jordan 标准型的普适存在；
-> 2. **向量的本质**：向量由加法与数乘运算公理定义，矩阵、函数、多项式与序列皆为向量；
-> 3. **线性组合与张成**：以向量为原材料线性加权生成新向量，$\operatorname{span}(S)$ 是包含 $S$ 的最小子空间；
-> 4. **线性相关 vs 线性无关**：存在非平凡零组合意味着内部有冗余维度；只有全零组合意味着每个向量都贡献了不可替代的独立新维度；
-> 5. **空间之基**：**线性无关（无冗余） + 空间张成（能覆盖） $\implies$ 向量空间之基（Basis）**，基的基数即为维数 $\dim V$；
-> 6. **子空间判定**：仅需验证非空含零元、加法封闭与数乘封闭；直和 $U \oplus W$ 满足仅交于零元（唯一分解）；
-> 7. **定义域 vs 陪域 vs 像空间**：定义域 $V$ 与陪域 $W$ 构成映射舞台，像空间 $\operatorname{im}(T) \le W$ 是实际有效覆盖子空间；
-> 8. **单射 / 满射 / 双射的充要条件**：
+> 1. <strong>数域的代数基石</strong>：标量来自满足加减乘除（除数非零）封闭的数域 $\mathbb{F}$。$\mathbb{Q}, \mathbb{R}, \mathbb{C}$ 是数域，而整数集 $\mathbb{Z}$ 因除法不封闭不是数域（若标量退化为整数环，空间退化为模而非向量空间）；$\mathbb{C}$ 的代数闭包性质保证了特征值全分解与 Jordan 标准型的普适存在；
+> 2. <strong>向量的本质</strong>：向量由加法与数乘运算公理定义，矩阵、函数、多项式与序列皆为向量；
+> 3. <strong>线性组合与张成</strong>：以向量为原材料线性加权生成新向量，$\operatorname{span}(S)$ 是包含 $S$ 的最小子空间；
+> 4. <strong>线性相关 vs 线性无关</strong>：存在非平凡零组合意味着内部有冗余维度；只有全零组合意味着每个向量都贡献了不可替代的独立新维度；
+> 5. <strong>空间之基</strong>：<strong>线性无关（无冗余） + 空间张成（能覆盖） $\implies$ 向量空间之基（Basis）</strong>，基的基数即为维数 $\dim V$；
+> 6. <strong>子空间判定</strong>：仅需验证非空含零元、加法封闭与数乘封闭；直和 $U \oplus W$ 满足仅交于零元（唯一分解）；
+> 7. <strong>定义域 vs 陪域 vs 像空间</strong>：定义域 $V$ 与陪域 $W$ 构成映射舞台，像空间 $\operatorname{im}(T) \le W$ 是实际有效覆盖子空间；
+> 8. <strong>单射 / 满射 / 双射的充要条件</strong>：
 >    - 单射 $\iff \ker(T) = \{\mathbf{0}\} \iff \operatorname{nullity}(T) = 0$（低维嵌入高维）；
 >    - 满射 $\iff \operatorname{im}(T) = W \iff \operatorname{rank}(T) = \dim(W)$（高维覆盖低维）；
 >    - 双射 $\iff \ker(T) = \{\mathbf{0}\}$ 且 $\operatorname{im}(T) = W$（同维可逆同构）；
-> 9. **秩-零度定理**：$\dim(V) = \operatorname{nullity}(T) + \operatorname{rank}(T)$；
-> 10. **同构定理**：任意 $n$ 维向量空间皆同构于 $\mathbb{R}^n$（$V \cong \mathbb{R}^n$）；商空间同构 $V/\ker(T) \cong \operatorname{im}(T)$。
+> 9. <strong>秩-零度定理</strong>：$\dim(V) = \operatorname{nullity}(T) + \operatorname{rank}(T)$；
+> 10. <strong>同构定理</strong>：任意 $n$ 维向量空间皆同构于 $\mathbb{R}^n$（$V \cong \mathbb{R}^n$）；商空间同构 $V/\ker(T) \cong \operatorname{im}(T)$。

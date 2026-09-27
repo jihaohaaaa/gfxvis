@@ -806,7 +806,7 @@ export default function LeastSquaresDemo({ height }: { height?: string }) {
 
   return (
     <ExpandableDemo id="least-squares-demo" height={height}>
-      <div id="least-squares-demo" className="space-y-4">
+      <div className="space-y-4">
         {/* Top Control Bar */}
         <div className="space-y-2 border-b border-border/80 pb-3">
           {/* Row 1: Method Tabs & Right-aligned CanvasToolbar */}

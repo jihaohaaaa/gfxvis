@@ -172,7 +172,7 @@ export default function ExpandableDemo({
 
   return (
     <ExpandableContext.Provider value={contextValue}>
-      <div ref={containerRef} className="relative">
+      <div id={id} ref={containerRef} className="relative">
         {/* Placeholder keeping exact document flow height while in fixed modal */}
         {expanded && placeholderHeight !== null && (
           <div

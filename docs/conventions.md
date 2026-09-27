@@ -25,8 +25,8 @@
 - 框架与共享层:Three 工具集中在 `core/three-utils.ts`(灯光 / 网格 / 标记 / 曲面材质与透明度 / `disposeObject` / `buildColoredGrid`),2D 绘制辅助在 `core/plot2d.ts`(`drawAxes` / `drawPolyline` / `drawPoint` / `drawSegment` / `drawArrow`),数值与网格采样在 `core/math.ts`(`sampleGrid` / `forEachCube`);React 侧复用 `components/framework/` 下的 `useCanvas2D` / `useViewer3D` / `useVectorDrag` hooks 与 `ExpandableDemo` / `PresetSelector` / `CapsuleTabs` / `ParamSlider` / `Checkbox` / `InlineMath` 组件;预设场唯一来源是 `demos/scalar-field/field.ts` 的 `FIELDS2D`(圆族 / 抛物线族自带可选 `levelCurve`)。
   - **InlineMath 属性转义**: JSX 静态双引号属性中传 TeX 必须用**单个反斜杠**（`<InlineMath tex="\mathbb{R}^3" />`），严禁双反斜杠；JS 表达式/模板字符串中才使用**双反斜杠**（``tex={`\\hat{\\mathbf{x}} = ${v}`}``）。
 - 文章放 `src/content/posts/<category>/<slug>.mdx`,frontmatter 沿用现有 schema。
-- MDX 排版(CommonMark 加粗与中文):
-  - **外侧留空，内侧严禁空格**: `**...**` 的外侧边界不要紧贴中文，正确写法是**外侧两端加空格、保持对称**，如 `落到 **线性组合(linear combination)** 上`（紧贴一侧时至少让闭合 `**` 后接空格或标点）。**加粗定界符内侧开头和末尾严禁加空格**（严禁写成 `** 文本 **`，根据 CommonMark 规范，起始 `**` 后紧邻空格或结束 `**` 前紧邻空格将直接破坏定界符开闭解析，退化为字面 `**` 乱码）。不要把中文引号包进 `**` 内侧（写 `**输出能到哪里**`，不要写 `**“输出能到哪里”**`）。
+- MDX 排版(加粗与重点统一使用 <strong>):
+  - **统一使用 `<strong>` 标签（严禁使用 `**...**`）**: 文章中一律使用标准 HTML/MDX 标签 `<strong>重点内容</strong>` 进行加粗强调，**严禁使用 Markdown `**...**`**。彻底消除 CommonMark 规范中由内外侧空格、中英文紧贴或全角引号引发的定界符误配与乱码风险。CI 及 `pnpm validate` 会自动执行 `scripts/format-bold.ts --check` 拦截裸 `**`。
 - 文章标点:中文语句一律用**全角标点**(`,` `;` `:` `?` `!` → `，` `；` `：` `？` `！`;中文引号用 `“ ”` 成对,不用 ASCII `"`;包中文内容的括号用 `（）`)。公式、代码(含 MDX 顶部 `import` 与 JSX)、Markdown 链接 `[文字](url)`、英文术语与数字内部,一律保持英文标点(如 `(linear combination)`、`(x,y)`、`rank(A)` 不变)。
 
 ## 渲染与交互

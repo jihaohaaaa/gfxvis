@@ -43,7 +43,20 @@ async function renderMermaidDiagrams() {
     theme: isDark ? "dark" : "default",
     securityLevel: "loose",
     fontFamily:
-      'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif',
+    fontSize: 14,
+    state: {
+      wrappingWidth: 320,
+      minNodeWidth: 140,
+      fontSizeFactor: 2.0,
+    },
+    flowchart: {
+      wrappingWidth: 320,
+      htmlLabels: true,
+    },
+    themeVariables: {
+      fontSize: "14px",
+    },
   });
 
   for (let i = 0; i < mermaidBlocks.length; i++) {

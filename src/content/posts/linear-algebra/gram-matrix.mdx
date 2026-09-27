@@ -16,7 +16,7 @@ draft: false
 
 import GramMatrixDemo from "../../../components/demos/GramMatrixDemo";
 
-在向量空间中，一组向量两两之间的内积构成了 **Gram 矩阵（格拉姆矩阵，Gram Matrix）**。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 **度规张量（Metric Tensor）** 的核心桥梁。
+在向量空间中，一组向量两两之间的内积构成了 <strong>Gram 矩阵（格拉姆矩阵，Gram Matrix）</strong>。它不仅是抽象代数中的内积表征，更是连接几何空间体积、最小二乘投影、正交化过程以及计算机图形学中参量曲面 <strong>度规张量（Metric Tensor）</strong> 的核心桥梁。
 
 关于内积公理、加权内积与函数空间内积的完整推导，详见 [《内积空间：从欧氏点积到广义内积与函数空间》](/posts/linear-algebra/inner-product-spaces)。
 
@@ -24,7 +24,7 @@ import GramMatrixDemo from "../../../components/demos/GramMatrixDemo";
 
 ## 一、代数定义与矩阵形式
 
-设 $V$ 为一个 [内积空间](/posts/linear-algebra/inner-product-spaces)，给定一组向量 $\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k \in V$。这组向量的 **Gram 矩阵** $G$ 定义为一个 $k \times k$ 的对称方阵，其第 $i$ 行第 $j$ 列的元素为向量 $\mathbf{v}_i$ 与 $\mathbf{v}_j$ 的内积：
+设 $V$ 为一个 [内积空间](/posts/linear-algebra/inner-product-spaces)，给定一组向量 $\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k \in V$。这组向量的 <strong>Gram 矩阵</strong> $G$ 定义为一个 $k \times k$ 的对称方阵，其第 $i$ 行第 $j$ 列的元素为向量 $\mathbf{v}_i$ 与 $\mathbf{v}_j$ 的内积：
 
 $$
 G_{ij} = \langle \mathbf{v}_i, \mathbf{v}_j \rangle
@@ -59,7 +59,7 @@ $$
 
 ## 二、几何意义与 Gram 行列式计算体积
 
-Gram 矩阵最引人入胜的几何性质在于：**它的行列式蕴含了向量组在空间中张成的平行多面体的体积（Volume）**。
+Gram 矩阵最引人入胜的几何性质在于：<strong>它的行列式蕴含了向量组在空间中张成的平行多面体的体积（Volume）</strong>。
 
 ### 2.1 二维与三维直观推导
 
@@ -78,7 +78,7 @@ $$
 \det(G) = \lVert\mathbf{u}\rVert^2 \lVert\mathbf{v}\rVert^2 - (\mathbf{u} \cdot \mathbf{v})^2 = \lVert\mathbf{u}\rVert^2 \lVert\mathbf{v}\rVert^2 (1 - \cos^2\theta) = \lVert\mathbf{u}\rVert^2 \lVert\mathbf{v}\rVert^2 \sin^2\theta = S^2
 $$
 
-因此，平行四边形的面积恰好等于 **Gram 行列式（Gram Determinant）** 的平方根：
+因此，平行四边形的面积恰好等于 <strong>Gram 行列式（Gram Determinant）</strong> 的平方根：
 
 $$
 \text{Area} = \sqrt{\det(G)}
@@ -104,20 +104,20 @@ $$
 
 Gram 矩阵具备许多极佳的线性代数性质：
 
-1. **对称性（Symmetric）**：由于内积满足对称公理 $\langle \mathbf{v}_i, \mathbf{v}_j \rangle = \langle \mathbf{v}_j, \mathbf{v}_i \rangle$，因此：
+1. <strong>对称性（Symmetric）</strong>：由于内积满足对称公理 $\langle \mathbf{v}_i, \mathbf{v}_j \rangle = \langle \mathbf{v}_j, \mathbf{v}_i \rangle$，因此：
    $$
    G = G^\top
    $$
-2. **半正定性（Positive Semi-Definite）**：对任意非零向量 $\mathbf{x} \in \mathbb{R}^k$，有：
+2. <strong>半正定性（Positive Semi-Definite）</strong>：对任意非零向量 $\mathbf{x} \in \mathbb{R}^k$，有：
    $$
    \mathbf{x}^\top G \mathbf{x} = \mathbf{x}^\top A^\top A \mathbf{x} = (A\mathbf{x})^\top (A\mathbf{x}) = \lVert A\mathbf{x} \rVert^2 \ge 0
    $$
    因此 $G \succeq 0$。
-3. **秩与可逆性（Rank and Invertibility）**：
+3. <strong>秩与可逆性（Rank and Invertibility）</strong>：
    $$
    \operatorname{rank}(A^\top A) = \operatorname{rank}(A)
    $$
-   当且仅当向量组 $\mathbf{v}_1, \dots, \mathbf{v}_k$ **线性无关（Linearly Independent）** 时，$A$ 满列秩，Gram 矩阵 $G$ 严格正定（$G \succ 0$）且可逆（$\det(G) > 0$）。若向量组线性相关，则 $\det(G) = 0$。
+   当且仅当向量组 $\mathbf{v}_1, \dots, \mathbf{v}_k$ <strong>线性无关（Linearly Independent）</strong> 时，$A$ 满列秩，Gram 矩阵 $G$ 严格正定（$G \succ 0$）且可逆（$\det(G) > 0$）。若向量组线性相关，则 $\det(G) = 0$。
 
 ---
 
@@ -143,7 +143,7 @@ $$
 
 ### 4.2 Gram-Schmidt 正交化过程
 
-**Gram-Schmidt 正交化** 的目标是将一组线性无关基 $\mathbf{v}_1, \dots, \mathbf{v}_k$ 转换为正交基 $\mathbf{u}_1, \dots, \mathbf{u}_k$。从矩阵对角化的视角看：
+<strong>Gram-Schmidt 正交化</strong> 的目标是将一组线性无关基 $\mathbf{v}_1, \dots, \mathbf{v}_k$ 转换为正交基 $\mathbf{u}_1, \dots, \mathbf{u}_k$。从矩阵对角化的视角看：
 
 - 原始基的内积矩阵 $G$ 是一个一般的满秩对称正定矩阵；
 - 正交化过程相当于寻找一个上三角可逆变换矩阵 $R$，使得正交基的内积矩阵化为对角矩阵（若归一化则为单位矩阵 $I$）：
@@ -158,7 +158,7 @@ $$
 
 在计算机图形学、3D 曲面建模与渲染中，参量曲面通常表示为 $\mathbf{r}(u, v) \in \mathbb{R}^3$。
 
-曲面在点 $(u, v)$ 处的切平面由偏导向量 $\mathbf{r}_u = \dfrac{\partial \mathbf{r}}{\partial u}$ 与 $\mathbf{r}_v = \dfrac{\partial \mathbf{r}}{\partial v}$ 张成。这两个切向量构成的 Gram 矩阵在微分几何中被称为 **第一基本形式（First Fundamental Form）** 或 **度规张量（Metric Tensor）**：
+曲面在点 $(u, v)$ 处的切平面由偏导向量 $\mathbf{r}_u = \dfrac{\partial \mathbf{r}}{\partial u}$ 与 $\mathbf{r}_v = \dfrac{\partial \mathbf{r}}{\partial v}$ 张成。这两个切向量构成的 Gram 矩阵在微分几何中被称为 <strong>第一基本形式（First Fundamental Form）</strong> 或 <strong>度规张量（Metric Tensor）</strong>：
 
 $$
 g = \begin{pmatrix} E & F \\ F & G_{\text{surf}} \end{pmatrix} = \begin{pmatrix} \mathbf{r}_u \cdot \mathbf{r}_u & \mathbf{r}_u \cdot \mathbf{r}_v \\ \mathbf{r}_v \cdot \mathbf{r}_u & \mathbf{r}_v \cdot \mathbf{r}_v \end{pmatrix}
@@ -174,8 +174,8 @@ $$
 
 ---
 
-> 💡 **全文总结 Takeaway**：
+> 💡 <strong>全文总结 Takeaway</strong>：
 >
-> 1. **Gram 矩阵**：$G_{ij} = \langle \mathbf{v}_i, \mathbf{v}_j \rangle = A^\top A$ 完整刻画了一组向量的内在夹角与模长几何；
-> 2. **Gram 行列式**：$\sqrt{\det(G)}$ 在几何上精确度量了向量组张成的平行多面体体积；
-> 3. **领域统一**：从最小二乘正规方程 $A^\top A \mathbf{x} = A^\top \mathbf{b}$ 到曲面微元面积 $\mathrm{d}A = \sqrt{\det g} \, \mathrm{d}u\mathrm{d}v$，Gram 矩阵深刻贯通了代数计算与微分几何。
+> 1. <strong>Gram 矩阵</strong>：$G_{ij} = \langle \mathbf{v}_i, \mathbf{v}_j \rangle = A^\top A$ 完整刻画了一组向量的内在夹角与模长几何；
+> 2. <strong>Gram 行列式</strong>：$\sqrt{\det(G)}$ 在几何上精确度量了向量组张成的平行多面体体积；
+> 3. <strong>领域统一</strong>：从最小二乘正规方程 $A^\top A \mathbf{x} = A^\top \mathbf{b}$ 到曲面微元面积 $\mathrm{d}A = \sqrt{\det g} \, \mathrm{d}u\mathrm{d}v$，Gram 矩阵深刻贯通了代数计算与微分几何。

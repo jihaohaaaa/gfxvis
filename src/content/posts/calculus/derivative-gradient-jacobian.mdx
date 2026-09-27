@@ -6,17 +6,17 @@ tags: ["calculus", "derivative", "gradient", "jacobian", "multivariable"]
 draft: false
 ---
 
-**导数（Derivative）、梯度（Gradient）与雅可比（Jacobian）其实都在回答同一个根本问题：**
+<strong>导数（Derivative）、梯度（Gradient）与雅可比（Jacobian）其实都在回答同一个根本问题：</strong>
 
 > 在点 $X$ 附近，如果输入发生了一个微小的扰动 $\Delta X$，输出会发生怎样的一阶变化 $\Delta Y$？
 
-更精确地说，它们给出的都是输出在局部的**一阶最佳线性近似（First-order Linear Approximation）**：
+更精确地说，它们给出的都是输出在局部的<strong>一阶最佳线性近似（First-order Linear Approximation）</strong>：
 
 $$
 \boxed{\Delta Y \approx Df(X)\,\Delta X}
 $$
 
-其中 $Df(X)$ 就是映射 $f$ 在点 $X$ 处的 **导数 / 微分算子**。导数、梯度与雅可比矩阵，仅仅是这一统一定理在**不同输入与输出维度（标量到标量、向量到标量、向量到向量）**下的三种具体表现形式。
+其中 $Df(X)$ 就是映射 $f$ 在点 $X$ 处的 <strong>导数 / 微分算子</strong>。导数、梯度与雅可比矩阵，仅仅是这一统一定理在<strong>不同输入与输出维度（标量到标量、向量到标量、向量到向量）</strong>下的三种具体表现形式。
 
 ---
 
@@ -34,7 +34,7 @@ $$
 \Delta y \approx f'(x)\,\Delta x
 $$
 
-这里 $f'(x)$ 是一个纯粹的 **标量（数）**：它衡量的是当输入改变 1 个单位时，输出在当前位置附近大约改变多少（即切线斜率）。
+这里 $f'(x)$ 是一个纯粹的 <strong>标量（数）</strong>：它衡量的是当输入改变 1 个单位时，输出在当前位置附近大约改变多少（即切线斜率）。
 
 ### 1.1 一元导数数值实例
 
@@ -77,13 +77,13 @@ $$
 \Delta z \approx \nabla f(X) \cdot \Delta X
 $$
 
-其中 $\nabla f$ 就是标量场的 **梯度向量（Gradient Vector）**：
+其中 $\nabla f$ 就是标量场的 <strong>梯度向量（Gradient Vector）</strong>：
 
 $$
 \nabla f = \begin{pmatrix} f_x \\ f_y \end{pmatrix} = \begin{pmatrix} \dfrac{\partial f}{\partial x} \\ \dfrac{\partial f}{\partial y} \end{pmatrix}
 $$
 
-> 💡 **核心洞察**：**梯度本质上就是标量场在多维空间中的导数，只不过用向量形式表达**——它同时编码了输出增长的方向（指向函数值上升最快的方向）与大小（最大方向导数）。
+> 💡 <strong>核心洞察</strong>：<strong>梯度本质上就是标量场在多维空间中的导数，只不过用向量形式表达</strong>——它同时编码了输出增长的方向（指向函数值上升最快的方向）与大小（最大方向导数）。
 
 ### 2.1 梯度数值实例
 
@@ -128,7 +128,7 @@ $$
 \Delta\mathbf{Y} \approx J_{\mathbf{F}}(\mathbf{X})\,\Delta\mathbf{X}
 $$
 
-这里的导数不再是单个标量或单个向量，而是一个 **线性变换矩阵**——**雅可比矩阵（Jacobian Matrix）**：
+这里的导数不再是单个标量或单个向量，而是一个 <strong>线性变换矩阵</strong>——<strong>雅可比矩阵（Jacobian Matrix）</strong>：
 
 $$
 J_{\mathbf{F}} =
@@ -145,7 +145,7 @@ $$
 
 要直观且深刻地理解雅可比矩阵，关键在于解构输出向量：
 
-向量输出 $\mathbf{Y} = (F_x, F_y, F_z)^\top$ 的三个分量 $F_x, F_y, F_z$ **各自本质上都是一个完整的标量场**——它们都独立地把 $\mathbb{R}^3$ 中的每个空间点映射为一个实数。向量值函数 $\mathbf{F}$ 只是把这三个标量场“垂直打包”成了一个向量。
+向量输出 $\mathbf{Y} = (F_x, F_y, F_z)^\top$ 的三个分量 $F_x, F_y, F_z$ <strong>各自本质上都是一个完整的标量场</strong>——它们都独立地把 $\mathbb{R}^3$ 中的每个空间点映射为一个实数。向量值函数 $\mathbf{F}$ 只是把这三个标量场“垂直打包”成了一个向量。
 
 既然每个分量都是标量场，那么每个分量就必然拥有属于自己的梯度向量：
 
@@ -155,7 +155,7 @@ $$
 \nabla F_z = \left(\frac{\partial F_z}{\partial x},\, \frac{\partial F_z}{\partial y},\, \frac{\partial F_z}{\partial z}\right)
 $$
 
-因此，**雅可比矩阵的每一行，正好就是对应分量标量场的梯度向量（以行向量转置呈现）**：
+因此，<strong>雅可比矩阵的每一行，正好就是对应分量标量场的梯度向量（以行向量转置呈现）</strong>：
 
 $$
 \boxed{J_{\mathbf{F}} =
@@ -176,7 +176,7 @@ $$
 
 ### 3.2 逐分量点积分解与数值实例
 
-将矩阵方程 $\Delta\mathbf{Y} \approx J\,\Delta\mathbf{X}$ 逐行展开，就会发现**每个输出分量的一阶变化量，恰好等于它自身梯度向量与输入位移的点积**：
+将矩阵方程 $\Delta\mathbf{Y} \approx J\,\Delta\mathbf{X}$ 逐行展开，就会发现<strong>每个输出分量的一阶变化量，恰好等于它自身梯度向量与输入位移的点积</strong>：
 
 $$
 \Delta F_x \approx \nabla F_x \cdot \Delta\mathbf{X}, \qquad
@@ -238,11 +238,11 @@ $$
 
 | 映射维度（输入 $\to$ 输出）     | 导数数学形式                                | 专用名称               | 几何与代数角色           |
 | :------------------------------ | :------------------------------------------ | :--------------------- | :----------------------- |
-| $\mathbb{R} \to \mathbb{R}$     | $f'(X)$，一个标量（数）                     | **导数（Derivative）** | 切线斜率，局部伸缩倍率   |
-| $\mathbb{R}^n \to \mathbb{R}$   | $\nabla f(X)$，一个行/列向量                | **梯度（Gradient）**   | 最速上升方向与最大变化率 |
-| $\mathbb{R}^n \to \mathbb{R}^m$ | $J_{\mathbf{F}}(X)$，一个 $m \times n$ 矩阵 | **雅可比（Jacobian）** | 局部切空间的最佳线性映射 |
+| $\mathbb{R} \to \mathbb{R}$     | $f'(X)$，一个标量（数）                     | <strong>导数（Derivative）</strong> | 切线斜率，局部伸缩倍率   |
+| $\mathbb{R}^n \to \mathbb{R}$   | $\nabla f(X)$，一个行/列向量                | <strong>梯度（Gradient）</strong>   | 最速上升方向与最大变化率 |
+| $\mathbb{R}^n \to \mathbb{R}^m$ | $J_{\mathbf{F}}(X)$，一个 $m \times n$ 矩阵 | <strong>雅可比（Jacobian）</strong> | 局部切空间的最佳线性映射 |
 
-无论维数如何扩展，$Df(X)$ 的根本几何定义始终保持不变：**它是在当前位置 $X$ 处，把输入微小位移 $\Delta X$ 线性映射为输出微小变化 $\Delta Y$ 的唯一最佳线性近似算子**。
+无论维数如何扩展，$Df(X)$ 的根本几何定义始终保持不变：<strong>它是在当前位置 $X$ 处，把输入微小位移 $\Delta X$ 线性映射为输出微小变化 $\Delta Y$ 的唯一最佳线性近似算子</strong>。
 
 $$
 \Delta Y \approx Df(X)\,\Delta X
@@ -281,6 +281,6 @@ $$
 
 ---
 
-> 💡 **总结 Takeaway**：
+> 💡 <strong>总结 Takeaway</strong>：
 >
-> 导数、梯度、雅可比，自始至终都在阐述同一件事——**在某一点附近，输入微动一步，输出随之产生怎样的最佳一阶线性响应。**
+> 导数、梯度、雅可比，自始至终都在阐述同一件事——<strong>在某一点附近，输入微动一步，输出随之产生怎样的最佳一阶线性响应。</strong>

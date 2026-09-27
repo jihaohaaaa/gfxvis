@@ -283,7 +283,7 @@ export default function BasisFittingDemo({ height }: { height?: string }) {
 
   return (
     <ExpandableDemo id="basis-fitting" height={height}>
-      <div id="basis-fitting" className="space-y-4">
+      <div className="space-y-4">
         {/* Controls Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CapsuleTabs

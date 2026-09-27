@@ -1,0 +1,258 @@
+---
+title: "在技术文章中嵌入可运行的多语言代码：从 Node.js 原生 API 到 Rust 与 C++ 现场编译"
+description: "基于 Astro Actions 与服务端执行器，实现文章内多语言代码现场编译与原生执行：直接在浏览器中调用宿主机 Node.js API、执行现代 TypeScript，现场调用本地 rustc 与 clang++ 进行高性能算法与系统编程实战。"
+date: 2026-09-27
+tags:
+  - type-systems
+  - rust
+  - nodejs
+  - cpp
+  - visualization
+draft: false
+---
+
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const osInfoSnippet = [
+  'import { cpus, platform, arch, totalmem, freemem } from "node:os";',
+  "",
+  'console.log("=== 宿主机系统概况 ===");',
+  'console.log("OS 平台:", platform(), "| 架构:", arch());',
+  'console.log("CPU 核心数:", cpus().length, "核");',
+  'console.log("处理器型号:", cpus()[0]?.model || "未知");',
+  "console.log(",
+  '  "内存使用情况:",',
+  "  ((totalmem() - freemem()) / 1024 / 1024 / 1024).toFixed(2),",
+  '  "GB /",',
+  "  (totalmem() / 1024 / 1024 / 1024).toFixed(2),",
+  '  "GB"',
+  ");",
+].join("\n");
+
+export const fsSnippet = [
+  'import { writeFile, readFile } from "node:fs/promises";',
+  'import { createHash } from "node:crypto";',
+  'import { join } from "node:path";',
+  'import { tmpdir } from "node:os";',
+  "",
+  'const filename = join(tmpdir(), "gfxvis-test.log");',
+  'const payload = "Hello from interactive MDX! 当前时间戳: " + Date.now();',
+  "",
+  "// 1. 写入真实文件",
+  'await writeFile(filename, payload, "utf-8");',
+  'console.log("✓ 成功写入临时文件:", filename);',
+  "",
+  "// 2. 读取验证",
+  'const readBack = await readFile(filename, "utf-8");',
+  'console.log("✓ 读回内容:", readBack);',
+  "",
+  "// 3. 计算数据哈希",
+  'const hash = createHash("sha256").update(readBack).digest("hex");',
+  'console.log("✓ 数据 SHA-256 指纹:", hash);',
+].join("\n");
+
+export const tsSnippet = [
+  "interface TreeNode<T> {",
+  "  value: T;",
+  "  left: TreeNode<T> | null;",
+  "  right: TreeNode<T> | null;",
+  "}",
+  "",
+  "class BinarySearchTree<T> {",
+  "  root: TreeNode<T> | null = null;",
+  "",
+  "  insert(val: T): void {",
+  "    const node: TreeNode<T> = { value: val, left: null, right: null };",
+  "    if (!this.root) {",
+  "      this.root = node;",
+  "      return;",
+  "    }",
+  "",
+  "    let curr = this.root;",
+  "    while (true) {",
+  "      if (val < curr.value) {",
+  "        if (!curr.left) {",
+  "          curr.left = node;",
+  "          break;",
+  "        }",
+  "        curr = curr.left;",
+  "      } else {",
+  "        if (!curr.right) {",
+  "          curr.right = node;",
+  "          break;",
+  "        }",
+  "        curr = curr.right;",
+  "      }",
+  "    }",
+  "  }",
+  "",
+  "  inOrder(node: TreeNode<T> | null = this.root, res: T[] = []): T[] {",
+  "    if (!node) return res;",
+  "    this.inOrder(node.left, res);",
+  "    res.push(node.value);",
+  "    this.inOrder(node.right, res);",
+  "    return res;",
+  "  }",
+  "}",
+  "",
+  "const bst = new BinarySearchTree<number>();",
+  "[42, 17, 89, 5, 23, 67, 100].forEach((n) => bst.insert(n));",
+  "",
+  'console.log("中序升序遍历结果:", bst.inOrder());',
+].join("\n");
+
+export const rustSnippet = [
+  "#[derive(Debug)]",
+  "struct Vector3 {",
+  "    x: f64,",
+  "    y: f64,",
+  "    z: f64,",
+  "}",
+  "",
+  "impl Vector3 {",
+  "    fn new(x: f64, y: f64, z: f64) -> Self {",
+  "        Self { x, y, z }",
+  "    }",
+  "",
+  "    fn length(&self) -> f64 {",
+  "        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()",
+  "    }",
+  "",
+  "    fn scale_mut(&mut self, factor: f64) {",
+  "        self.x *= factor;",
+  "        self.y *= factor;",
+  "        self.z *= factor;",
+  "    }",
+  "}",
+  "",
+  "fn main() {",
+  "    let mut v = Vector3::new(3.0, 4.0, 0.0);",
+  '    println!("初始向量: {:?}, 模长 = {}", v, v.length());',
+  "",
+  "    v.scale_mut(2.0);",
+  '    println!("缩放后向量: {:?}, 模长 = {}", v, v.length());',
+  "",
+  "    let r1 = &v;",
+  '    println!("只读引用读取模长: {}", r1.length());',
+  "}",
+].join("\n");
+
+export const cppSnippet = [
+  "#include <iostream>",
+  "#include <vector>",
+  "#include <numeric>",
+  "#include <algorithm>",
+  "",
+  "// C++ 20 编译期函数",
+  "constexpr unsigned long long factorial(unsigned int n) {",
+  "    return (n <= 1) ? 1 : n * factorial(n - 1);",
+  "}",
+  "",
+  "int main() {",
+  "    constexpr auto f10 = factorial(10);",
+  '    std::cout << "[编译期计算] 10! = " << f10 << std::endl;',
+  "",
+  "    std::vector<int> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};",
+  "    ",
+  "    // 原地平方变换",
+  "    std::transform(data.begin(), data.end(), data.begin(), [](int x) {",
+  "        return x * x;",
+  "    });",
+  "",
+  "    // 求和",
+  "    long long sum = std::accumulate(data.begin(), data.end(), 0LL);",
+  "",
+  '    std::cout << "[运行时计算] 1^2 + ... + 10^2 = " << sum << std::endl;',
+  "    return 0;",
+  "}",
+].join("\n");
+
+传统的技术博客与学术文档通常只将代码视为“静态文本”。读者在阅读涉及编译器原理、图形学管线、系统调用或并发数据结构的深度文章时，往往需要手动把代码复制到本地终端中创建工程、配置编译器才能验证结果。
+
+为了彻底打通<strong>“阅读、思考与现场验证”</strong>之间的鸿沟，我们在本站技术栈中构建了一套轻量级<strong>全栈多语言即时执行引擎（Polyglot Execution Engine）</strong>。它依托 Astro Actions 的端到端类型安全 RPC 机制，使文章不仅能直接调度宿主机安装的 <strong>Rust（`rustc`）</strong> 与 <strong>C++ 20（`clang++`）</strong> 进行本地原生编译，还能<strong>在文章里直接调用 Node.js 原生系统级 API</strong>（如 `node:fs`、`node:os`）。
+
+本文将通过现场可交互示例，全面展示这一能力在不同语言场景下的应用。
+
+---
+
+## 一、在文章中直接调用 Node.js 原生 API
+
+在浏览器中，纯前端 JavaScript 无法触碰操作系统的底层文件与硬件资源。而依托后端的特权 Action 执行器，读者可以在文章中直接调度宿主机的标准库模块。
+
+### 1.1 探测宿主操作系统与硬件状态
+
+运行以下脚本，直接读取当前服务器/宿主机的架构、内存与核心拓扑（支持点击「解锁编辑」修改测试）：
+
+<CodePlayground
+  client:visible
+  lang="node"
+  title="读取硬件与系统拓扑"
+  initialCode={osInfoSnippet}
+  editable={false}
+/>
+
+### 1.2 真实文件系统读写（`node:fs/promises`）
+
+试着<strong>自由修改文件名与写入内容</strong>，观察文件在宿主文件系统中的真实创建、写入与哈希校验过程：
+
+<CodePlayground
+  client:visible
+  lang="node"
+  title="文件读写与 SHA-256 哈希计算"
+  description="可直接在文本框内修改写入内容或增加数据，点击「运行代码」实时查看执行日志。"
+  initialCode={fsSnippet}
+/>
+
+---
+
+## 二、现代 TypeScript：泛型约束与集合算法
+
+得益于项目集成的 `tsx` 执行引擎，文章中支持直接书写带有复杂类型注解、接口继承与 ES 模块的现代 TypeScript 代码，无需手动先做编译打包。
+
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="TypeScript 泛型二叉搜索树实现"
+  description="尝试在末尾的 insert 调用中加入新的数值，观察排序中序遍历的实时输出结果。"
+  initialCode={tsSnippet}
+/>
+
+---
+
+## 三、Rust 现场编译：生命周期与所有权验证
+
+在阐述系统级内存模型时，最有效的方式莫过于让编译器亲自为你检查代码。
+
+下方的代码块将直接交由宿主机的 <strong>`rustc`（开启 `-O` 优化）</strong> 现场编译并运行二进制产物：
+
+<CodePlayground
+  client:visible
+  lang="rust"
+  title="Rust 模式匹配与所有权转移动态演示"
+  description="试着解开注释中的非法读写行，点击运行，观察 rustc 编译器的实际报错输出！"
+  initialCode={rustSnippet}
+/>
+
+---
+
+## 四、现代 C++ 20：常量求值与高性能并行算法
+
+图形学核心算法与高性能并行计算几乎离不开现代 C++。下方代码直接调用本地的 <strong>`clang++ -std=c++20 -O2`</strong> 进行编译链接：
+
+<CodePlayground
+  client:visible
+  lang="cpp"
+  title="C++ 20 Constexpr 编译期计算与 STL 管道"
+  description="演示 C++ 20 编译期阶乘与运行时容器算法聚合。"
+  initialCode={cppSnippet}
+/>
+
+---
+
+## 五、架构安全性与超时防护设计
+
+将代码执行接入操作系统本地原生环境带来了强大的交互力，但同时也伴随着<strong>计算安全与防死循环需求</strong>。在底层设计中，本执行器贯彻了以下防护原则：
+
+1. <strong>唯一随机沙箱隔离</strong>：每次请求均由 `randomUUID()` 生成专用的临时文件目录，执行结束无论成败立即递归擦除，杜绝磁盘文件残留；
+2. <strong>8 秒超时强杀熔断</strong>：如果读者在编辑代码时不小心写了 `while(true)` 或死递归，子进程监视器将在 <strong>8000 毫秒</strong> 后自动发送 `SIGTERM` 强杀子进程并向前端输出拦截报告，确保不会占满或阻塞服务器资源；
+3. <strong>环境探针自适应</strong>：在执行 C++ 或 Rust 前，Action 会首先进行环境变量与命令行探针检查；若宿主机未预装编译环境，将友好提供包管理器安装指令，而非抛出粗糙的崩溃信息。

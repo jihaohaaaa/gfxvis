@@ -375,7 +375,7 @@ export default function MatrixDecompositionsDemo({
 
   return (
     <ExpandableDemo id="matrix-decompositions-demo" height={height}>
-      <div id="matrix-decompositions-demo" className="space-y-4">
+      <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 pb-3">
           <CapsuleTabs
             options={DECOMP_TABS}

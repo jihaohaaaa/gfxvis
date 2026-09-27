@@ -19,13 +19,13 @@ import { InnerProductSpaceDemo } from "../../../components/demos/InnerProductSpa
 
 在初等线性代数中，我们熟悉的“内积”往往局限于欧几里得空间 $\mathbb{R}^n$ 中的标准点积 $\mathbf{u} \cdot \mathbf{v} = \mathbf{u}^\top \mathbf{v}$。然而，标准点积只是宏大几何世界中的一个特例。
 
-**内积空间（Inner Product Space）** 是现代数学与计算机图形学的核心基石。通过将内积抽象为一组满足特定公理的代数运算体系，我们不仅能在高维实数空间中自由弯曲度规（加权欧氏内积与马氏距离），更能将内积概念拓展到 **矩阵空间** 乃至 **连续函数空间**（如傅里叶级数、正交多项式与球面调和函数 Spherical Harmonics）。
+<strong>内积空间（Inner Product Space）</strong> 是现代数学与计算机图形学的核心基石。通过将内积抽象为一组满足特定公理的代数运算体系，我们不仅能在高维实数空间中自由弯曲度规（加权欧氏内积与马氏距离），更能将内积概念拓展到 <strong>矩阵空间</strong> 乃至 <strong>连续函数空间</strong>（如傅里叶级数、正交多项式与球面调和函数 Spherical Harmonics）。
 
 ---
 
 ## 一、内积空间的公理化定义
 
-设 $V$ 为实数（或复数）数域 $\mathbb{F}$ 上的向量空间。如果映射 $\langle \cdot, \cdot \rangle : V \times V \to \mathbb{F}$ 对任意向量 $\mathbf{u}, \mathbf{v}, \mathbf{w} \in V$ 及标量 $\alpha, \beta \in \mathbb{F}$ 严格满足以下三条公理，则称映射 $\langle \cdot, \cdot \rangle$ 为空间 $V$ 上的一个 **内积（Inner Product）**，而配备了内积的向量空间 $(V, \langle \cdot, \cdot \rangle)$ 称为 **内积空间**：
+设 $V$ 为实数（或复数）数域 $\mathbb{F}$ 上的向量空间。如果映射 $\langle \cdot, \cdot \rangle : V \times V \to \mathbb{F}$ 对任意向量 $\mathbf{u}, \mathbf{v}, \mathbf{w} \in V$ 及标量 $\alpha, \beta \in \mathbb{F}$ 严格满足以下三条公理，则称映射 $\langle \cdot, \cdot \rangle$ 为空间 $V$ 上的一个 <strong>内积（Inner Product）</strong>，而配备了内积的向量空间 $(V, \langle \cdot, \cdot \rangle)$ 称为 <strong>内积空间</strong>：
 
 ### 1.1 正定性（Positive-Definiteness）
 
@@ -51,9 +51,9 @@ $$
 \langle \alpha \mathbf{u} + \beta \mathbf{v}, \mathbf{w} \rangle = \alpha \langle \mathbf{u}, \mathbf{w} \rangle + \beta \langle \mathbf{v}, \mathbf{w} \rangle
 $$
 
-> 💡 **范数与距离的天然诱导**：
+> 💡 <strong>范数与距离的天然诱导</strong>：
 >
-> 任何内积都会 **天然诱导（Induce）一个范数**：$\lVert\mathbf{v}\rVert = \sqrt{\langle \mathbf{v}, \mathbf{v} \rangle}$，以及由范数诱导的向量间欧氏拓扑距离 $d(\mathbf{u}, \mathbf{v}) = \lVert\mathbf{u} - \mathbf{v}\rVert$。
+> 任何内积都会 <strong>天然诱导（Induce）一个范数</strong>：$\lVert\mathbf{v}\rVert = \sqrt{\langle \mathbf{v}, \mathbf{v} \rangle}$，以及由范数诱导的向量间欧氏拓扑距离 $d(\mathbf{u}, \mathbf{v}) = \lVert\mathbf{u} - \mathbf{v}\rVert$。
 
 ---
 
@@ -79,7 +79,7 @@ $$
 \langle \mathbf{u}, \mathbf{v} \rangle_W = \mathbf{u}^\top W \mathbf{v}
 $$
 
-在加权内积下，欧氏空间的单位球形变成了一个椭球（称为 **度规椭圆**）。在机器学习与统计学中，由加权内积诱导的几何距离正是著名的 **马氏距离（Mahalanobis Distance）**。
+在加权内积下，欧氏空间的单位球形变成了一个椭球（称为 <strong>度规椭圆</strong>）。在机器学习与统计学中，由加权内积诱导的几何距离正是著名的 <strong>马氏距离（Mahalanobis Distance）</strong>。
 
 ---
 
@@ -91,7 +91,7 @@ $$
 \langle A, B \rangle_F = \operatorname{tr}(A^\top B) = \sum_{i=1}^m \sum_{j=1}^n A_{ij} B_{ij}
 $$
 
-其诱导的矩阵范数即为图形学中广泛应用的 **Frobenius 范数** $\lVert A \rVert_F = \sqrt{\operatorname{tr}(A^\top A)}$。
+其诱导的矩阵范数即为图形学中广泛应用的 <strong>Frobenius 范数</strong> $\lVert A \rVert_F = \sqrt{\operatorname{tr}(A^\top A)}$。
 
 ---
 
@@ -103,10 +103,10 @@ $$
 \langle f, g \rangle = \int_a^b f(x) g(x) \, \mathrm{d}x
 $$
 
-若 $\langle f, g \rangle = \int_a^b f(x) g(x) \, \mathrm{d}x = 0$，则称函数 $f(x)$ 与 $g(x)$ 在区间 $[a, b]$ 上 **相互正交**！
+若 $\langle f, g \rangle = \int_a^b f(x) g(x) \, \mathrm{d}x = 0$，则称函数 $f(x)$ 与 $g(x)$ 在区间 $[a, b]$ 上 <strong>相互正交</strong>！
 
-- **傅里叶级数（Fourier Series）**：经典三角函数基族 $\{1, \cos(nx), \sin(nx)\}$ 在区间 $[-\pi, \pi]$ 上两两积分正交，这正是傅里叶分析的几何基石；
-- **球面调和函数（Spherical Harmonics, SH）**：在渲染方程与全局光照中，SH 正是球面连续函数空间上的标准正交基底。
+- <strong>傅里叶级数（Fourier Series）</strong>：经典三角函数基族 $\{1, \cos(nx), \sin(nx)\}$ 在区间 $[-\pi, \pi]$ 上两两积分正交，这正是傅里叶分析的几何基石；
+- <strong>球面调和函数（Spherical Harmonics, SH）</strong>：在渲染方程与全局光照中，SH 正是球面连续函数空间上的标准正交基底。
 
 ---
 
@@ -132,7 +132,7 @@ $$
 
 这是一个关于实变量 $t$ 恒非负的一元二次多项式，其判别式必须满足 $\Delta = 4 \langle \mathbf{u}, \mathbf{v} \rangle^2 - 4 \lVert\mathbf{u}\rVert^2 \lVert\mathbf{v}\rVert^2 \le 0$，开方移项即得证。
 
-> 💡 **空间夹角的几何定义**：正是柯西-施瓦茨不等式保证了比值严格满足 $-1 \le \dfrac{\langle \mathbf{u}, \mathbf{v} \rangle}{\lVert\mathbf{u}\rVert \lVert\mathbf{v}\rVert} \le 1$，使得我们能在任意抽象内积空间中自然定义向量夹角 $\theta$：
+> 💡 <strong>空间夹角的几何定义</strong>：正是柯西-施瓦茨不等式保证了比值严格满足 $-1 \le \dfrac{\langle \mathbf{u}, \mathbf{v} \rangle}{\lVert\mathbf{u}\rVert \lVert\mathbf{v}\rVert} \le 1$，使得我们能在任意抽象内积空间中自然定义向量夹角 $\theta$：
 >
 > $$
 > \cos \theta = \frac{\langle \mathbf{u}, \mathbf{v} \rangle}{\lVert\mathbf{u}\rVert \lVert\mathbf{v}\rVert}
@@ -148,7 +148,7 @@ $$
 \boxed{\lVert\mathbf{u} + \mathbf{v}\rVert^2 + \lVert\mathbf{u} - \mathbf{v}\rVert^2 = 2 \lVert\mathbf{u}\rVert^2 + 2 \lVert\mathbf{v}\rVert^2}
 $$
 
-> 💡 **冯·诺伊曼定理（von Neumann Theorem）**：一个赋范向量空间（Normed Space）中的范数能够由某个内积诱导出来的 **充要条件**，就是该范数满足平行四边形恒等式。
+> 💡 <strong>冯·诺伊曼定理（von Neumann Theorem）</strong>：一个赋范向量空间（Normed Space）中的范数能够由某个内积诱导出来的 <strong>充要条件</strong>，就是该范数满足平行四边形恒等式。
 
 ---
 
@@ -156,9 +156,9 @@ $$
 
 在下方交互演示中，你可以自由切换三种模式：
 
-1. **加权内积模式**：滑动调节权重 $w_{11}, w_{22}$，观察单位圆变形成椭圆，以及在加权度规下保持正交的向量对；
-2. **函数空间内积模式**：选择不同的基函数（如正交三角函数、多项式），观察函数曲线与其乘积的积分重叠区域；
-3. **几何定理模式**：拖动向量端点，实时验证柯西-施瓦茨不等式与平行四边形恒等式。
+1. <strong>加权内积模式</strong>：滑动调节权重 $w_{11}, w_{22}$，观察单位圆变形成椭圆，以及在加权度规下保持正交的向量对；
+2. <strong>函数空间内积模式</strong>：选择不同的基函数（如正交三角函数、多项式），观察函数曲线与其乘积的积分重叠区域；
+3. <strong>几何定理模式</strong>：拖动向量端点，实时验证柯西-施瓦茨不等式与平行四边形恒等式。
 
 <InnerProductSpaceDemo client:visible />
 
@@ -166,16 +166,16 @@ $$
 
 ## 五、希尔伯特空间（Hilbert Space）与图形学前沿
 
-当一个内积空间按其诱导的距离是 **完备的（Complete，即空间内所有柯西序列均收敛到空间内部）** 时，称其为 **希尔伯特空间（Hilbert Space）**。
+当一个内积空间按其诱导的距离是 <strong>完备的（Complete，即空间内所有柯西序列均收敛到空间内部）</strong> 时，称其为 <strong>希尔伯特空间（Hilbert Space）</strong>。
 
 在计算机图形学、数字信号处理与物理模拟中，希尔伯特空间提供了最完美的投影框架：
 
-- **最佳逼近与正交投影**：将复杂连续信号 $f(x)$ 投影到有限维基函数子空间（如 SH 或小波基），使得平方误差最小，本质就是将 $f(x)$ 减去投影分量，使其与子空间严格正交；
-- **Gram 矩阵与正交化**：一组函数或向量的 Gram 矩阵 $G_{ij} = \langle \mathbf{v}_i, \mathbf{v}_j \rangle$ 决定了基变换、最小二乘与 Gram-Schmidt 正交化的所有度规性质。
+- <strong>最佳逼近与正交投影</strong>：将复杂连续信号 $f(x)$ 投影到有限维基函数子空间（如 SH 或小波基），使得平方误差最小，本质就是将 $f(x)$ 减去投影分量，使其与子空间严格正交；
+- <strong>Gram 矩阵与正交化</strong>：一组函数或向量的 Gram 矩阵 $G_{ij} = \langle \mathbf{v}_i, \mathbf{v}_j \rangle$ 决定了基变换、最小二乘与 Gram-Schmidt 正交化的所有度规性质。
 
 ---
 
-> 💡 **知识贯通**：
+> 💡 <strong>知识贯通</strong>：
 >
 > - [《抽象向量空间与线性映射》](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps) — 回溯向量空间的八大公理体系、多项式空间与同构定理；
 > - [《Gram 矩阵与几何体积》](/posts/linear-algebra/gram-matrix) — 探究内积矩阵 $G = A^\top A$ 与平行多面体体积的关系；

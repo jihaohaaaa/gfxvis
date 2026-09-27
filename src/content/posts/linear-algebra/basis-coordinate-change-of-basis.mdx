@@ -10,26 +10,26 @@ import ChangeOfBasisDemo from "../../../components/demos/ChangeOfBasisDemo";
 
 同一个几何向量，在不同的“参照系”下，写出来的坐标数字完全不同。矩阵也一样：同一个抽象线性映射，在不同的基底之下，纸面上的矩阵长相也大相径庭。
 
-理解这一现象的关键，在于系统掌握三个环环相扣的核心概念：**基（Basis）、坐标表示（Coordinate Representation）、基变换矩阵（Change of Basis Matrix）**。
+理解这一现象的关键，在于系统掌握三个环环相扣的核心概念：<strong>基（Basis）、坐标表示（Coordinate Representation）、基变换矩阵（Change of Basis Matrix）</strong>。
 
 ---
 
 ## 一、什么是基：空间参照系的数学定义
 
-在进入基之前，先回顾一个重要前提：一组向量 **线性无关**，指的是只有全零组合才能得到零向量，即每个向量都带来一个真正的新几何方向（详见 [《抽象向量空间与线性映射》](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps)）。
+在进入基之前，先回顾一个重要前提：一组向量 <strong>线性无关</strong>，指的是只有全零组合才能得到零向量，即每个向量都带来一个真正的新几何方向（详见 [《抽象向量空间与线性映射》](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps)）。
 
-设 $V$ 是一个 $n$ 维向量空间。$V$ 的一组 **基（Basis）** $\mathcal{B} = (\mathbf{b}_1, \mathbf{b}_2, \dots, \mathbf{b}_n)$ 是一组 **线性无关且张成全空间 $V$** 的有序向量组：
+设 $V$ 是一个 $n$ 维向量空间。$V$ 的一组 <strong>基（Basis）</strong> $\mathcal{B} = (\mathbf{b}_1, \mathbf{b}_2, \dots, \mathbf{b}_n)$ 是一组 <strong>线性无关且张成全空间 $V$</strong> 的有序向量组：
 
 $$
 \boxed{\text{基 (Basis)} \equiv \text{线性无关 (无冗余)} + \text{张成全空间 (能覆盖)}}
 $$
 
-- **“张成全空间”** 保证了空间中的任意向量都能由这组基线性表示；
-- **“线性无关”** 保证了这种表示方式在代数上是 **唯一** 的。
+- <strong>“张成全空间”</strong> 保证了空间中的任意向量都能由这组基线性表示；
+- <strong>“线性无关”</strong> 保证了这种表示方式在代数上是 <strong>唯一</strong> 的。
 
 ### 标准基与非标准基
 
-最常用的基是 **标准正交基（Standard Basis）**：$\mathbb{R}^n$ 中的标准基由单位坐标轴向量构成：
+最常用的基是 <strong>标准正交基（Standard Basis）</strong>：$\mathbb{R}^n$ 中的标准基由单位坐标轴向量构成：
 
 $$
 \mathcal{E} = (\mathbf{e}_1, \mathbf{e}_2, \dots, \mathbf{e}_n), \qquad \mathbf{e}_1 = \begin{pmatrix} 1 \\ 0 \\ \vdots \\ 0 \end{pmatrix}, \quad \mathbf{e}_2 = \begin{pmatrix} 0 \\ 1 \\ \vdots \\ 0 \end{pmatrix}, \quad \dots, \quad \mathbf{e}_n = \begin{pmatrix} 0 \\ 0 \\ \vdots \\ 1 \end{pmatrix}
@@ -41,19 +41,19 @@ $$
 \mathcal{B} = (\mathbf{b}_1, \mathbf{b}_2) = \left( \begin{pmatrix} 1 \\ 1 \end{pmatrix},\; \begin{pmatrix} 1 \\ -1 \end{pmatrix} \right)
 $$
 
-这两个向量不共线、线性无关，同样能张成整个二维平面。基的核心作用，就是为空间中的每一个几何点赋予唯一的“地址命名”——**一旦更换基底，坐标地址随之改变**。
+这两个向量不共线、线性无关，同样能张成整个二维平面。基的核心作用，就是为空间中的每一个几何点赋予唯一的“地址命名”——<strong>一旦更换基底，坐标地址随之改变</strong>。
 
 ---
 
 ## 二、坐标表示：抽象向量与坐标向量的双重世界
 
-设 $\mathcal{B} = (\mathbf{b}_1, \mathbf{b}_2, \dots, \mathbf{b}_n)$ 是空间 $V$ 的一组基。由于基张成 $V$ 且线性无关，任何客观抽象向量 $\mathbf{x} \in V$ 都能被 **唯一** 分解为基向量的线性组合：
+设 $\mathcal{B} = (\mathbf{b}_1, \mathbf{b}_2, \dots, \mathbf{b}_n)$ 是空间 $V$ 的一组基。由于基张成 $V$ 且线性无关，任何客观抽象向量 $\mathbf{x} \in V$ 都能被 <strong>唯一</strong> 分解为基向量的线性组合：
 
 $$
 \mathbf{x} = \beta_1 \mathbf{b}_1 + \beta_2 \mathbf{b}_2 + \cdots + \beta_n \mathbf{b}_n = \sum_{i=1}^n \beta_i \mathbf{b}_i
 $$
 
-这组唯一的标量系数序列 $(\beta_1, \beta_2, \dots, \beta_n)$ 称为向量 $\mathbf{x}$ 在基 $\mathcal{B}$ 下的 **坐标（Coordinates）**，记作列向量形式 $\boldsymbol{\beta}$：
+这组唯一的标量系数序列 $(\beta_1, \beta_2, \dots, \beta_n)$ 称为向量 $\mathbf{x}$ 在基 $\mathcal{B}$ 下的 <strong>坐标（Coordinates）</strong>，记作列向量形式 $\boldsymbol{\beta}$：
 
 $$
 \boxed{[\mathbf{x}]_{\mathcal{B}} = \boldsymbol{\beta} = \begin{pmatrix} \beta_1 \\ \beta_2 \\ \vdots \\ \beta_n \end{pmatrix} \in \mathbb{R}^n}
@@ -73,8 +73,8 @@ $$
 
 ### 抽象向量 vs 坐标向量
 
-- **抽象向量 $\mathbf{x} \in V$**：不依赖任何人为指定的坐标系，它就是客观存在的几何实体（如空间中的位移矢量、速度或受力）；
-- **坐标向量 $[\mathbf{x}]_{\mathcal{B}} \in \mathbb{R}^n$**：是 $\mathbf{x}$ 在选定基 $\mathcal{B}$ 下的一串标量数字，**高度依赖基底的选择**。
+- <strong>抽象向量 $\mathbf{x} \in V$</strong>：不依赖任何人为指定的坐标系，它就是客观存在的几何实体（如空间中的位移矢量、速度或受力）；
+- <strong>坐标向量 $[\mathbf{x}]_{\mathcal{B}} \in \mathbb{R}^n$</strong>：是 $\mathbf{x}$ 在选定基 $\mathcal{B}$ 下的一串标量数字，<strong>高度依赖基底的选择</strong>。
 
 “取坐标”定义了一个从抽象空间到数字空间的映射：
 
@@ -82,13 +82,13 @@ $$
 \boxed{\Phi_{\mathcal{B}}: V \to \mathbb{R}^n, \qquad \mathbf{x} \mapsto [\mathbf{x}]_{\mathcal{B}} = \begin{pmatrix} \beta_1 \\ \vdots \\ \beta_n \end{pmatrix}}
 $$
 
-这是一个保线性加法与数乘结构的 **同构映射（Isomorphism）**。坐标只是客观向量在某个特定参照系下的 **数字快照**。
+这是一个保线性加法与数乘结构的 <strong>同构映射（Isomorphism）</strong>。坐标只是客观向量在某个特定参照系下的 <strong>数字快照</strong>。
 
 ---
 
 ## 三、基变换矩阵：从列展开第一性原理到双向转换
 
-当我们需要将向量在基 $\mathcal{C}$ 下的坐标 $[\mathbf{x}]_{\mathcal{C}}$ 转换到基 $\mathcal{B}$ 下的坐标 $[\mathbf{x}]_{\mathcal{B}}$ 时，连接两者的矩阵正是 **换基矩阵（Change of Basis Matrix）**。
+当我们需要将向量在基 $\mathcal{C}$ 下的坐标 $[\mathbf{x}]_{\mathcal{C}}$ 转换到基 $\mathcal{B}$ 下的坐标 $[\mathbf{x}]_{\mathcal{B}}$ 时，连接两者的矩阵正是 <strong>换基矩阵（Change of Basis Matrix）</strong>。
 
 ### 3.1 换基矩阵 $P$ 的构造与定义
 
@@ -97,7 +97,7 @@ $$
 - 旧基底（目标基）：$\mathcal{B} = (\mathbf{b}_1, \mathbf{b}_2, \dots, \mathbf{b}_n)$；
 - 新基底（原基）：$\mathcal{C} = (\mathbf{c}_1, \mathbf{c}_2, \dots, \mathbf{c}_n)$。
 
-我们定义从基 $\mathcal{C}$ 到基 $\mathcal{B}$ 的 **换基矩阵 $P$** 为：**将新基 $\mathcal{C}$ 中的每一个基向量 $\mathbf{c}_j$ 用旧基 $\mathcal{B}$ 展开所得到的坐标列向量 $[\mathbf{c}_j]_{\mathcal{B}}$ 按列拼合而成的矩阵**：
+我们定义从基 $\mathcal{C}$ 到基 $\mathcal{B}$ 的 <strong>换基矩阵 $P$</strong> 为：<strong>将新基 $\mathcal{C}$ 中的每一个基向量 $\mathbf{c}_j$ 用旧基 $\mathcal{B}$ 展开所得到的坐标列向量 $[\mathbf{c}_j]_{\mathcal{B}}$ 按列拼合而成的矩阵</strong>：
 
 $$
 \boxed{
@@ -192,15 +192,15 @@ $$
 }
 $$
 
-> 💡 **换基矩阵第一性金句**：
+> 💡 <strong>换基矩阵第一性金句</strong>：
 >
-> **“把新基底 $\mathcal{C}$ 的每个基向量用旧基底 $\mathcal{B}$ 表示（求出其在 $\mathcal{B}$ 下的坐标向量），然后把这些坐标向量按列拼起来，就得到了从 $\mathcal{C}$ 转换到 $\mathcal{B}$ 的换基矩阵 $P$。”**
+> <strong>“把新基底 $\mathcal{C}$ 的每个基向量用旧基底 $\mathcal{B}$ 表示（求出其在 $\mathcal{B}$ 下的坐标向量），然后把这些坐标向量按列拼起来，就得到了从 $\mathcal{C}$ 转换到 $\mathcal{B}$ 的换基矩阵 $P$。”</strong>
 
 ---
 
 ### 3.4 双向坐标转换与逆矩阵
 
-因为基底 $\mathcal{C}$ 中的向量组线性无关，矩阵 $P$ 的各列线性无关，故换基矩阵 $P$ **必然是可逆方阵（$\det(P) \neq 0$）**。
+因为基底 $\mathcal{C}$ 中的向量组线性无关，矩阵 $P$ 的各列线性无关，故换基矩阵 $P$ <strong>必然是可逆方阵（$\det(P) \neq 0$）</strong>。
 
 两边左乘 $P^{-1}$，立即得到反向坐标转换公式：
 
@@ -216,7 +216,7 @@ $$
 P^{-1} = \begin{bmatrix} [\mathbf{b}_1]_{\mathcal{C}} & [\mathbf{b}_2]_{\mathcal{C}} & \cdots & [\mathbf{b}_n]_{\mathcal{C}} \end{bmatrix}
 $$
 
-> **双向转换直观图景**：
+> <strong>双向转换直观图景</strong>：
 >
 > $$
 > \boxed{[\mathbf{x}]_{\mathcal{C}} \;\xrightarrow{\quad P \quad}\; [\mathbf{x}]_{\mathcal{B}} \;\xrightarrow{\quad P^{-1} \quad}\; [\mathbf{x}]_{\mathcal{C}}}
@@ -234,7 +234,7 @@ $$
 T(\mathbf{x}) = T\left( \sum_{j=1}^n \beta_j \mathbf{b}_j \right) = \sum_{j=1}^n \beta_j T(\mathbf{b}_j)
 $$
 
-这表明：**线性变换 $T$ 的行为完全由各个基向量经变换后的去向 $T(\mathbf{b}_j)$ 唯一决定**。
+这表明：<strong>线性变换 $T$ 的行为完全由各个基向量经变换后的去向 $T(\mathbf{b}_j)$ 唯一决定</strong>。
 
 ---
 
@@ -252,9 +252,9 @@ $$
 \boxed{[T(\mathbf{x})]_{\mathcal{C}} = [T]_{\mathcal{C} \leftarrow \mathcal{B}} [\mathbf{x}]_{\mathcal{B}}}
 $$
 
-> 💡 **核心洞察：矩阵列的本质几何意义**
+> 💡 <strong>核心洞察：矩阵列的本质几何意义</strong>
 >
-> **矩阵的第 $j$ 列，就是第 $j$ 个输入基向量 $\mathbf{b}_j$ 经过线性变换 $T$ 后，在输出基 $\mathcal{C}$ 中的坐标表示**：
+> <strong>矩阵的第 $j$ 列，就是第 $j$ 个输入基向量 $\mathbf{b}_j$ 经过线性变换 $T$ 后，在输出基 $\mathcal{C}$ 中的坐标表示</strong>：
 >
 > $$
 > \operatorname{Col}_j\big([T]_{\mathcal{C} \leftarrow \mathcal{B}}\big) = [T(\mathbf{b}_j)]_{\mathcal{C}}
@@ -287,7 +287,7 @@ $$
 \end{aligned}
 $$
 
-联立两端，得到对**任意**坐标向量 $[\mathbf{x}]_{\mathcal{C}} \in \mathbb{R}^n$ 均严格恒成立的矩阵乘法等式：
+联立两端，得到对<strong>任意</strong>坐标向量 $[\mathbf{x}]_{\mathcal{C}} \in \mathbb{R}^n$ 均严格恒成立的矩阵乘法等式：
 
 $$
 [T]_{\mathcal{C}} [\mathbf{x}]_{\mathcal{C}} = \big( P^{-1} [T]_{\mathcal{B}} P \big) [\mathbf{x}]_{\mathcal{C}}, \qquad \forall [\mathbf{x}]_{\mathcal{C}} \in \mathbb{R}^n
@@ -309,7 +309,7 @@ $$
 \boxed{ P [T]_{\mathcal{C}} = [T]_{\mathcal{B}} P \iff [T]_{\mathcal{C}} = P^{-1} [T]_{\mathcal{B}} P }
 $$
 
-这正是 **矩阵相似（Matrix Similarity）理论的第一性原理源头**——同一个客观线性算子在不同观察坐标系下的矩阵表示必然互为相似矩阵（关于相似不变量证明、充要条件判定与 Jordan 标准型，[详见专篇《矩阵相似、相似不变量与特征结构》](/posts/linear-algebra/matrix-similarity-and-invariants)）。
+这正是 <strong>矩阵相似（Matrix Similarity）理论的第一性原理源头</strong>——同一个客观线性算子在不同观察坐标系下的矩阵表示必然互为相似矩阵（关于相似不变量证明、充要条件判定与 Jordan 标准型，[详见专篇《矩阵相似、相似不变量与特征结构》](/posts/linear-algebra/matrix-similarity-and-invariants)）。
 
 ---
 
@@ -353,7 +353,7 @@ $$
 \boxed{R = \begin{bmatrix} R \mathbf{e}_x & R \mathbf{e}_y & R \mathbf{e}_z \end{bmatrix} = \begin{bmatrix} \mathbf{r} & \mathbf{u} & \mathbf{f} \end{bmatrix}}
 $$
 
-> 💡 **图形学金句**：**“The columns of the matrix are the transformed basis vectors.”（矩阵的列就是变换后的基向量。）**
+> 💡 <strong>图形学金句</strong>：<strong>“The columns of the matrix are the transformed basis vectors.”（矩阵的列就是变换后的基向量。）</strong>
 
 ---
 
@@ -361,19 +361,19 @@ $$
 
 在下方交互演示中，你可以切换体验：
 
-1. **2D 模式**：通过拖动向量 $\mathbf{x}$ 或切换新基预设，实时观察标准坐标 $[\mathbf{x}]_{\mathcal{B}}$ 与新基坐标 $[\mathbf{x}]_{\mathcal{C}}$ 在变形网格中的精确换算；
-2. **3D 模式**：调节偏航/俯仰/翻滚角，直观观察 3D 旋转矩阵 $R$ 的三列如何精确对应右轴 $\mathbf{r}$、上轴 $\mathbf{u}$ 与前轴 $\mathbf{f}$ 的空间指向。
+1. <strong>2D 模式</strong>：通过拖动向量 $\mathbf{x}$ 或切换新基预设，实时观察标准坐标 $[\mathbf{x}]_{\mathcal{B}}$ 与新基坐标 $[\mathbf{x}]_{\mathcal{C}}$ 在变形网格中的精确换算；
+2. <strong>3D 模式</strong>：调节偏航/俯仰/翻滚角，直观观察 3D 旋转矩阵 $R$ 的三列如何精确对应右轴 $\mathbf{r}$、上轴 $\mathbf{u}$ 与前轴 $\mathbf{f}$ 的空间指向。
 
 <ChangeOfBasisDemo client:visible />
 
 ---
 
-> 💡 **全文总结 Takeaway**：
+> 💡 <strong>全文总结 Takeaway</strong>：
 >
-> 1. **基（Basis）**：给空间命名坐标的参照系 $\mathcal{B} = (\mathbf{b}_1, \dots, \mathbf{b}_n)$（线性无关 + 张成）；
-> 2. **抽象向量 $\mathbf{x}$**：不依赖坐标系的客观几何实体；
-> 3. **坐标向量 $[\mathbf{x}]_{\mathcal{B}} = \boldsymbol{\beta}$ 与 $[\mathbf{x}]_{\mathcal{C}} = \boldsymbol{\gamma}$**：抽象向量在特定基底下的数字快照；
-> 4. **换基矩阵**：$P = \begin{bmatrix} [\mathbf{c}_1]_{\mathcal{B}} & \cdots & [\mathbf{c}_n]_{\mathcal{B}} \end{bmatrix}$，实现 $[\mathbf{x}]_{\mathcal{B}} = P [\mathbf{x}]_{\mathcal{C}}$ 与 $[\mathbf{x}]_{\mathcal{C}} = P^{-1} [\mathbf{x}]_{\mathcal{B}}$；
-> 5. **矩阵表示与相似**：第 $j$ 列精确记录原基向量变换后的坐标；算子换基满足 $[T]_{\mathcal{C}} = P^{-1} [T]_{\mathcal{B}} P$。
+> 1. <strong>基（Basis）</strong>：给空间命名坐标的参照系 $\mathcal{B} = (\mathbf{b}_1, \dots, \mathbf{b}_n)$（线性无关 + 张成）；
+> 2. <strong>抽象向量 $\mathbf{x}$</strong>：不依赖坐标系的客观几何实体；
+> 3. <strong>坐标向量 $[\mathbf{x}]_{\mathcal{B}} = \boldsymbol{\beta}$ 与 $[\mathbf{x}]_{\mathcal{C}} = \boldsymbol{\gamma}$</strong>：抽象向量在特定基底下的数字快照；
+> 4. <strong>换基矩阵</strong>：$P = \begin{bmatrix} [\mathbf{c}_1]_{\mathcal{B}} & \cdots & [\mathbf{c}_n]_{\mathcal{B}} \end{bmatrix}$，实现 $[\mathbf{x}]_{\mathcal{B}} = P [\mathbf{x}]_{\mathcal{C}}$ 与 $[\mathbf{x}]_{\mathcal{C}} = P^{-1} [\mathbf{x}]_{\mathcal{B}}$；
+> 5. <strong>矩阵表示与相似</strong>：第 $j$ 列精确记录原基向量变换后的坐标；算子换基满足 $[T]_{\mathcal{C}} = P^{-1} [T]_{\mathcal{B}} P$。
 >
 > 延伸阅读：[《矩阵相似、相似不变量与特征结构》](/posts/linear-algebra/matrix-similarity-and-invariants)（算子换基与 $B = P^{-1}AP$ 相似理论全景）、[《抽象向量空间与线性映射》](/posts/linear-algebra/abstract-vector-spaces-and-linear-maps)（公理与基底铺垫）、[《矩阵的秩、列空间与行空间》](/posts/linear-algebra/matrix-rank-column-row-space)（“列 = 基向量的像”）、[《投影算子》](/posts/linear-algebra/projection-operators)（投影矩阵与正规方程）、[《内积空间：从欧氏点积到广义内积与函数空间》](/posts/linear-algebra/inner-product-spaces)（几何度规与正交基展开）。

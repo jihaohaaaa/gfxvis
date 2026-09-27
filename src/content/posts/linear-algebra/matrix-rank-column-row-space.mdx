@@ -20,7 +20,7 @@ $$
 A: \mathbb{R}^n \to \mathbb{R}^m
 $$
 
-它把 $n$ 维输入向量映射为 $m$ 维输出向量。本文将围绕这个映射系统贯通五个核心问题：**矩阵的行列尺寸到底意味着什么、列空间为什么决定输出能力、为什么 $\operatorname{rank}(A) \le \min(m,n)$、秩的本质几何意义是什么、行空间又是如何精确约束零空间的**。
+它把 $n$ 维输入向量映射为 $m$ 维输出向量。本文将围绕这个映射系统贯通五个核心问题：<strong>矩阵的行列尺寸到底意味着什么、列空间为什么决定输出能力、为什么 $\operatorname{rank}(A) \le \min(m,n)$、秩的本质几何意义是什么、行空间又是如何精确约束零空间的</strong>。
 
 ---
 
@@ -40,9 +40,9 @@ a_{m1} & a_{m2} & \cdots & a_{mn}
 \end{bmatrix}
 $$
 
-当输入 $n$ 维向量 $\mathbf{x} \in \mathbb{R}^n$ 时，输出 $A\mathbf{x} \in \mathbb{R}^m$ 是一个 $m$ 维向量。**行数 $m$ 决定输出空间的维数，列数 $n$ 决定输入空间的维数**——这不是记号上的偶然巧合，而是矩阵作为线性映射的根本本质：
+当输入 $n$ 维向量 $\mathbf{x} \in \mathbb{R}^n$ 时，输出 $A\mathbf{x} \in \mathbb{R}^m$ 是一个 $m$ 维向量。<strong>行数 $m$ 决定输出空间的维数，列数 $n$ 决定输入空间的维数</strong>——这不是记号上的偶然巧合，而是矩阵作为线性映射的根本本质：
 
-1. **列数 $n$ = 输入空间维数（基向量映射视角）**：
+1. <strong>列数 $n$ = 输入空间维数（基向量映射视角）</strong>：
    线性映射完全由它在输入基底上的行为唯一决定。输入空间 $\mathbb{R}^n$ 的标准基是 $\mathbf{e}_1, \mathbf{e}_2, \ldots, \mathbf{e}_n$，而矩阵的第 $j$ 列正好就是第 $j$ 个基向量在映射后的像：
 
    $$
@@ -51,7 +51,7 @@ $$
 
    每个列向量 $\mathbf{a}_j \in \mathbb{R}^m$ 告诉我们：“第 $j$ 个输入主轴方向被投射到了输出空间里的哪个具体位置”。
 
-2. **行数 $m$ = 输出空间维数（线性泛函测量视角）**：
+2. <strong>行数 $m$ = 输出空间维数（线性泛函测量视角）</strong>：
    输出向量 $A\mathbf{x}$ 的第 $i$ 个标量分量，正是矩阵第 $i$ 行行向量与输入向量 $\mathbf{x}$ 的内积（点积）：
    $$
    (A\mathbf{x})_i = a_{i1}x_1 + a_{i2}x_2 + \cdots + a_{in}x_n = \mathbf{r}_i \cdot \mathbf{x}
@@ -80,8 +80,8 @@ $$
 \boxed{\operatorname{Col}(A) \subseteq \mathbb{R}^m, \qquad \operatorname{Row}(A) \subseteq \mathbb{R}^n}
 $$
 
-- **列空间（Column Space）** 住在 **输出空间 $\mathbb{R}^m$** 中；
-- **行空间（Row Space）** 住在 **输入空间 $\mathbb{R}^n$** 中。
+- <strong>列空间（Column Space）</strong> 住在 <strong>输出空间 $\mathbb{R}^m$</strong> 中；
+- <strong>行空间（Row Space）</strong> 住在 <strong>输入空间 $\mathbb{R}^n$</strong> 中。
 
 分清“谁住在输入端、谁住在输出端”，是贯通后续四大基本子空间几何结构的核心关键。
 
@@ -91,7 +91,7 @@ $$
 
 ### 2.1 列向量张成与线性方程组可解性判据
 
-矩阵的 $n$ 个列向量张成的线性子空间，称为 **列空间（Column Space）** 或 **像空间（Image）**：
+矩阵的 $n$ 个列向量张成的线性子空间，称为 <strong>列空间（Column Space）</strong> 或 <strong>像空间（Image）</strong>：
 
 $$
 \boxed{\operatorname{Col}(A) = \operatorname{span}\{\mathbf{a}_1, \mathbf{a}_2, \ldots, \mathbf{a}_n\} = \{A\mathbf{x} \mid \mathbf{x} \in \mathbb{R}^n\} = \operatorname{im}(A)}
@@ -103,7 +103,7 @@ $$
 2. 它是当自变量 $\mathbf{x}$ 遍历整个输入空间时，$A\mathbf{x}$ 的全部可能取值集合（映射的值域）；
 3. 它是目标输出空间 $\mathbb{R}^m$ 中的一个线性子空间。
 
-直观而言：列向量就是输出空间里的“拼装积木”，列空间回答了 **“输出到底能抵达哪里”**——输入 $\mathbf{x}$ 无论怎么挑选，输出 $A\mathbf{x}$ 都只能被严格禁锢在列空间之内；反之，列空间中的每一个点，都必然存在至少一个输入 $\mathbf{x}$ 能够击中它。
+直观而言：列向量就是输出空间里的“拼装积木”，列空间回答了 <strong>“输出到底能抵达哪里”</strong>——输入 $\mathbf{x}$ 无论怎么挑选，输出 $A\mathbf{x}$ 都只能被严格禁锢在列空间之内；反之，列空间中的每一个点，都必然存在至少一个输入 $\mathbf{x}$ 能够击中它。
 
 这也给出了非齐次线性方程组 $A\mathbf{x} = \mathbf{b}$ 可解性的第一根本判据：
 
@@ -125,7 +125,7 @@ $$
 
 ### 3.1 从列数与输出维数看双重约束
 
-**矩阵的秩（Rank）** 的基本代数定义就是其列空间的维度：
+<strong>矩阵的秩（Rank）</strong> 的基本代数定义就是其列空间的维度：
 
 $$
 \operatorname{rank}(A) = \dim(\operatorname{Col}(A)) = \dim(\operatorname{im}(A))
@@ -133,14 +133,14 @@ $$
 
 秩的大小同时受到输入端与输出端的双重物理“卡口”制约：
 
-1. **从输入列数看（生成元上限）：$\operatorname{rank}(A) \le n$**
+1. <strong>从输入列数看（生成元上限）：$\operatorname{rank}(A) \le n$</strong>
    列空间是由 $n$ 个列向量张成的。$n$ 个向量中最多只能挑选出 $n$ 个线性无关的向量，因此：
 
    $$
    \operatorname{rank}(A) \le n
    $$
 
-2. **从输出空间看（容纳空间上限）：$\operatorname{rank}(A) \le m$**
+2. <strong>从输出空间看（容纳空间上限）：$\operatorname{rank}(A) \le m$</strong>
    列空间 $\operatorname{Col}(A)$ 始终是 $m$ 维欧氏空间 $\mathbb{R}^m$ 的一个子空间。一个 $m$ 维空间中的任何子空间，其维度绝对不可能超过母空间维度 $m$，因此：
    $$
    \operatorname{rank}(A) \le m
@@ -156,10 +156,10 @@ $$
 
 ### 3.2 常见矩阵尺寸与维度瓶颈解析
 
-- **$3 \times 2$ 矩阵（瘦高型）**：$\operatorname{rank}(A) \le 2$。输出空间虽然是 $\mathbb{R}^3$，但由于输入只有 2 个自由度（只有 2 列），最多只能产生一个 2 维平面（若两列共线则退化为 1 维直线）；
-- **$2 \times 3$ 矩阵（矮胖型）**：$\operatorname{rank}(A) \le 2$。虽然有 3 个列向量，但每个列向量都只是 2 维向量。在 2 维平面中最多只有 2 个线性无关向量，第 3 列必然是冗余线性组合；
-- **$5 \times 3$ 矩阵**：$\operatorname{rank}(A) \le 3$。输出有 5 个坐标维度，但 3 维输入最多只能携带 3 个独立运动方向，像至多是 $\mathbb{R}^5$ 里的一个 3 维平直子空间；
-- **$3 \times 5$ 矩阵**：$\operatorname{rank}(A) \le 3$。输入有 5 个自由维度，但输出只有 3 维，映射过程至少会硬生生丢弃 $5 - 3 = 2$ 个输入维度的信息（被压缩进零空间）。
+- <strong>$3 \times 2$ 矩阵（瘦高型）</strong>：$\operatorname{rank}(A) \le 2$。输出空间虽然是 $\mathbb{R}^3$，但由于输入只有 2 个自由度（只有 2 列），最多只能产生一个 2 维平面（若两列共线则退化为 1 维直线）；
+- <strong>$2 \times 3$ 矩阵（矮胖型）</strong>：$\operatorname{rank}(A) \le 2$。虽然有 3 个列向量，但每个列向量都只是 2 维向量。在 2 维平面中最多只有 2 个线性无关向量，第 3 列必然是冗余线性组合；
+- <strong>$5 \times 3$ 矩阵</strong>：$\operatorname{rank}(A) \le 3$。输出有 5 个坐标维度，但 3 维输入最多只能携带 3 个独立运动方向，像至多是 $\mathbb{R}^5$ 里的一个 3 维平直子空间；
+- <strong>$3 \times 5$ 矩阵</strong>：$\operatorname{rank}(A) \le 3$。输入有 5 个自由维度，但输出只有 3 维，映射过程至少会硬生生丢弃 $5 - 3 = 2$ 个输入维度的信息（被压缩进零空间）。
 
 ---
 
@@ -177,7 +177,7 @@ $$
 \operatorname{rank}(A) = \dim(\operatorname{im}(A))
 $$
 
-> 💡 **核心洞察**：**秩描述的不是矩阵表面上有多少行、多少列，而是这台机器在运作时，输出空间里真正被点亮的独立自由度。**
+> 💡 <strong>核心洞察</strong>：<strong>秩描述的不是矩阵表面上有多少行、多少列，而是这台机器在运作时，输出空间里真正被点亮的独立自由度。</strong>
 
 ### 4.1 维度坍缩与线性相关性
 
@@ -196,13 +196,13 @@ $$
 \mathbf{a}_3 = 2\mathbf{a}_1 + 5\mathbf{a}_2
 $$
 
-那么第三列没有为整个系统贡献任何全新的方向，真正独立的只有两列，因此 $\operatorname{rank}(A) = 2$。所以秩也可以理解为：**列向量组中真正不冗余的独立向量个数**。
+那么第三列没有为整个系统贡献任何全新的方向，真正独立的只有两列，因此 $\operatorname{rank}(A) = 2$。所以秩也可以理解为：<strong>列向量组中真正不冗余的独立向量个数</strong>。
 
 ---
 
 ### 4.2 秩-零化度定理（Rank-Nullity Theorem）
 
-在变换中被“丢弃”、“拍扁”的输入维度去了哪里？这引出了线性代数最宏伟的守恒定律——**秩-零化度定理（Rank-Nullity Theorem / 维度守恒定律）**：
+在变换中被“丢弃”、“拍扁”的输入维度去了哪里？这引出了线性代数最宏伟的守恒定律——<strong>秩-零化度定理（Rank-Nullity Theorem / 维度守恒定律）</strong>：
 
 $$
 \boxed{\operatorname{rank}(A) + \dim(\ker(A)) = n}
@@ -216,7 +216,7 @@ $$
 
 - 输入空间总共拥有 $n$ 个独立自由度；
 - 其中 $\operatorname{rank}(A)$ 个自由度被成功保留并投射到输出空间中；
-- 剩下的 $n - \operatorname{rank}(A)$ 个自由度被完全压缩消解为零向量 $\mathbf{0}$，构成了映射的 **核（零空间，Null Space）**。
+- 剩下的 $n - \operatorname{rank}(A)$ 个自由度被完全压缩消解为零向量 $\mathbf{0}$，构成了映射的 <strong>核（零空间，Null Space）</strong>。
 
 例如对于上述三维投影矩阵（$n = 3, \operatorname{rank} = 2$），零空间维度为 $\dim(\ker(A)) = 3 - 2 = 1$，代表整条 $z$ 轴上的所有点都被压缩到了原点。
 
@@ -256,7 +256,7 @@ A\mathbf{x} =
 \end{bmatrix}
 $$
 
-每一行都是一个作用于输入向量 $\mathbf{x}$ 的 **线性泛函（Linear Functional）**。
+每一行都是一个作用于输入向量 $\mathbf{x}$ 的 <strong>线性泛函（Linear Functional）</strong>。
 
 例如矩阵：
 
@@ -273,13 +273,13 @@ $$
 \operatorname{Row}(A) = \operatorname{span}\{\mathbf{r}_1, \mathbf{r}_2, \ldots, \mathbf{r}_m\} \subseteq \mathbb{R}^n
 $$
 
-> 💡 **重要结论**：**行空间是输入空间 $\mathbb{R}^n$ 中的子空间**，而列空间是输出空间 $\mathbb{R}^m$ 中的子空间。
+> 💡 <strong>重要结论</strong>：<strong>行空间是输入空间 $\mathbb{R}^n$ 中的子空间</strong>，而列空间是输出空间 $\mathbb{R}^m$ 中的子空间。
 
 ---
 
 ### 5.2 行空间与零空间的正交互补性（$\ker(A) = \operatorname{Row}(A)^\perp$）
 
-行空间最深远、最重要的几何用途，是**完美精确地刻画了零空间（核）**。
+行空间最深远、最重要的几何用途，是<strong>完美精确地刻画了零空间（核）</strong>。
 
 由矩阵齐次方程 $A\mathbf{x} = \mathbf{0}$ 可知：
 
@@ -287,20 +287,20 @@ $$
 A\mathbf{x} = \mathbf{0} \iff \mathbf{r}_1 \cdot \mathbf{x} = 0, \quad \mathbf{r}_2 \cdot \mathbf{x} = 0, \quad \dots, \quad \mathbf{r}_m \cdot \mathbf{x} = 0
 $$
 
-一个向量 $\mathbf{x}$ 落在零空间 $\ker(A)$ 中，**当且仅当 $\mathbf{x}$ 与矩阵的每一行向量都保持垂直**——这意味着它必须与由行向量张成的整个行空间严格正交！
+一个向量 $\mathbf{x}$ 落在零空间 $\ker(A)$ 中，<strong>当且仅当 $\mathbf{x}$ 与矩阵的每一行向量都保持垂直</strong>——这意味着它必须与由行向量张成的整个行空间严格正交！
 
 $$
 \boxed{\ker(A) = \operatorname{Row}(A)^\perp}
 $$
 
-这展现了一幅宏伟的几何对称图景：**输入空间 $\mathbb{R}^n$ 被无损、正交地拆分成了两个互为正交补的子空间**：
+这展现了一幅宏伟的几何对称图景：<strong>输入空间 $\mathbb{R}^n$ 被无损、正交地拆分成了两个互为正交补的子空间</strong>：
 
 $$
 \mathbb{R}^n = \operatorname{Row}(A) \oplus^\perp \ker(A)
 $$
 
-- **行空间 $\operatorname{Row}(A)$**：负责承载所有真正对输出产生实质贡献的有效输入方向（维度为 $\operatorname{rank}(A)$）；
-- **零空间 $\ker(A)$**：负责吸收所有在变换中被彻底过滤湮灭的无效方向（维度为 $n - \operatorname{rank}(A)$）；
+- <strong>行空间 $\operatorname{Row}(A)$</strong>：负责承载所有真正对输出产生实质贡献的有效输入方向（维度为 $\operatorname{rank}(A)$）；
+- <strong>零空间 $\ker(A)$</strong>：负责吸收所有在变换中被彻底过滤湮灭的无效方向（维度为 $n - \operatorname{rank}(A)$）；
 - 两者严格正交垂直，维度相加恒等于输入空间总维数 $n$。
 
 ---
@@ -311,18 +311,18 @@ $$
 
 | 基本子空间                         | 所属母空间              | 几何物理含义                           | 空间维度                     | 正交互补伴侣                                 |
 | :--------------------------------- | :---------------------- | :------------------------------------- | :--------------------------- | :------------------------------------------- |
-| **列空间 $\operatorname{Col}(A)$** | 输出空间 $\mathbb{R}^m$ | 输出向量全部可能的抵达范围（值域）     | $\operatorname{rank}(A)$     | $\ker(A^\top) = \operatorname{Col}(A)^\perp$ |
-| **左零空间 $\ker(A^\top)$**        | 输出空间 $\mathbb{R}^m$ | 输出空间中无法被任何输入触达的正交盲区 | $m - \operatorname{rank}(A)$ | $\operatorname{Col}(A) = \ker(A^\top)^\perp$ |
-| **行空间 $\operatorname{Row}(A)$** | 输入空间 $\mathbb{R}^n$ | 真正决定输出数值变化的有效输入方向     | $\operatorname{rank}(A)$     | $\ker(A) = \operatorname{Row}(A)^\perp$      |
-| **零空间 $\ker(A)$**               | 输入空间 $\mathbb{R}^n$ | 在变换中被完全压扁清零的输入冗余方向   | $n - \operatorname{rank}(A)$ | $\operatorname{Row}(A) = \ker(A)^\perp$      |
+| <strong>列空间 $\operatorname{Col}(A)$</strong> | 输出空间 $\mathbb{R}^m$ | 输出向量全部可能的抵达范围（值域）     | $\operatorname{rank}(A)$     | $\ker(A^\top) = \operatorname{Col}(A)^\perp$ |
+| <strong>左零空间 $\ker(A^\top)$</strong>        | 输出空间 $\mathbb{R}^m$ | 输出空间中无法被任何输入触达的正交盲区 | $m - \operatorname{rank}(A)$ | $\operatorname{Col}(A) = \ker(A^\top)^\perp$ |
+| <strong>行空间 $\operatorname{Row}(A)$</strong> | 输入空间 $\mathbb{R}^n$ | 真正决定输出数值变化的有效输入方向     | $\operatorname{rank}(A)$     | $\ker(A) = \operatorname{Row}(A)^\perp$      |
+| <strong>零空间 $\ker(A)$</strong>               | 输入空间 $\mathbb{R}^n$ | 在变换中被完全压扁清零的输入冗余方向   | $n - \operatorname{rank}(A)$ | $\operatorname{Row}(A) = \ker(A)^\perp$      |
 
 ---
 
-> 💡 **全文总结 Takeaway**：
+> 💡 <strong>全文总结 Takeaway</strong>：
 >
-> 1. **矩阵尺寸**：$m \times n$ 矩阵即线性映射 $\mathbb{R}^n \to \mathbb{R}^m$，$n$ 决定输入维数，$m$ 决定输出维数；
-> 2. **秩的本质**：$\operatorname{rank}(A)$ 是映射实际产生的有效独立维度数，受双向瓶颈制约 $\operatorname{rank}(A) \le \min(m,n)$；
-> 3. **空间定位**：列空间 $\operatorname{Col}(A)$ 是输出端的“能到哪里”，行空间 $\operatorname{Row}(A)$ 是输入端的“哪些方向起作用”；
-> 4. **正交对称**：输入端正交剖分为 $\mathbb{R}^n = \operatorname{Row}(A) \oplus^\perp \ker(A)$，输出端正交剖分为 $\mathbb{R}^m = \operatorname{Col}(A) \oplus^\perp \ker(A^\top)$。
+> 1. <strong>矩阵尺寸</strong>：$m \times n$ 矩阵即线性映射 $\mathbb{R}^n \to \mathbb{R}^m$，$n$ 决定输入维数，$m$ 决定输出维数；
+> 2. <strong>秩的本质</strong>：$\operatorname{rank}(A)$ 是映射实际产生的有效独立维度数，受双向瓶颈制约 $\operatorname{rank}(A) \le \min(m,n)$；
+> 3. <strong>空间定位</strong>：列空间 $\operatorname{Col}(A)$ 是输出端的“能到哪里”，行空间 $\operatorname{Row}(A)$ 是输入端的“哪些方向起作用”；
+> 4. <strong>正交对称</strong>：输入端正交剖分为 $\mathbb{R}^n = \operatorname{Row}(A) \oplus^\perp \ker(A)$，输出端正交剖分为 $\mathbb{R}^m = \operatorname{Col}(A) \oplus^\perp \ker(A^\top)$。
 >
 > 更深度的子空间几何可视化与伪逆 / SVD 结构解析，可参阅 [《四大基本子空间与正交直和分解》](/posts/linear-algebra/four-fundamental-subspaces)；最小二乘与投影算子推导可参阅 [《投影算子》](/posts/linear-algebra/projection-operators)。

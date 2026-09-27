@@ -17,15 +17,15 @@ draft: false
 
 import EigenDemo from "../../../components/demos/EigenDemo";
 
-在大多数情况下，当一个矩阵 $A$ 作用于一个向量 $\mathbf{x}$ 时，输出向量 $A \mathbf{x}$ 既会改变 **长度**，也会改变 **方向**。
+在大多数情况下，当一个矩阵 $A$ 作用于一个向量 $\mathbf{x}$ 时，输出向量 $A \mathbf{x}$ 既会改变 <strong>长度</strong>，也会改变 <strong>方向</strong>。
 
-但在几乎每一个线性变换中，都存在一些极其独特的“特权方向”——在这些方向上的非零向量，在矩阵变换的作用下 **完全不发生任何旋转偏转**，仅仅经历纯粹的标量缩放：
+但在几乎每一个线性变换中，都存在一些极其独特的“特权方向”——在这些方向上的非零向量，在矩阵变换的作用下 <strong>完全不发生任何旋转偏转</strong>，仅仅经历纯粹的标量缩放：
 
 $$
 A \mathbf{v} = \lambda \mathbf{v} \quad (\mathbf{v} \neq \mathbf{0})
 $$
 
-这些特殊的方向向量 $\mathbf{v}$ 被称为 **特征向量（Eigenvector）**，对应的缩放倍率 $\lambda$ 被称为 **特征值（Eigenvalue）**。将方阵按其特征系统完全解耦并因子化为特征基底与特征值对角阵的形式，构成了代数学中最基石的矩阵分解——**特征值分解（Eigendecomposition / 谱分解 Spectral Decomposition）**。
+这些特殊的方向向量 $\mathbf{v}$ 被称为 <strong>特征向量（Eigenvector）</strong>，对应的缩放倍率 $\lambda$ 被称为 <strong>特征值（Eigenvalue）</strong>。将方阵按其特征系统完全解耦并因子化为特征基底与特征值对角阵的形式，构成了代数学中最基石的矩阵分解——<strong>特征值分解（Eigendecomposition / 谱分解 Spectral Decomposition）</strong>。
 
 ---
 
@@ -33,12 +33,12 @@ $$
 
 ### 1.1 不变直线（Invariant Lines）
 
-从几何视角来看，特征向量张成的直线 $L = \{c \mathbf{v} \mid c \in \mathbb{R}\}$ 是一条 **不变子空间直线**：
+从几何视角来看，特征向量张成的直线 $L = \{c \mathbf{v} \mid c \in \mathbb{R}\}$ 是一条 <strong>不变子空间直线</strong>：
 
 - 如果初始向量 $\mathbf{x}$ 位于直线 $L$ 上，那么变换后的向量 $A \mathbf{x} = \lambda \mathbf{x}$ 仍然严格停留在该直线上；
-- **当 $\lambda > 0$ 时**：向量沿直线同向拉伸（$\lambda > 1$）或压缩（$0 < \lambda < 1$）；
-- **当 $\lambda < 0$ 时**：向量发生沿直线的 $180^\circ$ 翻转与缩放；
-- **当 $\lambda = 0$ 时**：该方向上的所有向量被坍缩为原点零向量（即 $\mathbf{v} \in \ker(A)$，属于矩阵的零空间）。
+- <strong>当 $\lambda > 0$ 时</strong>：向量沿直线同向拉伸（$\lambda > 1$）或压缩（$0 < \lambda < 1$）；
+- <strong>当 $\lambda < 0$ 时</strong>：向量发生沿直线的 $180^\circ$ 翻转与缩放；
+- <strong>当 $\lambda = 0$ 时</strong>：该方向上的所有向量被坍缩为原点零向量（即 $\mathbf{v} \in \ker(A)$，属于矩阵的零空间）。
 
 ### 1.2 为什么旋转变换没有实特征向量？
 
@@ -56,7 +56,7 @@ $
 (\lambda I - A) \mathbf{v} = \mathbf{0}
 $
 
-为了使该方程组存在 **非零解** $\mathbf{v} \neq \mathbf{0}$，系数矩阵 $(\lambda I - A)$ 必须是不可逆的奇异矩阵，即其行列式必须为零。由此定义矩阵 $A$ 的 **特征多项式（Characteristic Polynomial）** $p_A(\lambda)$：
+为了使该方程组存在 <strong>非零解</strong> $\mathbf{v} \neq \mathbf{0}$，系数矩阵 $(\lambda I - A)$ 必须是不可逆的奇异矩阵，即其行列式必须为零。由此定义矩阵 $A$ 的 <strong>特征多项式（Characteristic Polynomial）</strong> $p_A(\lambda)$：
 
 $
 \boxed{p_A(\lambda) = \det(\lambda I - A) = 0}
@@ -64,7 +64,7 @@ $
 
 使用 $\det(\lambda I - A)$ 的标准定义，最高次项系数恒为首一正系数（$\lambda^n$ 为首一多项式 Monic Polynomial）。
 
-从[集合论基础](../discrete-math/set-theory-relations-and-partitions)的概括公理（Axiom of Comprehension）视角，矩阵 $A$ 的所有特征值构成的集合称为 **谱（Spectrum）**，记作：
+从[集合论基础](../discrete-math/set-theory-relations-and-partitions)的概括公理（Axiom of Comprehension）视角，矩阵 $A$ 的所有特征值构成的集合称为 <strong>谱（Spectrum）</strong>，记作：
 
 $$
 \sigma(A) = \{\lambda \in \mathbb{C} \mid \det(\lambda I - A) = 0\}
@@ -82,8 +82,8 @@ $
 
 注意到首项系数后：
 
-- 一阶项系数恰为矩阵的 **迹**：$\operatorname{tr}(A) = a + d$；
-- 常数项恰为矩阵的 **行列式**：$\det(A) = ad - bc$。
+- 一阶项系数恰为矩阵的 <strong>迹</strong>：$\operatorname{tr}(A) = a + d$；
+- 常数项恰为矩阵的 <strong>行列式</strong>：$\det(A) = ad - bc$。
 
 因此二维特征方程具有极其普适的标准形式：
 
@@ -97,11 +97,11 @@ $$
 \lambda_{1, 2} = \frac{\operatorname{tr}(A) \pm \sqrt{\operatorname{tr}(A)^2 - 4\det(A)}}{2}
 $$
 
-> 💡 **深层结论**：
+> 💡 <strong>深层结论</strong>：
 >
-> 1. **特征值之和恒等于迹**：$\lambda_1 + \lambda_2 = \operatorname{tr}(A)$；
-> 2. **特征值之积恒等于行列式**：$\lambda_1 \lambda_2 = \det(A)$；
-> 3. **判别式 $\Delta = \operatorname{tr}(A)^2 - 4\det(A)$** 决定了矩阵的谱类型：$\Delta > 0$ 为两个不同实特征值，$\Delta = 0$ 为重特征值，$\Delta < 0$ 为共轭复特征值。
+> 1. <strong>特征值之和恒等于迹</strong>：$\lambda_1 + \lambda_2 = \operatorname{tr}(A)$；
+> 2. <strong>特征值之积恒等于行列式</strong>：$\lambda_1 \lambda_2 = \det(A)$；
+> 3. <strong>判别式 $\Delta = \operatorname{tr}(A)^2 - 4\det(A)$</strong> 决定了矩阵的谱类型：$\Delta > 0$ 为两个不同实特征值，$\Delta = 0$ 为重特征值，$\Delta < 0$ 为共轭复特征值。
 
 ---
 
@@ -121,9 +121,9 @@ $$
 (A - \lambda I)\mathbf{v} = \mathbf{0}
 $$
 
-这个齐次方程的全部解向量（包含所有非零特征向量以及平凡解零向量 $\mathbf{v} = \mathbf{0}$），恰好构成了矩阵 $(A - \lambda I)$ 的 **零空间（核，Kernel / Null Space）**。
+这个齐次方程的全部解向量（包含所有非零特征向量以及平凡解零向量 $\mathbf{v} = \mathbf{0}$），恰好构成了矩阵 $(A - \lambda I)$ 的 <strong>零空间（核，Kernel / Null Space）</strong>。
 
-因此，属于特征值 $\lambda$ 的 **特征子空间（Eigenspace）** $E_\lambda$ 定义为：
+因此，属于特征值 $\lambda$ 的 <strong>特征子空间（Eigenspace）</strong> $E_\lambda$ 定义为：
 
 $$
 \boxed{E_\lambda = \ker(A - \lambda I) = \{ \mathbf{v} \in V \mid A\mathbf{v} = \lambda \mathbf{v} \}}
@@ -131,10 +131,10 @@ $$
 
 从子空间与核的视角审视特征子空间：
 
-1. **代数封闭性**：因为 $E(\lambda_i)$ 正是矩阵 $(A - \lambda_i I)$ 的零空间（Kernel / Null Space），根据零空间的代数性质，属于同一个特征值的两个特征向量的任意线性组合仍属于该特征子空间（即 $\mathbf{u}, \mathbf{v} \in E(\lambda) \implies c_1\mathbf{u} + c_2\mathbf{v} \in E(\lambda)$）；
-2. **几何图像（一维直线 vs 高维特征空间）**：
-   - **单特征值（无重根）**：特征子空间 $E(\lambda)$ 是一条穿过原点的一维 **不变直线**，线上的所有向量经变换后仅做 $\lambda$ 倍纯拉伸；
-   - **重特征值（有重根）**：特征子空间可以是一个二维平面甚至更高维度的子空间。在这个特征子空间内部的 **任意非零向量**，变换后方向全部保持不变，且均被统一缩放 $\lambda$ 倍！
+1. <strong>代数封闭性</strong>：因为 $E(\lambda_i)$ 正是矩阵 $(A - \lambda_i I)$ 的零空间（Kernel / Null Space），根据零空间的代数性质，属于同一个特征值的两个特征向量的任意线性组合仍属于该特征子空间（即 $\mathbf{u}, \mathbf{v} \in E(\lambda) \implies c_1\mathbf{u} + c_2\mathbf{v} \in E(\lambda)$）；
+2. <strong>几何图像（一维直线 vs 高维特征空间）</strong>：
+   - <strong>单特征值（无重根）</strong>：特征子空间 $E(\lambda)$ 是一条穿过原点的一维 <strong>不变直线</strong>，线上的所有向量经变换后仅做 $\lambda$ 倍纯拉伸；
+   - <strong>重特征值（有重根）</strong>：特征子空间可以是一个二维平面甚至更高维度的子空间。在这个特征子空间内部的 <strong>任意非零向量</strong>，变换后方向全部保持不变，且均被统一缩放 $\lambda$ 倍！
      - 例如标量缩放矩阵 $A = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix}$，特征值 $\lambda = 2$ 的代数重数为 2，整个二维平面 $\mathbb{R}^2$ 就是它的特征子空间 $E(2)$，平面内任意方向的向量都不会发生旋转。
 
 ---
@@ -143,13 +143,13 @@ $$
 
 对于每个特征值 $\lambda_i$：
 
-- **代数重数（Algebraic Multiplicity, AM）**：$\lambda_i$ 作为特征多项式 $p(\lambda) = \det(A - \lambda I) = 0$ 根的重数；
-- **几何重数（Geometric Multiplicity, GM）**：特征子空间 $E(\lambda_i)$ 的维度（即零空间维度 $\operatorname{nullity}(A - \lambda_i I)$），代表属于该特征值的 **线性无关特征向量的最大数量**：
+- <strong>代数重数（Algebraic Multiplicity, AM）</strong>：$\lambda_i$ 作为特征多项式 $p(\lambda) = \det(A - \lambda I) = 0$ 根的重数；
+- <strong>几何重数（Geometric Multiplicity, GM）</strong>：特征子空间 $E(\lambda_i)$ 的维度（即零空间维度 $\operatorname{nullity}(A - \lambda_i I)$），代表属于该特征值的 <strong>线性无关特征向量的最大数量</strong>：
   $$
   \operatorname{GM}(\lambda_i) = \dim(E(\lambda_i)) = n - \operatorname{rank}(A - \lambda_i I)
   $$
 
-**基本定理**：对任意特征值，总有：
+<strong>基本定理</strong>：对任意特征值，总有：
 
 $$
 1 \le \operatorname{GM}(\lambda_i) \le \operatorname{AM}(\lambda_i)
@@ -159,12 +159,12 @@ $$
 
 ### 3.3 特征子空间直和与矩阵可对角化充要条件
 
-- **可对角化充要条件**：当且仅当所有特征值的几何重数均等于代数重数（$\operatorname{GM}(\lambda_i) = \operatorname{AM}(\lambda_i)$，即 $\sum \dim(E(\lambda_i)) = n$）时，全空间 $V$ 可以被各个特征子空间无损充满并实现直和分解：
+- <strong>可对角化充要条件</strong>：当且仅当所有特征值的几何重数均等于代数重数（$\operatorname{GM}(\lambda_i) = \operatorname{AM}(\lambda_i)$，即 $\sum \dim(E(\lambda_i)) = n$）时，全空间 $V$ 可以被各个特征子空间无损充满并实现直和分解：
   $$
   V = E(\lambda_1) \oplus E(\lambda_2) \oplus \cdots \oplus E(\lambda_k)
   $$
-  此时矩阵拥有完备的特征向量基底，**必然可以相似对角化**（$A = P \Lambda P^{-1}$）；
-- **亏损矩阵（Defective Matrix）**：若存在某个特征值的 $\operatorname{GM} < \operatorname{AM}$（例如剪切矩阵 $\begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$，$\lambda=1$ 的代数重数 $\operatorname{AM}=2$，但解齐次方程只能得到一个独立特征向量，$\operatorname{GM}=1$），特征子空间无法充满全空间，称矩阵是 **亏损的（Defective）**，无法完全对角化。
+  此时矩阵拥有完备的特征向量基底，<strong>必然可以相似对角化</strong>（$A = P \Lambda P^{-1}$）；
+- <strong>亏损矩阵（Defective Matrix）</strong>：若存在某个特征值的 $\operatorname{GM} < \operatorname{AM}$（例如剪切矩阵 $\begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$，$\lambda=1$ 的代数重数 $\operatorname{AM}=2$，但解齐次方程只能得到一个独立特征向量，$\operatorname{GM}=1$），特征子空间无法充满全空间，称矩阵是 <strong>亏损的（Defective）</strong>，无法完全对角化。
 
 ---
 
@@ -174,7 +174,7 @@ $$
 
 在 [《基、坐标表示与基变换》](/posts/linear-algebra/basis-coordinate-change-of-basis#5-为什么偏偏是-column) 中，我们证明了一个根本性的代数几何定理：
 
-> **任何线性变换矩阵的第 $j$ 列，就是第 $j$ 个输入基向量经过变换后，在输出基底下的坐标表示：**
+> <strong>任何线性变换矩阵的第 $j$ 列，就是第 $j$ 个输入基向量经过变换后，在输出基底下的坐标表示：</strong>
 >
 > $$
 > \operatorname{Col}_j\big([T]_{\mathcal{C} \leftarrow \mathcal{B}}\big) = [T(b_j)]_{\mathcal{C}}
@@ -182,9 +182,9 @@ $$
 
 现在，我们把这个定理直接应用到特征向量上：
 
-假设 $n \times n$ 矩阵 $A$ 拥有 $n$ 个线性无关的特征向量 $\mathcal{V} = (\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_n)$。**如果我们直接选择这套特征向量组 $\mathcal{V}$ 作为整个空间的坐标基底：**
+假设 $n \times n$ 矩阵 $A$ 拥有 $n$ 个线性无关的特征向量 $\mathcal{V} = (\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_n)$。<strong>如果我们直接选择这套特征向量组 $\mathcal{V}$ 作为整个空间的坐标基底：</strong>
 
-1. 考察第 $j$ 个基向量 $\mathbf{v}_j$。根据特征向量的定义 $T(\mathbf{v}_j) = \lambda_j \mathbf{v}_j$，变换 $T$ 作用在它上面 **既不产生任何旋转，也不向其他基向量方向发生任何偏转**，仅仅是对它自身进行了 $\lambda_j$ 倍的纯拉伸：
+1. 考察第 $j$ 个基向量 $\mathbf{v}_j$。根据特征向量的定义 $T(\mathbf{v}_j) = \lambda_j \mathbf{v}_j$，变换 $T$ 作用在它上面 <strong>既不产生任何旋转，也不向其他基向量方向发生任何偏转</strong>，仅仅是对它自身进行了 $\lambda_j$ 倍的纯拉伸：
 
    $$
    T(\mathbf{v}_j) = \lambda_j \mathbf{v}_j = 0\mathbf{v}_1 + \dots + 0\mathbf{v}_{j-1} + \lambda_j \mathbf{v}_j + 0\mathbf{v}_{j+1} + \dots + 0\mathbf{v}_n
@@ -196,7 +196,7 @@ $$
    [T(\mathbf{v}_j)]_{\mathcal{V}} = \begin{pmatrix} 0 \\ \vdots \\ 0 \\ \lambda_j \\ 0 \\ \vdots \\ 0 \end{pmatrix} \leftarrow \text{第 } j \text{ 行}
    $$
 
-3. **结果自然呈现**：新矩阵的第 $j$ 列除了第 $j$ 行是 $\lambda_j$ 外，其余所有元素全部是 0！将所有列按顺序拼接起来，变换在特征基下的矩阵表示 $[T]_{\mathcal{V}}$ **必然是一个纯对角矩阵 $\Lambda$**：
+3. <strong>结果自然呈现</strong>：新矩阵的第 $j$ 列除了第 $j$ 行是 $\lambda_j$ 外，其余所有元素全部是 0！将所有列按顺序拼接起来，变换在特征基下的矩阵表示 $[T]_{\mathcal{V}}$ <strong>必然是一个纯对角矩阵 $\Lambda$</strong>：
 
 $$
 [T]_{\mathcal{V}} = \begin{pmatrix}
@@ -207,12 +207,12 @@ $$
 \end{pmatrix} = \Lambda
 $$
 
-> 💡 **核心洞察（Key Takeaway）：特征值与对角化的几何本质**
+> 💡 <strong>核心洞察（Key Takeaway）：特征值与对角化的几何本质</strong>
 >
-> - **为什么一般矩阵 $A$ 充满非对角线元素？** 因为标准基 $\mathcal{E}$ 与变换 $T$ 的天然物理主轴不重合，导致坐标轴在变换中被搅乱、耦合在了一起；
-> - **特征向量是什么？** 特征向量就是线性变换的 **“天然本征主轴”**——沿着这些方向，高维空间变换完全退化为独立的 1 维纯伸缩；
-> - **特征值 $\lambda_j$ 是什么？** $\lambda_j$ 就是变换后第 $j$ 个基向量在它自己方向上的 **1 维本征坐标**；
-> - **特征值分解是什么？** 就是通过基变换把观察视角切换到天然本征主轴上，将原本复杂的耦合矩阵因子化为基底与对角阵的乘积 $A = V \Lambda V^{-1}$！
+> - <strong>为什么一般矩阵 $A$ 充满非对角线元素？</strong> 因为标准基 $\mathcal{E}$ 与变换 $T$ 的天然物理主轴不重合，导致坐标轴在变换中被搅乱、耦合在了一起；
+> - <strong>特征向量是什么？</strong> 特征向量就是线性变换的 <strong>“天然本征主轴”</strong>——沿着这些方向，高维空间变换完全退化为独立的 1 维纯伸缩；
+> - <strong>特征值 $\lambda_j$ 是什么？</strong> $\lambda_j$ 就是变换后第 $j$ 个基向量在它自己方向上的 <strong>1 维本征坐标</strong>；
+> - <strong>特征值分解是什么？</strong> 就是通过基变换把观察视角切换到天然本征主轴上，将原本复杂的耦合矩阵因子化为基底与对角阵的乘积 $A = V \Lambda V^{-1}$！
 
 ---
 
@@ -226,7 +226,7 @@ $$
 
 设特征基底为 $\mathcal{V} = (\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_n)$，标准 / 原始基底为 $\mathcal{E}$：
 
-1. **特征基矩阵 $V = [I]_{\mathcal{E} \leftarrow \mathcal{V}} = V_{[\text{origin} \leftarrow \text{eigen}]}$ 的本质**：
+1. <strong>特征基矩阵 $V = [I]_{\mathcal{E} \leftarrow \mathcal{V}} = V_{[\text{origin} \leftarrow \text{eigen}]}$ 的本质</strong>：
    矩阵 $V$ 的每一列就是各个特征向量在原始基下的坐标分量：
 
    $$
@@ -239,10 +239,10 @@ $$
    V [\mathbf{x}]_{\text{eigen}} = c_1 \mathbf{v}_1 + c_2 \mathbf{v}_2 + \dots + c_n \mathbf{v}_n = [\mathbf{x}]_{\text{origin}}
    $$
 
-   因此，$V$ 的物理角色是 **把“特征基坐标”翻译为“原始基坐标”**（即 $V_{\text{origin} \leftarrow \text{eigen}}$）。
+   因此，$V$ 的物理角色是 <strong>把“特征基坐标”翻译为“原始基坐标”</strong>（即 $V_{\text{origin} \leftarrow \text{eigen}}$）。
 
-2. **逆矩阵 $V^{-1} = [I]_{\mathcal{V} \leftarrow \mathcal{E}} = V^{-1}_{[\text{eigen} \leftarrow \text{origin}]}$ 的本质**：
-   求逆之后映射方向自然颠倒，负责 **把“原始基坐标”分解并翻译到“特征基坐标系”**：
+2. <strong>逆矩阵 $V^{-1} = [I]_{\mathcal{V} \leftarrow \mathcal{E}} = V^{-1}_{[\text{eigen} \leftarrow \text{origin}]}$ 的本质</strong>：
+   求逆之后映射方向自然颠倒，负责 <strong>把“原始基坐标”分解并翻译到“特征基坐标系”</strong>：
    $$
    [\mathbf{x}]_{\text{eigen}} = V^{-1} [\mathbf{x}]_{\text{origin}}
    $$
@@ -253,18 +253,18 @@ $$
 \underbrace{[T]_{\mathcal{E}}}_{A} = \underbrace{[I]_{\mathcal{E}\leftarrow\mathcal{V}}}_{V_{[\text{origin} \leftarrow \text{eigen}]}} \cdot \underbrace{[T]_{\mathcal{V}}}_{\Lambda_{[\text{eigen}]}} \cdot \underbrace{[I]_{\mathcal{V}\leftarrow\mathcal{E}}}_{V^{-1}_{[\text{eigen} \leftarrow \text{origin}]}} \quad \implies \quad \boxed{A = V \Lambda V^{-1}}
 $$
 
-1. **第一步（对齐主轴，切换视角）：乘 $V^{-1}_{[\text{eigen} \leftarrow \text{origin}]}$**
-   将原始基下的坐标向量 $[\mathbf{x}]_{\text{origin}}$ 投射 / 翻译到 **特征向量坐标系** 中：$[\mathbf{x}]_{\text{eigen}} = V^{-1} [\mathbf{x}]_{\text{origin}}$；
-2. **第二步（独立缩放，完全解耦）：乘 $\Lambda_{[\text{eigen}]}$**
+1. <strong>第一步（对齐主轴，切换视角）：乘 $V^{-1}_{[\text{eigen} \leftarrow \text{origin}]}$</strong>
+   将原始基下的坐标向量 $[\mathbf{x}]_{\text{origin}}$ 投射 / 翻译到 <strong>特征向量坐标系</strong> 中：$[\mathbf{x}]_{\text{eigen}} = V^{-1} [\mathbf{x}]_{\text{origin}}$；
+2. <strong>第二步（独立缩放，完全解耦）：乘 $\Lambda_{[\text{eigen}]}$</strong>
    在特征基的世界里，各坐标轴之间完全解耦、不存在任何剪切或旋转，每个特征轴独立伸缩 $\lambda_j$ 倍：$[\mathbf{y}]_{\text{eigen}} = \Lambda [\mathbf{x}]_{\text{eigen}}$；
-3. **第三步（还原姿态，重返现实）：乘 $V_{[\text{origin} \leftarrow \text{eigen}]}$**
+3. <strong>第三步（还原姿态，重返现实）：乘 $V_{[\text{origin} \leftarrow \text{eigen}]}$</strong>
    将缩放完成的特征基坐标，重新翻译并搬回原始世界坐标系：$[\mathbf{y}]_{\text{origin}} = V [\mathbf{y}]_{\text{eigen}}$。
 
 ---
 
 ### 4.3 谱展开（Spectral Expansion）：秩 1 投影外积和式
 
-除了将矩阵视为三个方阵连乘 $A = V \Lambda V^{-1}$ 外，特征值分解还有一个更加深刻的代数表象——**谱展开式（Spectral Expansion）**。
+除了将矩阵视为三个方阵连乘 $A = V \Lambda V^{-1}$ 外，特征值分解还有一个更加深刻的代数表象——<strong>谱展开式（Spectral Expansion）</strong>。
 
 记逆矩阵 $V^{-1}$ 的每一行为行向量 $\mathbf{w}_i^\top$：
 
@@ -284,27 +284,27 @@ $$
 A = \begin{pmatrix} \mathbf{v}_1 & \cdots & \mathbf{v}_n \end{pmatrix} \begin{pmatrix} \lambda_1 & & 0 \\ & \ddots & \\ 0 & & \lambda_n \end{pmatrix} \begin{pmatrix} \mathbf{w}_1^\top \\ \vdots \\ \mathbf{w}_n^\top \end{pmatrix} = \begin{pmatrix} \lambda_1 \mathbf{v}_1 & \cdots & \lambda_n \mathbf{v}_n \end{pmatrix} \begin{pmatrix} \mathbf{w}_1^\top \\ \vdots \\ \mathbf{w}_n^\top \end{pmatrix}
 $$
 
-由此得到特征值分解的 **外积谱展开求和公式**：
+由此得到特征值分解的 <strong>外积谱展开求和公式</strong>：
 
 $$
 \boxed{A = \sum_{i=1}^n \lambda_i \mathbf{v}_i \mathbf{w}_i^\top = \lambda_1 \mathbf{v}_1 \mathbf{w}_1^\top + \lambda_2 \mathbf{v}_2 \mathbf{w}_2^\top + \dots + \lambda_n \mathbf{v}_n \mathbf{w}_n^\top}
 $$
 
-> 💡 **谱展开的几何算子意义**：
+> 💡 <strong>谱展开的几何算子意义</strong>：
 >
-> 每一个项 $P_i = \mathbf{v}_i \mathbf{w}_i^\top$ 都是一个 **秩 1 投影矩阵（Rank-1 Projector）**，满足：
+> 每一个项 $P_i = \mathbf{v}_i \mathbf{w}_i^\top$ 都是一个 <strong>秩 1 投影矩阵（Rank-1 Projector）</strong>，满足：
 >
-> 1. **幂等性**：$P_i^2 = (\mathbf{v}_i \mathbf{w}_i^\top)(\mathbf{v}_i \mathbf{w}_i^\top) = \mathbf{v}_i (\mathbf{w}_i^\top \mathbf{v}_i) \mathbf{w}_i^\top = \mathbf{v}_i (1) \mathbf{w}_i^\top = P_i$；
-> 2. **互斥性**：$P_i P_j = \mathbf{0} \quad (i \neq j)$；
-> 3. **完备单位分解**：$\sum_{i=1}^n P_i = I$。
+> 1. <strong>幂等性</strong>：$P_i^2 = (\mathbf{v}_i \mathbf{w}_i^\top)(\mathbf{v}_i \mathbf{w}_i^\top) = \mathbf{v}_i (\mathbf{w}_i^\top \mathbf{v}_i) \mathbf{w}_i^\top = \mathbf{v}_i (1) \mathbf{w}_i^\top = P_i$；
+> 2. <strong>互斥性</strong>：$P_i P_j = \mathbf{0} \quad (i \neq j)$；
+> 3. <strong>完备单位分解</strong>：$\sum_{i=1}^n P_i = I$。
 >
-> 这表明：**任意可对角化矩阵 $A$ 都可以无损拆解为 $n$ 个独立 1 维投影算子的加权线性组合，权重正是特征值 $\lambda_i$**！
+> 这表明：<strong>任意可对角化矩阵 $A$ 都可以无损拆解为 $n$ 个独立 1 维投影算子的加权线性组合，权重正是特征值 $\lambda_i$</strong>！
 
 ---
 
 ### 4.4 常规对角化的特征基底为何通常不正交（斜交基）？
 
-一个至关重要的几何事实是：**常规特征值分解 $A = V \Lambda V^{-1}$ 仅保证特征基底彼此“线性无关”，绝不保证它们“相互正交”！**
+一个至关重要的几何事实是：<strong>常规特征值分解 $A = V \Lambda V^{-1}$ 仅保证特征基底彼此“线性无关”，绝不保证它们“相互正交”！</strong>
 
 #### 极简反例：夹角为 $45^\circ$ 的常规特征基底
 
@@ -314,42 +314,42 @@ $$
 A = \begin{pmatrix} 1 & 2 \\ 0 & 3 \end{pmatrix}
 $$
 
-1. **特征值**：上三角矩阵对角元即特征值，$\lambda_1 = 1, \; \lambda_2 = 3$（两互异实根，必可对角化）；
-2. **特征向量**：
+1. <strong>特征值</strong>：上三角矩阵对角元即特征值，$\lambda_1 = 1, \; \lambda_2 = 3$（两互异实根，必可对角化）；
+2. <strong>特征向量</strong>：
    - 对 $\lambda_1 = 1$：$(A - I)\mathbf{v}_1 = \begin{pmatrix} 0 & 2 \\ 0 & 2 \end{pmatrix}\mathbf{v}_1 = \mathbf{0} \implies \mathbf{v}_1 = \begin{pmatrix} 1 \\ 0 \end{pmatrix}$；
    - 对 $\lambda_2 = 3$：$(A - 3I)\mathbf{v}_2 = \begin{pmatrix} -2 & 2 \\ 0 & 0 \end{pmatrix}\mathbf{v}_2 = \mathbf{0} \implies \mathbf{v}_2 = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$；
-3. **检验正交性**：
+3. <strong>检验正交性</strong>：
    $$
    \mathbf{v}_1 \cdot \mathbf{v}_2 = 1 \times 1 + 0 \times 1 = 1 \neq 0 \implies \theta = \arccos\left(\frac{1}{\sqrt{2}}\right) = 45^\circ
    $$
 
-两个特征向量的夹角是 $45^\circ$！此时过渡矩阵 $V = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$ **不是正交矩阵**，其逆矩阵 $V^{-1} = \begin{pmatrix} 1 & -1 \\ 0 & 1 \end{pmatrix} \neq V^\top$。虽然特征值分解成立，但在几何上特征坐标轴是倾斜的（斜交基），变换存在剪切与形变。
+两个特征向量的夹角是 $45^\circ$！此时过渡矩阵 $V = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$ <strong>不是正交矩阵</strong>，其逆矩阵 $V^{-1} = \begin{pmatrix} 1 & -1 \\ 0 & 1 \end{pmatrix} \neq V^\top$。虽然特征值分解成立，但在几何上特征坐标轴是倾斜的（斜交基），变换存在剪切与形变。
 
 ---
 
 ### 4.5 矩阵分解全景透视：特征值分解 vs 奇异值分解（SVD）
 
-为了建立现代线性代数矩阵分解的全局图景，我们将 **特征值分解（Eigendecomposition）** 与 [《奇异值分解（SVD）》](/posts/linear-algebra/singular-value-decomposition) 进行系统横向对比：
+为了建立现代线性代数矩阵分解的全局图景，我们将 <strong>特征值分解（Eigendecomposition）</strong> 与 [《奇异值分解（SVD）》](/posts/linear-algebra/singular-value-decomposition) 进行系统横向对比：
 
 | 核心维度           | 特征值分解（Eigendecomposition）                                                         | 奇异值分解（SVD）                                                                                          |
 | :----------------- | :--------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
-| **适用矩阵类型**   | **仅限方阵**（$n \times n$），且必须满足 $\operatorname{GM}=\operatorname{AM}$（非亏损） | **任意实数/复数矩阵**（$m \times n$，方阵或长方阵均可）                                                    |
-| **代数分解形式**   | $A = V \Lambda V^{-1}$                                                                   | $A = U \Sigma V^\top$                                                                                      |
-| **基底空间与性质** | **单参考系切换**：输入与输出使用同组特征基底 $V$（一般为斜交基）                         | **双参考系正交解耦**：输入基底 $V \in \mathrm{O}(n)$，输出基底 $U \in \mathrm{O}(m)$（两组独立标准正交基） |
-| **几何动作拆解**   | 坐标斜投影 $\to$ 沿特征主轴纯伸缩 $\to$ 返回原空间                                       | 正交旋转/反射 $V^\top \to$ 沿主轴非负拉伸 $\Sigma \to$ 目标空间正交旋转/反射 $U$                           |
-| **外积谱展开式**   | $A = \sum_{i=1}^n \lambda_i \mathbf{v}_i \mathbf{w}_i^\top$（斜投影算子加权）            | $A = \sum_{i=1}^r \sigma_i \mathbf{u}_i \mathbf{v}_i^\top$（标准正交外积展开）                             |
-| **主要计算应用**   | **矩阵幂次 $A^k$、微分方程矩阵指数 $e^{At}$、离散马尔可夫链**                            | **数据降维（PCA）、伪逆（Pseudoinverse）、图像压缩、低秩近似**                                             |
+| <strong>适用矩阵类型</strong>   | <strong>仅限方阵</strong>（$n \times n$），且必须满足 $\operatorname{GM}=\operatorname{AM}$（非亏损） | <strong>任意实数/复数矩阵</strong>（$m \times n$，方阵或长方阵均可）                                                    |
+| <strong>代数分解形式</strong>   | $A = V \Lambda V^{-1}$                                                                   | $A = U \Sigma V^\top$                                                                                      |
+| <strong>基底空间与性质</strong> | <strong>单参考系切换</strong>：输入与输出使用同组特征基底 $V$（一般为斜交基）                         | <strong>双参考系正交解耦</strong>：输入基底 $V \in \mathrm{O}(n)$，输出基底 $U \in \mathrm{O}(m)$（两组独立标准正交基） |
+| <strong>几何动作拆解</strong>   | 坐标斜投影 $\to$ 沿特征主轴纯伸缩 $\to$ 返回原空间                                       | 正交旋转/反射 $V^\top \to$ 沿主轴非负拉伸 $\Sigma \to$ 目标空间正交旋转/反射 $U$                           |
+| <strong>外积谱展开式</strong>   | $A = \sum_{i=1}^n \lambda_i \mathbf{v}_i \mathbf{w}_i^\top$（斜投影算子加权）            | $A = \sum_{i=1}^r \sigma_i \mathbf{u}_i \mathbf{v}_i^\top$（标准正交外积展开）                             |
+| <strong>主要计算应用</strong>   | <strong>矩阵幂次 $A^k$、微分方程矩阵指数 $e^{At}$、离散马尔可夫链</strong>                            | <strong>数据降维（PCA）、伪逆（Pseudoinverse）、图像压缩、低秩近似</strong>                                             |
 
 #### 为什么特征值分解是矩阵函数计算的唯一利器？
 
 对于方阵的幂次与复杂解析函数 $f(A)$，特征值分解拥有不可替代的计算代数优势：
 
-1. **高维矩阵幂次（Matrix Powers）**：
+1. <strong>高维矩阵幂次（Matrix Powers）</strong>：
    由于中间项全自动抵消（$V^{-1} V = I$）：
    $$
    A^k = (V \Lambda V^{-1})^k = V \Lambda^k V^{-1} = \sum_{i=1}^n \lambda_i^k \mathbf{v}_i \mathbf{w}_i^\top
    $$
-2. **微分方程与矩阵指数（Matrix Exponential）**：
+2. <strong>微分方程与矩阵指数（Matrix Exponential）</strong>：
    对于常微分方程组 $\frac{d\mathbf{x}}{dt} = A \mathbf{x}$，其精确解析解由矩阵指数 $e^{At}$ 给出：
    $$
    e^{At} = \sum_{k=0}^\infty \frac{(At)^k}{k!} = V \left( \sum_{k=0}^\infty \frac{(\Lambda t)^k}{k!} \right) V^{-1} = V \begin{pmatrix} e^{\lambda_1 t} & & 0 \\ & \ddots & \\ 0 & & e^{\lambda_n t} \end{pmatrix} V^{-1} = \sum_{i=1}^n e^{\lambda_i t} \mathbf{v}_i \mathbf{w}_i^\top
@@ -369,30 +369,30 @@ $$
 
 对向量 $\mathbf{v}$ 作用矩阵 $A$：
 
-- 在特征值分解中，相当于用标量 $\lambda$ **缩放原向量 $\mathbf{v}$ 自身**（输出向量留在原向量张成的直线上，同向自缩放）；
-- 在 SVD 分解中，相当于用标量 $\sigma_i$ **缩放输出空间中的新正交基底向量 $\mathbf{u}_i$**（跨空间正交映射）。
+- 在特征值分解中，相当于用标量 $\lambda$ <strong>缩放原向量 $\mathbf{v}$ 自身</strong>（输出向量留在原向量张成的直线上，同向自缩放）；
+- 在 SVD 分解中，相当于用标量 $\sigma_i$ <strong>缩放输出空间中的新正交基底向量 $\mathbf{u}_i$</strong>（跨空间正交映射）。
 
-> 🌟 **两者的完美大一统**：
+> 🌟 <strong>两者的完美大一统</strong>：
 >
-> 当矩阵 $A$ 为 **实对称正定矩阵（SPD）** 时，由于其特征向量组天然构成标准正交基，此时输出基底恰好与输入基底重合（$\mathbf{u}_i = \mathbf{v}_i$），且奇异值恰好等于特征值（$\sigma_i = \lambda_i > 0$）；
+> 当矩阵 $A$ 为 <strong>实对称正定矩阵（SPD）</strong> 时，由于其特征向量组天然构成标准正交基，此时输出基底恰好与输入基底重合（$\mathbf{u}_i = \mathbf{v}_i$），且奇异值恰好等于特征值（$\sigma_i = \lambda_i > 0$）；
 >
-> 此时 **SVD 奇异方程与特征值方程完全重合、殊途同归**！SVD 本质上正是特征值分解在更广阔、更普适空间中的终极推广（关于任意长宽矩阵的正交分解与几何三部曲，[详见后续进阶专题《奇异值分解（SVD）》](/posts/linear-algebra/singular-value-decomposition#11-核心思想的大一统从特征方程-amathbfv--lambda-mathbfv-到奇异方程-amathbfv--sigma-mathbfu)）。
+> 此时 <strong>SVD 奇异方程与特征值方程完全重合、殊途同归</strong>！SVD 本质上正是特征值分解在更广阔、更普适空间中的终极推广（关于任意长宽矩阵的正交分解与几何三部曲，[详见后续进阶专题《奇异值分解（SVD）》](/posts/linear-algebra/singular-value-decomposition#11-核心思想的大一统从特征方程-amathbfv--lambda-mathbfv-到奇异方程-amathbfv--sigma-mathbfu)）。
 
 ---
 
 ## 五、对称矩阵与谱定理(Spectral Theorem)
 
-在计算机图形学、物理学与几何处理中，**实对称矩阵($A = A^\top$)** 具有无与伦比的优雅性质。
+在计算机图形学、物理学与几何处理中，<strong>实对称矩阵($A = A^\top$)</strong> 具有无与伦比的优雅性质。
 
 ### 1. 谱定理（Spectral Theorem）核心断言
 
-> 🌟 **核心定理**：**任何实对称矩阵（Real Symmetric Matrix）都必定存在一组由特征向量构成的标准正交基（Orthonormal Eigenbasis）。**
+> 🌟 <strong>核心定理</strong>：<strong>任何实对称矩阵（Real Symmetric Matrix）都必定存在一组由特征向量构成的标准正交基（Orthonormal Eigenbasis）。</strong>
 
 具体包含三大递进性质：
 
-1. **特征值全为实数**：即使特征方程在复数域求解，实对称矩阵的所有根 $\lambda_i$ 必定是**纯实数**，绝不包含虚部；
-2. **特征向量天然正交**：属于不同特征值的特征向量**彼此严格垂直正交**（$\mathbf{v}_i \perp \mathbf{v}_j$）；
-3. **可正交对角化**：$A = Q \Lambda Q^\top$（其中 $Q$ 为正交矩阵，满足 $Q^{-1} = Q^\top$）。
+1. <strong>特征值全为实数</strong>：即使特征方程在复数域求解，实对称矩阵的所有根 $\lambda_i$ 必定是<strong>纯实数</strong>，绝不包含虚部；
+2. <strong>特征向量天然正交</strong>：属于不同特征值的特征向量<strong>彼此严格垂直正交</strong>（$\mathbf{v}_i \perp \mathbf{v}_j$）；
+3. <strong>可正交对角化</strong>：$A = Q \Lambda Q^\top$（其中 $Q$ 为正交矩阵，满足 $Q^{-1} = Q^\top$）。
 
 ---
 
@@ -400,7 +400,7 @@ $$
 
 这是线性代数中最具代表性的“左右互搏”对称推导：
 
-设 $A$ 为实对称矩阵（$A = A^\top$），有两个**不同的特征值** $\lambda_1 \neq \lambda_2$，对应特征向量分别为 $\mathbf{v}_1, \mathbf{v}_2$：
+设 $A$ 为实对称矩阵（$A = A^\top$），有两个<strong>不同的特征值</strong> $\lambda_1 \neq \lambda_2$，对应特征向量分别为 $\mathbf{v}_1, \mathbf{v}_2$：
 
 $$
 A \mathbf{v}_1 = \lambda_1 \mathbf{v}_1, \qquad A \mathbf{v}_2 = \lambda_2 \mathbf{v}_2
@@ -408,13 +408,13 @@ $$
 
 我们从两个不同方向来计算内积 $(A \mathbf{v}_1) \cdot \mathbf{v}_2$：
 
-1. **从左边计算（把 $A$ 看作作用在 $\mathbf{v}_1$ 上）**：
+1. <strong>从左边计算（把 $A$ 看作作用在 $\mathbf{v}_1$ 上）</strong>：
 
    $$
    (A \mathbf{v}_1)^\top \mathbf{v}_2 = (\lambda_1 \mathbf{v}_1)^\top \mathbf{v}_2 = \lambda_1 (\mathbf{v}_1^\top \mathbf{v}_2)
    $$
 
-2. **从右边计算（利用矩阵转置分配律与对称性 $A^\top = A$）**：
+2. <strong>从右边计算（利用矩阵转置分配律与对称性 $A^\top = A$）</strong>：
    $$
    (A \mathbf{v}_1)^\top \mathbf{v}_2 = \mathbf{v}_1^\top A^\top \mathbf{v}_2 \xlongequal{A^\top = A} \mathbf{v}_1^\top (A \mathbf{v}_2) = \mathbf{v}_1^\top (\lambda_2 \mathbf{v}_2) = \lambda_2 (\mathbf{v}_1^\top \mathbf{v}_2)
    $$
@@ -425,13 +425,13 @@ $$
 \lambda_1 (\mathbf{v}_1^\top \mathbf{v}_2) = \lambda_2 (\mathbf{v}_1^\top \mathbf{v}_2) \implies (\lambda_1 - \lambda_2) (\mathbf{v}_1 \cdot \mathbf{v}_2) = 0
 $$
 
-因为前提是两个**互不相同的特征值**（$\lambda_1 \neq \lambda_2 \implies \lambda_1 - \lambda_2 \neq 0$），**唯一能让乘积恒为 0 的解，就是两个特征向量的点积必须严格为 0**：
+因为前提是两个<strong>互不相同的特征值</strong>（$\lambda_1 \neq \lambda_2 \implies \lambda_1 - \lambda_2 \neq 0$），<strong>唯一能让乘积恒为 0 的解，就是两个特征向量的点积必须严格为 0</strong>：
 
 $$
 \boxed{\mathbf{v}_1 \cdot \mathbf{v}_2 = 0 \iff \mathbf{v}_1 \perp \mathbf{v}_2}
 $$
 
-> **代数物理本质**：实对称性 $A = A^\top$ 保证了矩阵算子在内积中可以“无损跨越到另一侧”（自伴算子 Self-adjoint Operator）。当两个物理状态具有不同的本征能级（特征值）时，算子的自伴性强行逼迫它们在几何空间中必须处于完全互不相干的直角方向！
+> <strong>代数物理本质</strong>：实对称性 $A = A^\top$ 保证了矩阵算子在内积中可以“无损跨越到另一侧”（自伴算子 Self-adjoint Operator）。当两个物理状态具有不同的本征能级（特征值）时，算子的自伴性强行逼迫它们在几何空间中必须处于完全互不相干的直角方向！
 
 ---
 
@@ -439,11 +439,11 @@ $$
 
 如果特征多项式出现 $k$ 重根（例如 $\lambda_1 = \lambda_2$）：
 
-- **永远不亏损**：代数定理保证实对称矩阵的几何重数恒等于代数重数（$\operatorname{GM} = \operatorname{AM} = k$），特征子空间 $E(\lambda)$ 的维度恰好为 $k$；
-- **Gram-Schmidt 正交化**：在该子空间内任选一组基，通过 [Gram-Schmidt 正交化](/posts/linear-algebra/gram-matrix#四gram-schmidt-正交化与-qr-分解) 即可构造出 $k$ 个彼此严格垂直的特征向量；
-- **单位化（Normalization）**：将所有特征向量除以自身模长 $\mathbf{q}_i = \frac{\mathbf{v}_i}{\|\mathbf{v}_i\|}$。
+- <strong>永远不亏损</strong>：代数定理保证实对称矩阵的几何重数恒等于代数重数（$\operatorname{GM} = \operatorname{AM} = k$），特征子空间 $E(\lambda)$ 的维度恰好为 $k$；
+- <strong>Gram-Schmidt 正交化</strong>：在该子空间内任选一组基，通过 [Gram-Schmidt 正交化](/posts/linear-algebra/gram-matrix#四gram-schmidt-正交化与-qr-分解) 即可构造出 $k$ 个彼此严格垂直的特征向量；
+- <strong>单位化（Normalization）</strong>：将所有特征向量除以自身模长 $\mathbf{q}_i = \frac{\mathbf{v}_i}{\|\mathbf{v}_i\|}$。
 
-最终，我们必定能够在整个空间中凑齐一组**标准正交特征基底（Orthonormal Eigenbasis）** $(\mathbf{q}_1, \mathbf{q}_2, \dots, \mathbf{q}_n)$，满足：
+最终，我们必定能够在整个空间中凑齐一组<strong>标准正交特征基底（Orthonormal Eigenbasis）</strong> $(\mathbf{q}_1, \mathbf{q}_2, \dots, \mathbf{q}_n)$，满足：
 
 $$
 \mathbf{q}_i \cdot \mathbf{q}_j = \delta_{ij} = \begin{cases} 1, & i = j \\ 0, & i \neq j \end{cases}
@@ -455,31 +455,31 @@ $$
 
 将这组标准正交特征基底按列拼成过渡矩阵 $Q = (\mathbf{q}_1, \mathbf{q}_2, \dots, \mathbf{q}_n)$。由于各列正交归一，矩阵 $Q$ 是标准正交矩阵，天然满足 $Q^\top Q = I \implies Q^{-1} = Q^\top$。
 
-一般对角化公式中的求逆运算直接退化为转置，得到 **正交对角化（Orthogonal Diagonalization）**：
+一般对角化公式中的求逆运算直接退化为转置，得到 <strong>正交对角化（Orthogonal Diagonalization）</strong>：
 
 $$
 \boxed{A = Q \Lambda Q^\top = \begin{pmatrix} | & & | \\ \mathbf{q}_1 & \dots & \mathbf{q}_n \\ | & & | \end{pmatrix} \begin{pmatrix} \lambda_1 & & 0 \\ & \ddots & \\ 0 & & \lambda_n \end{pmatrix} \begin{pmatrix} \text{---} & \mathbf{q}_1^\top & \text{---} \\ & \vdots & \\ \text{---} & \mathbf{q}_n^\top & \text{---} \end{pmatrix}}
 $$
 
-进一步将矩阵乘法按外积展开，即得经典的 **谱分解（Spectral Decomposition）**：
+进一步将矩阵乘法按外积展开，即得经典的 <strong>谱分解（Spectral Decomposition）</strong>：
 
 $$
 \boxed{A = \sum_{i=1}^n \lambda_i \mathbf{q}_i \mathbf{q}_i^\top = \lambda_1 \mathbf{q}_1 \mathbf{q}_1^\top + \lambda_2 \mathbf{q}_2 \mathbf{q}_2^\top + \dots + \lambda_n \mathbf{q}_n \mathbf{q}_n^\top}
 $$
 
-每个 $\mathbf{q}_i \mathbf{q}_i^\top$ 都是一个秩为 1 的标准 **正交投影矩阵**（向 $\mathbf{q}_i$ 所在的一维直线投影）。这揭示了实对称矩阵的终极几何图景：**任何实对称矩阵变换，本质上就是先将空间投影到各个互相垂直的主轴上，再各自乘以特征值 $\lambda_i$ 进行独立拉伸后的叠加！**
+每个 $\mathbf{q}_i \mathbf{q}_i^\top$ 都是一个秩为 1 的标准 <strong>正交投影矩阵</strong>（向 $\mathbf{q}_i$ 所在的一维直线投影）。这揭示了实对称矩阵的终极几何图景：<strong>任何实对称矩阵变换，本质上就是先将空间投影到各个互相垂直的主轴上，再各自乘以特征值 $\lambda_i$ 进行独立拉伸后的叠加！</strong>
 
-> 💡 **核心洞察（Key Takeaway）：实对称矩阵与正交特征基底**
+> 💡 <strong>核心洞察（Key Takeaway）：实对称矩阵与正交特征基底</strong>
 >
-> - **刚性直角保持**：普通矩阵对角化时，特征向量基底往往是斜交的（非直角）；而实对称矩阵的特征基底 **在几何上永远保持 $90^\circ$ 刚性垂直**；
-> - **求逆等价于转置**：基变换矩阵 $Q$ 满足 $Q^{-1} = Q^\top$，坐标切换无需复杂的矩阵求逆，计算稳定性极高；
-> - **物理与图形学天然主轴**：在 3D 刚体惯性张量（Inertia Tensor）、应力张量（Stress Tensor）、点云协方差矩阵（PCA）中，实对称矩阵的正交特征向量就是物体或数据的 **天然主轴坐标系**。
+> - <strong>刚性直角保持</strong>：普通矩阵对角化时，特征向量基底往往是斜交的（非直角）；而实对称矩阵的特征基底 <strong>在几何上永远保持 $90^\circ$ 刚性垂直</strong>；
+> - <strong>求逆等价于转置</strong>：基变换矩阵 $Q$ 满足 $Q^{-1} = Q^\top$，坐标切换无需复杂的矩阵求逆，计算稳定性极高；
+> - <strong>物理与图形学天然主轴</strong>：在 3D 刚体惯性张量（Inertia Tensor）、应力张量（Stress Tensor）、点云协方差矩阵（PCA）中，实对称矩阵的正交特征向量就是物体或数据的 <strong>天然主轴坐标系</strong>。
 
 ---
 
 ### 5. 几何主轴定理：单位圆到椭圆的映射
 
-实对称矩阵将几何单位圆 $S^1 = \{\mathbf{x} \mid \|\mathbf{x}\| = 1\}$ 映射为一个 **主轴椭圆**：
+实对称矩阵将几何单位圆 $S^1 = \{\mathbf{x} \mid \|\mathbf{x}\| = 1\}$ 映射为一个 <strong>主轴椭圆</strong>：
 
 - 椭圆的长轴与短轴方向恰好是 $A$ 的两个相互正交的特征向量 $\mathbf{q}_1, \mathbf{q}_2$；
 - 椭圆的半轴长度恰好等于特征值的绝对值 $|\lambda_1|, |\lambda_2|$。
@@ -488,7 +488,7 @@ $$
 
 ## 六、正定矩阵、二次型与能量椭球 (Positive Definite Matrices & Quadratic Forms)
 
-当实对称矩阵的所有特征值不仅为实数，而且**严格大于零**时，它便升华成了线性代数与图形学中最为核心的算子——**对称正定矩阵 (Symmetric Positive Definite, 简称 SPD)**。
+当实对称矩阵的所有特征值不仅为实数，而且<strong>严格大于零</strong>时，它便升华成了线性代数与图形学中最为核心的算子——<strong>对称正定矩阵 (Symmetric Positive Definite, 简称 SPD)</strong>。
 
 ### 6.1 二次型能量函数 (Quadratic Form)
 
@@ -504,21 +504,21 @@ $$
 \mathbf x^\top A \mathbf x > 0 \quad (\forall \mathbf x \in \mathbb{R}^n, \mathbf x \neq \mathbf 0)
 $$
 
-则称矩阵 $A$ 为 **对称正定矩阵** ，记作 $A \succ 0$。若条件放宽为 $\mathbf x^\top A \mathbf x \ge 0$，则称为 **半正定矩阵 (Positive Semi-Definite)** ，记作 $A \succeq 0$。
+则称矩阵 $A$ 为 <strong>对称正定矩阵</strong> ，记作 $A \succ 0$。若条件放宽为 $\mathbf x^\top A \mathbf x \ge 0$，则称为 <strong>半正定矩阵 (Positive Semi-Definite)</strong> ，记作 $A \succeq 0$。
 
 ### 6.2 正定矩阵的 5 大等价判定
 
 在线性代数中，一个实对称矩阵 $A$ 是正定的，当且仅当满足以下 5 大等价判据之一：
 
-1. **特征值判据 (All Eigenvalues Positive)** ：
+1. <strong>特征值判据 (All Eigenvalues Positive)</strong> ：
    - $A$ 的所有特征值严格为正：$\lambda_1, \lambda_2, \dots, \lambda_n > 0$。
-2. **二次型能量判据 (Energy Positivity)** ：
+2. <strong>二次型能量判据 (Energy Positivity)</strong> ：
    - 对任意非零向量 $\mathbf x \neq \mathbf 0$，恒有能量 $\mathbf x^\top A \mathbf x > 0$。
-3. **顺序主子式判据 (Sylvester Criterion)** ：
+3. <strong>顺序主子式判据 (Sylvester Criterion)</strong> ：
    - $A$ 的所有 $k$ 阶前导顺序主子式严格大于零：$\det(A_k) > 0$ ($k = 1, 2, \dots, n$)。
-4. **消元主元判据 (Positive Pivots)** ：
+4. <strong>消元主元判据 (Positive Pivots)</strong> ：
    - 在高斯消元法中，无需行交换，所有对角主元严格为正：$d_1, d_2, \dots, d_n > 0$。
-5. **Cholesky 分解判据 (Cholesky Factorization)** ：
+5. <strong>Cholesky 分解判据 (Cholesky Factorization)</strong> ：
    - 存在唯一的对角元全为正数的下三角矩阵 $L$，使得 $A = L L^\top$（矩阵的“算术平方根”分解）。
 
 ### 6.3 谱定理下的二次型对角化与能量椭球
@@ -529,24 +529,24 @@ $$
 \mathbf x^\top A \mathbf x = (Q \mathbf y)^\top A (Q \mathbf y) = \mathbf y^\top (Q^\top A Q) \mathbf y = \mathbf y^\top \Lambda \mathbf y = \sum_{i=1}^n \lambda_i y_i^2
 $$
 
-- **能量曲面 (Energy Surface)** ：三维函数图像 $z = \mathbf x^\top A \mathbf x$ 是一个开口向上、以原点为唯一定域极小值点的**碗状椭圆抛物面**；
-- **等值线能量椭球 (Energy Ellipsoid)** ：令二次型能量等于常数 $1$（$\mathbf x^\top A \mathbf x = 1$），展开即得标准椭球方程：
+- <strong>能量曲面 (Energy Surface)</strong> ：三维函数图像 $z = \mathbf x^\top A \mathbf x$ 是一个开口向上、以原点为唯一定域极小值点的<strong>碗状椭圆抛物面</strong>；
+- <strong>等值线能量椭球 (Energy Ellipsoid)</strong> ：令二次型能量等于常数 $1$（$\mathbf x^\top A \mathbf x = 1$），展开即得标准椭球方程：
   $$
   \sum_{i=1}^n \lambda_i y_i^2 = 1 \iff \sum_{i=1}^n \frac{y_i^2}{(1/\sqrt{\lambda_i})^2} = 1
   $$
-  - **椭球的主轴方向** ：严格沿着相互正交的特征向量 $\mathbf q_1, \dots, \mathbf q_n$ 方向；
-  - **椭球的半轴长度** ：恰好等于特征值的逆平方根 $\frac{1}{\sqrt{\lambda_i}}$。特征值 $\lambda_i$ 越大，该方向能量上升越陡峭，等能椭球在该轴上的截距越短。
+  - <strong>椭球的主轴方向</strong> ：严格沿着相互正交的特征向量 $\mathbf q_1, \dots, \mathbf q_n$ 方向；
+  - <strong>椭球的半轴长度</strong> ：恰好等于特征值的逆平方根 $\frac{1}{\sqrt{\lambda_i}}$。特征值 $\lambda_i$ 越大，该方向能量上升越陡峭，等能椭球在该轴上的截距越短。
 
 ### 6.4 度规张量与微分几何应用 (Metric Tensor)
 
-正定矩阵不仅是一个代数算子，更在几何上天然定义了**空间距离与角度的测量标尺（度规）**：
+正定矩阵不仅是一个代数算子，更在几何上天然定义了<strong>空间距离与角度的测量标尺（度规）</strong>：
 
-- **诱导广义内积** ：任何对称正定矩阵 $A \succ 0$ 均可诱导一个合法的内积 $\langle \mathbf u, \mathbf v \rangle_A = \mathbf u^\top A \mathbf v$ 与加权能量范数 $\|\mathbf v\|_A = \sqrt{\mathbf v^\top A \mathbf v}$；
-- **参数曲面的第一基本形式** ：在图形学与微分几何中，三维参数曲面 $\mathbf r(u, v)$ 的切平面度规张量（第一基本形式矩阵）为：
+- <strong>诱导广义内积</strong> ：任何对称正定矩阵 $A \succ 0$ 均可诱导一个合法的内积 $\langle \mathbf u, \mathbf v \rangle_A = \mathbf u^\top A \mathbf v$ 与加权能量范数 $\|\mathbf v\|_A = \sqrt{\mathbf v^\top A \mathbf v}$；
+- <strong>参数曲面的第一基本形式</strong> ：在图形学与微分几何中，三维参数曲面 $\mathbf r(u, v)$ 的切平面度规张量（第一基本形式矩阵）为：
   $$
   I = \begin{pmatrix} E & F \\ F & G \end{pmatrix} = \begin{pmatrix} \mathbf r_u \cdot \mathbf r_u & \mathbf r_u \cdot \mathbf r_v \\ \mathbf r_v \cdot \mathbf r_u & \mathbf r_v \cdot \mathbf r_v \end{pmatrix} = J^\top J
   $$
-  只要曲面无奇异自交折叠（参数导数线性无关），度规张量 $I$ 必然是**严格对称正定矩阵**。它精确衡量了参数空间微位移 $\mathrm{d}\mathbf u = (\mathrm{d}u, \mathrm{d}v)^\top$ 映射到曲面上的实际物理微弧长平方：
+  只要曲面无奇异自交折叠（参数导数线性无关），度规张量 $I$ 必然是<strong>严格对称正定矩阵</strong>。它精确衡量了参数空间微位移 $\mathrm{d}\mathbf u = (\mathrm{d}u, \mathrm{d}v)^\top$ 映射到曲面上的实际物理微弧长平方：
   $$
   \mathrm{d}s^2 = \mathrm{d}\mathbf u^\top I \, \mathrm{d}\mathbf u = E \, \mathrm{d}u^2 + 2F \, \mathrm{d}u \, \mathrm{d}v + G \, \mathrm{d}v^2 > 0
   $$
@@ -558,9 +558,9 @@ $$
 
 在下方的交互实验中，你可以直观探索特征几何的奇妙机制：
 
-1. **特征方向探测器** ：拖动探测角度滑块 $\theta$ 旋转紫色向量 $\mathbf x$，实时观察变换后的向量 $A \mathbf x$。当 $\mathbf x$ 旋转到与 $A \mathbf x$ 共线时（高亮为绿色光晕），即找到了特征向量与特征轴！
-2. **谱定理与主轴椭圆** ：直观观察虚线单位圆在矩阵 $A$ 作用下如何被拉伸为主轴椭圆，椭圆的对称主轴正是特征向量方向；
-3. **特征基底对角化** ：观察在特征基底观察下，复杂的矩阵变换是如何还原为纯粹的独立拉伸。
+1. <strong>特征方向探测器</strong> ：拖动探测角度滑块 $\theta$ 旋转紫色向量 $\mathbf x$，实时观察变换后的向量 $A \mathbf x$。当 $\mathbf x$ 旋转到与 $A \mathbf x$ 共线时（高亮为绿色光晕），即找到了特征向量与特征轴！
+2. <strong>谱定理与主轴椭圆</strong> ：直观观察虚线单位圆在矩阵 $A$ 作用下如何被拉伸为主轴椭圆，椭圆的对称主轴正是特征向量方向；
+3. <strong>特征基底对角化</strong> ：观察在特征基底观察下，复杂的矩阵变换是如何还原为纯粹的独立拉伸。
 
 <EigenDemo client:visible />
 
@@ -584,9 +584,9 @@ $$
 
 对于线性微分方程组 $\dot{\mathbf x} = A \mathbf x$：
 
-- **若所有 $\operatorname{Re}(\lambda_i) < 0$** ：系统渐近稳定，所有轨迹最终收敛于原点（稳定节点/焦点）；
-- **若存在 $\operatorname{Re}(\lambda_i) > 0$** ：系统发散失稳（不稳定节点/鞍点）；
-- **若 $\lambda_{1, 2} = \pm i \omega$（纯虚数，$\operatorname{tr}(A)=0, \det(A)>0$）** ：系统轨迹为封闭同心椭圆轨道（简谐振子中心）。
+- <strong>若所有 $\operatorname{Re}(\lambda_i) < 0$</strong> ：系统渐近稳定，所有轨迹最终收敛于原点（稳定节点/焦点）；
+- <strong>若存在 $\operatorname{Re}(\lambda_i) > 0$</strong> ：系统发散失稳（不稳定节点/鞍点）；
+- <strong>若 $\lambda_{1, 2} = \pm i \omega$（纯虚数，$\operatorname{tr}(A)=0, \det(A)>0$）</strong> ：系统轨迹为封闭同心椭圆轨道（简谐振子中心）。
 
 ---
 
@@ -594,10 +594,10 @@ $$
 
 | 概念                         | 代数表达                                                                                  | 几何/物理本质                                                                                                                                       |
 | :--------------------------- | :---------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **特征值与特征向量**         | $A \mathbf v = \lambda \mathbf v$                                                         | 线性变换中方向保持不变的主轴，$\lambda$ 为伸缩倍率                                                                                                  |
-| **特征多项式**               | $p_A(\lambda) = \det(\lambda I - A) = \lambda^2 - \operatorname{tr}(A)\lambda + \det(A)$  | 串联不变量（首一多项式，迹为负一阶项，行列式为常数项）                                                                                              |
-| **矩阵对角化**               | $A = P \Lambda P^{-1}$                                                                    | 选取特征向量为观察基底，将多维耦合变换彻底解耦（参见 [《矩阵相似、相似不变量与特征结构》](/posts/linear-algebra/matrix-similarity-and-invariants)） |
-| **实对称矩阵谱定理**         | $A = Q \Lambda Q^\top$                                                                    | 正交特征基，将单位球映射为主轴椭球（参见 [《矩阵分解全景大一统》](/posts/linear-algebra/matrix-decompositions)）                                    |
-| **对称正定矩阵 (SPD)**       | $A \succ 0 \iff \lambda_i > 0 \iff \mathbf x^\top A \mathbf x > 0$                        | 能量二次型开口向上，等高线为正交主轴能量椭球                                                                                                        |
-| **度规张量 (Metric Tensor)** | $I = J^\top J \succ 0, \mathrm{d}s^2 = \mathrm{d}\mathbf u^\top I \, \mathrm{d}\mathbf u$ | 衡量弯曲曲面局部弧长与能量的对称正定微观标尺                                                                                                        |
-| **矩阵幂与动力系统**         | $A^k = P \Lambda^k P^{-1}$                                                                | 特征基底主导了长周期的系统渐近行为与稳定性                                                                                                          |
+| <strong>特征值与特征向量</strong>         | $A \mathbf v = \lambda \mathbf v$                                                         | 线性变换中方向保持不变的主轴，$\lambda$ 为伸缩倍率                                                                                                  |
+| <strong>特征多项式</strong>               | $p_A(\lambda) = \det(\lambda I - A) = \lambda^2 - \operatorname{tr}(A)\lambda + \det(A)$  | 串联不变量（首一多项式，迹为负一阶项，行列式为常数项）                                                                                              |
+| <strong>矩阵对角化</strong>               | $A = P \Lambda P^{-1}$                                                                    | 选取特征向量为观察基底，将多维耦合变换彻底解耦（参见 [《矩阵相似、相似不变量与特征结构》](/posts/linear-algebra/matrix-similarity-and-invariants)） |
+| <strong>实对称矩阵谱定理</strong>         | $A = Q \Lambda Q^\top$                                                                    | 正交特征基，将单位球映射为主轴椭球（参见 [《矩阵分解全景大一统》](/posts/linear-algebra/matrix-decompositions)）                                    |
+| <strong>对称正定矩阵 (SPD)</strong>       | $A \succ 0 \iff \lambda_i > 0 \iff \mathbf x^\top A \mathbf x > 0$                        | 能量二次型开口向上，等高线为正交主轴能量椭球                                                                                                        |
+| <strong>度规张量 (Metric Tensor)</strong> | $I = J^\top J \succ 0, \mathrm{d}s^2 = \mathrm{d}\mathbf u^\top I \, \mathrm{d}\mathbf u$ | 衡量弯曲曲面局部弧长与能量的对称正定微观标尺                                                                                                        |
+| <strong>矩阵幂与动力系统</strong>         | $A^k = P \Lambda^k P^{-1}$                                                                | 特征基底主导了长周期的系统渐近行为与稳定性                                                                                                          |

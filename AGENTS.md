@@ -12,7 +12,7 @@ GFXVis:本地托管的图形学/可视化技术博客(Astro 静态输出 + MDX +
     - **静态字符串属性(双引号)**: 必须使用**单个反斜杠**（如 `tex="\mathbb{R}^3"`、`tex="\mathbf{b}"`），**严禁写成双反斜杠 `tex="\\..."`**（JSX 静态双引号属性不会转义反斜杠，`\\` 会被 KaTeX 解析为换行符导致公式破坏/报错）。
     - **模板字符串/JS表达式(`{...}`)**: 按 JS 规则使用**双反斜杠**（如 ``tex={`\\hat{\\mathbf{x}} = ${val}`}``，矩阵换行使用 `\\\\`）。
 - **MDX 排版**:
-  - **加粗空格规范（外侧留空，内侧严禁空格）**: 写文章时 `**...**` 加粗**外侧两端加空格、保持对称**（如 `落到 **线性组合** 上`，紧贴中文会被 CommonMark 误配，渲染成字面 `**` 或错位）；**加粗定界符内侧开头和末尾严禁加空格**（严禁写成 `** 文本 **`，CommonMark 规范中定界符内接空格将直接导致无法开闭加粗，渲染成字面 `**` 乱码）；`**` 内侧也不要包中文引号。
+  - **加粗与重点统一使用 `<strong>` 标签（严禁使用 `**...**`）**: 文章中一律使用标准 HTML/MDX 标签 `<strong>重点内容</strong>` 进行加粗强调，**严禁使用 Markdown `**...**`**。这消除了 CommonMark 规范中由内外侧空格、中英文紧贴或全角引号引发的定界符误配与乱码风险。CI 及 `pnpm validate` 会自动执行 `scripts/format-bold.ts --check` 拦截裸 `**`。
   - **标点规范**: **中文语句用全角标点**（`,;:?!` → `，；：？！`、引号用 `“”`），公式/代码/Markdown 链接保持英文标点。详见 `docs/conventions.md`"记号与命名"。
 - **TypeScript 优先**:所有支持 TypeScript 的文件必须使用 `.ts` / `.tsx`,不允许 `.js` / `.mjs` / `.cjs` 变体。
   - 配置文件同样适用:`astro.config.ts`、`eslint.config.ts`、`prettier.config.ts`(不得写成 `.mjs` / `.js`)。
@@ -26,5 +26,5 @@ GFXVis:本地托管的图形学/可视化技术博客(Astro 静态输出 + MDX +
 - `pnpm dev` — 本地开发
 - `pnpm build` — 静态构建到 `dist/`
 - `pnpm lint` — ESLint 检查
-- `pnpm format` / `pnpm format:check` — Markdown加粗空格清洗 + Prettier 格式化 / 校验
-- `pnpm format:bold` / `pnpm format:bold:check` — 独立执行加粗空格规范（外侧留空，内侧严禁空格）清洗 / 检查
+- `pnpm format` / `pnpm format:check` — 加粗规范自动迁移/检查 + Prettier 格式化 / 校验
+- `pnpm format:bold` / `pnpm format:bold:check` — 独立执行将 `**` 迁移为 `<strong>` / 检查是否存在违规裸 `**`

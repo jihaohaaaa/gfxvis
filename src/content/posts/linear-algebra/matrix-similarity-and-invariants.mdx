@@ -16,11 +16,11 @@ draft: false
 
 import MatrixSimilarityDiagram from "../../../components/diagrams/MatrixSimilarityDiagram";
 
-同一个几何向量在不同的坐标系下，写出来的坐标数字截然不同；同样地，**同一个抽象线性算子，在不同的坐标基底观察下，写出来的方阵数值也大相径庭**。
+同一个几何向量在不同的坐标系下，写出来的坐标数字截然不同；同样地，<strong>同一个抽象线性算子，在不同的坐标基底观察下，写出来的方阵数值也大相径庭</strong>。
 
-在现代 Computer Graphics、Physics Simulation、Robotics 与 Machine Learning 中，我们经常需要在世界坐标系、局部相机坐标系、刚体惯性主轴系以及主成分（PCA）特征基底之间自如切换。连接同一个线性变换在不同参照系下数字表示的代数桥梁，正是 **矩阵相似（Matrix Similarity）**。
+在现代 Computer Graphics、Physics Simulation、Robotics 与 Machine Learning 中，我们经常需要在世界坐标系、局部相机坐标系、刚体惯性主轴系以及主成分（PCA）特征基底之间自如切换。连接同一个线性变换在不同参照系下数字表示的代数桥梁，正是 <strong>矩阵相似（Matrix Similarity）</strong>。
 
-本文将从线性算子换基的第一性原理出发，系统推导相似变换公式 $B = P^{-1}AP$ 的几何本质，全景解构所有与坐标基无关的 **相似不变量（Similarity Invariants）**，深入辨析“特征值相同但不相似”的经典陷阱，并探讨矩阵相似理论的终极归宿——正交相似对角化与不可对角化矩阵的 **Jordan 标准型（Jordan Canonical Form）**。
+本文将从线性算子换基的第一性原理出发，系统推导相似变换公式 $B = P^{-1}AP$ 的几何本质，全景解构所有与坐标基无关的 <strong>相似不变量（Similarity Invariants）</strong>，深入辨析“特征值相同但不相似”的经典陷阱，并探讨矩阵相似理论的终极归宿——正交相似对角化与不可对角化矩阵的 <strong>Jordan 标准型（Jordan Canonical Form）</strong>。
 
 ---
 
@@ -34,10 +34,10 @@ import MatrixSimilarityDiagram from "../../../components/diagrams/MatrixSimilari
 
 在深入代数公式之前，必须在概念层面厘清两个经常被混淆的核心对象：
 
-- **抽象线性算子（Linear Operator $T: V \to V$）**：
+- <strong>抽象线性算子（Linear Operator $T: V \to V$）</strong>：
   定义在向量空间 $V$ 上的客观几何变换（如空间中的一次刚体旋转、各向异性缩放或镜像反射）。它独立于任何人为选定的坐标系而真实存在。
-- **矩阵表示（Matrix Representation $A = [T]_{\mathcal{B}}$）**：
-  当我们为空间选定一组基底 $\mathcal{B} = (\mathbf{b}_1, \dots, \mathbf{b}_n)$ 后，将变换后的各个基向量按列写出所得到的数字网格（[详见《基、坐标表示与基变换》](/posts/linear-algebra/basis-coordinate-change-of-basis)）。**矩阵只是算子在某个特定参照系下的“数字身份证”**。
+- <strong>矩阵表示（Matrix Representation $A = [T]_{\mathcal{B}}$）</strong>：
+  当我们为空间选定一组基底 $\mathcal{B} = (\mathbf{b}_1, \dots, \mathbf{b}_n)$ 后，将变换后的各个基向量按列写出所得到的数字网格（[详见《基、坐标表示与基变换》](/posts/linear-algebra/basis-coordinate-change-of-basis)）。<strong>矩阵只是算子在某个特定参照系下的“数字身份证”</strong>。
 
 ### 1.2 换基交换图与相似公式推导
 
@@ -57,9 +57,9 @@ $$
 
 现在我们要计算新基下的输出坐标 $[T(\mathbf{v})]_{\mathcal{C}}$。我们可以沿着以下闭环路径推导：
 
-1. **第一步（新坐标转旧坐标）**：将新基坐标 $[\mathbf{v}]_{\mathcal{C}}$ 乘以 $P$，换算为旧基坐标 $[\mathbf{v}]_{\mathcal{B}} = P [\mathbf{v}]_{\mathcal{C}}$；
-2. **第二步（在旧基下施加变换）**：在旧基坐标系下应用已知矩阵 $A$，得到变换后的旧基坐标 $[T(\mathbf{v})]_{\mathcal{B}} = A [\mathbf{v}]_{\mathcal{B}} = A P [\mathbf{v}]_{\mathcal{C}}$；
-3. **第三步（旧输出转回新坐标）**：将变换后的旧基坐标左乘 $P^{-1}$，换算回新基坐标 $[T(\mathbf{v})]_{\mathcal{C}} = P^{-1} [T(\mathbf{v})]_{\mathcal{B}} = P^{-1} A P [\mathbf{v}]_{\mathcal{C}}$。
+1. <strong>第一步（新坐标转旧坐标）</strong>：将新基坐标 $[\mathbf{v}]_{\mathcal{C}}$ 乘以 $P$，换算为旧基坐标 $[\mathbf{v}]_{\mathcal{B}} = P [\mathbf{v}]_{\mathcal{C}}$；
+2. <strong>第二步（在旧基下施加变换）</strong>：在旧基坐标系下应用已知矩阵 $A$，得到变换后的旧基坐标 $[T(\mathbf{v})]_{\mathcal{B}} = A [\mathbf{v}]_{\mathcal{B}} = A P [\mathbf{v}]_{\mathcal{C}}$；
+3. <strong>第三步（旧输出转回新坐标）</strong>：将变换后的旧基坐标左乘 $P^{-1}$，换算回新基坐标 $[T(\mathbf{v})]_{\mathcal{C}} = P^{-1} [T(\mathbf{v})]_{\mathcal{B}} = P^{-1} A P [\mathbf{v}]_{\mathcal{C}}$。
 
 根据新基矩阵表示的定义 $[T(\mathbf{v})]_{\mathcal{C}} = B [\mathbf{v}]_{\mathcal{C}}$，对比两式，即得：
 
@@ -67,7 +67,7 @@ $$
 \boxed{ B = P^{-1} A P }.
 $$
 
-> **直观记忆法则（三步跳跃法）**：
+> <strong>直观记忆法则（三步跳跃法）</strong>：
 >
 > $$
 > \boxed{\text{新基坐标 } [\mathbf{v}]_{\mathcal{C}} \;\xrightarrow{\quad P \quad}\; \text{旧基坐标 } [\mathbf{v}]_{\mathcal{B}} \;\xrightarrow{\quad A \quad}\; \text{旧变换结果 } [T(\mathbf{v})]_{\mathcal{B}} \;\xrightarrow{\quad P^{-1} \quad}\; \text{新变换结果 } [T(\mathbf{v})]_{\mathcal{C}}}
@@ -87,7 +87,7 @@ $$
 B = P^{-1} A P
 $$
 
-则称矩阵 $A$ 与矩阵 $B$ **相似（Similar）**，记作：
+则称矩阵 $A$ 与矩阵 $B$ <strong>相似（Similar）</strong>，记作：
 
 $$
 \boxed{ A \sim B }.
@@ -95,24 +95,24 @@ $$
 
 ### 2.2 相似性是严格的等价关系
 
-在近世代数中，相似关系在所有 $n \times n$ 方阵集合 $\mathcal{M}_n(\mathbb{F})$ 上构成一个严格的 **等价关系（Equivalence Relation）**（二元关系公理体系与商集定理详见 [《集合论与二元关系》](/posts/discrete-math/set-theory-relations-and-partitions#四等价关系与商集划分基本定理)）：
+在近世代数中，相似关系在所有 $n \times n$ 方阵集合 $\mathcal{M}_n(\mathbb{F})$ 上构成一个严格的 <strong>等价关系（Equivalence Relation）</strong>（二元关系公理体系与商集定理详见 [《集合论与二元关系》](/posts/discrete-math/set-theory-relations-and-partitions#四等价关系与商集划分基本定理)）：
 
-1. **自反性（Reflexivity）**：$A \sim A$（取单位矩阵 $P = I$，满足 $A = I^{-1} A I$）；
-2. **对称性（Symmetry）**：若 $A \sim B$，则 $B \sim A$（由 $B = P^{-1}AP$ 两边左乘 $P$、右乘 $P^{-1}$，得到 $A = P B P^{-1} = (P^{-1})^{-1} B (P^{-1})$，取可逆矩阵 $Q = P^{-1}$ 即可）；
-3. **传递性（Transitivity）**：若 $A \sim B$ 且 $B \sim C$，则 $A \sim C$（设 $B = P^{-1}AP, C = Q^{-1}BQ$，则 $C = Q^{-1}(P^{-1}AP)Q = (PQ)^{-1} A (PQ)$，取可逆矩阵 $R = PQ$ 即可）。
+1. <strong>自反性（Reflexivity）</strong>：$A \sim A$（取单位矩阵 $P = I$，满足 $A = I^{-1} A I$）；
+2. <strong>对称性（Symmetry）</strong>：若 $A \sim B$，则 $B \sim A$（由 $B = P^{-1}AP$ 两边左乘 $P$、右乘 $P^{-1}$，得到 $A = P B P^{-1} = (P^{-1})^{-1} B (P^{-1})$，取可逆矩阵 $Q = P^{-1}$ 即可）；
+3. <strong>传递性（Transitivity）</strong>：若 $A \sim B$ 且 $B \sim C$，则 $A \sim C$（设 $B = P^{-1}AP, C = Q^{-1}BQ$，则 $C = Q^{-1}(P^{-1}AP)Q = (PQ)^{-1} A (PQ)$，取可逆矩阵 $R = PQ$ 即可）。
 
 ### 2.3 几何意义：相似等价类（Similarity Orbit）
 
-根据集合划分基本定理，相似等价关系将整个 $n$ 阶方阵空间 $\mathcal{M}_n(\mathbb{F})$ 严格划分为互不相交的 **相似等价类（Similarity Classes）**（即商空间/商集 $\mathcal{M}_n / {\sim}$）：
+根据集合划分基本定理，相似等价关系将整个 $n$ 阶方阵空间 $\mathcal{M}_n(\mathbb{F})$ 严格划分为互不相交的 <strong>相似等价类（Similarity Classes）</strong>（即商空间/商集 $\mathcal{M}_n / {\sim}$）：
 
-- 同一个相似等价类中的所有矩阵，本质上是 **同一个抽象线性算子在所有可能基底下的全套数字化身**；
-- 研究矩阵相似，就是要寻找在基底变换下 **保持恒定不变的几何内禀属性（不变量）**，以及在每个等价类中最优雅、最简化的“代表元”（标准型）。
+- 同一个相似等价类中的所有矩阵，本质上是 <strong>同一个抽象线性算子在所有可能基底下的全套数字化身</strong>；
+- 研究矩阵相似，就是要寻找在基底变换下 <strong>保持恒定不变的几何内禀属性（不变量）</strong>，以及在每个等价类中最优雅、最简化的“代表元”（标准型）。
 
 ---
 
 ## 三、相似不变量（Similarity Invariants）全景图谱与代数证明
 
-当坐标基底剧烈变动时，相似矩阵 $B = P^{-1}AP$ 内部的各个具体元素数值会发生剧烈改变。但算子本身的几何本质从未动摇。以下物理与代数量在任意相似变换下 **严格恒等守恒**。
+当坐标基底剧烈变动时，相似矩阵 $B = P^{-1}AP$ 内部的各个具体元素数值会发生剧烈改变。但算子本身的几何本质从未动摇。以下物理与代数量在任意相似变换下 <strong>严格恒等守恒</strong>。
 
 ### 3.1 特征多项式与特征值谱守恒
 
@@ -129,7 +129,7 @@ p_B(\lambda) &= \det(\lambda I - B) \\
 \end{aligned}
 $$
 
-> **定理**：**相似矩阵拥有完全相同的特征多项式，因而拥有完全相同的特征值集合（包括代数重数）**：
+> <strong>定理</strong>：<strong>相似矩阵拥有完全相同的特征多项式，因而拥有完全相同的特征值集合（包括代数重数）</strong>：
 >
 > $$
 > \boxed{ p_A(\lambda) \equiv p_B(\lambda) }
@@ -141,8 +141,8 @@ $$
 
 由于特征多项式相同，其展开式的各个系数必然全等：
 
-- 最高次项下一项的系数对应矩阵的 **迹 $\operatorname{tr}$（特征值之和）**；
-- 常数项对应矩阵的 **行列式 $\det$（特征值之积）**。
+- 最高次项下一项的系数对应矩阵的 <strong>迹 $\operatorname{tr}$（特征值之和）</strong>；
+- 常数项对应矩阵的 <strong>行列式 $\det$（特征值之积）</strong>。
 
 利用矩阵乘积的循环迹性质与乘法定理，亦可直接独立证明（[详见《矩阵的迹与行列式》](/posts/linear-algebra/trace-and-determinant)）：
 
@@ -168,8 +168,8 @@ $$
 
 对于同一个特征值 $\lambda_0$：
 
-1. **代数重数（Algebraic Multiplicity, $\operatorname{alg}(\lambda_0)$）**：根 $\lambda_0$ 在特征多项式 $p_A(\lambda) = 0$ 中的重数。由于 $p_A(\lambda) = p_B(\lambda)$，代数重数显然相同；
-2. **几何重数（Geometric Multiplicity, $\operatorname{geo}(\lambda_0)$）**：特征子空间 $E_{\lambda_0} = \ker(A - \lambda_0 I)$ 的维数，即线性无关特征向量的最大数量：
+1. <strong>代数重数（Algebraic Multiplicity, $\operatorname{alg}(\lambda_0)$）</strong>：根 $\lambda_0$ 在特征多项式 $p_A(\lambda) = 0$ 中的重数。由于 $p_A(\lambda) = p_B(\lambda)$，代数重数显然相同；
+2. <strong>几何重数（Geometric Multiplicity, $\operatorname{geo}(\lambda_0)$）</strong>：特征子空间 $E_{\lambda_0} = \ker(A - \lambda_0 I)$ 的维数，即线性无关特征向量的最大数量：
    $$
    \operatorname{geo}(\lambda_0) = \operatorname{nullity}(A - \lambda_0 I) = n - \operatorname{rank}(A - \lambda_0 I).
    $$
@@ -186,7 +186,7 @@ $$
 f(P^{-1}AP) = P^{-1} f(A) P.
 $$
 
-特别地，$f(B) = 0 \iff f(A) = 0$。因此矩阵 $A$ 与 $B$ 的 **零化多项式集合完全相同**，从而它们的 **最小多项式（使得 $m(A) = 0$ 的最高次项系数为 1 的最低次多项式）完全相同**：
+特别地，$f(B) = 0 \iff f(A) = 0$。因此矩阵 $A$ 与 $B$ 的 <strong>零化多项式集合完全相同</strong>，从而它们的 <strong>最小多项式（使得 $m(A) = 0$ 的最高次项系数为 1 的最低次多项式）完全相同</strong>：
 
 $$
 \boxed{ m_A(\lambda) \equiv m_B(\lambda) }.
@@ -196,21 +196,21 @@ $$
 
 | 不变量名称                         | 代数表达                                                   | 几何/物理本质含义          | 判定相似的必要性     |
 | :--------------------------------- | :--------------------------------------------------------- | :------------------------- | :------------------- |
-| **特征多项式**                     | $p_A(\lambda) = \det(\lambda I - A)$                       | 算子的一维伸缩特征全貌     | 必须相同（必要条件） |
-| **特征值谱**                       | $\operatorname{spec}(A) = \{\lambda_1, \dots, \lambda_n\}$ | 算子固有主缩放倍率         | 必须相同（必要条件） |
-| **迹 $\operatorname{tr}$**         | $\sum \lambda_i = \sum a_{ii}$                             | 微分体积一阶膨胀率（散度） | 必须相同（必要条件） |
-| **行列式 $\det$**                  | $\prod \lambda_i = \det(A)$                                | 空间定向体积缩放因子       | 必须相同（必要条件） |
-| **矩阵的秩 $\operatorname{rank}$** | $\dim(\operatorname{im}(A))$                               | 映射像空间的有效维度       | 必须相同（必要条件） |
-| **几何重数**                       | $\dim(\ker(A - \lambda_i I))$                              | 特征子空间的几何维数       | 必须相同（必要条件） |
-| **最小多项式**                     | $m_A(\lambda)$                                             | 算子零化结构的最高阶数     | 必须相同（必要条件） |
+| <strong>特征多项式</strong>                     | $p_A(\lambda) = \det(\lambda I - A)$                       | 算子的一维伸缩特征全貌     | 必须相同（必要条件） |
+| <strong>特征值谱</strong>                       | $\operatorname{spec}(A) = \{\lambda_1, \dots, \lambda_n\}$ | 算子固有主缩放倍率         | 必须相同（必要条件） |
+| <strong>迹 $\operatorname{tr}$</strong>         | $\sum \lambda_i = \sum a_{ii}$                             | 微分体积一阶膨胀率（散度） | 必须相同（必要条件） |
+| <strong>行列式 $\det$</strong>                  | $\prod \lambda_i = \det(A)$                                | 空间定向体积缩放因子       | 必须相同（必要条件） |
+| <strong>矩阵的秩 $\operatorname{rank}$</strong> | $\dim(\operatorname{im}(A))$                               | 映射像空间的有效维度       | 必须相同（必要条件） |
+| <strong>几何重数</strong>                       | $\dim(\ker(A - \lambda_i I))$                              | 特征子空间的几何维数       | 必须相同（必要条件） |
+| <strong>最小多项式</strong>                     | $m_A(\lambda)$                                             | 算子零化结构的最高阶数     | 必须相同（必要条件） |
 
 ---
 
 ## 四、经典易错辨析：为什么特征值、迹、行列式相同不保证相似？
 
-在线性代数学习中，一个极易混淆的误区是：**“既然两个矩阵的特征值、迹、行列式和秩都一样，那它们是不是一定相似？”**
+在线性代数学习中，一个极易混淆的误区是：<strong>“既然两个矩阵的特征值、迹、行列式和秩都一样，那它们是不是一定相似？”</strong>
 
-**答案是否定的！** 相似不变量只是相似的 **必要条件**，绝非充分条件。
+<strong>答案是否定的！</strong> 相似不变量只是相似的 <strong>必要条件</strong>，绝非充分条件。
 
 ### 4.1 经典反例 1：单位矩阵 vs 剪切 Jordan 块
 
@@ -224,19 +224,19 @@ $$
 
 对比它们的不变量：
 
-- **特征多项式**：$p_A(\lambda) = (\lambda - 1)^2$，$p_B(\lambda) = (\lambda - 1)^2$（完全相同）；
-- **特征值**：均为 $\lambda_1 = \lambda_2 = 1$（代数重数均为 2）；
-- **迹与行列式**：$\operatorname{tr}(A) = \operatorname{tr}(B) = 2$，$\det(A) = \det(B) = 1$；
-- **矩阵的秩**：$\operatorname{rank}(A) = \operatorname{rank}(B) = 2$。
+- <strong>特征多项式</strong>：$p_A(\lambda) = (\lambda - 1)^2$，$p_B(\lambda) = (\lambda - 1)^2$（完全相同）；
+- <strong>特征值</strong>：均为 $\lambda_1 = \lambda_2 = 1$（代数重数均为 2）；
+- <strong>迹与行列式</strong>：$\operatorname{tr}(A) = \operatorname{tr}(B) = 2$，$\det(A) = \det(B) = 1$；
+- <strong>矩阵的秩</strong>：$\operatorname{rank}(A) = \operatorname{rank}(B) = 2$。
 
-**为什么它们绝对不相似？**
+<strong>为什么它们绝对不相似？</strong>
 
-- **几何视角（几何重数失配）**：
+- <strong>几何视角（几何重数失配）</strong>：
   - 对单位矩阵 $A$，任意非零向量都是特征向量，特征子空间为整个二维平面，几何重数 $\operatorname{geo}_A(1) = 2$；
   - 对剪切矩阵 $B$，求解 $(B - I)\mathbf{v} = 0 \implies \begin{pmatrix}0&1\\0&0\end{pmatrix}\begin{pmatrix}x\\y\end{pmatrix} = 0 \implies y = 0$，特征向量只能分布在 $x$ 轴上一维直线上，几何重数 $\operatorname{geo}_B(1) = 1$；
   - 几何重数不同（$2 \neq 1$），两者断然不相似！
-- **代数视角（单位矩阵的孤立性）**：
-  对任意可逆矩阵 $P$，$P^{-1} A P = P^{-1} I P = I = A$。因此与单位矩阵相似的矩阵 **只有单位矩阵自己**，任何非对角矩阵都不可能相似于单位矩阵！
+- <strong>代数视角（单位矩阵的孤立性）</strong>：
+  对任意可逆矩阵 $P$，$P^{-1} A P = P^{-1} I P = I = A$。因此与单位矩阵相似的矩阵 <strong>只有单位矩阵自己</strong>，任何非对角矩阵都不可能相似于单位矩阵！
 
 ### 4.2 经典反例 2：最小多项式与高阶块结构差异
 
@@ -260,14 +260,14 @@ $$
 
 - 它们的所有特征值全为 $0$，迹全为 $0$，行列式全为 $0$，秩均为 $2$；
 - 几何重数均为 $\operatorname{nullity} = 4 - 2 = 2$；
-- **但它们依然不相似！** 因为 $A^2 = 0$（最小多项式为 $\lambda^2$），而 $B^2 \neq 0, B^3 = 0$（最小多项式为 $\lambda^3$）。$A$ 由两个 $2\times 2$ Jordan 块组成，而 $B$ 由一个 $3\times 3$ 块和一个 $1\times 1$ 块组成。
+- <strong>但它们依然不相似！</strong> 因为 $A^2 = 0$（最小多项式为 $\lambda^2$），而 $B^2 \neq 0, B^3 = 0$（最小多项式为 $\lambda^3$）。$A$ 由两个 $2\times 2$ Jordan 块组成，而 $B$ 由一个 $3\times 3$ 块和一个 $1\times 1$ 块组成。
 
 ### 4.3 充要判定条件定理
 
 那么，何时特征值相同就能断定矩阵相似？
 
-> **定理（互异特征值充分性定理）**：
-> 若 $n$ 阶方阵 $A$ 和 $B$ 拥有 **$n$ 个互不相同的特征值**（即所有特征值的代数重数均为 1），且 $\operatorname{spec}(A) = \operatorname{spec}(B)$，则 **$A$ 与 $B$ 必然相似**（因为它们都能相似对角化到同一个对角阵 $\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n)$）。
+> <strong>定理（互异特征值充分性定理）</strong>：
+> 若 $n$ 阶方阵 $A$ 和 $B$ 拥有 <strong>$n$ 个互不相同的特征值</strong>（即所有特征值的代数重数均为 1），且 $\operatorname{spec}(A) = \operatorname{spec}(B)$，则 <strong>$A$ 与 $B$ 必然相似</strong>（因为它们都能相似对角化到同一个对角阵 $\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n)$）。
 
 ---
 
@@ -291,16 +291,16 @@ $$
 
 这揭示了对角化的几何第一性原理：
 
-- **换基矩阵 $P$ 的列向量，就是算子 $A$ 的全部特征向量**；
-- **对角化本质上就是把观察坐标系切换到算子的“自然特征主轴系”**。在这个专属参照系下，复杂的矩阵耦合变换彻底解耦为 $n$ 个独立坐标轴上的单向纯伸缩（[详见《特征值与特征向量》](/posts/linear-algebra/eigenvalues-and-eigenvectors)）。
+- <strong>换基矩阵 $P$ 的列向量，就是算子 $A$ 的全部特征向量</strong>；
+- <strong>对角化本质上就是把观察坐标系切换到算子的“自然特征主轴系”</strong>。在这个专属参照系下，复杂的矩阵耦合变换彻底解耦为 $n$ 个独立坐标轴上的单向纯伸缩（[详见《特征值与特征向量》](/posts/linear-algebra/eigenvalues-and-eigenvectors)）。
 
-> **对角化充要条件**：$n$ 阶方阵 $A$ 可相似对角化 $\iff A$ 拥有 $n$ 个线性无关的特征向量 $\iff$ 对每个特征值，其 **几何重数精确等于代数重数**。
+> <strong>对角化充要条件</strong>：$n$ 阶方阵 $A$ 可相似对角化 $\iff A$ 拥有 $n$ 个线性无关的特征向量 $\iff$ 对每个特征值，其 <strong>几何重数精确等于代数重数</strong>。
 
 ### 5.2 正交相似（Orthogonal Similarity）与实对称矩阵谱定理
 
-在几何与计算机图形学中，任意的可逆换基矩阵 $P$ 可能会扭曲坐标轴的夹角与长度。我们最青睐的换基矩阵是 **正交矩阵（$P \in \mathrm{O}(n)$，即 $P^{-1} = P^\top$）**。
+在几何与计算机图形学中，任意的可逆换基矩阵 $P$ 可能会扭曲坐标轴的夹角与长度。我们最青睐的换基矩阵是 <strong>正交矩阵（$P \in \mathrm{O}(n)$，即 $P^{-1} = P^\top$）</strong>。
 
-此时的相似变换称为 **正交相似变换（Orthogonal Similarity）**：
+此时的相似变换称为 <strong>正交相似变换（Orthogonal Similarity）</strong>：
 
 $$
 \boxed{ B = P^\top A P }.
@@ -308,8 +308,8 @@ $$
 
 正交相似变换不仅保持全部代数特征值，还严格保持全空间的欧氏距离与夹角（保距同构）。
 
-> **谱定理（Spectral Theorem）**：
-> 实对称矩阵（$A = A^\top$）必然可以 **正交相似对角化**：
+> <strong>谱定理（Spectral Theorem）</strong>：
+> 实对称矩阵（$A = A^\top$）必然可以 <strong>正交相似对角化</strong>：
 >
 > $$
 > \boxed{ Q^\top A Q = \Lambda }, \qquad Q \in \mathrm{O}(n), \quad \Lambda \in \mathbb{R}^{n \times n}.
@@ -321,13 +321,13 @@ $$
 
 ## 六、不可对角化矩阵的终极归宿：Jordan 标准型
 
-当矩阵存在重特征值且特征向量不足（几何重数严格小于代数重数，称为 **亏损矩阵 Defective Matrix**）时，矩阵无法被相似对角化。那么这类矩阵在相似变换下能化简到的最极致形态是什么？
+当矩阵存在重特征值且特征向量不足（几何重数严格小于代数重数，称为 <strong>亏损矩阵 Defective Matrix</strong>）时，矩阵无法被相似对角化。那么这类矩阵在相似变换下能化简到的最极致形态是什么？
 
-这就是代数学中著名的 **Jordan 标准型（Jordan Canonical Form / Jordan Normal Form）**。
+这就是代数学中著名的 <strong>Jordan 标准型（Jordan Canonical Form / Jordan Normal Form）</strong>。
 
 ### 6.1 Jordan 块（Jordan Block）的构造
 
-一个对应特征值 $\lambda$ 的 $k$ 阶 **Jordan 块 $J_k(\lambda)$** 是一个主对角线上全为 $\lambda$、次对角线（紧上方）全为 $1$ 的上三角方阵：
+一个对应特征值 $\lambda$ 的 $k$ 阶 <strong>Jordan 块 $J_k(\lambda)$</strong> 是一个主对角线上全为 $\lambda$、次对角线（紧上方）全为 $1$ 的上三角方阵：
 
 $$
 J_k(\lambda) = \begin{pmatrix}
@@ -344,11 +344,11 @@ $$
 
 ### 6.2 广义特征向量（Generalized Eigenvectors）与 Jordan 链
 
-为什么会出现 Jordan 块？因为普通特征向量不足，我们需要通过构造 **广义特征向量链（Jordan Chain）** 来补齐基底：
+为什么会出现 Jordan 块？因为普通特征向量不足，我们需要通过构造 <strong>广义特征向量链（Jordan Chain）</strong> 来补齐基底：
 
-1. **第 1 阶（正统特征向量）**：$(A - \lambda I)\mathbf{v}_1 = \mathbf{0}$；
-2. **第 2 阶（广义特征向量）**：$(A - \lambda I)\mathbf{v}_2 = \mathbf{v}_1 \implies (A - \lambda I)^2 \mathbf{v}_2 = \mathbf{0}$；
-3. **第 $k$ 阶（高阶广义特征向量）**：$(A - \lambda I)\mathbf{v}_k = \mathbf{v}_{k-1} \implies (A - \lambda I)^k \mathbf{v}_k = \mathbf{0}$。
+1. <strong>第 1 阶（正统特征向量）</strong>：$(A - \lambda I)\mathbf{v}_1 = \mathbf{0}$；
+2. <strong>第 2 阶（广义特征向量）</strong>：$(A - \lambda I)\mathbf{v}_2 = \mathbf{v}_1 \implies (A - \lambda I)^2 \mathbf{v}_2 = \mathbf{0}$；
+3. <strong>第 $k$ 阶（高阶广义特征向量）</strong>：$(A - \lambda I)\mathbf{v}_k = \mathbf{v}_{k-1} \implies (A - \lambda I)^k \mathbf{v}_k = \mathbf{0}$。
 
 将这组链式基向量排成矩阵 $P = (\mathbf{v}_1, \dots, \mathbf{v}_k)$，立即满足：
 
@@ -358,8 +358,8 @@ $$
 
 ### 6.3 Jordan 分解定理
 
-> **Jordan 标准型主定理**：
-> 在复数域 $\mathbb{C}$ 上，**任何方阵 $A$ 都必然相似于一个分块对角矩阵 $J$，且该 Jordan 标准型在不计对角块顺序的前提下是唯一确定的**：
+> <strong>Jordan 标准型主定理</strong>：
+> 在复数域 $\mathbb{C}$ 上，<strong>任何方阵 $A$ 都必然相似于一个分块对角矩阵 $J$，且该 Jordan 标准型在不计对角块顺序的前提下是唯一确定的</strong>：
 >
 > $$
 > \boxed{ P^{-1} A P = J = \begin{pmatrix}
@@ -369,11 +369,11 @@ $$
 > \end{pmatrix} }.
 > $$
 >
-> - **特征值 $\lambda$ 对应的 Jordan 块总个数** = 特征值 $\lambda$ 的 **几何重数**；
-> - **所有特征值 $\lambda$ 对应的 Jordan 块阶数之和** = 特征值 $\lambda$ 的 **代数重数**；
-> - **特征值 $\lambda$ 对应的最大 Jordan 块的阶数** = 最小多项式中根 $(\lambda - \lambda_i)$ 的幂次指数。
+> - <strong>特征值 $\lambda$ 对应的 Jordan 块总个数</strong> = 特征值 $\lambda$ 的 <strong>几何重数</strong>；
+> - <strong>所有特征值 $\lambda$ 对应的 Jordan 块阶数之和</strong> = 特征值 $\lambda$ 的 <strong>代数重数</strong>；
+> - <strong>特征值 $\lambda$ 对应的最大 Jordan 块的阶数</strong> = 最小多项式中根 $(\lambda - \lambda_i)$ 的幂次指数。
 
-**Jordan 标准型是相似分类理论的终极裁决者**：两个复方阵相似 $\iff$ 它们拥有完全相同的 Jordan 标准型！
+<strong>Jordan 标准型是相似分类理论的终极裁决者</strong>：两个复方阵相似 $\iff$ 它们拥有完全相同的 Jordan 标准型！
 
 ---
 
@@ -388,7 +388,7 @@ $$
 I_{\text{body}} = R^\top I_{\text{world}} R = \operatorname{diag}(I_{xx}, I_{yy}, I_{zz})
 $$
 
-将观察坐标系切换到刚体本身的 **惯性主轴系（Principal Axes of Inertia）**，复杂的交叉角动量耦合项瞬间化为零，欧拉旋转动力学方程大幅简化。
+将观察坐标系切换到刚体本身的 <strong>惯性主轴系（Principal Axes of Inertia）</strong>，复杂的交叉角动量耦合项瞬间化为零，欧拉旋转动力学方程大幅简化。
 
 ### 7.2 连续动力系统微分方程组解耦
 
@@ -414,8 +414,8 @@ $$
 
 ## 八、核心总结
 
-> 1. **第一性原理**：矩阵只是算子的坐标表示快照；同一个线性算子在不同基底下的矩阵满足相似变换 $B = P^{-1}AP$。
-> 2. **相似等价类**：相似关系是等价关系，将方阵空间划分为算子轨道；相似矩阵是同一个算子在不同坐标系下的化身。
-> 3. **相似不变量**：特征多项式、特征值谱、迹、行列式、秩、代数重数、几何重数与最小多项式在基变换下严格守恒。
-> 4. **反例与判定**：特征值与迹/行列式相同**不一定相似**（剪切矩阵与单位矩阵的区别）；只有当几何重数等于代数重数时才可相似对角化。
-> 5. **终极标准型**：实对称矩阵必可正交相似对角化（谱定理）；不可对角化的亏损矩阵通过广义特征向量链化为唯一的 Jordan 标准型。
+> 1. <strong>第一性原理</strong>：矩阵只是算子的坐标表示快照；同一个线性算子在不同基底下的矩阵满足相似变换 $B = P^{-1}AP$。
+> 2. <strong>相似等价类</strong>：相似关系是等价关系，将方阵空间划分为算子轨道；相似矩阵是同一个算子在不同坐标系下的化身。
+> 3. <strong>相似不变量</strong>：特征多项式、特征值谱、迹、行列式、秩、代数重数、几何重数与最小多项式在基变换下严格守恒。
+> 4. <strong>反例与判定</strong>：特征值与迹/行列式相同<strong>不一定相似</strong>（剪切矩阵与单位矩阵的区别）；只有当几何重数等于代数重数时才可相似对角化。
+> 5. <strong>终极标准型</strong>：实对称矩阵必可正交相似对角化（谱定理）；不可对角化的亏损矩阵通过广义特征向量链化为唯一的 Jordan 标准型。
