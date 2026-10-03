@@ -23,12 +23,17 @@ import { clamp } from "@math";
 import KdeTabs, { type KdeTabOption } from "../framework/KdeTabs";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import CanvasResizer from "../framework/CanvasResizer";
-import Checkbox from "../framework/Checkbox";
+import KdeCheckbox from "../framework/KdeCheckbox";
+import KdeSwitch from "../framework/KdeSwitch";
+import KdeDivider from "../framework/KdeDivider";
+import KdeProgressBar from "../framework/KdeProgressBar";
+import KdeButtonGroup from "../framework/KdeButtonGroup";
+import KdeMessageBar from "../framework/KdeMessageBar";
+import KdeButton from "../framework/KdeButton";
 import AutoMath from "../framework/AutoMath";
 import ExpandableDemo, { useExpandable } from "../framework/ExpandableDemo";
 import KdeWindowShell from "../framework/KdeWindowShell";
 import KdeCard from "../framework/KdeCard";
-import KdeGroupBox from "../framework/KdeGroupBox";
 import KdeReadout from "../framework/KdeReadout";
 import KdeBadge from "../framework/KdeBadge";
 import InteractiveLayout, {
@@ -448,6 +453,45 @@ export default function InteractionStyleLabDemo({
 
   const sliders = (
     <div className="style-lab__sliders flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-semibold text-[var(--kde-muted,#626b73)]">
+          快速预设点：
+        </span>
+        <KdeButtonGroup attached size="xs" columns={2} className="w-full">
+          <KdeButton
+            size="xs"
+            className="w-full font-mono text-center"
+            onClick={() => setProbe({ x: 1, y: 2 })}
+            title="设为 (1, 2)"
+          >
+            (1, 2)
+          </KdeButton>
+          <KdeButton
+            size="xs"
+            className="w-full font-mono text-center"
+            onClick={() => setProbe({ x: 2, y: -1 })}
+            title="设为 (2, -1)"
+          >
+            (2, -1)
+          </KdeButton>
+          <KdeButton
+            size="xs"
+            className="w-full font-mono text-center"
+            onClick={() => setProbe({ x: -2, y: 2 })}
+            title="设为 (-2, 2)"
+          >
+            (-2, 2)
+          </KdeButton>
+          <KdeButton
+            size="xs"
+            className="w-full font-mono text-center"
+            onClick={() => setProbe({ x: 0, y: 3 })}
+            title="设为 (0, 3)"
+          >
+            (0, 3)
+          </KdeButton>
+        </KdeButtonGroup>
+      </div>
       <ParamSlider
         label="$x$"
         min={PROBE_CLAMP.xMin}
@@ -465,6 +509,21 @@ export default function InteractionStyleLabDemo({
         value={probe.y}
         onChange={(y: number) => setProbe((current) => ({ ...current, y }))}
         widthClass="w-full"
+      />
+      <KdeDivider spacing="xs" />
+      <KdeProgressBar
+        value={Math.round(
+          (Math.hypot(projected[0], projected[1]) /
+            (Math.hypot(probe.x, probe.y) || 1)) *
+            100,
+        )}
+        label="投影模长保持率"
+        valueDisplay={`${Math.round(
+          (Math.hypot(projected[0], projected[1]) /
+            (Math.hypot(probe.x, probe.y) || 1)) *
+            100,
+        )}%`}
+        size="xs"
       />
       <div className="flex items-center gap-1.5 mt-0.5">
         <KdeBadge variant="primary">BOUNDS [-4, 4]</KdeBadge>
@@ -502,10 +561,7 @@ export default function InteractionStyleLabDemo({
         activeTab === "geometry" ? "" : "hidden"
       }`}
     >
-      <CanvasToolbar
-        onReset={resetBounds}
-        className="style-lab__canvas-toolbar"
-      />
+      <CanvasToolbar onReset={resetBounds} />
       <canvas
         ref={canvasRef}
         className="absolute inset-0 h-full w-full touch-none"
@@ -531,6 +587,16 @@ export default function InteractionStyleLabDemo({
         </div>
         <KdeBadge variant="neutral">DIM = 2, RANK = 1</KdeBadge>
       </div>
+
+      <KdeMessageBar
+        variant={modeId === "orthogonal" ? "info" : "warning"}
+        mode="card"
+        title={modeId === "orthogonal" ? "正交投影算子性质" : "斜投影算子性质"}
+      >
+        {modeId === "orthogonal"
+          ? "正交投影同时满足幂等性 $P^2 = P$ 与自伴对称性 $P^\\top = P$，像空间与核空间严格正交。"
+          : "斜投影满足幂等性 $P^2 = P$，但不对称 $P^\\top \\neq P$，分解方向与子空间呈倾斜夹角。"}
+      </KdeMessageBar>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <KdeCard
@@ -636,6 +702,12 @@ export default function InteractionStyleLabDemo({
         </KdeBadge>
       </div>
 
+      <KdeMessageBar variant="success" mode="card" title="直和与勾股定理分解">
+        {
+          "空间中任意向量均可唯一分解为像空间分量与余空间残差之和：$\\mathbf{x} = P\\mathbf{x} + (I-P)\\mathbf{x}$。"
+        }
+      </KdeMessageBar>
+
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <KdeCard title="直和向量分解" variant="highlight">
           <div className="space-y-2 text-xs">
@@ -728,56 +800,79 @@ export default function InteractionStyleLabDemo({
 
   const controlPanel = (
     <aside
-      className={`style-lab__control-panel style-lab__control-panel--${variant} ${variant === "instrument" ? "style-lab__instrument-rack" : ""}`}
+      className={`style-lab__control-panel flex flex-col gap-2.5 min-w-0 ${variant === "instrument" ? "style-lab__instrument-rack" : ""}`}
       data-control-panel={variant}
     >
-      <KdeGroupBox title="PROJECTION SUBSPACE / 投影子空间">
-        {targetControl}
-      </KdeGroupBox>
+      <KdeCard
+        title="投影空间与模式"
+        badge={
+          <KdeBadge variant={modeId === "orthogonal" ? "success" : "warning"}>
+            {modeId.toUpperCase()}
+          </KdeBadge>
+        }
+      >
+        <div className="flex flex-col gap-2">
+          <div>
+            <div className="text-[11px] font-medium text-[var(--kde-muted)] mb-1">
+              目标子空间
+            </div>
+            {targetControl}
+          </div>
+          <div>
+            <div className="text-[11px] font-medium text-[var(--kde-muted)] mb-1">
+              投影模式
+            </div>
+            {modeControl}
+          </div>
+        </div>
+      </KdeCard>
 
-      <KdeGroupBox title="PROJECTION MODE / 投影模式">
-        {modeControl}
-      </KdeGroupBox>
-
-      <KdeGroupBox title="VECTOR PROBE / 探测向量">{sliders}</KdeGroupBox>
+      <KdeCard
+        title="探测向量探针"
+        badge={<KdeBadge variant="primary">BOUNDS [-4, 4]</KdeBadge>}
+      >
+        {sliders}
+      </KdeCard>
 
       {layoutPreset !== "dense-dock" && (
-        <KdeGroupBox title="DISPLAY LAYERS / 显示图层">
-          <div className="flex flex-col gap-1.5">
-            <Checkbox
+        <KdeCard title="显示图层与交互引导">
+          <div className="flex flex-col gap-2">
+            <KdeCheckbox
               label="输入向量"
               checked={showInputVector}
               onChange={setShowInputVector}
             />
-            <Checkbox
+            <KdeCheckbox
               label="投影残差"
               checked={showResidual}
               onChange={setShowResidual}
             />
-            <Checkbox
-              label="拖拽 Gizmo"
+            <KdeDivider spacing="xs" />
+            <KdeSwitch
+              label="拖拽 Gizmo 引导轴"
               checked={showGizmo}
               onChange={setShowGizmo}
             />
           </div>
-        </KdeGroupBox>
+        </KdeCard>
       )}
 
       {layoutPreset === "dense-dock" ? (
         <>
           <KdeCard title="显示层" testId="dense-dock-controls" variant="dense">
-            <div className="flex flex-col gap-1.5">
-              <Checkbox
+            <div className="flex flex-col gap-2">
+              <KdeCheckbox
                 label="输入向量"
                 checked={showInputVector}
                 onChange={setShowInputVector}
               />
-              <Checkbox
+              <KdeCheckbox
                 label="投影残差"
                 checked={showResidual}
                 onChange={setShowResidual}
               />
-              <Checkbox
+              <KdeDivider spacing="xs" />
+              <KdeSwitch
                 label="拖拽 Gizmo"
                 checked={showGizmo}
                 onChange={setShowGizmo}
@@ -864,10 +959,7 @@ export default function InteractionStyleLabDemo({
         activeTab === "geometry" ? "" : "hidden"
       }`}
     >
-      <CanvasToolbar
-        onReset={secondaryCanvasState.resetBounds}
-        className="style-lab__canvas-toolbar"
-      />
+      <CanvasToolbar onReset={secondaryCanvasState.resetBounds} />
       <canvas
         ref={secondaryCanvasState.canvasRef}
         className="absolute inset-0 h-full w-full touch-none"

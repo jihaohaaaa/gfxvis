@@ -13,6 +13,53 @@ tags:
 ---
 
 import SystemFPolymorphismDiagram from "../../../components/diagrams/SystemFPolymorphismDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const systemFTsRank2Snippet = `// TypeScript 高阶泛型（Rank-2 Polymorphism）与纯多态函数实战
+// 声明一个必须接收“通用多态函数”的运行器 (Rank-2)
+function runGenericTwice<R1, R2>(
+  genericTransformer: <T>(value: T) => [T, string],
+  val1: R1,
+  val2: R2
+): [[R1, string], [R2, string]] {
+  const res1 = genericTransformer(val1); // 特化为 T = R1
+  const res2 = genericTransformer(val2); // 特化为 T = R2
+  return [res1, res2];
+}
+
+// 构造一个真正的多态泛型转换器
+const tagTransformer = <T>(val: T): [T, string] => [val, typeof val];
+
+const [first, second] = runGenericTwice(tagTransformer, 42, "System F");
+console.log("泛型调用 1 (number):", first);
+console.log("泛型调用 2 (string):", second);
+`;
+
+export const systemFTsTheoremsForFreeSnippet = `// Philip Wadler: "Theorems for Free!" (免费定理验证)
+// 定理: rev(map(f, xs)) ≡ map(f, rev(xs))
+
+function rev<T>(list: readonly T[]): T[] {
+  return [...list].reverse();
+}
+
+function mapList<A, B>(f: (a: A) => B, list: readonly A[]): B[] {
+  return list.map(f);
+}
+
+// 测试数据
+const nums = [1, 2, 3, 4, 5];
+const square = (x: number) => x * x;
+
+// 路径 1: map 然后 rev
+const path1 = rev(mapList(square, nums));
+
+// 路径 2: rev 然后 map
+const path2 = mapList(square, rev(nums));
+
+console.log("路径 1 rev(map(f, xs)):", path1);
+console.log("路径 2 map(f, rev(xs)):", path2);
+console.log("免费定理交换图成立:", JSON.stringify(path1) === JSON.stringify(path2));
+`;
 
 在简单类型 $\lambda$ 演算（STLC）中，我们通过给每个形参标上静态类型，达成了“良类型的程序绝不犯傻”的停机安全乌托邦。然而，STLC 的纯净安全伴随着极其沉重的工业代价 —— <strong>代码无法复用与“多态贫血症”</strong>。
 
@@ -251,17 +298,13 @@ function run<T>(x: T): T { return x; }
 
 但如果你想写一个函数，它的参数要求<strong>必须是一个“能够接受任意类型”的泛型函数</strong>呢？这就是 <strong>Rank-2 多态</strong>：
 
-```typescript
-// TypeScript 支持函数参数位置的高阶多态（Rank-2 Types）
-function runOnBoth(genericFn: <T>(x: T) => T) {
-    const num = genericFn<number>(42);
-    const str = genericFn<string>("hello");
-    return [num, str];
-}
-
-// 传入真正的多态恒等函数
-runOnBoth(<T>(x: T) => x); // 完美工作！
-```
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="TypeScript 高阶泛型（Rank-2 Polymorphism）实战"
+  description="接收全称量化泛型函数作为参数，并连续以不同类型实例特化调用"
+  initialCode={systemFTsRank2Snippet}
+/>
 
 在 C++ 中，这种高阶泛型能力正是通过<strong>泛型 Lambda（Generic Lambdas，C++14 起支持 `[](auto x)`）</strong>或模板模板参数（Template Template Parameters）来实现的。
 
@@ -405,6 +448,14 @@ $$
 
 <strong>“先反转列表再做元素映射变换，与先做元素映射变换再反转列表，两者的计算结果绝对完全同一！”</strong>
 现代现代编译器（如 GHC）正是利用这一免费定理，在中间代码优化期肆无忌惮地进行<strong>循环合并（Loop Fusion）</strong>与数据流管线重排，而完全不用担心改变程序的业务逻辑。
+
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="Philip Wadler 免费定理（Theorems for Free!）TypeScript 验证"
+  description="验证自然性交换图：rev(map(f, xs)) ≡ map(f, rev(xs))"
+  initialCode={systemFTsTheoremsForFreeSnippet}
+/>
 
 ### 8.3 软件工程启示：类型即最强安全契约
 

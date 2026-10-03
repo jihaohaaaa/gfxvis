@@ -12,6 +12,135 @@ tags:
 ---
 
 import EffectsDiagram from "../../../components/diagrams/EffectsDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const effectsTsSuspenseSnippet = `// TypeScript 模拟 React Suspense 代数效应机制实战
+// 1. 资源包装器：当数据未就绪时向上 throw promise (Perform 意图)
+interface Resource<T> {
+  read(): T;
+}
+
+function createResource<T>(promise: Promise<T>): Resource<T> {
+  let status: "pending" | "success" | "error" = "pending";
+  let result: T;
+  let error: unknown;
+
+  const suspender = promise.then(
+    (data) => {
+      status = "success";
+      result = data;
+    },
+    (err) => {
+      status = "error";
+      error = err;
+    }
+  );
+
+  return {
+    read() {
+      if (status === "pending") {
+        // 💥 Perform 效应：向上抛出 Promise 挂起渲染
+        throw suspender;
+      } else if (status === "error") {
+        throw error;
+      } else {
+        return result;
+      }
+    },
+  };
+}
+
+// 2. 模拟业务组件：纯同步写法，无 async / await
+function UserProfile(resource: Resource<{ name: string; role: string }>) {
+  const user = resource.read(); // 同步读取！
+  return \`用户卡片: \${user.name} (\${user.role})\`;
+}
+
+// 3. 模拟 Suspense 效应处理器 (Effect Handler)
+async function renderWithSuspense(component: () => string, fallback: string) {
+  try {
+    const output = component();
+    console.log("[Render 成功]:", output);
+  } catch (thrown) {
+    if (thrown instanceof Promise) {
+      console.log("[Suspense 拦截]: 捕获到异步效应，正在展示 Fallback ->", fallback);
+      await thrown; // 等待意图完成 (Resume 准备)
+      console.log("[Resume 恢复]: 数据就绪，重新执行组件渲染 (Re-render)...");
+      const finalOutput = component();
+      console.log("[Render 成功]:", finalOutput);
+    } else {
+      console.error("[ErrorBoundary]: 业务错误", thrown);
+    }
+  }
+}
+
+// 执行演示
+const userPromise = new Promise<{ name: string; role: string }>((resolve) =>
+  setTimeout(() => resolve({ name: "Alice", role: "架构师" }), 50)
+);
+const userResource = createResource(userPromise);
+
+renderWithSuspense(() => UserProfile(userResource), "加载中 (Skeleton)...");
+`;
+
+export const effectsCppCoroutineSnippet = `// C++20 协程 promise_type 代数效应处理器实战
+#include <iostream>
+#include <coroutine>
+
+template <typename T>
+struct Generator {
+    struct promise_type {
+        T current_value;
+
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+
+        // 接管 co_yield 效应意图 (相当于 Handle Yield)
+        std::suspend_always yield_value(T val) noexcept {
+            current_value = val;
+            return {}; // 暂停并将控制权让渡给调用方
+        }
+
+        void return_void() noexcept {}
+        void unhandled_exception() { std::terminate(); }
+
+        Generator get_return_object() {
+            return Generator{std::coroutine_handle<promise_type>::from_promise(*this)};
+        }
+    };
+
+    std::coroutine_handle<promise_type> h;
+    explicit Generator(std::coroutine_handle<promise_type> handle) : h(handle) {}
+    ~Generator() { if (h) h.destroy(); }
+
+    bool next() {
+        if (h && !h.done()) {
+            h.resume(); // 💥 Resume 延续！
+            return !h.done();
+        }
+        return false;
+    }
+
+    T value() const { return h.promise().current_value; }
+};
+
+// 协程函数：执行过程中不断向外发出 yield 意图
+Generator<int> count_up_to(int limit) {
+    for (int i = 1; i <= limit; ++i) {
+        co_yield i * 10;
+    }
+}
+
+int main() {
+    std::cout << "=== C++20 协程代数效应 Handler 实战 ===" << std::endl;
+    auto gen = count_up_to(5);
+    while (gen.next()) {
+        std::cout << "接收到产出效应值: " << gen.value() << std::endl;
+    }
+    std::cout << "协程执行完成并安全销毁！" << std::endl;
+    return 0;
+}
+`;
 
 在软件工程漫长的进化长河中，程序员一直在与同一个幽灵搏斗：<strong>副作用（Side Effects）</strong>。
 
@@ -175,43 +304,13 @@ $$
 
 答案是：<strong>React 利用 JavaScript 的 `throw` 机制，实现了一个单向的、以“重新渲染”代替“原位恢复”的代数效应处理器！</strong>
 
-```typescript
-// 子组件：声明效应意图（读取异步用户资源）
-function UserProfile({ userId }: { userId: string }) {
-    // 看起来完全是同步的！没有 async，没有 await！
-    const user = fetchUserResource(userId).read();
-    return <div>Hello, {user.name}</div>;
-}
-
-// 资源包装器：模拟代数效应的 perform 操作
-function createResource<T>(promise: Promise<T>) {
-    let status: "pending" | "success" | "error" = "pending";
-    let result: T;
-    let suspender = promise.then(
-        (r) => {
-            status = "success";
-            result = r;
-        },
-        (e) => {
-            status = "error";
-            result = e;
-        }
-    );
-
-    return {
-        read() {
-            if (status === "pending") {
-                // 💥 关键点：向上抛出未经包装的原生 Promise！这就是 Perform 操作！
-                throw suspender;
-            } else if (status === "error") {
-                throw result;
-            } else if (status === "success") {
-                return result; // 恢复后再次求值时，直接同步拿到数据
-            }
-        },
-    };
-}
-```
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="TypeScript 模拟 React Suspense 代数效应机制实战"
+  description="以 throw Promise 模拟 Perform 意图，以 Suspense 捕获等待与 Re-render 模拟 Resume 恢复"
+  initialCode={effectsTsSuspenseSnippet}
+/>
 
 在调用栈的上游，`<Suspense>` 容器扮演了<strong>效应处理器（Handler）</strong>的角色：
 1. 捕获到子组件抛出的异常；
@@ -371,61 +470,13 @@ where
 
 在 C++20 中，`promise_type` 本质上就是<strong>用户编写的代数效应解释器（Handler）</strong>：
 
-```cpp
-#include <coroutine>
-#include <iostream>
-#include <optional>
-
-// 1. 定义业务计算的效应包装类型
-template <typename T>
-struct Generator {
-    // 关键点：promise_type 就是该协程的 Effect Handler！
-    struct promise_type {
-        T current_value;
-
-        // 协程启动时的初始策略（相当于是否一进入就 handle）
-        std::suspend_always initial_suspend() noexcept { return {}; }
-        // 协程结束时的策略
-        std::suspend_always final_suspend() noexcept { return {}; }
-
-        // 接管 co_yield 效应意图（相当于 handle yield）
-        std::suspend_always yield_value(T value) noexcept {
-            current_value = value;
-            return {}; // 暂停执行，把控制权归还给外部调用者！
-        }
-
-        // 接管 co_return 最终结果
-        void return_void() noexcept {}
-        void unhandled_exception() { std::terminate(); }
-
-        Generator get_return_object() {
-            return Generator{std::coroutine_handle<promise_type>::from_promise(*this)};
-        }
-    };
-
-    std::coroutine_handle<promise_type> h;
-
-    ~Generator() { if (h) h.destroy(); }
-
-    // 外部调用者通过 resume 恢复延续
-    bool next() {
-        if (!h.done()) {
-            h.resume(); // 💥 Resume 延续！
-            return !h.done();
-        }
-        return false;
-    }
-
-    T value() const { return h.promise().current_value; }
-};
-
-// 2. 协程函数：执行过程中不断向外 perform yield 效应
-Generator<int> range(int start, int end) {
-    for (int i = start; i < end; ++i) {
-        co_yield i; // 抛出意图，暂停并移交延续
-    }
-}
-```
+<CodePlayground
+  client:visible
+  lang="cpp"
+  title="C++20 协程 promise_type 代数效应处理器实战"
+  description="以 promise_type 接管 co_yield 意图并在外部通过 coroutine_handle.resume() 驱动计算"
+  initialCode={effectsCppCoroutineSnippet}
+/>
 
 通过灵活定制 `promise_type`，C++20 开发者不仅可以实现类似 Python 的生成器，还可以无缝实现任务调度（Task）、惰性计算（Lazy Evaluation）、乃至类似 Rx 的事件流反应式编排。
 

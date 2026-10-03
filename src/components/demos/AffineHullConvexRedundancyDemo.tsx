@@ -24,6 +24,7 @@ import KdeWindowShell from "../framework/KdeWindowShell";
 import KdeCard from "../framework/KdeCard";
 import KdeReadout from "../framework/KdeReadout";
 import KdeBadge from "../framework/KdeBadge";
+import KdeMessageBar from "../framework/KdeMessageBar";
 import { useCanvas2D } from "../framework/useCanvas2D";
 import { useViewer3D } from "../framework/useViewer3D";
 import { clamp } from "@math";
@@ -534,49 +535,29 @@ function VertexCoordinatesRack({
           })}
         </div>
 
-        <div className="mt-2.5 rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)]/70 bg-[var(--kde-panel)]/80 p-2.5 text-xs text-[var(--kde-muted)]">
+        <div className="mt-2.5">
           {!isFourPoint ? (
-            <div>
-              <div className="mb-0.5 flex items-center justify-between font-semibold text-[var(--kde-ink)]">
-                <span>几何特征状态</span>
-                <span
-                  className={
-                    dimension === 2
-                      ? "font-bold text-emerald-600 dark:text-emerald-400"
-                      : "font-bold text-amber-600 dark:text-amber-400"
-                  }
-                >
-                  {dimension === 2
-                    ? "● 仿射无关 (2D 面)"
-                    : "▲ 共线退化 (1D 线)"}
-                </span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-[var(--kde-muted)]">
-                {dimension === 2
-                  ? "3 点仿射无关，生成非退化实心三角形凸包。"
-                  : "3 点共线退化，凸包与仿射包退化为线段与直线。"}
-              </p>
-            </div>
+            <KdeMessageBar
+              variant={dimension === 2 ? "success" : "warning"}
+              mode="card"
+              title={dimension === 2 ? "仿射无关 (2D 面)" : "共线退化 (1D 线)"}
+            >
+              {dimension === 2
+                ? "3 点仿射无关，生成非退化实心三角形凸包。"
+                : "3 点共线退化，凸包与仿射包退化为线段与直线。"}
+            </KdeMessageBar>
           ) : (
-            <div>
-              <div className="mb-0.5 flex items-center justify-between font-semibold text-[var(--kde-ink)]">
-                <span>凸包极点统计</span>
-                <span
-                  className={
-                    (redundantIndices?.length ?? 0) === 0
-                      ? "font-bold text-emerald-600 dark:text-emerald-400"
-                      : "font-bold text-amber-600 dark:text-amber-400"
-                  }
-                >
-                  {4 - (redundantIndices?.length ?? 0)} / 4 极点
-                </span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-[var(--kde-muted)]">
-                {(redundantIndices?.length ?? 0) === 0
-                  ? "所有 4 个顶点均为凸包极点，无内部冗余。"
-                  : `点 P${redundantIndices!.join(", P")} 属于内部冗余点（可由其余点凸组合表示）。`}
-              </p>
-            </div>
+            <KdeMessageBar
+              variant={
+                (redundantIndices?.length ?? 0) === 0 ? "success" : "warning"
+              }
+              mode="card"
+              title={`凸包极点统计：${4 - (redundantIndices?.length ?? 0)} / 4 极点`}
+            >
+              {(redundantIndices?.length ?? 0) === 0
+                ? "所有 4 个顶点均为凸包极点，无内部冗余。"
+                : `点 P${redundantIndices!.join(", P")} 属于内部冗余点（可由其余点凸组合表示）。`}
+            </KdeMessageBar>
           )}
         </div>
       </KdeCard>
@@ -1236,17 +1217,12 @@ function FormulaCard({
         title={title}
         badge={<KdeBadge variant={badgeVariant}>形式化公理与判据</KdeBadge>}
         footer={
-          <div
-            className={`flex items-start gap-2 rounded-[var(--kde-control-radius,0.35rem)] border px-3 py-2 text-xs font-medium transition-all ${
-              statusType === "success"
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200"
-                : statusType === "warning"
-                  ? "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200"
-                  : "border-[var(--kde-border)] bg-[var(--kde-panel)] text-[var(--kde-ink)]"
-            }`}
+          <KdeMessageBar
+            variant={statusType === "info" ? "info" : statusType}
+            mode="card"
           >
             {status}
-          </div>
+          </KdeMessageBar>
         }
       >
         <div

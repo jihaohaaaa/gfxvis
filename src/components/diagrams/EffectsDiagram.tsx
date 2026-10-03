@@ -1,10 +1,18 @@
 import { useState } from "react";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import CanvasResizer from "../framework/CanvasResizer";
-import CapsuleTabs from "../framework/CapsuleTabs";
-import ExpandableDemo from "../framework/ExpandableDemo";
+import KdeTabs, { type KdeTabOption } from "../framework/KdeTabs";
+import KdeWindowShell from "../framework/KdeWindowShell";
+import InteractiveLayout from "../framework/InteractiveLayout";
+import KdeCard from "../framework/KdeCard";
+import KdeBadge from "../framework/KdeBadge";
+import KdeButtonGroup from "../framework/KdeButtonGroup";
+import KdeProgressBar from "../framework/KdeProgressBar";
+import CodePlayground from "../framework/CodePlayground";
 import { AutoMath } from "../framework/AutoMath";
+import ExpandableDemo from "../framework/ExpandableDemo";
 import PresetSelector from "../framework/PresetSelector";
+import KdeButton from "../framework/KdeButton";
 
 // ============================================================================
 // Types & Presets for Algebraic Effects & Effect Systems
@@ -99,144 +107,131 @@ const PRESETS: EffectPreset[] = [
         "由于 JavaScript 缺乏语言级延续（Continuation），React 无法就地恢复，只能‘自杀并重生’，因此必须遵守 Hooks 严禁在条件语句中调用的规则以维持调用顺序。",
     },
     coloredFunctionMatrix: {
-      syncChain: [
-        "main()",
-        "process_order()",
-        "calculate_discount()",
-        "fetch_price()",
-      ],
+      syncChain: ["getUser()", "calculateTax()", "renderUI()"],
       asyncChain: [
-        "async fn main()",
-        "async fn process_order()",
-        "async fn calculate_discount()",
-        "async fn fetch_price()",
+        "async getUser()",
+        "async calculateTax()",
+        "async renderUI()",
       ],
       coloredInfection:
-        "染色函数感染定律：只要最底层的一个 fetch_price 变成了异步（红函数），整条调用链上的所有祖先函数必须全盘改成 async 并在调用点加上 await！",
+        "一旦底层函数染上 async 红色，调用栈上层的所有函数都必须被迫加上 async/await，代码结构被彻底分裂为两套生态。",
       keywordGenericsSolution:
-        "代数效应与效应多态：函数只需声明它可能产生 IO 效应，上层函数既可以被同步执行器消费，也可以被异步调度器消费，彻底终结‘红蓝函数’撕裂！",
+        "代数效应视角下，异步只是一种普通的 Effect（如 perform Await(p)），外层函数的签名保持完全透明一致，彻底消除染色！",
     },
     insight:
-      "代数效应是‘带返回键的超级异常’：普通异常（try/catch）在抛出后栈帧就灰飞烟灭了；而代数效应允许你在捕获异常后，递给它一个值，让它在原地满血复活！",
+      "代数效应（Algebraic Effects）是定界延续（Delimited Continuation）的高级类型化具象：它将‘效应的声明（Perform）’与‘效应的解释（Handler）’彻底解耦，实现了真正意义上的关注点分离！",
   },
   {
     id: "react_suspense",
-    label: "2. React Suspense 异步数据获取 (前端工程中的代数效应落地)",
-    desc: "Dan Abramov 称 React Suspense 为代数效应的世俗落地：抛出 Promise 暂停，解决后重放渲染",
+    label: "2. React Suspense 异步数据获取 (实用主义代数效应落地)",
+    desc: "React 团队用 throw Promise 模拟 perform，用 Suspense 边界模拟 Handler 的工程壮举",
     formalTex:
-      "\\text{use(Promise)} \\cong \\text{perform Fetch(url)} \\quad \\& \\quad \\langle\\text{Suspense}\\rangle \\cong \\text{Handler}",
+      "\\text{useData}(id) \\longrightarrow \\text{throw } \\text{Promise} \\; (\\cong \\text{perform Fetch})",
     effectName: "AsyncFetch (异步加载效应)",
     steps: [
       {
-        label: "步骤 1: 组件调用 use(resource)，数据尚未就绪",
+        label: "步骤 1: 组件读取尚未加载的资源",
         source: "caller",
         codeSnippet:
-          "function UserProfile({ id }) {\n  // 模拟 perform 效应：\n  const user = use(fetchUser(id)); // 命中缓存则直接返回，未命中则触发中断！\n  return <h1>{user.name}</h1>;\n}",
+          "function UserProfile({ id }) {\n  // 试图同步读取尚未到位的异步数据：\n  const user = useData(fetchUser(id));\n  return <h1>{user.name}</h1>;\n}",
         explanation:
-          "在 React 18/19 中，当组件读取未决的 Promise 时，React 内部抛出（Throw）该 Promise，立刻中断当前组件的渲染树生成。",
-        stateBadge: "⏸️ 抛出中断 (Throw Promise)",
+          "组件没有写任何 async/await，也没有在 useEffect 中管理 loading 状态，代码如同纯同步数据流一样清爽。",
+        stateBadge: "📦 触发加载 (Trigger Use)",
         isPaused: true,
       },
       {
-        label: "步骤 2: 最近的外层 <Suspense> 边界捕获中断",
-        source: "handler",
-        codeSnippet:
-          "<Suspense fallback={<Spinner />}>\n  <UserProfile id={42} />\n</Suspense>",
-        explanation:
-          "<Suspense> 边界扮演了效应处理器（Effect Handler）的角色。它捕获了被抛出的 Promise，并在主 DOM 树上挂载 fallback 骨架屏。",
-        stateBadge: "🛡️ 展示占位 (Fallback UI)",
-        isPaused: true,
-      },
-      {
-        label: "步骤 3: 异步网络请求在后台完成响应",
+        label: "步骤 2: 缓存未命中，扔出 Promise 抛向外层",
         source: "runtime",
         codeSnippet:
-          "promise.then(userData => {\n  cache.set(key, userData);\n  // 触发恢复信号！\n  triggerRerender();\n});",
+          "// useData 内部实现：\nif (!cache.has(id)) {\n  const promise = api.get(id).then(res => cache.set(id, res));\n  throw promise; // 💥 用 throw 砸穿执行栈！\n}",
         explanation:
-          "当 Promise 敲定（Resolved），React 接收到信号，准备唤醒挂起的组件。",
-        stateBadge: "⚡ 信号就绪 (Resolved)",
-        isPaused: false,
+          "因为 JS 引擎没有原生 `perform` 指令，React 巧妙借用 `throw` 将控制权强制回溯到外层作用域。",
+        stateBadge: "🚀 抛出 Promise (Throwing)",
+        isPaused: true,
       },
       {
-        label: "步骤 4: 组件被重新调用，从缓存无缝读出数据",
-        source: "caller",
+        label: "步骤 3: Suspense 边界捕获 Promise 并展示骨架屏",
+        source: "handler",
         codeSnippet:
-          "function UserProfile({ id }) {\n  const user = use(fetchUser(id)); // 第二次进入：从缓存立即读出数据！\n  return <h1>Alice</h1>; // 成功渲染！\n}",
+          "<Suspense fallback={<Skeleton />}>\n  <UserProfile id={42} />\n</Suspense>",
         explanation:
-          "第二次进入时 `use` 不再抛出，而是直接返回解析好的数据，真实 UI 替换掉骨架屏！",
-        stateBadge: "✅ 渲染达成 (Rendered)",
+          "Suspense 边界充当了 Effect Handler 的角色：捕获被扔出的 Promise，挂起当前分支，并优雅渲染 fallback 占位符。",
+        stateBadge: "⏳ 渲染 Fallback (Suspended Boundary)",
+        isPaused: true,
+      },
+      {
+        label: "步骤 4: Promise 决议，React 重新发起渲染",
+        source: "runtime",
+        codeSnippet:
+          "// Promise.then 触发重新渲染：\n// 再次调用 UserProfile({ id: 42 })\n// 此时 cache.get(id) 命中缓存，顺利返回 user 对象！",
+        explanation:
+          "数据就绪后，React 重新执行组件函数。这次缓存已在，组件成功完成渲染并挂载到真实的 DOM 树上！",
+        stateBadge: "✨ 重放成功 (Re-rendered)",
         isPaused: false,
       },
     ],
     suspenseComparison: {
-      algebraicWay:
-        "真正的语言级效应：无需重复执行前半截无辜的计算，直接在中断语句继续下一行。",
-      reactWay:
-        "JavaScript 运行环境的无奈折中：通过抛出 Promise 模拟中断，通过重新执行整函数模拟恢复。虽然粗糙，却神奇地在前端实现了无需 useEffect 的无痛异步声明！",
+      algebraicWay: "一次暂停，就地恢复。无重复执行开销。",
+      reactWay: "整树重放（Re-render）。依赖纯函数无副作用假设。",
       reactLimitation:
-        "组件必须保持纯度（Idempotent），严禁在中断前的代码中产生未受保护的副作用（如向外部数组 push 数据），否则重新重放时会导致副作用成倍叠加！",
+        "如果组件函数内部包含不可重入的非幂等副作用，重放将导致状态错乱。",
     },
     coloredFunctionMatrix: {
-      syncChain: ["App", "Dashboard", "UserProfile", "Avatar"],
-      asyncChain: [
-        "async App",
-        "async Dashboard",
-        "async UserProfile",
-        "async Avatar",
-      ],
+      syncChain: ["Component()", "Child()", "Leaf()"],
+      asyncChain: ["async Component() // 破坏 React 原生 JSX 渲染机制"],
       coloredInfection:
-        "如果没有 Suspense，UserProfile 必须声明为 async，导致其父组件全部被迫重构为异步流；有了 Suspense，组件在外部看来依旧是同步声明式函数！",
+        "React 之所以不用 async/await 组件，就是为了防止整个 React 虚拟 DOM 树被异步传染导致调度器瘫痪。",
       keywordGenericsSolution:
-        "React 将异步复杂性封装在调度器内部，向开发者呈现了一份伪同步的纯净代数效应图景。",
+        "Suspense 让所有组件保持普通同步函数外貌，内部通过代数效应风格中断。",
     },
     insight:
-      "React 团队通过一次精彩的工程偷袭，在没有一阶延续（First-class Continuation）语法的纯 JavaScript 运行时中，硬生生模拟出了代数效应的绝大部分开发体验！",
+      "Sebastian Markbåge（React 核心架构师）直言：Suspense 的灵感完全源自 OCaml 和 Eff 的代数效应。它是函数式编程学术思想在数亿终端工业界面上的最伟大降维应用之一！",
   },
   {
-    id: "rust_effects",
+    id: "rust_colored_functions",
     label: "3. Rust 染色函数难题与 Keyword Generics 效应多态",
-    desc: "解密‘函数颜色问题’：为什么 async 会像病毒一样传染？Rust 如何计划用效应多态拯救泛型生态",
+    desc: "函数颜色之痛：为什么 async fn 和普通 fn 无法复用？以及未来的 ?async 效应系统解决方案",
     formalTex:
-      "\\text{fn map}\\langle F: \\text{async? Fn}()\\rangle \\to \\text{async?} \\; \\text{Vec}\\langle T\\rangle",
+      "\\text{trait } \\text{Read} = \\{ \\text{fn read}(\\&\\text{mut self}) \\to \\text{Result} \\quad \\& \\quad \\text{?async} \\}",
     effectName: "Async & Try (Rust 硬编码双效应)",
     steps: [
       {
-        label: "步骤 1: 编写普通同步泛型库函数",
+        label: "步骤 1: 现实痛苦：同步与异步的两套平行标准库",
         source: "caller",
         codeSnippet:
-          "// 优秀的同步 map 函数：\npub fn map<T, U, F>(list: &[T], f: F) -> Vec<U> \nwhere F: Fn(&T) -> U {\n  let mut res = Vec::new();\n  for item in list { res.push(f(item)); }\n  res\n}",
+          "// 同步版本:\ntrait Read { fn read(&mut self, buf: &mut [u8]) -> Result<usize>; }\n// 异步版本 (完全相同的逻辑，却必须重写一遍！):\ntrait AsyncRead { fn poll_read(...) -> Poll<Result<usize>>; }",
         explanation:
-          "此时函数是‘蓝色’的（纯同步）。如果调用方想要传入一个异步网络请求闭包呢？",
-        stateBadge: "🔵 蓝色函数 (Sync)",
-        isPaused: false,
-      },
-      {
-        label: "步骤 2: 遭遇染色函数感染，生态被迫分裂为两份代码！",
-        source: "runtime",
-        codeSnippet:
-          "// 为了支持异步，必须将整个函数重写为 async 红色版本：\npub async fn map_async<T, U, F, Fut>(list: &[T], f: F) -> Vec<U>\nwhere \n  F: Fn(&T) -> Fut,\n  Fut: Future<Output = U> {\n  let mut res = Vec::new();\n  for item in list { res.push(f(item).await); }\n  res\n}",
-        explanation:
-          "这就是臭名昭著的‘函数颜色问题’：`map` 和 `map_async` 逻辑一模一样，但由于 Rust 缺乏效应多态，标准库和生态库被迫复制代码（如 async-std vs std）！",
-        stateBadge: "🔴 红色感染 (Async Duplication)",
+          "Rust 当前缺乏通用的效应系统，导致所有的 I/O Trait 都被迫分裂为两套互不兼容的代码库。",
+        stateBadge: "🎨 颜色分裂 (Colored Split)",
         isPaused: true,
       },
       {
-        label: "步骤 3: 引入 Keyword Generics（效应多态提议）",
-        source: "handler",
+        label: "步骤 2: 效应多态登场：Keyword Generics 提议",
+        source: "runtime",
         codeSnippet:
-          "// Rust 未来效应多态愿景语法：\npub async<A> fn map<T, U, F>(list: &[T], f: F) -> Vec<U>\nwhere \n  F: async<A> Fn(&T) -> U {\n  let mut res = Vec::new();\n  for item in list { res.push(f(item).await<A>); }\n  res\n}",
+          "// 编写一次，同时适配同步与异步：\ntrait Read<const is_async: bool = false> {\n    async<is_async> fn read(&mut self, buf: &mut [u8]) -> Result<usize>;\n}",
         explanation:
-          "效应参数 A 代表该函数是否带有 async 效应。若传入同步闭包，A=false，函数编译为极速纯同步代码；若传入异步闭包，A=true，函数编译为状态机协程！",
-        stateBadge: "🟣 效应多态 (Effect Polymorphic)",
+          "通过将 `async` 提升为编译期的‘效应标记参数’，同一个 Trait 可以根据调用上下文自动具象化为同步或异步版本！",
+        stateBadge: "🔮 效应多态 (Effect Polymorphic)",
+        isPaused: true,
+      },
+      {
+        label: "步骤 3: 泛型算法的终极复用",
+        source: "caller",
+        codeSnippet:
+          "// 无论传入的是文件还是网络套接字，算法自动继承参数效应：\nasync<T::is_async> fn copy_all<T: Read>(reader: &mut T) {\n    reader.read(...).await<T::is_async>;\n}",
+        explanation:
+          "若传入同步 Reader，`.await` 自动消除退化为普通调用；若传入异步 Reader，编译器自动生成状态机 Future！",
+        stateBadge: "🚀 自动退化/特化 (Auto Specialization)",
         isPaused: false,
       },
       {
-        label: "步骤 4: 编译期单态化分发，一石二鸟",
-        source: "caller",
+        label: "步骤 4: 零开销消除双重代码维护地狱",
+        source: "handler",
         codeSnippet:
-          "// 一份代码，双向通吃！\nlet v1 = map(&data, |x| x + 1);             // 生成极速同步内联汇编！\nlet v2 = map(&data, |x| async { fetch(x) }).await; // 生成高效状态机！",
+          "// 编译产物：\n// 1. 同步环境生成极简裸调用，零抽象开销！\n// 2. 异步环境生成精确 Future 状态机，零堆分配！",
         explanation:
-          "效应系统让语言在编译期把‘是否有副作用’作为类型系统的维度推导，彻底根除代码重复。",
+          "Rust 的 Keyword Generics 计划将把代数效应理论转化为编译期单态化的零开销利刃！",
         stateBadge: "🎉 终极统一 (Unified)",
         isPaused: false,
       },
@@ -329,14 +324,73 @@ const PRESETS: EffectPreset[] = [
   },
 ];
 
-// ============================================================================
-// Component Definition
-// ============================================================================
+const VIEW_OPTIONS: readonly KdeTabOption<
+  | "timeline_tracer"
+  | "suspense_comparison"
+  | "colored_functions"
+  | "code_sandbox"
+>[] = [
+  { id: "timeline_tracer", label: "代数效应时序追踪器" },
+  { id: "suspense_comparison", label: "React Suspense 效应对照" },
+  { id: "colored_functions", label: "染色函数与效应多态矩阵" },
+  { id: "code_sandbox", label: "TS 发生器效应沙盒" },
+];
+
+const EFFECTS_TS_CODE = `// TypeScript 使用 Generator 模拟代数效应 (Algebraic Effects)
+// 1. 定义效应标识
+type Effect = 
+  | { type: "GET_STATE" }
+  | { type: "SET_STATE"; value: number }
+  | { type: "LOG"; message: string };
+
+// 2. 纯业务代码 (通过 yield 触发 perform)
+function* businessLogic() {
+  const initial: number = yield { type: "GET_STATE" };
+  yield { type: "LOG", message: "读取当前状态: " + initial };
+  
+  yield { type: "SET_STATE", value: initial + 10 };
+  const updated: number = yield { type: "GET_STATE" };
+  
+  return updated * 2;
+}
+
+// 3. 效应处理器 Handler (管理定界延续与状态存储)
+function runWithHandler<T>(gen: Generator<Effect, T, any>, initialStore = 0): T {
+  let store = initialStore;
+  let nextVal: any = undefined;
+  
+  while (true) {
+    const result = gen.next(nextVal);
+    if (result.done) return result.value;
+    
+    const eff = result.value;
+    switch (eff.type) {
+      case "GET_STATE":
+        nextVal = store;
+        break;
+      case "SET_STATE":
+        store = eff.value;
+        nextVal = undefined;
+        break;
+      case "LOG":
+        console.log("[Effect Handler Log]", eff.message);
+        nextVal = undefined;
+        break;
+    }
+  }
+}
+
+const finalResult = runWithHandler(businessLogic(), 42);
+console.log("最终业务计算结果 ( (42 + 10) * 2 ) =", finalResult);
+`;
 
 export default function EffectsDiagram() {
   const [activeTab, setActiveTab] = useState<
-    "perform_resume" | "react_suspense" | "function_color"
-  >("perform_resume");
+    | "timeline_tracer"
+    | "suspense_comparison"
+    | "colored_functions"
+    | "code_sandbox"
+  >("timeline_tracer");
 
   const [selectedPresetId, setSelectedPresetId] = useState<string>("state_log");
   const [currentStepIdx, setCurrentStepIdx] = useState<number>(0);
@@ -346,360 +400,446 @@ export default function EffectsDiagram() {
 
   const handleReset = () => {
     setSelectedPresetId("state_log");
-    setActiveTab("perform_resume");
+    setActiveTab("timeline_tracer");
     setCurrentStepIdx(0);
   };
 
-  const activeStep =
+  const currentStep =
     currentPreset.steps[currentStepIdx] || currentPreset.steps[0];
+  const totalSteps = currentPreset.steps.length;
 
   return (
     <AutoMath>
       <ExpandableDemo id="effects-sandbox">
-        <div className="my-8 rounded-xl border border-border/80 bg-card p-4 sm:p-6 shadow-sm">
-          {/* Header Info */}
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4">
-            <div>
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <span>代数效应与效应系统（Algebraic Effects）交互探针</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-medium">
-                  Perform / Resume 与副作用驯服
-                </span>
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                单步演示代数效应的暂停与延续恢复（Perform & Resume）、React
-                Suspense 模拟代数效应的运行拓扑，以及染色函数（Function Color
-                Problem）与效应多态。
-              </p>
-            </div>
-          </div>
-
-          {/* Preset Selector */}
-          <div className="mb-4">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-              现代效应模型经典场景预设
-            </label>
-            <PresetSelector
-              options={PRESETS.map((p) => ({
-                id: p.id,
-                label: p.label,
-                description: p.desc,
-              }))}
-              value={selectedPresetId}
-              onChange={(id: string) => {
-                setSelectedPresetId(id);
-                setCurrentStepIdx(0);
-              }}
-            />
-          </div>
-
-          {/* Mode Capsule Tabs */}
-          <div className="mb-4">
-            <CapsuleTabs
-              options={[
-                {
-                  id: "perform_resume",
-                  label: "代数效应时序追踪 (Perform & Resume)",
-                },
-                { id: "react_suspense", label: "React Suspense 效应对照" },
-                { id: "function_color", label: "染色函数与效应多态矩阵" },
-              ]}
-              value={activeTab}
-              onChange={(tab) =>
-                setActiveTab(
-                  tab as "perform_resume" | "react_suspense" | "function_color",
-                )
-              }
-              size="sm"
-            />
-          </div>
-
-          {/* Main Interactive Stage Container */}
-          <div className="relative overflow-hidden rounded-lg border border-border/70 bg-card/60 p-4 sm:p-5 h-[var(--demo-height,28rem)] flex flex-col justify-between">
-            {/* Canvas Toolbar with S/M/L heights */}
-            <CanvasToolbar onReset={handleReset} />
-            <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
-
-            {/* Tab 1: Perform & Resume Stepper View */}
-            {activeTab === "perform_resume" && (
-              <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-                <div className="rounded-lg bg-card/80 p-3 border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span className="text-xs font-semibold text-muted-foreground block mb-0.5">
-                      形式化效应签名 (Formal Effect Signature)
+        <KdeWindowShell
+          eyebrow="TYPE THEORY WORKSPACE · ALGEBRAIC EFFECTS"
+          mark="ε"
+          modeTag="DENSE-DOCK"
+          title="代数效应与效应系统（Algebraic Effects）交互探针"
+        >
+          <InteractiveLayout
+            preset="dense-dock"
+            top={
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-[var(--kde-muted)]">
+                      探针视角：
                     </span>
-                    <div className="text-primary font-mono text-sm">
+                    <KdeTabs
+                      onChange={(val) => setActiveTab(val)}
+                      options={VIEW_OPTIONS}
+                      size="sm"
+                      value={activeTab}
+                    />
+                  </div>
+                </div>
+              </div>
+            }
+            main={
+              <div className="relative flex h-[var(--demo-height,28rem)] w-full flex-col overflow-hidden rounded-xl border border-[var(--kde-border)] bg-[var(--kde-canvas)] p-5 shadow-inner">
+                <CanvasToolbar onReset={handleReset} />
+
+                {activeTab === "code_sandbox" ? (
+                  <div className="flex-1 flex flex-col overflow-y-auto pr-1">
+                    <CodePlayground
+                      code={EFFECTS_TS_CODE}
+                      description="使用 ES6 Generator yield 模拟 perform 与定界延续，实时运行状态读取与日志记录效应。"
+                      lang="ts"
+                      maxHeight="20rem"
+                      title="TypeScript 代数效应沙盒"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    {/* Shared Top Formal Signature */}
+                    <div className="rounded-lg bg-[var(--kde-raised)] p-3 border border-[var(--kde-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                      <div>
+                        <span className="text-xs font-semibold text-[var(--kde-muted)] block mb-0.5">
+                          形式化效应签名 (Formal Effect Signature)
+                        </span>
+                        <div className="text-[var(--kde-accent)] font-mono text-sm">
+                          {`$${currentPreset.formalTex}$`}
+                        </div>
+                      </div>
+                      <div className="text-xs px-2.5 py-1 rounded-md bg-[var(--kde-panel)] text-[var(--kde-ink)] font-mono border border-[var(--kde-border)]">
+                        目标效应：{currentPreset.effectName}
+                      </div>
+                    </div>
+
+                    {/* Tab 1: Algebraic Effects Timeline Tracer View */}
+                    {activeTab === "timeline_tracer" && (
+                      <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+                        {/* Stepper Timeline Navigation */}
+                        <div className="rounded-lg bg-[var(--kde-raised)] p-3 border border-[var(--kde-border)] flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <KdeButtonGroup attached size="xs">
+                            <KdeButton
+                              size="xs"
+                              variant="default"
+                              disabled={currentStepIdx === 0}
+                              onClick={() =>
+                                setCurrentStepIdx((prev) =>
+                                  Math.max(0, prev - 1),
+                                )
+                              }
+                            >
+                              ◀ 上一步
+                            </KdeButton>
+                            {currentPreset.steps.map((_, idx) => (
+                              <KdeButton
+                                key={idx}
+                                size="xs"
+                                variant={
+                                  currentStepIdx === idx ? "primary" : "default"
+                                }
+                                onClick={() => setCurrentStepIdx(idx)}
+                                aria-label={`执行步进 ${idx + 1}`}
+                              >
+                                {idx + 1}
+                              </KdeButton>
+                            ))}
+                            <KdeButton
+                              size="xs"
+                              variant="primary"
+                              disabled={currentStepIdx === totalSteps - 1}
+                              onClick={() =>
+                                setCurrentStepIdx((prev) =>
+                                  Math.min(totalSteps - 1, prev + 1),
+                                )
+                              }
+                            >
+                              下一步 ▶
+                            </KdeButton>
+                          </KdeButtonGroup>
+
+                          <div className="flex items-center gap-2.5">
+                            <KdeProgressBar
+                              steps={totalSteps}
+                              value={currentStepIdx + 1}
+                              size="sm"
+                              className="w-28"
+                              showLabel={false}
+                            />
+                            <KdeBadge variant="primary">
+                              Step {currentStepIdx + 1} / {totalSteps}
+                            </KdeBadge>
+                          </div>
+                        </div>
+
+                        {/* Active Step Visual Box */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 text-xs">
+                          {/* Left: Code Box */}
+                          <div className="rounded-lg bg-[var(--kde-raised)] p-3.5 border border-[var(--kde-border)] font-mono flex flex-col justify-between">
+                            <div>
+                              <div className="text-[var(--kde-muted)] font-semibold text-[11px] mb-2 flex items-center justify-between">
+                                <span>{currentStep.label}</span>
+                                <KdeBadge
+                                  variant={
+                                    currentStep.source === "caller"
+                                      ? "primary"
+                                      : currentStep.source === "runtime"
+                                        ? "warning"
+                                        : "success"
+                                  }
+                                >
+                                  {currentStep.source.toUpperCase()}
+                                </KdeBadge>
+                              </div>
+                              <pre className="text-[var(--kde-ink)] whitespace-pre-wrap leading-relaxed text-[11px] bg-[var(--kde-panel)] p-2.5 rounded-lg border border-[var(--kde-border)]">
+                                {currentStep.codeSnippet}
+                              </pre>
+                            </div>
+                            <div className="mt-3 flex items-center justify-between text-[11px] border-t border-[var(--kde-border)] pt-2">
+                              <span className="text-[var(--kde-muted)]">
+                                执行状态：
+                              </span>
+                              <span className="font-bold text-[var(--kde-ink)]">
+                                {currentStep.stateBadge}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right: Architectural Explanation */}
+                          <KdeCard
+                            title="延续流转机理（Continuation Dynamics）"
+                            badge={
+                              <KdeBadge variant="primary">
+                                CONTROL FLOW
+                              </KdeBadge>
+                            }
+                            variant="highlight"
+                            footer={
+                              <div className="text-[11px] text-[var(--kde-muted)]">
+                                <strong>控制流拓扑：</strong>
+                                {currentStep.isPaused
+                                  ? " 执行暂停在当前定界帧，CPU 控制权向上移交至就近的 Handler。"
+                                  : " 定界延续被唤醒，控制权无缝切回原调用点继续向前求值。"}
+                              </div>
+                            }
+                          >
+                            <p className="text-[var(--kde-ink)] leading-relaxed text-xs">
+                              {currentStep.explanation}
+                            </p>
+                          </KdeCard>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tab 2: React Suspense Comparison View */}
+                    {activeTab === "suspense_comparison" && (
+                      <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+                        <div className="text-center max-w-xl mx-auto py-0.5">
+                          <h4 className="text-sm font-bold text-[var(--kde-ink)]">
+                            纯粹代数效应 vs React Suspense 的工程世俗化
+                          </h4>
+                          <p className="text-xs text-[var(--kde-muted)] mt-0.5">
+                            从学术界的“原点就地恢复”到工程界的“重放渲染（Re-render）”
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 flex-1 text-xs">
+                          {/* Theoretical Algebraic Effect Side */}
+                          <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3.5 flex flex-col justify-between text-[var(--kde-ink)] ring-1 ring-emerald-500/20">
+                            <div>
+                              <div className="flex items-center justify-between pb-2 border-b border-emerald-500/20 mb-2">
+                                <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                                  真正的代数效应 (Koka / Eff)
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 font-mono">
+                                  Delimited Cont
+                                </span>
+                              </div>
+                              <div className="text-xs space-y-2 text-[var(--kde-ink)]">
+                                <p className="leading-relaxed">
+                                  {
+                                    currentPreset.suspenseComparison
+                                      .algebraicWay
+                                  }
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-[10px] text-emerald-800 dark:text-emerald-300 font-mono mt-2 border-t border-emerald-500/20 pt-1.5">
+                              优势：单步暂停与精准复原，零冗余计算开销。
+                            </div>
+                          </div>
+
+                          {/* React Suspense Side */}
+                          <div className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-3.5 flex flex-col justify-between text-[var(--kde-ink)] ring-1 ring-sky-500/20">
+                            <div>
+                              <div className="flex items-center justify-between pb-2 border-b border-sky-500/20 mb-2">
+                                <span className="font-bold text-sky-700 dark:text-sky-300">
+                                  React Suspense 实用主义实现
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-800 dark:text-sky-200 font-mono">
+                                  Throw Promise
+                                </span>
+                              </div>
+                              <div className="text-xs space-y-2 text-[var(--kde-ink)]">
+                                <p className="leading-relaxed">
+                                  {currentPreset.suspenseComparison.reactWay}
+                                </p>
+                                <div className="p-2 rounded-lg bg-amber-500/10 text-[11px] text-[var(--kde-ink)] border border-amber-500/30 mt-2">
+                                  ⚠️{" "}
+                                  <strong className="text-amber-700 dark:text-amber-400">
+                                    局限性：
+                                  </strong>
+                                  <span className="text-[var(--kde-muted)]">
+                                    {
+                                      currentPreset.suspenseComparison
+                                        .reactLimitation
+                                    }
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-[10px] text-sky-800 dark:text-sky-300 font-mono mt-2 border-t border-sky-500/20 pt-1.5">
+                              哲学：借助 JS
+                              异常机制跨级跳转，依靠纯函数重放绕开延续缺乏。
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tab 3: Colored Functions Matrix View */}
+                    {activeTab === "colored_functions" && (
+                      <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+                        <div className="text-center max-w-xl mx-auto py-0.5">
+                          <h4 className="text-sm font-bold text-[var(--kde-ink)]">
+                            染色函数难题（Function Color Problem）与效应多态
+                          </h4>
+                          <p className="text-xs text-[var(--kde-muted)] mt-0.5">
+                            “你的函数是什么颜色？”——代数效应如何一劳永逸终结异步传染
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 flex-1 text-xs">
+                          {/* Blue Synchronous Stack */}
+                          <div className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-3.5 flex flex-col justify-between text-[var(--kde-ink)] ring-1 ring-sky-500/20">
+                            <div>
+                              <div className="flex items-center justify-between pb-2 border-b border-sky-500/20 mb-2">
+                                <span className="font-bold text-sky-700 dark:text-sky-300">
+                                  🔵 纯同步调用链 (Blue Stack)
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-800 dark:text-sky-200 font-mono">
+                                  Sync
+                                </span>
+                              </div>
+                              <div className="space-y-1.5 font-mono text-[11px]">
+                                {currentPreset.coloredFunctionMatrix.syncChain.map(
+                                  (item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="p-1.5 rounded bg-[var(--kde-panel)] text-[var(--kde-ink)] border border-[var(--kde-border)]"
+                                    >
+                                      {item}
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-[10px] text-sky-800 dark:text-sky-300 font-mono mt-2 border-t border-sky-500/20 pt-1.5">
+                              同步函数只能调用同步函数，一旦混入异步便彻底断裂。
+                            </div>
+                          </div>
+
+                          {/* Red Asynchronous Stack */}
+                          <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-3.5 flex flex-col justify-between text-[var(--kde-ink)] ring-1 ring-rose-500/20">
+                            <div>
+                              <div className="flex items-center justify-between pb-2 border-b border-rose-500/20 mb-2">
+                                <span className="font-bold text-rose-700 dark:text-rose-300">
+                                  🔴 异步传染调用链 (Red Infection)
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-800 dark:text-rose-200 font-mono">
+                                  Async Infected
+                                </span>
+                              </div>
+                              <div className="space-y-1.5 font-mono text-[11px]">
+                                {currentPreset.coloredFunctionMatrix.asyncChain.map(
+                                  (item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="p-1.5 rounded bg-[var(--kde-panel)] text-[var(--kde-ink)] border border-[var(--kde-border)]"
+                                    >
+                                      {item}
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                              <div className="mt-2 text-[11px] text-[var(--kde-muted)]">
+                                {
+                                  currentPreset.coloredFunctionMatrix
+                                    .coloredInfection
+                                }
+                              </div>
+                            </div>
+                            <div className="text-[10px] text-rose-800 dark:text-rose-300 font-mono mt-2 border-t border-rose-500/20 pt-1.5">
+                              解法：
+                              {
+                                currentPreset.coloredFunctionMatrix
+                                  .keywordGenericsSolution
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
+              </div>
+            }
+            side={
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <KdeCard title="精选代数效应工程预设" variant="dense">
+                  <PresetSelector
+                    layout="vertical"
+                    size="xs"
+                    options={PRESETS.map((p) => ({
+                      id: p.id,
+                      label: p.label,
+                      description: p.desc,
+                    }))}
+                    value={selectedPresetId}
+                    onChange={(id: string) => {
+                      setSelectedPresetId(id);
+                      setCurrentStepIdx(0);
+                    }}
+                  />
+                </KdeCard>
+
+                <KdeCard title="时序流转与执行状态" variant="dense">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[var(--kde-muted)]">
+                        当前步骤：
+                      </span>
+                      <span className="font-semibold text-[var(--kde-ink)] truncate max-w-[140px]">
+                        {currentStep.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[var(--kde-muted)]">
+                        执行状态：
+                      </span>
+                      <span className="font-bold text-[var(--kde-accent)]">
+                        {currentStep.stateBadge}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[var(--kde-muted)]">
+                        流转来源：
+                      </span>
+                      <KdeBadge
+                        variant={
+                          currentStep.source === "caller"
+                            ? "primary"
+                            : currentStep.source === "runtime"
+                              ? "warning"
+                              : "success"
+                        }
+                      >
+                        {currentStep.source.toUpperCase()}
+                      </KdeBadge>
+                    </div>
+                    <div className="pt-1">
+                      <KdeProgressBar
+                        steps={totalSteps}
+                        value={currentStepIdx + 1}
+                        size="sm"
+                        showLabel
+                      />
+                    </div>
+                  </div>
+                </KdeCard>
+
+                <KdeCard title="形式化效应代数公理" variant="dense">
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2 rounded bg-[var(--kde-panel)] border border-[var(--kde-border)] font-mono text-[11px] text-[var(--kde-accent)]">
                       {`$${currentPreset.formalTex}$`}
                     </div>
-                  </div>
-                  <div className="text-xs px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground font-mono">
-                    效应目标：{currentPreset.effectName}
-                  </div>
-                </div>
-
-                {/* Stepper Controls Bar */}
-                <div className="flex items-center justify-between bg-muted/30 p-2.5 rounded-lg border border-border/60">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-foreground">
-                      执行流步进：
-                    </span>
-                    <div className="flex gap-1">
-                      {currentPreset.steps.map((_, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          aria-label={`执行步进 ${idx + 1}`}
-                          onClick={() => setCurrentStepIdx(idx)}
-                          className={`h-6 w-6 rounded text-xs font-mono font-bold transition-all ${
-                            currentStepIdx === idx
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
-                        >
-                          {idx + 1}
-                        </button>
-                      ))}
+                    <div className="text-[11px] text-[var(--kde-muted)] leading-relaxed">
+                      目标效应契约：<strong>{currentPreset.effectName}</strong>
+                      。代数效应通过定界延续与就近 Handler
+                      实现无侵入控制流跳转。
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={currentStepIdx === 0}
-                      onClick={() =>
-                        setCurrentStepIdx((prev) => Math.max(0, prev - 1))
-                      }
-                      className="px-2.5 py-1 text-xs rounded bg-secondary text-secondary-foreground disabled:opacity-40"
-                    >
-                      ◀ 上一步
-                    </button>
-                    <button
-                      type="button"
-                      disabled={
-                        currentStepIdx === currentPreset.steps.length - 1
-                      }
-                      onClick={() =>
-                        setCurrentStepIdx((prev) =>
-                          Math.min(currentPreset.steps.length - 1, prev + 1),
-                        )
-                      }
-                      className="px-2.5 py-1 text-xs rounded bg-primary text-primary-foreground disabled:opacity-40"
-                    >
-                      下一步 ▶
-                    </button>
-                  </div>
-                </div>
-
-                {/* Active Step Visual Card */}
-                <div className="rounded-lg bg-card/90 border border-border/80 p-4 shadow-sm flex flex-col justify-between flex-1">
-                  <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-border/40 gap-2 mb-2">
-                      <span className="font-bold text-xs text-foreground flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                        {activeStep.label}
-                      </span>
-                      <span className="text-xs px-2 py-0.5 rounded font-mono font-semibold bg-primary/10 text-primary">
-                        {activeStep.stateBadge}
-                      </span>
-                    </div>
-
-                    <pre className="text-foreground/90 whitespace-pre-wrap leading-relaxed text-xs bg-black/30 p-3 rounded-lg border border-white/5 font-mono mb-3">
-                      {activeStep.codeSnippet}
-                    </pre>
-                  </div>
-
-                  <div className="text-xs text-muted-foreground leading-relaxed bg-muted/20 p-2.5 rounded border border-border/40">
-                    💡 <strong>时序解析</strong>：{activeStep.explanation}
-                  </div>
-                </div>
+                </KdeCard>
               </div>
-            )}
-
-            {/* Tab 2: React Suspense Comparison View */}
-            {activeTab === "react_suspense" && (
-              <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-                <div className="text-center max-w-xl mx-auto py-0.5">
-                  <h4 className="text-sm font-bold text-foreground">
-                    纯粹代数效应 vs React Suspense 的工程世俗化
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    从语言级第一类延续（Continuation）到 JavaScript 抛出 Promise
-                    与重放
-                  </p>
+            }
+            bottom={
+              <KdeCard>
+                <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                  🔍 代数效应理论洞见 (Algebraic Effects Insight)
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 flex-1 text-xs">
-                  {/* Pure Algebraic Effects */}
-                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/15 p-3.5 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between pb-2 border-b border-emerald-500/20 mb-2">
-                        <span className="font-bold text-emerald-400">
-                          真正的代数效应 (Koka / Eff)
-                        </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                          语言级一等延续
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-muted-foreground text-[11px] leading-relaxed">
-                        <p>{currentPreset.suspenseComparison.algebraicWay}</p>
-                        <div className="p-2.5 rounded bg-black/30 font-mono text-[11px] text-emerald-200 border border-emerald-500/20">
-                          let user = perform Fetch(id);
-                          <br />
-                          // 延续 k 仅仅包含下一行：
-                          <br />
-                          render(user);
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-emerald-300/80 font-mono mt-2 border-t border-emerald-500/20 pt-1.5">
-                      零重放开销，只执行一次，局部状态安全保留。
-                    </div>
-                  </div>
-
-                  {/* React Suspense Pragmatic Compromise */}
-                  <div className="rounded-lg border border-cyan-500/30 bg-cyan-950/15 p-3.5 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between pb-2 border-b border-cyan-500/20 mb-2">
-                        <span className="font-bold text-cyan-400">
-                          React Suspense 实用主义实现
-                        </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">
-                          Throw Promise & Replay
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-muted-foreground text-[11px] leading-relaxed">
-                        <p>{currentPreset.suspenseComparison.reactWay}</p>
-                        <div className="p-2.5 rounded bg-black/30 font-mono text-[11px] text-cyan-200 border border-cyan-500/20">
-                          if (!cache.has(id)) throw promise;
-                          <br />
-                          // Suspense 捕获并重置组件！
-                          <br />
-                          // 之后再次从第一行重新执行组件！
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-rose-300 font-mono mt-2 border-t border-cyan-500/20 pt-1.5">
-                      ⚠️ 限制：
-                      {currentPreset.suspenseComparison.reactLimitation}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 3: Function Color & Keyword Generics View */}
-            {activeTab === "function_color" && (
-              <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-                <div className="text-center max-w-xl mx-auto py-0.5">
-                  <h4 className="text-sm font-bold text-foreground">
-                    染色函数难题（Function Color Problem）与效应多态
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    红函数（Async）与蓝函数（Sync）的生态割裂，以及效应系统如何消除重复代码
-                  </p>
-                </div>
-
-                {/* Call Stack Comparison */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="rounded-lg border border-blue-500/30 bg-blue-950/15 p-3">
-                    <div className="font-bold text-blue-400 mb-1 flex items-center justify-between">
-                      <span>🔵 纯同步调用链 (Blue Stack)</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono">
-                        Sync
-                      </span>
-                    </div>
-                    <div className="space-y-1.5 font-mono text-[11px] text-blue-200/90 mt-2">
-                      {currentPreset.coloredFunctionMatrix.syncChain.map(
-                        (fnName, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <span className="text-muted-foreground text-[10px]">
-                              L{idx + 1}:
-                            </span>
-                            <span>{fnName}</span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border border-rose-500/30 bg-rose-950/15 p-3">
-                    <div className="font-bold text-rose-400 mb-1 flex items-center justify-between">
-                      <span>🔴 异步传染调用链 (Red Infection)</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono">
-                        Infected
-                      </span>
-                    </div>
-                    <div className="space-y-1.5 font-mono text-[11px] text-rose-200/90 mt-2">
-                      {currentPreset.coloredFunctionMatrix.asyncChain.map(
-                        (fnName, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <span className="text-muted-foreground text-[10px]">
-                              L{idx + 1}:
-                            </span>
-                            <span>{fnName}</span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Solution Banner */}
-                <div className="rounded-lg bg-card/90 border border-border/80 p-3.5 text-xs">
-                  <div className="font-bold text-primary mb-1">
-                    💡 效应多态（Effect Polymorphism）终极破局：
-                  </div>
-                  <p className="text-muted-foreground leading-relaxed text-[11px] mb-2">
-                    {
-                      currentPreset.coloredFunctionMatrix
-                        .keywordGenericsSolution
-                    }
-                  </p>
-                  <div className="font-mono text-[11px] bg-black/30 p-2.5 rounded border border-white/5 text-foreground/90">
-                    {currentPreset.coloredFunctionMatrix.coloredInfection}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Footer Insight */}
-            <div className="mt-3 rounded bg-muted/40 p-2.5 text-[11px] text-muted-foreground border border-border/40 flex items-start gap-2">
-              <span className="text-primary font-bold">💡 理论洞见：</span>
-              <span className="flex-1">{currentPreset.insight}</span>
-            </div>
-          </div>
-
-          {/* Speed Reference Accordion */}
-          <details className="mt-4 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs">
-            <summary className="font-semibold text-foreground cursor-pointer select-none">
-              代数效应（Algebraic Effects）与现代语言理论核心速查
-            </summary>
-            <div className="mt-3 text-xs text-muted-foreground space-y-3 leading-relaxed">
-              <p>
-                <strong>1. Plotkin & Pretnar（2009）代数效应与处理器</strong>：
-                将副作用的形式化建模从传统的
-                Monad（单子）中彻底解耦。操作声明只规定“我要发起什么效应（Perform）”，具体的副作用执行完全由外层动态绑定的处理器（Handler）决定，实现了副作用与纯计算的彻底正交。
-              </p>
-              <p>
-                <strong>
-                  2. 什么是单次恢复（One-shot）与多次恢复（Multi-shot）？
-                </strong>
-                ： 若延续闭包 $k$ 只能被调用一次（如大多数异步
-                I/O、状态读写），称为 One-shot 延续；若延续闭包 $k${" "}
-                允许被多次重复调用（例如在回溯算法、概率编程和非确定性多分支中分叉探索），称为
-                Multi-shot 延续。
-              </p>
-              <p>
-                <strong>3. 效应行多态（Effect Row Polymorphism）</strong>：
-                类型签名形如{" "}
-                {
-                  "$f: A \\to B \\ \\& \\ \\langle \\text{IO}, \\text{State} \\mid \\rho \\rangle$"
-                }
-                。类型系统不仅检查入参和出参的类型，还显式推导计算过程中会引发哪些副作用集合。未被处理的效应将自动向上冒泡，保证了无遗漏的编译期静态效应安全。
-              </p>
-            </div>
-          </details>
-        </div>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--kde-ink)]">
+                  {currentPreset.insight}
+                </p>
+              </KdeCard>
+            }
+          />
+        </KdeWindowShell>
       </ExpandableDemo>
     </AutoMath>
   );

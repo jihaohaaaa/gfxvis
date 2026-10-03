@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import PresetSelector, { type PresetOption } from "../framework/PresetSelector";
+import KdeCard from "../framework/KdeCard";
+import KdeBadge from "../framework/KdeBadge";
+import KdeGroupBox from "../framework/KdeGroupBox";
 
 const PRESETS: PresetOption[] = [
   {
@@ -69,13 +72,13 @@ export default function AbstractLinearMapDiagram() {
 
   return (
     <AutoMath>
-      <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
+      <div className="my-8 rounded-2xl border border-[var(--kde-border)] bg-[var(--kde-canvas)] p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            <div className="text-base font-semibold text-[var(--kde-ink)]">
               抽象算子同构图：多项式空间 {"$\\mathcal{P}_2$"} 与求导算子 $D$
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-[var(--kde-muted)]">
               体验抽象函数世界的求导运算 $p'(x)$ 与坐标空间 {"$\\mathbb{R}^3$"}{" "}
               矩阵乘法 {"$[D]\\boldsymbol{\\beta}$"} 的完全同构等价
             </p>
@@ -83,11 +86,13 @@ export default function AbstractLinearMapDiagram() {
         </div>
 
         <div className="mb-5">
-          <PresetSelector
-            onChange={handlePreset}
-            options={PRESETS}
-            value={presetKey}
-          />
+          <KdeGroupBox title="多项式预设与自定义调节">
+            <PresetSelector
+              onChange={handlePreset}
+              options={PRESETS}
+              value={presetKey}
+            />
+          </KdeGroupBox>
         </div>
 
         {/* Sliders */}
@@ -133,153 +138,150 @@ export default function AbstractLinearMapDiagram() {
         {/* Two parallel worlds: Abstract Function World vs Matrix Coordinate World */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {/* World 1: Abstract Vector & Operator World */}
-          <div className="flex flex-col justify-between rounded-xl border border-sky-200 bg-sky-50/40 p-4 dark:border-sky-950 dark:bg-sky-950/20">
+          <KdeCard
+            title="1. 抽象向量与算子世界（函数空间）"
+            headerAction={
+              <KdeBadge variant="primary">
+                {"$\\mathcal{P}_2 \\xrightarrow{\\; D \\;} \\mathcal{P}_2$"}
+              </KdeBadge>
+            }
+            className="flex flex-col justify-between"
+          >
             <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-sky-900 dark:text-sky-300">
-                  1. 抽象向量与算子世界（函数空间）
-                </span>
-                <span className="rounded bg-sky-100 px-2 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-900 dark:text-sky-200">
-                  {"$\\mathcal{P}_2 \\xrightarrow{\\; D \\;} \\mathcal{P}_2$"}
-                </span>
-              </div>
-
               {/* Input polynomial */}
-              <div className="mt-4 rounded-lg bg-white p-3 shadow-xs dark:bg-slate-900">
-                <div className="text-[11px] text-slate-500">
+              <div className="mt-2 rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-3 shadow-xs">
+                <div className="text-[11px] font-medium text-[var(--kde-muted)]">
                   输入抽象多项式 {"$p(x) \\in \\mathcal{P}_2$"}：
                 </div>
-                <div className="mt-1 font-mono text-sm text-slate-800 dark:text-slate-100">
+                <div className="mt-1 font-mono text-sm font-semibold text-[var(--kde-ink)]">
                   {`$p(x) = ${fmtLead(a)} ${fmt(b)} x ${fmt(c)} x^2$`}
                 </div>
               </div>
 
               {/* Downward operator arrow */}
-              <div className="my-2 flex items-center justify-center gap-2 text-xs font-semibold text-sky-600 dark:text-sky-400">
+              <div className="my-3 flex items-center justify-center gap-2 text-xs font-semibold text-[var(--kde-accent)]">
                 <span>施加微分算子</span>
                 {"$D = \\frac{\\mathrm{d}}{\\mathrm{d}x}$"}
                 <span>↓</span>
               </div>
 
               {/* Output derivative polynomial */}
-              <div className="rounded-lg bg-white p-3 shadow-xs dark:bg-slate-900">
-                <div className="text-[11px] text-slate-500">
+              <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-3 shadow-xs">
+                <div className="text-[11px] font-medium text-[var(--kde-muted)]">
                   导数多项式 {"$D(p) = p'(x) \\in \\mathcal{P}_2$"}：
                 </div>
-                <div className="mt-1 font-mono text-sm font-semibold text-sky-700 dark:text-sky-400">
+                <div className="mt-1 font-mono text-sm font-bold text-sky-700 dark:text-sky-300">
                   {`$p'(x) = ${fmtLead(dConst)} ${fmt(dLinear)} x$`}
                 </div>
               </div>
             </div>
 
-            <div className="mt-3 rounded bg-white/70 p-2 text-center text-[11px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
+            <div className="mt-3 rounded border border-[var(--kde-border)] bg-[var(--kde-panel)] p-2 text-center text-[11px] text-[var(--kde-muted)]">
               客观运算：多项式函数经微积分规则直接逐项求导
             </div>
-          </div>
+          </KdeCard>
 
           {/* World 2: Matrix & Coordinate Vector World */}
-          <div className="flex flex-col justify-between rounded-xl border border-indigo-200 bg-indigo-50/40 p-4 dark:border-indigo-950 dark:bg-indigo-950/20">
+          <KdeCard
+            title="2. 坐标与矩阵表示世界（数字空间）"
+            headerAction={
+              <KdeBadge variant="primary">
+                基底 {"$\\mathcal{B}=(1, x, x^2)$"}
+              </KdeBadge>
+            }
+            className="flex flex-col justify-between"
+          >
             <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
-                  2. 坐标与矩阵表示世界（数字空间）
-                </span>
-                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-                  基底 {"$\\mathcal{B}=(1, x, x^2)$"}
-                </span>
-              </div>
-
               {/* Input coordinate vector */}
-              <div className="mt-4 rounded-lg bg-white p-3 shadow-xs dark:bg-slate-900">
-                <div className="text-[11px] text-slate-500">
+              <div className="mt-2 rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-3 shadow-xs">
+                <div className="text-[11px] font-medium text-[var(--kde-muted)]">
                   坐标映射快照{" "}
                   {
                     "$\\Phi_{\\mathcal{B}}(p) = \\boldsymbol{\\beta} \\in \\mathbb{R}^3$"
                   }
                   ：
                 </div>
-                <div className="mt-1 font-mono text-sm text-slate-800 dark:text-slate-100">
+                <div className="mt-1 font-mono text-sm font-semibold text-[var(--kde-ink)]">
                   {`$[p(x)]_{\\mathcal{B}} = \\begin{pmatrix} ${a.toFixed(1)} \\\\ ${b.toFixed(1)} \\\\ ${c.toFixed(1)} \\end{pmatrix}$`}
                 </div>
               </div>
 
               {/* Downward matrix arrow */}
-              <div className="my-2 flex items-center justify-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+              <div className="my-3 flex items-center justify-center gap-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
                 <span>左乘算子矩阵</span>
                 {"$[D]_{\\mathcal{B}}$"}
                 <span>↓</span>
               </div>
 
               {/* Matrix multiplication result */}
-              <div className="rounded-lg bg-white p-3 shadow-xs dark:bg-slate-900">
-                <div className="text-[11px] text-slate-500">
+              <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-3 shadow-xs">
+                <div className="text-[11px] font-medium text-[var(--kde-muted)]">
                   矩阵乘法结果{" "}
                   {"$[D]_{\\mathcal{B}} [p]_{\\mathcal{B}} \\in \\mathbb{R}^3$"}
                   ：
                 </div>
-                <div className="mt-1 font-mono text-sm font-semibold text-indigo-700 dark:text-indigo-400">
+                <div className="mt-1 font-mono text-sm font-bold text-indigo-700 dark:text-indigo-300">
                   {`$\\begin{pmatrix} 0 & 1 & 0 \\\\ 0 & 0 & 2 \\\\ 0 & 0 & 0 \\end{pmatrix} \\begin{pmatrix} ${a.toFixed(1)} \\\\ ${b.toFixed(1)} \\\\ ${c.toFixed(1)} \\end{pmatrix} = \\begin{pmatrix} ${dConst.toFixed(1)} \\\\ ${dLinear.toFixed(1)} \\\\ 0.0 \\end{pmatrix}$`}
                 </div>
               </div>
             </div>
 
-            <div className="mt-3 rounded bg-white/70 p-2 text-center text-[11px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
+            <div className="mt-3 rounded border border-[var(--kde-border)] bg-[var(--kde-panel)] p-2 text-center text-[11px] text-[var(--kde-muted)]">
               代数同构：数字矩阵乘积精确对应客观导数坐标！
             </div>
-          </div>
+          </KdeCard>
         </div>
 
         {/* Diagnostics Card: Kernel, Image & Rank-Nullity Theorem */}
-        <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-              抽象核空间与秩-零度定理探针（Rank-Nullity Theorem）
-            </span>
-            {inKernel && !isZero && (
-              <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+        <KdeCard
+          title="抽象核空间与秩-零度定理探针（Rank-Nullity Theorem）"
+          headerAction={
+            inKernel && !isZero ? (
+              <KdeBadge variant="warning">
                 当前多项式位于核空间 ker(D) 中（求导得 0）
-              </span>
-            )}
-          </div>
-
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs">
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <span className="text-slate-500 dark:text-slate-400">
+              </KdeBadge>
+            ) : undefined
+          }
+          className="mt-5"
+        >
+          <div className="mt-1 grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+            <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-2.5">
+              <span className="font-medium text-[var(--kde-muted)]">
                 核空间（零度 Nullity）
               </span>
-              <div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
+              <div className="mt-1 font-semibold text-[var(--kde-ink)]">
                 {"$\\ker(D) = \\operatorname{span}(1)$"}
               </div>
-              <div className="mt-0.5 text-[11px] text-slate-400">
+              <div className="mt-0.5 text-[11px] text-[var(--kde-muted)]">
                 零度 {"$\\operatorname{nullity}(D) = 1$"}
               </div>
             </div>
 
-            <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-              <span className="text-slate-500 dark:text-slate-400">
+            <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-2.5">
+              <span className="font-medium text-[var(--kde-muted)]">
                 像空间（秩 Rank）
               </span>
-              <div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
+              <div className="mt-1 font-semibold text-[var(--kde-ink)]">
                 {"$\\operatorname{im}(D) = \\operatorname{span}(1, x)$"}
               </div>
-              <div className="mt-0.5 text-[11px] text-slate-400">
+              <div className="mt-0.5 text-[11px] text-[var(--kde-muted)]">
                 秩 {"$\\operatorname{rank}(D) = 2$"}
               </div>
             </div>
 
-            <div className="rounded-lg border border-emerald-200/80 bg-emerald-50/40 p-2.5 dark:border-emerald-950 dark:bg-emerald-950/20">
-              <span className="text-emerald-700 dark:text-emerald-400">
+            <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-2.5">
+              <span className="font-medium text-emerald-800 dark:text-emerald-200">
                 秩-零度守恒等式
               </span>
-              <div className="mt-1 font-mono font-bold text-emerald-800 dark:text-emerald-300">
+              <div className="mt-1 font-mono font-bold text-emerald-700 dark:text-emerald-300">
                 {"$\\dim(\\mathcal{P}_2) = \\text{nullity} + \\text{rank}$"}
               </div>
-              <div className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+              <div className="mt-0.5 text-[11px] text-emerald-800 dark:text-emerald-200">
                 {"$3 = 1 + 2 \\quad \\text{（严格守恒）}$"}
               </div>
             </div>
           </div>
-        </div>
+        </KdeCard>
       </div>
     </AutoMath>
   );

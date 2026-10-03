@@ -163,25 +163,6 @@ html.dark .style-lab[data-style="instrument"] {
   background: var(--gfx-surface);
 }
 
-.style-lab__canvas-toolbar {
-  color: var(--lab-ink);
-  border: 1px solid var(--lab-border);
-  border-radius: var(--lab-control-radius);
-  background: var(--lab-raised);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
-  backdrop-filter: blur(14px);
-}
-
-.style-lab__canvas-toolbar button {
-  color: var(--lab-muted);
-  border-radius: var(--lab-control-radius);
-}
-
-.style-lab__canvas-toolbar button:hover {
-  color: var(--lab-ink);
-  background: color-mix(in srgb, var(--lab-accent) 16%, var(--lab-raised));
-}
-
 .style-lab__target-selector,
 .style-lab__mode-tabs {
   color: var(--lab-muted);
@@ -217,28 +198,7 @@ html.dark .style-lab[data-style="instrument"] {
 }
 
 .style-lab__sliders {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem 1rem;
   color: var(--lab-muted);
-}
-
-.style-lab__sliders label {
-  min-width: 9.5rem;
-  flex: 1 1 9.5rem;
-  justify-content: space-between;
-  color: var(--lab-muted);
-  font-size: 0.76rem;
-}
-
-.style-lab__sliders input[type="range"] {
-  accent-color: var(--lab-accent);
-}
-
-.style-lab__sliders label > span:last-child {
-  color: var(--lab-ink);
-  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  font-variant-numeric: tabular-nums;
 }
 
 .style-lab__dense-controls {
@@ -337,11 +297,6 @@ html.dark .style-lab[data-style="instrument"] {
   background: var(--lab-panel);
 }
 
-.style-lab[data-style="kde"] .style-lab__canvas-toolbar {
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.08);
-  backdrop-filter: none;
-}
-
 .style-lab[data-style="kde"] .style-lab__mode-tabs > button,
 .style-lab[data-style="kde"] .style-lab__target-selector > button {
   border-radius: 0.28rem;
@@ -366,6 +321,12 @@ html.dark .style-lab[data-style="instrument"] {
   border: 1px solid var(--lab-border);
   border-radius: var(--lab-control-radius);
   background: var(--lab-raised);
+}
+
+.style-lab[data-style="kde"] .style-lab__control-panel {
+  border: none;
+  background: transparent;
+  padding: 0;
 }
 
 .style-lab__workspace
@@ -555,12 +516,6 @@ html.dark .style-lab[data-style="instrument"] {
   color: var(--lab-accent);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 0.7rem;
-}
-
-.style-lab[data-style="instrument"] .style-lab__canvas-toolbar {
-  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  box-shadow: none;
-  backdrop-filter: none;
 }
 
 .style-lab[data-style="instrument"] .style-lab__mode-tabs > button,

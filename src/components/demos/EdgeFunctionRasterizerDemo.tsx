@@ -10,6 +10,9 @@ import { useCanvas2D } from "../framework/useCanvas2D";
 import KdeWindowShell from "../framework/KdeWindowShell";
 import KdeCard from "../framework/KdeCard";
 import KdeBadge from "../framework/KdeBadge";
+import KdeButtonGroup from "../framework/KdeButtonGroup";
+import KdeButton from "../framework/KdeButton";
+import KdeMessageBar from "../framework/KdeMessageBar";
 import {
   computeNiceTicks,
   drawArrow,
@@ -1353,8 +1356,8 @@ export default function EdgeFunctionRasterizerDemo() {
   const [probeState, setProbeState] = useState<ProbeViewState>(() => ({
     triangle: cloneTriangle({ ...INITIAL_TRIANGLES[0], id: "T0" }),
     point: { x: 0.25, y: 0.25 },
-    selectedPoint: null,
-    draft: { x: "", y: "" },
+    selectedPoint: { kind: "probe" },
+    draft: { x: "0.25", y: "0.25" },
     highlight: null,
     bounds: { ...VIEW_BOUNDS },
   }));
@@ -1756,28 +1759,26 @@ export default function EdgeFunctionRasterizerDemo() {
                     </KdeBadge>
                   }
                   headerAction={
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
+                    <KdeButtonGroup attached size="xs">
+                      <KdeButton
+                        size="xs"
                         onClick={handleAddTriangle}
                         disabled={
                           coverageState.triangles.length >= TRIANGLE_LIMIT
                         }
-                        className="rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-panel)] px-2 py-1 text-xs font-medium text-[var(--kde-ink)] transition hover:border-[var(--kde-accent)] hover:text-[var(--kde-accent)] disabled:cursor-not-allowed disabled:opacity-45"
                         aria-label="添加三角形"
                       >
                         + 添加
-                      </button>
-                      <button
-                        type="button"
+                      </KdeButton>
+                      <KdeButton
+                        size="xs"
                         onClick={removeSelectedTriangle}
                         disabled={coverageState.triangles.length <= 1}
-                        className="rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-panel)] px-2 py-1 text-xs font-medium text-[var(--kde-muted)] transition hover:border-[var(--kde-accent)] hover:text-[var(--kde-accent)] disabled:cursor-not-allowed disabled:opacity-45"
                         aria-label={"删除 " + selectedCoverageTriangle.id}
                       >
                         删除
-                      </button>
-                    </div>
+                      </KdeButton>
+                    </KdeButtonGroup>
                   }
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
@@ -1816,9 +1817,9 @@ export default function EdgeFunctionRasterizerDemo() {
                         display={formatNumber(selectedCoverageTriangle.depth)}
                       />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
+                    <KdeButtonGroup attached size="xs">
+                      <KdeButton
+                        size="xs"
                         onClick={() =>
                           moveTriangle(selectedCoverageTriangle.id, "front")
                         }
@@ -1826,15 +1827,14 @@ export default function EdgeFunctionRasterizerDemo() {
                           coverageState.triangles[0]?.id ===
                           selectedCoverageTriangle.id
                         }
-                        className="rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-panel)] px-2.5 py-1 text-xs text-[var(--kde-muted)] transition hover:border-[var(--kde-accent)] hover:text-[var(--kde-accent)] disabled:cursor-not-allowed disabled:opacity-45"
                         aria-label={
                           "将 " + selectedCoverageTriangle.id + " 提到最前"
                         }
                       >
                         提到最前
-                      </button>
-                      <button
-                        type="button"
+                      </KdeButton>
+                      <KdeButton
+                        size="xs"
                         onClick={() =>
                           moveTriangle(selectedCoverageTriangle.id, "back")
                         }
@@ -1843,14 +1843,13 @@ export default function EdgeFunctionRasterizerDemo() {
                             coverageState.triangles.length - 1
                           ]?.id === selectedCoverageTriangle.id
                         }
-                        className="rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-panel)] px-2.5 py-1 text-xs text-[var(--kde-muted)] transition hover:border-[var(--kde-accent)] hover:text-[var(--kde-accent)] disabled:cursor-not-allowed disabled:opacity-45"
                         aria-label={
                           "将 " + selectedCoverageTriangle.id + " 移到最后"
                         }
                       >
                         移到最后
-                      </button>
-                    </div>
+                      </KdeButton>
+                    </KdeButtonGroup>
                   </div>
                   <p className="mt-2 text-xs leading-relaxed text-[var(--kde-muted)]">
                     绘制顺序从前到后排列。每个 MSAA
@@ -1860,13 +1859,184 @@ export default function EdgeFunctionRasterizerDemo() {
               ) : null}
 
               {mode === "probe" && (
-                <KdeGroupBox
-                  title="PROBE COORDINATES & VERTICES"
-                  subtitle="点击画布上的采样点或顶点，可直接输入精确坐标；拖动点也会实时同步数值与计算。"
-                />
+                <KdeCard
+                  title="顶点与采样点定位 (Point & Probe)"
+                  badge={
+                    <KdeBadge variant="primary">
+                      {activeLabel || "采样点 P"}
+                    </KdeBadge>
+                  }
+                  headerAction={
+                    <KdeButtonGroup attached size="xs">
+                      <KdeButton
+                        size="xs"
+                        variant={
+                          activeSelection?.kind === "probe"
+                            ? "primary"
+                            : "default"
+                        }
+                        onClick={() => selectProbePoint({ kind: "probe" })}
+                      >
+                        P (探针)
+                      </KdeButton>
+                      <KdeButton
+                        size="xs"
+                        variant={
+                          activeSelection?.kind === "vertex" &&
+                          activeSelection.vertexIndex === 0
+                            ? "primary"
+                            : "default"
+                        }
+                        onClick={() =>
+                          selectProbePoint({ kind: "vertex", vertexIndex: 0 })
+                        }
+                      >
+                        P₀
+                      </KdeButton>
+                      <KdeButton
+                        size="xs"
+                        variant={
+                          activeSelection?.kind === "vertex" &&
+                          activeSelection.vertexIndex === 1
+                            ? "primary"
+                            : "default"
+                        }
+                        onClick={() =>
+                          selectProbePoint({ kind: "vertex", vertexIndex: 1 })
+                        }
+                      >
+                        P₁
+                      </KdeButton>
+                      <KdeButton
+                        size="xs"
+                        variant={
+                          activeSelection?.kind === "vertex" &&
+                          activeSelection.vertexIndex === 2
+                            ? "primary"
+                            : "default"
+                        }
+                        onClick={() =>
+                          selectProbePoint({ kind: "vertex", vertexIndex: 2 })
+                        }
+                      >
+                        P₂
+                      </KdeButton>
+                    </KdeButtonGroup>
+                  }
+                >
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="text-xs text-[var(--kde-muted)]">
+                        采样探针快速预设位置：
+                      </div>
+                      <KdeButtonGroup attached size="xs" className="w-full">
+                        <KdeButton
+                          size="xs"
+                          className="flex-1"
+                          onClick={() => {
+                            selectProbePoint({ kind: "probe" });
+                            setProbeState((curr) => ({
+                              ...curr,
+                              point: { x: 0.25, y: 0.25 },
+                              draft: { x: "0.25", y: "0.25" },
+                            }));
+                          }}
+                        >
+                          内部
+                        </KdeButton>
+                        <KdeButton
+                          size="xs"
+                          className="flex-1"
+                          onClick={() => {
+                            selectProbePoint({ kind: "probe" });
+                            setProbeState((curr) => ({
+                              ...curr,
+                              point: { x: 0.0, y: -0.67 },
+                              draft: { x: "0.00", y: "-0.67" },
+                            }));
+                          }}
+                        >
+                          底边
+                        </KdeButton>
+                        <KdeButton
+                          size="xs"
+                          className="flex-1"
+                          onClick={() => {
+                            selectProbePoint({ kind: "probe" });
+                            setProbeState((curr) => ({
+                              ...curr,
+                              point: { x: 2.0, y: 1.5 },
+                              draft: { x: "2.00", y: "1.50" },
+                            }));
+                          }}
+                        >
+                          外部
+                        </KdeButton>
+                      </KdeButtonGroup>
+                    </div>
+
+                    <div
+                      className="flex flex-col gap-2 rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-panel)] p-2.5"
+                      data-testid="selected-point-editor"
+                      data-console-panel
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[var(--kde-muted)]">
+                          坐标精确输入
+                        </span>
+                        <span
+                          className="font-mono font-semibold text-[var(--kde-accent)]"
+                          data-testid="selected-point-label"
+                        >
+                          {activeLabel}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--kde-muted)]">
+                          <span className="font-mono font-medium">x</span>
+                          <input
+                            type="number"
+                            step="any"
+                            value={activeDraft.x}
+                            onChange={(event) =>
+                              changeCoordinate("x", event.currentTarget.value)
+                            }
+                            onBlur={() => restoreCoordinateDraft("x")}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter")
+                                event.currentTarget.blur();
+                            }}
+                            aria-label={activeLabel + " x 坐标"}
+                            data-testid="selected-coordinate-x"
+                            className="w-full min-w-0 rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-raised)] px-2 py-1.5 font-mono text-sm text-[var(--kde-ink)] outline-none focus:border-[var(--kde-accent)] focus:ring-2 focus:ring-[var(--kde-accent)]/20"
+                          />
+                        </label>
+                        <label className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--kde-muted)]">
+                          <span className="font-mono font-medium">y</span>
+                          <input
+                            type="number"
+                            step="any"
+                            value={activeDraft.y}
+                            onChange={(event) =>
+                              changeCoordinate("y", event.currentTarget.value)
+                            }
+                            onBlur={() => restoreCoordinateDraft("y")}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter")
+                                event.currentTarget.blur();
+                            }}
+                            aria-label={activeLabel + " y 坐标"}
+                            data-testid="selected-coordinate-y"
+                            className="w-full min-w-0 rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-raised)] px-2 py-1.5 font-mono text-sm text-[var(--kde-ink)] outline-none focus:border-[var(--kde-accent)] focus:ring-2 focus:ring-[var(--kde-accent)]/20"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </KdeCard>
               )}
 
-              {activeSelection && activePoint ? (
+              {mode === "coverage" && activeSelection && activePoint && (
                 <div
                   className="flex flex-col gap-2.5 rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-accent)]/50 bg-[var(--kde-accent)]/10 p-3"
                   data-testid="selected-point-editor"
@@ -1922,14 +2092,14 @@ export default function EdgeFunctionRasterizerDemo() {
                     </label>
                   </div>
                 </div>
-              ) : (
-                <p
-                  className="rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-panel)] px-3 py-2 text-xs text-[var(--kde-muted)]"
-                  data-testid="point-editor-hint"
-                  data-console-panel
-                >
-                  点击画布上的采样点或顶点，可直接输入坐标；拖动点也会同步数值。
-                </p>
+              )}
+
+              {mode === "coverage" && (!activeSelection || !activePoint) && (
+                <div data-testid="point-editor-hint" data-console-panel>
+                  <KdeMessageBar variant="neutral" mode="card">
+                    点击画布上的采样点或顶点，可直接输入坐标；拖动点也会同步数值。
+                  </KdeMessageBar>
+                </div>
               )}
             </div>
           }

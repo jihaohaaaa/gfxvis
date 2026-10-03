@@ -38,7 +38,7 @@ export default function KdeBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-[var(--kde-control-radius,0.35rem)] border font-mono uppercase tracking-wider ${sizeClass} ${VARIANT_CLASSES[variant]} ${className}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-[var(--kde-control-radius,0.35rem)] border font-mono uppercase tracking-wider ${sizeClass} ${VARIANT_CLASSES[variant]} ${className}`}
     >
       {children}
     </span>

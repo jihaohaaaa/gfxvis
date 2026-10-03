@@ -1,10 +1,20 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { AutoMath } from "../framework/AutoMath";
-import CapsuleTabs from "../framework/CapsuleTabs";
-import PresetSelector from "../framework/PresetSelector";
 import ExpandableDemo from "../framework/ExpandableDemo";
+import KdeWindowShell from "../framework/KdeWindowShell";
+import InteractiveLayout from "../framework/InteractiveLayout";
+import KdeTabs, { type KdeTabOption } from "../framework/KdeTabs";
+import PresetSelector from "../framework/PresetSelector";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import CanvasResizer from "../framework/CanvasResizer";
+import KdeCard from "../framework/KdeCard";
+import KdeBadge from "../framework/KdeBadge";
+import KdeButton from "../framework/KdeButton";
+import KdeInput from "../framework/KdeInput";
+import KdeButtonGroup from "../framework/KdeButtonGroup";
+import KdeProgressBar from "../framework/KdeProgressBar";
+import KdeMessageBar from "../framework/KdeMessageBar";
+import CodePlayground from "../framework/CodePlayground";
 
 // ============================================================================
 // 1. Lambda Calculus AST, Parser, and Stepper Engine
@@ -420,12 +430,67 @@ const PRESETS = [
   },
 ];
 
-const STRATEGY_OPTIONS = [
-  { id: "CBN", label: "Call-by-Name (正常序 / 惰性求值)" },
-  { id: "CBV", label: "Call-by-Value (应用序 / 严格求值)" },
+const VIEW_OPTIONS: readonly KdeTabOption<"cbn" | "cbv" | "code_sandbox">[] = [
+  { id: "cbn", label: "Call-by-Name (正常序 / 惰性求值)" },
+  { id: "cbv", label: "Call-by-Value (应用序 / 严格求值)" },
+  { id: "code_sandbox", label: "TS λ 解释器沙盒" },
 ];
 
+const TS_PLAYGROUND_CODE = `// 纯函数式 TypeScript 无类型 λ 演算微型解释器
+type Term =
+  | { tag: "Var"; name: string }
+  | { tag: "Abs"; param: string; body: Term }
+  | { tag: "App"; fn: Term; arg: Term };
+
+const Var = (name: string): Term => ({ tag: "Var", name });
+const Abs = (param: string, body: Term): Term => ({ tag: "Abs", param, body });
+const App = (fn: Term, arg: Term): Term => ({ tag: "App", fn, arg });
+
+function freeVars(t: Term): Set<string> {
+  if (t.tag === "Var") return new Set([t.name]);
+  if (t.tag === "Abs") {
+    const s = freeVars(t.body);
+    s.delete(t.param);
+    return s;
+  }
+  const s = freeVars(t.fn);
+  freeVars(t.arg).forEach((v) => s.add(v));
+  return s;
+}
+
+function subst(t: Term, x: string, s: Term): Term {
+  if (t.tag === "Var") return t.name === x ? s : t;
+  if (t.tag === "App") return App(subst(t.fn, x, s), subst(t.arg, x, s));
+  if (t.param === x) return t;
+  const sFVs = freeVars(s);
+  if (!sFVs.has(t.param)) return Abs(t.param, subst(t.body, x, s));
+  let fresh = t.param + "'";
+  while (sFVs.has(fresh) || freeVars(t.body).has(fresh)) fresh += "'";
+  const renamedBody = subst(t.body, t.param, Var(fresh));
+  return Abs(fresh, subst(renamedBody, x, s));
+}
+
+function evalCBN(t: Term): Term {
+  if (t.tag === "App") {
+    const fn = evalCBN(t.fn);
+    if (fn.tag === "Abs") return evalCBN(subst(fn.body, fn.param, t.arg));
+    return App(fn, t.arg);
+  }
+  return t;
+}
+
+const TRUE = Abs("x", Abs("y", Var("x")));
+const FALSE = Abs("x", Abs("y", Var("y")));
+const AND = Abs("p", Abs("q", App(App(Var("p"), Var("q")), Var("p"))));
+
+const result = evalCBN(App(App(AND, TRUE), FALSE));
+console.log("AND TRUE FALSE 规约求值结果:", JSON.stringify(result));
+`;
+
 export default function LambdaReductionDiagram() {
+  const [viewMode, setViewMode] = useState<"cbn" | "cbv" | "code_sandbox">(
+    "cbn",
+  );
   const [strategy, setStrategy] = useState<"CBN" | "CBV">("CBN");
   const [presetKey, setPresetKey] = useState<string>("bool_and");
   const [rawInput, setRawInput] = useState<string>(PRESETS[0].code);
@@ -487,273 +552,323 @@ export default function LambdaReductionDiagram() {
   };
 
   const handleReset = () => {
+    setPresetKey("bool_and");
+    setRawInput(PRESETS[0].code);
+    setParseError(null);
     setCurrentStepIndex(0);
     setIsPlaying(false);
+    setViewMode("cbn");
+    setStrategy("CBN");
+  };
+
+  const handleTabChange = (val: "cbn" | "cbv" | "code_sandbox") => {
+    setViewMode(val);
+    if (val === "cbn") setStrategy("CBN");
+    else if (val === "cbv") setStrategy("CBV");
   };
 
   return (
     <AutoMath>
       <ExpandableDemo id="lambda-reduction-stepper">
-        <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
-          {/* Header */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                无类型 λ 演算单步归约与求值策略探针
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                ✨ <strong>单步观察计算的心跳</strong>：自由切换{" "}
-                {"$\\text{Call-by-Name}$"} 与 {"$\\text{Call-by-Value}$"}
-                ，探查可归约项（
-                {"$\\text{Redex}$"}
-                ）与代换展开
-              </p>
-            </div>
-          </div>
-
-          {/* Strategy Selector Tabs */}
-          <div className="mb-4 overflow-x-auto pb-1">
-            <CapsuleTabs
-              onChange={(val) => setStrategy(val as "CBN" | "CBV")}
-              options={STRATEGY_OPTIONS}
-              value={strategy}
-            />
-          </div>
-
-          {/* Preset Selector */}
-          <div className="mb-5">
-            <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-              精选 λ 运算与理论实验预设：
-            </div>
-            <PresetSelector
-              onChange={handlePresetChange}
-              options={PRESETS.map((p) => ({
-                id: p.key,
-                label: p.label,
-                description: p.desc,
-              }))}
-              value={presetKey}
-            />
-          </div>
-
-          {/* Custom Input Bar */}
-          <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-3.5 dark:border-slate-800 dark:bg-slate-900/70">
-            <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <span>表达式源码输入（支持 \x. y 或 λx. y）：</span>
-              {parseError && (
-                <span className="text-rose-500">{parseError}</span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <input
-                className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs text-slate-900 transition focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                onChange={(e) => {
-                  setRawInput(e.target.value);
-                  setPresetKey("custom");
-                  try {
-                    parseLambda(e.target.value);
-                    setParseError(null);
-                  } catch (err: unknown) {
-                    setParseError(
-                      err instanceof Error ? err.message : String(err),
-                    );
-                  }
-                }}
-                placeholder="输入合法 λ 表达式，例如: (\x. \y. x) a b"
-                type="text"
-                value={rawInput}
-              />
-            </div>
-          </div>
-
-          {/* Visual Stepper Viewport Container */}
-          <div className="relative mb-5 flex h-[var(--demo-height,20rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-6 shadow-inner dark:border-slate-800">
-            <CanvasToolbar onReset={handleReset} />
-
-            {/* Stepper Toolbar */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
-              <div className="flex items-center gap-2">
-                <button
-                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                  disabled={currentStepIndex <= 0}
-                  onClick={() => setCurrentStepIndex(0)}
-                  title="回到初始状态"
-                  type="button"
-                >
-                  ⏮ 初始
-                </button>
-                <button
-                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                  disabled={currentStepIndex <= 0}
-                  onClick={() =>
-                    setCurrentStepIndex((prev) => Math.max(0, prev - 1))
-                  }
-                  title="单步回退"
-                  type="button"
-                >
-                  ◀ 单步回退
-                </button>
-                <button
-                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
-                    isPlaying
-                      ? "bg-amber-600 text-white hover:bg-amber-500"
-                      : "bg-indigo-600 text-white hover:bg-indigo-500"
-                  } disabled:opacity-40`}
-                  disabled={isFinished}
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  type="button"
-                >
-                  {isPlaying ? "⏸ 暂停" : "▶ 自动步进"}
-                </button>
-                <button
-                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                  disabled={isFinished}
-                  onClick={() =>
-                    setCurrentStepIndex((prev) =>
-                      Math.min(trace.length - 1, prev + 1),
-                    )
-                  }
-                  title="单步步进"
-                  type="button"
-                >
-                  单步步进 ▶
-                </button>
-              </div>
-
-              {/* Step Counter Badge */}
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-semibold text-slate-400">
-                  步数：{currentStepIndex + 1} / {trace.length}
-                </span>
-                {isFinished ? (
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+        <KdeWindowShell
+          eyebrow="TYPE THEORY WORKSPACE · λ-CALCULUS"
+          mark="λ"
+          modeTag="DENSE-DOCK"
+          title="无类型 λ 演算单步归约与求值策略探针"
+        >
+          <InteractiveLayout
+            preset="dense-dock"
+            top={
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-[var(--kde-muted)]">
+                    求值策略：
+                  </span>
+                  <KdeTabs
+                    onChange={handleTabChange}
+                    options={VIEW_OPTIONS}
+                    size="sm"
+                    value={viewMode}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <KdeBadge
+                    variant={
                       isDivergent
-                        ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                        : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                    }`}
+                        ? "danger"
+                        : isFinished
+                          ? "success"
+                          : "primary"
+                    }
                   >
                     {isDivergent
                       ? "⚠️ 发散振荡态"
-                      : "✅ 达成正规型 (Normal Form)"}
-                  </span>
-                ) : (
-                  <span className="rounded-full border border-sky-500/40 bg-sky-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300">
-                    ⚡ 归约进行中
-                  </span>
-                )}
+                      : isFinished
+                        ? "✅ 达成正规型"
+                        : "⚡ 归约进行中"}
+                  </KdeBadge>
+                </div>
               </div>
-            </div>
+            }
+            main={
+              <div className="relative flex h-[var(--demo-height,28rem)] w-full flex-col overflow-hidden rounded-xl border border-[var(--kde-border)] bg-[var(--kde-canvas)] p-6 shadow-inner">
+                <CanvasToolbar onReset={handleReset} />
 
-            {/* Stepper Main Display Area */}
-            <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
-              {parsedTerm && currentStep ? (
-                <div className="space-y-4 py-2">
-                  <div className="text-xs font-semibold text-slate-400">
-                    {currentStep.description}
+                {viewMode === "code_sandbox" ? (
+                  <div className="flex-1 flex flex-col overflow-y-auto pr-1">
+                    <CodePlayground
+                      code={TS_PLAYGROUND_CODE}
+                      description="纯 TypeScript 实现的 λ 演算 AST、自由变量分析、捕获规避代换与单步规约求值器。"
+                      lang="ts"
+                      maxHeight="20rem"
+                      title="TypeScript λ 解释器在线沙盒"
+                    />
                   </div>
+                ) : (
+                  <>
+                    {/* Stepper Toolbar */}
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--kde-border)] pb-3 pr-12">
+                      <KdeButtonGroup attached size="xs">
+                        <KdeButton
+                          size="xs"
+                          disabled={currentStepIndex <= 0}
+                          onClick={() => setCurrentStepIndex(0)}
+                          title="回到初始状态"
+                        >
+                          ⏮ 初始
+                        </KdeButton>
+                        <KdeButton
+                          size="xs"
+                          disabled={currentStepIndex <= 0}
+                          onClick={() =>
+                            setCurrentStepIndex((prev) => Math.max(0, prev - 1))
+                          }
+                          title="单步回退"
+                        >
+                          ◀ 单步回退
+                        </KdeButton>
+                        <KdeButton
+                          size="xs"
+                          variant={isPlaying ? "warning" : "primary"}
+                          disabled={isFinished}
+                          onClick={() => setIsPlaying(!isPlaying)}
+                        >
+                          {isPlaying ? "⏸ 暂停" : "▶ 自动步进"}
+                        </KdeButton>
+                        <KdeButton
+                          size="xs"
+                          disabled={isFinished}
+                          onClick={() =>
+                            setCurrentStepIndex((prev) =>
+                              Math.min(trace.length - 1, prev + 1),
+                            )
+                          }
+                          title="单步步进"
+                        >
+                          单步步进 ▶
+                        </KdeButton>
+                      </KdeButtonGroup>
 
-                  {/* Main Term Rendering with KaTeX */}
-                  <div className="flex items-center justify-center overflow-x-auto px-4 py-3">
-                    <div className="rounded-2xl border border-slate-700/60 bg-slate-800/50 px-6 py-4 shadow-lg backdrop-blur-sm">
-                      <div className="font-mono text-lg text-slate-100 sm:text-xl">
-                        {`$${termToLatex(currentStep.term)}$`}
+                      {/* Step Counter Badge & Progress */}
+                      <div className="flex items-center gap-2.5">
+                        <KdeProgressBar
+                          steps={trace.length}
+                          value={currentStepIndex + 1}
+                          size="sm"
+                          className="w-28"
+                          showLabel={false}
+                        />
+                        <span className="font-mono text-xs font-semibold text-[var(--kde-muted)]">
+                          步数：{currentStepIndex + 1} / {trace.length}
+                        </span>
+                        {isFinished ? (
+                          <KdeBadge
+                            variant={isDivergent ? "danger" : "success"}
+                          >
+                            {isDivergent
+                              ? "⚠️ 发散振荡态"
+                              : "✅ 达成正规型 (Normal Form)"}
+                          </KdeBadge>
+                        ) : (
+                          <KdeBadge variant="primary">⚡ 归约进行中</KdeBadge>
+                        )}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Redex Indicator Banner */}
-                  {currentStep.redex && (
-                    <div className="mx-auto inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-300">
-                      <span>活动 Redex：</span>
-                      <span className="font-mono font-bold">
-                        {`$(\\lambda ${currentStep.redex.param}.\\, ${termToLatex(
-                          currentStep.redex.body,
-                        )}) \\; ${termToLatex(currentStep.redex.arg)}$`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-xs text-rose-400">
-                  表达式语法解析失败，请检查括号与形参格式。
-                </div>
-              )}
-            </div>
-            <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
-          </div>
+                    {/* Stepper Main Display Area */}
+                    <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
+                      {parsedTerm && currentStep ? (
+                        <div className="space-y-4 py-2">
+                          <div className="text-xs font-semibold text-[var(--kde-muted)]">
+                            {currentStep.description}
+                          </div>
 
-          {/* Diagnostics & Theoretical Comparison Cards */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Card 1: Redex & Substitution Insight */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                当前归约步骤形式化代换剖析
-              </div>
-              <div className="mt-2 text-xs text-slate-700 dark:text-slate-300">
-                {currentStep?.redex ? (
-                  <div className="space-y-1.5">
-                    <div>
-                      代换操作：
-                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                        {`$[${currentStep.redex.param} \\mapsto ${termToLatex(
-                          currentStep.redex.arg,
-                        )}]$`}
-                      </span>
+                          {/* Main Term Rendering with KaTeX */}
+                          <div className="flex items-center justify-center overflow-x-auto px-4 py-3">
+                            <div className="rounded-2xl border border-[var(--kde-border)] bg-[var(--kde-raised)] px-6 py-4 shadow-lg backdrop-blur-md">
+                              <div className="font-mono text-lg font-bold text-[var(--kde-ink)] sm:text-xl">
+                                {`$${termToLatex(currentStep.term)}$`}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Redex Indicator Banner */}
+                          {currentStep.redex && (
+                            <div className="mx-auto max-w-lg">
+                              <KdeMessageBar
+                                variant="warning"
+                                mode="inline"
+                                title="活动 Redex："
+                              >
+                                <span className="font-mono font-bold">
+                                  {`$(\\lambda ${currentStep.redex.param}.\\, ${termToLatex(
+                                    currentStep.redex.body,
+                                  )}) \\; ${termToLatex(currentStep.redex.arg)}$`}
+                                </span>
+                              </KdeMessageBar>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mx-auto max-w-md">
+                          <KdeMessageBar variant="danger" mode="card">
+                            表达式语法解析失败，请检查括号与形参格式。
+                          </KdeMessageBar>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      目标函数体：
-                      {`$${termToLatex(currentStep.redex.body)}$`}
-                    </div>
-                    <div className="pt-1 text-[11px] leading-relaxed text-slate-500">
-                      💡
-                      捕获规避代换保证自由变量不会与函数体内部的同名绑定形参发生误冲突。
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-slate-500">
-                    当前项已经不存在任何可归约项（
-                    {"$\\text{Redex}$"}
-                    ），已达到最终正规型（
-                    {"$\\text{Normal Form}$"}
-                    ）。
-                  </div>
+                  </>
                 )}
+                <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
               </div>
-            </div>
+            }
+            side={
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <KdeCard title="预设 λ 运算与理论实验" variant="dense">
+                  <PresetSelector
+                    layout="vertical"
+                    size="xs"
+                    onChange={handlePresetChange}
+                    options={PRESETS.map((p) => ({
+                      id: p.key,
+                      label: p.label,
+                      description: p.desc,
+                    }))}
+                    value={presetKey}
+                  />
+                </KdeCard>
 
-            {/* Card 2: Strategy Comparison Insight */}
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
-              <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
-                求值策略（
-                {strategy === "CBN"
-                  ? "Call-by-Name 正常序"
-                  : "Call-by-Value 应用序"}
-                ）行为特征
+                <KdeCard title="表达式源码输入与解析" variant="dense">
+                  <div className="space-y-2 text-xs">
+                    <KdeInput
+                      label="支持 \x. y 或 λx. y："
+                      error={parseError}
+                      mono
+                      size="xs"
+                      value={rawInput}
+                      onChange={(e) => {
+                        setRawInput(e.target.value);
+                        setPresetKey("custom");
+                        try {
+                          parseLambda(e.target.value);
+                          setParseError(null);
+                        } catch (err: unknown) {
+                          setParseError(
+                            err instanceof Error ? err.message : String(err),
+                          );
+                        }
+                      }}
+                      placeholder="输入合法 λ 表达式，例如: (\x. \y. x) a b"
+                    />
+                  </div>
+                </KdeCard>
+
+                <KdeCard title="活动 Redex 与代换剖析" variant="dense">
+                  <div className="space-y-2 text-xs">
+                    {currentStep?.redex ? (
+                      <>
+                        <div className="p-1.5 rounded bg-[var(--kde-panel)] border border-[var(--kde-border)] font-mono text-[11px] text-[var(--kde-accent)] overflow-x-auto">
+                          {`$[${currentStep.redex.param} \\mapsto ${termToLatex(
+                            currentStep.redex.arg,
+                          )}]$`}
+                        </div>
+                        <div className="text-[11px] text-[var(--kde-muted)]">
+                          目标：{`$${termToLatex(currentStep.redex.body)}$`}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-mono text-xs">
+                        ✅ 达成最终正规型 (Normal Form)
+                      </div>
+                    )}
+                  </div>
+                </KdeCard>
               </div>
-              <div className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
-                {strategy === "CBN" ? (
-                  <p>
-                    🚀 <strong>正常序（Call-by-Name）</strong>
-                    ：优先归约最外层 Redex。参数在传入时
-                    <strong>绝不提前求值</strong>
-                    ，哪怕参数是发散死循环（如预设 6 中的 {"$\\Omega$"}
-                    ），只要函数体内未读取该参数，程序即可
-                    <strong>安全终止并短路返回</strong>！
-                  </p>
-                ) : (
-                  <p>
-                    ⚡ <strong>应用序（Call-by-Value）</strong>
-                    ：函数调用前必须先将所有参数严格求值为最终值（
-                    {"$\\text{Value}$"}
-                    ）。若参数包含死循环，程序将立即发散无法终止。这是
-                    C、Rust、JavaScript 等现代主流编程语言的底层执行模式。
-                  </p>
-                )}
+            }
+            bottom={
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <KdeCard title="当前归约步骤形式化代换剖析">
+                  <div className="text-xs text-[var(--kde-ink)]">
+                    {currentStep?.redex ? (
+                      <div className="space-y-1.5">
+                        <div>
+                          代换操作：
+                          <span className="font-semibold text-[var(--kde-accent)]">
+                            {`$[${currentStep.redex.param} \\mapsto ${termToLatex(
+                              currentStep.redex.arg,
+                            )}]$`}
+                          </span>
+                        </div>
+                        <div>
+                          目标函数体：
+                          {`$${termToLatex(currentStep.redex.body)}$`}
+                        </div>
+                        <div className="pt-1 text-[11px] leading-relaxed text-[var(--kde-muted)]">
+                          💡
+                          捕获规避代换保证自由变量不会与函数体内部的同名绑定形参发生误冲突。
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-[var(--kde-muted)]">
+                        当前项已经不存在任何可归约项（{"$\\text{Redex}$"}
+                        ），已达到最终正规型（{"$\\text{Normal Form}$"}）。
+                      </div>
+                    )}
+                  </div>
+                </KdeCard>
+
+                <KdeCard
+                  title={
+                    strategy === "CBN"
+                      ? "Call-by-Name 正常序行为特征"
+                      : "Call-by-Value 应用序行为特征"
+                  }
+                >
+                  <div className="text-xs leading-relaxed text-[var(--kde-ink)]">
+                    {strategy === "CBN" ? (
+                      <p>
+                        🚀 <strong>正常序（Call-by-Name）</strong>
+                        ：优先归约最外层 Redex。参数在传入时
+                        <strong>绝不提前求值</strong>
+                        ，哪怕参数是发散死循环（如预设 6 中的 {"$\\Omega$"}
+                        ），只要函数体内未读取该参数，程序即可
+                        <strong>安全终止并短路返回</strong>！
+                      </p>
+                    ) : (
+                      <p>
+                        ⚡ <strong>应用序（Call-by-Value）</strong>
+                        ：函数调用前必须先将所有参数严格求值为最终值（
+                        {"$\\text{Value}$"}
+                        ）。若参数包含死循环，程序将立即发散无法终止。这是
+                        C、Rust、JavaScript 等现代主流编程语言的底层执行模式。
+                      </p>
+                    )}
+                  </div>
+                </KdeCard>
               </div>
-            </div>
-          </div>
-        </div>
+            }
+          />
+        </KdeWindowShell>
       </ExpandableDemo>
     </AutoMath>
   );

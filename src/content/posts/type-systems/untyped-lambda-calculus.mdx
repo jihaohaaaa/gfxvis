@@ -12,6 +12,64 @@ tags:
 ---
 
 import LambdaReductionDiagram from "../../../components/diagrams/LambdaReductionDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const churchBoolSnippet = `// 完全不使用 JS 内置的 true / false / if
+type ChurchBool = <T>(thenBranch: T) => (elseBranch: T) => T;
+
+const TRUE: ChurchBool = (t) => (f) => t;
+const FALSE: ChurchBool = (t) => (f) => f;
+
+// 逻辑非 NOT：把传入的两个分支倒过来喂给 b
+const NOT = (b: ChurchBool): ChurchBool => (t) => (f) => b(f)(t);
+
+// 逻辑与 AND：若 p 为真则结果取决于 q，若 p 为假则直接为假
+const AND = (p: ChurchBool) => (q: ChurchBool): ChurchBool => p(q)(p);
+
+// 测试：NOT TRUE 会返回什么？
+const result = NOT(TRUE)("我是真")("我是假");
+console.log("NOT TRUE 判定结果:", result);
+
+const andResult = AND(TRUE)(FALSE)("真真为真")("包含假项");
+console.log("TRUE AND FALSE 判定结果:", andResult);
+`;
+
+export const churchNumSnippet = `type ChurchNum = <T>(f: (x: T) => T) => (x: T) => T;
+
+const ZERO: ChurchNum = (f) => (x) => x;
+const ONE: ChurchNum = (f) => (x) => f(x);
+const SUCC = (n: ChurchNum): ChurchNum => (f) => (x) => f(n(f)(x));
+const PLUS = (m: ChurchNum) => (n: ChurchNum): ChurchNum => (f) => (x) => m(f)(n(f)(x));
+const MULT = (m: ChurchNum) => (n: ChurchNum): ChurchNum => (f) => (x) => m(n(f))(x);
+
+// 将 Church 自然数解码为原生 JS 数字以便打印验证
+const toInt = (n: ChurchNum) => n((x: number) => x + 1)(0);
+
+const two = PLUS(ONE)(ONE);
+const three = SUCC(two);
+const six = MULT(two)(three);
+
+console.log("1 + 1 =", toInt(two));
+console.log("SUCC(2) =", toInt(three));
+console.log("2 * 3 =", toInt(six));
+`;
+
+export const zCombinatorSnippet = `// 在完全不给函数起名字、不使用任何原生递归语法的前提下实现递归！
+const Z = (f: any) =>
+  ((x: any) => f((v: any) => x(x)(v)))
+  ((x: any) => f((v: any) => x(x)(v)));
+
+// 定义单步阶乘逻辑：接收一个“未来的自己”（recurse）作为参数
+const factorialStep = (recurse: any) => (n: number): number => {
+  return n <= 1 ? 1 : n * recurse(n - 1);
+};
+
+// 用 Z 组合子一键点化为真正的递归函数！
+const factorial = Z(factorialStep);
+
+console.log("Z 组合子计算 factorial(5) =", factorial(5));
+console.log("Z 组合子计算 factorial(6) =", factorial(6));
+`;
 
 在 1930 年代，数理逻辑学界发生了一场深刻的思想地震。为了回答希尔伯特提出的判定性问题（Entscheidungsproblem），两位年轻的数学家各自给出了划时代的解答：
 
@@ -275,23 +333,13 @@ $$
 
 让我们用 TypeScript 纯闭包代码来亲身体验这种魔力：
 
-```typescript
-// 完全不使用 JS 内置的 true / false / if
-type ChurchBool = <T>(thenBranch: T) => (elseBranch: T) => T;
-
-const TRUE: ChurchBool = (t) => (f) => t;
-const FALSE: ChurchBool = (t) => (f) => f;
-
-// 逻辑非 NOT：把传入的两个分支倒过来喂给 b
-const NOT = (b: ChurchBool): ChurchBool => (t) => (f) => b(f)(t);
-
-// 逻辑与 AND：若 p 为真则结果取决于 q，若 p 为假则直接为假
-const AND = (p: ChurchBool) => (q: ChurchBool): ChurchBool => p(q)(p);
-
-// 测试：NOT TRUE 会返回什么？
-const result = NOT(TRUE)("我是真")("我是假");
-console.log(result); // 输出了 "我是假"！
-```
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="丘奇布尔值与逻辑运算现场执行"
+  description="完全不使用内置 true/false/if，纯闭包实现逻辑运算与条件分支。"
+  initialCode={churchBoolSnippet}
+/>
 
 ### 5.2 自然数就是“函数复合的次数”
 
@@ -309,20 +357,13 @@ $$
 
 看！我们用纯 TypeScript 闭包在不依赖原生数字的前提下，验证 $1 + 1 = 2$：
 
-```typescript
-type ChurchNum = <T>(f: (x: T) => T) => (x: T) => T;
-
-const ZERO: ChurchNum = (f) => (x) => x;
-const ONE: ChurchNum = (f) => (x) => f(x);
-const SUCC = (n: ChurchNum): ChurchNum => (f) => (x) => f(n(f)(x));
-const PLUS = (m: ChurchNum) => (n: ChurchNum): ChurchNum => (f) => (x) => m(f)(n(f)(x));
-
-// 将 Church 自然数解码为原生 JS 数字以便打印验证
-const toInt = (n: ChurchNum) => n((x: number) => x + 1)(0);
-
-const two = PLUS(ONE)(ONE);
-console.log(toInt(two)); // 惊奇地打印出了：2！
-```
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="丘奇自然数与加乘法现场验证"
+  description="函数复合次数表示自然数，纯函数代数实现 1 + 1 = 2 与 2 * 3 = 6。"
+  initialCode={churchNumSnippet}
+/>
 
 ### 5.3 二元组与克莱尼拔牙时的减法难题
 
@@ -424,23 +465,13 @@ $$
 
 让我们在 TypeScript 中直接写出这段代码，见证奇迹：
 
-```typescript
-// 在完全不给函数起名字、不使用任何原生递归语法的前提下实现递归！
-const Z = (f: any) =>
-  ((x: any) => f((v: any) => x(x)(v)))
-  ((x: any) => f((v: any) => x(x)(v)));
-
-// 定义单步阶乘逻辑：接收一个“未来的自己”（recurse）作为参数
-const factorialStep = (recurse: any) => (n: number): number => {
-  return n <= 1 ? 1 : n * recurse(n - 1);
-};
-
-// 用 Z 组合子一键点化为真正的递归函数！
-const factorial = Z(factorialStep);
-
-console.log(factorial(5)); // 输出：120！
-console.log(factorial(6)); // 输出：720！
-```
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="严格求值版 Z 组合子匿名递归现场求值"
+  description="在完全不给函数起名字、不使用任何原生递归语法的前提下实现阶乘计算。"
+  initialCode={zCombinatorSnippet}
+/>
 
 无需全局变量、无需函数命名、无需环境篡改，一段纯粹由括号与参数拼装起来的表达式，完成了向图灵完备性的伟大登顶！
 

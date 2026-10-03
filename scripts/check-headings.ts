@@ -45,6 +45,7 @@ function checkFile(file: string, content: string): Issue[] {
   let frontmatterCount = 0;
   let inCodeBlock = false;
   let inMathBlock = false;
+  let inTemplateLiteral = false;
   let lastHeadingDepth = 0;
   const seenHeadingSlugs = new Map<string, number>();
 
@@ -73,6 +74,27 @@ function checkFile(file: string, content: string): Issue[] {
       continue;
     }
     if (inCodeBlock) continue;
+
+    // 2.5 MDX Multiline template literal strings (e.g. export const snippet = `...`)
+    if (file.endsWith(".mdx")) {
+      if (!inTemplateLiteral) {
+        if (trimmed.includes("`") && !trimmed.endsWith("`;")) {
+          const backticks = (trimmed.match(/(?<!\\)`/g) || []).length;
+          if (backticks % 2 === 1) {
+            inTemplateLiteral = true;
+            continue;
+          }
+        }
+      } else {
+        if (trimmed.includes("`")) {
+          const backticks = (trimmed.match(/(?<!\\)`/g) || []).length;
+          if (backticks % 2 === 1) {
+            inTemplateLiteral = false;
+          }
+        }
+        continue;
+      }
+    }
 
     // 3. Display Math block fence ($$)
     if (

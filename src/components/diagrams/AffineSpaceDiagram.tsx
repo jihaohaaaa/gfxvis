@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { AutoMath } from "../framework/AutoMath";
+import { useState, useRef } from "react";
+import AutoMath from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import KdeTabs from "../framework/KdeTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
@@ -9,6 +9,11 @@ import { clamp } from "@math";
 import KdeWindowShell from "../framework/KdeWindowShell";
 import KdeCard from "../framework/KdeCard";
 import KdeBadge from "../framework/KdeBadge";
+import KdeButtonGroup from "../framework/KdeButtonGroup";
+import KdeProgressBar from "../framework/KdeProgressBar";
+import KdeDivider from "../framework/KdeDivider";
+import KdeMessageBar from "../framework/KdeMessageBar";
+import KdeButton from "../framework/KdeButton";
 
 type DiagramMode = "point_vector" | "frame_barycentric" | "homogenization";
 
@@ -195,9 +200,37 @@ export default function AffineSpaceDiagram() {
 
   const pointVectorControls = (
     <div className="grid grid-cols-1 gap-3">
+      <KdeMessageBar variant="info" mode="card" title="自由向量平移不变性">
+        {"向量 $\\mathbf{v} = Q - P$ 为代数差值，完全独立于原点 $O$ 的选取。"}
+      </KdeMessageBar>
+
       <KdeCard
         title="1. 观察者原点 O(x₀, y₀)（可拖拽）"
         badge={<KdeBadge variant="warning">ORIGIN</KdeBadge>}
+        headerAction={
+          <KdeButtonGroup attached size="xs">
+            <KdeButton
+              size="xs"
+              onClick={() => {
+                setOx(0);
+                setOy(0);
+              }}
+              title="原点归零 (0, 0)"
+            >
+              (0, 0)
+            </KdeButton>
+            <KdeButton
+              size="xs"
+              onClick={() => {
+                setOx(-1.5);
+                setOy(1.0);
+              }}
+              title="原点移至 (-1.5, 1.0)"
+            >
+              (-1.5, 1)
+            </KdeButton>
+          </KdeButtonGroup>
+        }
       >
         <ParamSlider
           labelMode="adaptive"
@@ -526,10 +559,10 @@ export default function AffineSpaceDiagram() {
       >
         <div className="space-y-1.5 text-xs text-[var(--kde-ink)]">
           <div className="font-semibold text-[var(--kde-accent)]">
-            {`$[P]_O = P - O = (${relPx.toFixed(1)},\\, ${relPy.toFixed(1)})^T`}
+            {`$[P]_O = P - O = (${relPx.toFixed(1)},\\, ${relPy.toFixed(1)})^T$`}
           </div>
           <div className="font-semibold text-sky-600 dark:text-sky-400">
-            {`$[Q]_O = Q - O = (${relQx.toFixed(1)},\\, ${relQy.toFixed(1)})^T`}
+            {`$[Q]_O = Q - O = (${relQx.toFixed(1)},\\, ${relQy.toFixed(1)})^T$`}
           </div>
           <div className="pt-1 text-[11px] text-[var(--kde-muted)]">
             💡 尝试在画布中直接拖拽原点 $O$，你会发现点 $P$ 和 $Q$
@@ -545,7 +578,7 @@ export default function AffineSpaceDiagram() {
       >
         <div className="space-y-1.5 text-xs text-[var(--kde-ink)]">
           <div className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
-            {`$\\mathbf{v} = [Q]_O - [P]_O = (${vx.toFixed(1)},\\, ${vy.toFixed(1)})^T`}
+            {`$\\mathbf{v} = [Q]_O - [P]_O = (${vx.toFixed(1)},\\, ${vy.toFixed(1)})^T$`}
           </div>
           <div className="text-[11px] leading-relaxed text-[var(--kde-muted)]">
             {"✨ "}
@@ -597,10 +630,17 @@ export default function AffineSpaceDiagram() {
           step={0.05}
           value={lambda2}
         />
-        <div className="mt-3 flex items-center justify-between border-t border-[var(--kde-border)]/50 pt-2 text-xs text-[var(--kde-muted)]">
-          <span>基准权重 $\lambda_0 = 1 - \lambda_1 - \lambda_2$</span>
+        <KdeDivider spacing="xs" />
+        <KdeProgressBar
+          value={Math.max(0, Math.min(100, Math.round(lambda0 * 100)))}
+          label="基准顶点 P₀ 重心权重 λ₀"
+          valueDisplay={lambda0.toFixed(2)}
+          size="xs"
+        />
+        <div className="mt-2 flex items-center justify-between text-xs text-[var(--kde-muted)]">
+          <span>约束方程 $\sum \lambda_i = 1$</span>
           <span className="font-mono font-bold text-[var(--kde-ink)]">
-            {lambda0.toFixed(2)}
+            {(lambda0 + lambda1 + lambda2).toFixed(2)}
           </span>
         </div>
       </KdeCard>
@@ -874,36 +914,28 @@ export default function AffineSpaceDiagram() {
         </div>
       </KdeCard>
 
-      <KdeCard
+      <KdeMessageBar
+        variant={isInsideTriangle ? "success" : "warning"}
+        mode="card"
         title={
           isInsideTriangle
             ? "处于凸包内部 (Convex Hull)"
             : "处于凸包外部 (Affine Hull)"
         }
-        badge={
-          isInsideTriangle ? (
-            <KdeBadge variant="success">λᵢ ≥ 0</KdeBadge>
-          ) : (
-            <KdeBadge variant="warning">∑λᵢ = 1</KdeBadge>
-          )
-        }
-        variant={isInsideTriangle ? "default" : "highlight"}
       >
-        <p className="text-[11px] leading-relaxed text-[var(--kde-muted)]">
-          {isInsideTriangle ? (
-            <span>
-              所有重心坐标非负 $\lambda_i \ge 0$，点 $P$
-              严格位于三角形内部（凸组合）。
-            </span>
-          ) : (
-            <span>
-              {
-                "存在负权重 $\\lambda_i < 0$，点 $P$ 超出三角形边界，但仍严格满足全仿射平面约束 $\\sum \\lambda_i = 1$（仿射组合）。"
-              }
-            </span>
-          )}
-        </p>
-      </KdeCard>
+        {isInsideTriangle ? (
+          <span>
+            所有重心坐标非负 $\lambda_i \ge 0$，点 $P$
+            严格位于三角形内部（凸组合）。
+          </span>
+        ) : (
+          <span>
+            {
+              "存在负权重 $\\lambda_i < 0$，点 $P$ 超出三角形边界，但仍严格满足全仿射平面约束 $\\sum \\lambda_i = 1$（仿射组合）。"
+            }
+          </span>
+        )}
+      </KdeMessageBar>
     </>
   );
 
@@ -948,7 +980,25 @@ export default function AffineSpaceDiagram() {
         />
       </KdeCard>
 
-      <KdeCard title="线性旋转角 θ">
+      <KdeCard
+        title="线性旋转角 θ"
+        headerAction={
+          <KdeButtonGroup attached size="xs">
+            <KdeButton size="xs" onClick={() => setThetaDeg(0)}>
+              0°
+            </KdeButton>
+            <KdeButton size="xs" onClick={() => setThetaDeg(30)}>
+              30°
+            </KdeButton>
+            <KdeButton size="xs" onClick={() => setThetaDeg(45)}>
+              45°
+            </KdeButton>
+            <KdeButton size="xs" onClick={() => setThetaDeg(90)}>
+              90°
+            </KdeButton>
+          </KdeButtonGroup>
+        }
+      >
         <ParamSlider
           labelMode="adaptive"
           display={`${thetaDeg}°`}
@@ -1211,36 +1261,33 @@ export default function AffineSpaceDiagram() {
         </div>
       </KdeCard>
 
-      <KdeCard
-        title="半直积与超平面保持机制"
-        badge={
-          testType === "point" ? (
-            <KdeBadge variant="success">w = 1 切片</KdeBadge>
-          ) : (
-            <KdeBadge variant="warning">w = 0 子空间</KdeBadge>
-          )
+      <KdeMessageBar
+        variant={testType === "point" ? "success" : "warning"}
+        mode="card"
+        title={
+          testType === "point"
+            ? "仿射点 w = 1 超平面保持机制"
+            : "方向向量 w = 0 线性子空间保持机制"
         }
       >
-        <p className="text-xs leading-relaxed text-[var(--kde-muted)]">
-          {testType === "point" ? (
-            <span>
-              {"📌 当输入为"}
-              <strong className="text-[var(--kde-ink)]">仿射点</strong>
-              {
-                "（$w = 1$）时，平移分量 $\\mathbf{t} \\times 1$ 起效，且输出高度恒为 $w' = 1$，严格保持在仿射切片超平面上！"
-              }
-            </span>
-          ) : (
-            <span>
-              {"🚀 当输入为"}
-              <strong className="text-[var(--kde-ink)]">方向向量</strong>
-              {
-                "（$w = 0$）时，平移分量 $\\mathbf{t} \\times 0 = 0$ 自动消去，向量只经历纯线性旋转，不产生平移，保持在向量子空间中！"
-              }
-            </span>
-          )}
-        </p>
-      </KdeCard>
+        {testType === "point" ? (
+          <span>
+            {"📌 当输入为"}
+            <strong className="text-[var(--kde-ink)]">仿射点</strong>
+            {
+              "（$w = 1$）时，平移分量 $\\mathbf{t} \\times 1$ 起效，且输出高度恒为 $w' = 1$，严格保持在仿射切片超平面上！"
+            }
+          </span>
+        ) : (
+          <span>
+            {"🚀 当输入为"}
+            <strong className="text-[var(--kde-ink)]">方向向量</strong>
+            {
+              "（$w = 0$）时，平移分量 $\\mathbf{t} \\times 0 = 0$ 自动消去，向量只经历纯线性旋转，不产生平移，保持在向量子空间中！"
+            }
+          </span>
+        )}
+      </KdeMessageBar>
     </>
   );
 

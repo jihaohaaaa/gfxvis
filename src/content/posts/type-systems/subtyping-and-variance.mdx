@@ -12,6 +12,71 @@ tags:
 ---
 
 import SubtypingVarianceDiagram from "../../../components/diagrams/SubtypingVarianceDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const subtypingTsFnSnippet = `// TypeScript 函数子类型化：入参逆变与出参协变实战
+interface Animal {
+  name: string;
+  eat(): void;
+}
+
+interface Dog extends Animal {
+  bark(): void;
+}
+
+interface Corgi extends Dog {
+  shortLegs: boolean;
+}
+
+// 模拟实例构造
+const makeAnimal = (name: string): Animal => ({ name, eat: () => console.log(\`\${name} 在进食\`) });
+const makeDog = (name: string): Dog => ({ name, eat: () => console.log(\`\${name} 进食\`), bark: () => console.log("汪汪!") });
+const makeCorgi = (name: string): Corgi => ({ name, eat: () => console.log(\`\${name} 进食\`), bark: () => console.log("汪汪!"), shortLegs: true });
+
+// 槽位契约：接收 Dog，返回 Animal
+type DogHandler = (d: Dog) => Animal;
+
+// 候选函数 1：(a: Animal) => Dog
+// 入参 Animal 是 Dog 的超类（逆变安全：能处理所有动物，当然能处理狗）
+// 出参 Dog 是 Animal 的子类（协变安全：承诺返回狗，完全满足动物契约）
+const safeFn: (a: Animal) => Dog = (a: Animal) => {
+  console.log("safeFn 成功处理动物:", a.name);
+  return makeDog(\`狗版_\${a.name}\`);
+};
+
+// 赋值完全合法：(Animal -> Dog) <: (Dog -> Animal)
+const handler: DogHandler = safeFn;
+
+const dog = makeDog("旺财");
+const result = handler(dog);
+console.log("处理结果动物:", result.name);
+result.eat();
+`;
+
+export const subtypingRustLifetimeSnippet = `// Rust 生命周期子类型化与协变实战
+// 'a: 'b (生命周期 'a 长于 'b，则 'a 是 'b 的子类型：'a <: 'b)
+
+fn choose_longer<'a, 'b: 'c, 'c>(x: &'b str, y: &'c str) -> &'c str {
+    if x.len() > y.len() {
+        x // &'b str 协变转换为 &'c str 返回！
+    } else {
+        y
+    }
+}
+
+fn main() {
+    let static_str: &'static str = "全局长寿命字符串 ('static)";
+    {
+        let local_string = String::from("局部块作用域短寿命字符串 ('local)");
+        let local_ref: &str = &local_string;
+
+        // 'static 生命周期远长于局部作用域，发生生命周期协变收窄
+        let chosen = choose_longer(static_str, local_ref);
+        println!("选出的较长字符串是: {}", chosen);
+    }
+    println!("主程序安全结束，生命周期严格捍卫内存安全！");
+}
+`;
 
 在现代编程语言的类型系统中，<strong>多态（Polymorphism）</strong>呈现出三种截然不同的哲学形态：
 1. <strong>参数多态（Parametric Polymorphism / System F）</strong>：通过类型参数（如泛型 `T`）实现“对所有类型一视同仁”的通用算法；
@@ -326,6 +391,14 @@ $$
 (\text{Animal} \to \text{Dog}) <: (\text{Dog} \to \text{Animal})
 $$
 
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="TypeScript 函数子类型化：入参逆变与出参协变验证"
+  description="验证 (Animal -> Dog) <: (Dog -> Animal) 赋值与安全调用"
+  initialCode={subtypingTsFnSnippet}
+/>
+
 ### 4.2 为什么入参不能协变？
 
 如果把<strong>候选函数 B</strong>（期待接收短腿柯基 `Corgi`）强行赋给期待 `Dog` 的槽位：
@@ -470,6 +543,14 @@ $$
 #### 2. 共享引用 `&'a T` 与独占引用 `&'a mut T` 的型变分野
 - <strong>`&'a T`（共享不可变引用）</strong>：对 `'a` 协变，对 `T` 也<strong>协变</strong>！长寿命可以顺应缩短，子类型对象也可以安全读取；
 - <strong>`&'a mut T`（独占可变引用）</strong>：对 `'a` 协变，但对 `T` <strong>严格不变（Invariant）！</strong>
+
+<CodePlayground
+  client:visible
+  lang="rust"
+  title="Rust 生命周期子类型化与协变实战"
+  description="验证长生命周期 &'static str 向短生命周期 &'a str 的协变收窄与安全调用"
+  initialCode={subtypingRustLifetimeSnippet}
+/>
 
 #### 3. 惊心动魄的安全证明：如果 `&mut T` 协变会发生什么？
 假设 Rust 允许 `&'a mut T` 对 `T` 发生协变，考察下方代码：

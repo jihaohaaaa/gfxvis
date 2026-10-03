@@ -13,6 +13,74 @@ tags:
 ---
 
 import AdtRecursiveTypesDiagram from "../../../components/diagrams/AdtRecursiveTypesDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const adtTsResponseSnippet = `// TypeScript 乘法分配律消除非法状态实战
+// ❌ 错误做法：积类型产生 2 * 2 * 2 = 8 种可能组合（含非法状态）
+interface BadResponse {
+  status: "success" | "error";
+  data?: string;
+  errorMessage?: string;
+}
+
+// ✅ 正确做法：利用 A × (B + C) ≅ (A × B) + (A × C) 和类型严格收敛为 2 种合法状态
+type ApiResponse<T> =
+  | { readonly success: true; readonly data: T }
+  | { readonly success: false; readonly error: string };
+
+function renderResponse(res: ApiResponse<string>): string {
+  if (res.success) {
+    // 此时类型自动收窄为成功分支，data 必然存在！
+    return \`[SUCCESS] 接收到数据: \${res.data}\`;
+  } else {
+    // 此时类型自动收窄为失败分支，error 必然存在！
+    return \`[ERROR] 接口错误: \${res.error}\`;
+  }
+}
+
+const ok: ApiResponse<string> = { success: true, data: "用户 Token: abc-123" };
+const fail: ApiResponse<string> = { success: false, error: "404 Not Found" };
+
+console.log(renderResponse(ok));
+console.log(renderResponse(fail));
+`;
+
+export const adtRustBoxSnippet = `// Rust 递归数据类型与 Box 堆指针定长化实战
+use std::mem::size_of;
+
+#[derive(Debug)]
+enum List<T> {
+    Nil,
+    Cons(T, Box<List<T>>),
+}
+
+impl<T> List<T> {
+    fn new() -> Self {
+        List::Nil
+    }
+
+    fn push(self, elem: T) -> Self {
+        List::Cons(elem, Box::new(self))
+    }
+
+    fn len(&self) -> usize {
+        match self {
+            List::Nil => 0,
+            List::Cons(_, next) => 1 + next.len(),
+        }
+    }
+}
+
+fn main() {
+    println!("=== 递归类型内存大小探测 ===");
+    println!("Box<List<i32>> 堆指针大小: {} 字节", size_of::<Box<List<i32>>>());
+    println!("List<i32> 栈上枚举大小: {} 字节 (定长收敛)", size_of::<List<i32>>());
+
+    let list = List::new().push(10).push(20).push(30);
+    println!("构造的链表: {:?}", list);
+    println!("链表长度为: {}", list.len());
+}
+`;
 
 在日常软件工程中，我们每天都在定义结构体（Struct）、元组（Tuple）、枚举（Enum）并使用 `switch` 或 `match` 进行模式匹配。在直觉上，它们只是编译器组织内存与区分分支的语法糖。
 
@@ -90,25 +158,15 @@ graph LR
 ```
 
 #### 乘法分配律实战：如何消灭业务代码中的非法状态
-假设我们在开发一个网络请求模块，常常有人写出这样的“反模式”结构体：
-```typescript
-// ❌ 错误建模：积类型包含了潜在的非法状态
-interface BadResponse {
-    status: "success" | "error"; // 2 种状态
-    data?: string;               // 存在或不存在
-    errorMessage?: string;       // 存在或不存在
-}
-```
-此时类型的总状态数是乘积状态：$2 \times 2 \times 2 = 8$ 种！其中包括极其荒谬的组合：状态是 `"success"` 却带有 `errorMessage`，或者状态是 `"error"` 却带有 `data`。
+假设我们在开发一个网络请求模块，常常有人写出包含潜在非法状态的积类型结构体。利用分配律 $A \times (B + C) \cong AB + AC$，我们将其重构成和类型，将状态严格收敛为合法的两种互斥分支：
 
-利用分配律 $A \times (B + C) \cong AB + AC$，我们将其重构成和类型：
-```typescript
-// ✅ 优雅建模：和类型将状态严格收敛为合法的两种互斥分支
-type GoodResponse =
-    | { status: "success"; data: string }
-    | { status: "error"; errorMessage: string };
-```
-此时总状态数收缩为 $1 + 1 = 2$ 种！业务代码里的 Bug 在类型系统的数学层面上直接被物理消除。
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="TypeScript 乘法分配律与非法状态消除"
+  description="利用可辨识联合类型将 8 种积类型状态精简为 2 种严格互斥的和类型状态"
+  initialCode={adtTsResponseSnippet}
+/>
 
 ### 1.5 四大现代主流语言对和类型的支持度大比拼
 
@@ -358,15 +416,15 @@ $$
 方程的解是 $\text{sizeof}(\text{List}) = \infty$！要在栈上为无穷大内存分配空间是物理不可能的。
 
 #### 引入堆指针间接层（Box Indirection）破局
-解决方案是引入<strong>指针间接层（Indirection）</strong>：
-```rust
-// ✅ 编译通过：sizeof(List) 严格定长为 16 字节！
-enum List {
-    Nil,
-    Cons(i32, Box<List>),
-}
-```
-指针（`Box`）在 64 位机器上无论指向的目标数据有多庞大，其本身的宽度固定是 $8$ 个字节。递归结构的内存占用从而由栈上无限展开，解耦为<strong>栈上定长句柄 + 堆上动态链式节点</strong>。
+解决方案是引入<strong>指针间接层（Indirection）</strong>。指针（`Box`）在 64 位机器上无论指向的目标数据有多庞大，其本身的宽度固定是 $8$ 个字节。递归结构的内存占用从而由栈上无限展开，解耦为<strong>栈上定长句柄 + 堆上动态链式节点</strong>：
+
+<CodePlayground
+  client:visible
+  lang="rust"
+  title="Rust 递归数据类型与 Box 堆指针定长化实战"
+  description="以 Box 指针解决 Rust E0072 无限大小死锁，并验证栈上定长收敛大小与链表操作"
+  initialCode={adtRustBoxSnippet}
+/>
 
 #### C++ 的 incomplete type 报错
 C++ 同样要求栈上变量必须在编译期确定大小：

@@ -14,6 +14,60 @@ tags:
 ---
 
 import CurryHowardDiagram from "../../../components/diagrams/CurryHowardDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const curryHowardTsSnippet = `// Curry-Howard 同构：TypeScript 命题即类型证明程序
+// 1. 命题合取与蕴涵证明：(A ∧ B → C) ≅ (A → B → C)
+type And<A, B> = [A, B];
+
+// 柯里化正向证明 (Currying Proof):
+function proveCurry<A, B, C>(
+  f: (pair: And<A, B>) => C
+): (a: A) => (b: B) => C {
+  return (a: A) => (b: B) => f([a, b]);
+}
+
+// 反向证明 (Uncurrying Proof):
+function proveUncurry<A, B, C>(
+  f: (a: A) => (b: B) => C
+): (pair: And<A, B>) => C {
+  return ([a, b]: And<A, B>) => f(a)(b);
+}
+
+// 2. 假言推理证明 (Modus Ponens): A ∧ (A → B) ⊢ B
+function modusPonens<A, B>(evidenceA: A, implication: (a: A) => B): B {
+  return implication(evidenceA);
+}
+
+// 运行现场验证：
+const add = ([x, y]: And<number, number>) => x + y;
+const curriedAdd = proveCurry(add);
+console.log("证明通过：curriedAdd(10)(20) =", curriedAdd(10)(20));
+
+const doubled = modusPonens(42, (x: number) => x * 2);
+console.log("假言推理推出 doubled =", doubled);
+`;
+
+export const curryHowardRustSnippet = `// Rust: 命题逻辑析取 (A ∨ B) 与模式匹配穷尽性验证
+enum Either<A, B> {
+    Left(A),
+    Right(B),
+}
+
+fn handle_either(e: Either<i32, String>) -> String {
+    match e {
+        Either::Left(val) => format!("证明分支 A 命中，数值为: {}", val),
+        Either::Right(msg) => format!("证明分支 B 命中，字符串为: {}", msg),
+    }
+}
+
+fn main() {
+    let proof1 = Either::Left(42);
+    let proof2 = Either::Right(String::from("Curry-Howard 同构"));
+    println!("{}", handle_either(proof1));
+    println!("{}", handle_either(proof2));
+}
+`;
 
 在无类型 $\lambda$ 演算（UTLC）的宇宙中，一切既是数据又是函数。这种纯粹的自由赋予了它图灵完备的表达力，但也带来了严峻的混乱：程序可能毫无征兆地陷入死循环（如自复制项 $\Omega = (\lambda x.\, x\, x)(\lambda x.\, x\, x)$），也可能把一个布尔值强行当作加法器调用而陷入崩溃。
 
@@ -297,6 +351,14 @@ flowchart LR
 
 <strong>你每一次在计算机中运行程序、化简表达式，其在逻辑宇宙中都在为一篇数学论文进行证明化简！</strong>
 
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="Curry–Howard 同构：TypeScript 命题即类型与假言推理"
+  description="以 TypeScript 泛型证明柯里化等价定理 (A ∧ B → C) ≅ (A → B → C) 与假言推理 Modus Ponens"
+  initialCode={curryHowardTsSnippet}
+/>
+
 ---
 
 ## 六、交互探针：Curry–Howard 逻辑与计算对偶镜像
@@ -331,13 +393,13 @@ struct ProofOfAAndB {
 在逻辑中，要证明“$A$ 或 $B$”成立，你必须明确给出 $A$ 的证据（左注入 $\text{inl}$），或者给出 $B$ 的证据（右注入 $\text{inr}$）。
 在编程语言中，这就是带标签的<strong>和类型（Sum Type / 标签联合 Tagged Union）</strong>：
 
-```rust
-// Rust: enum 就是逻辑上的“析取 (OR)”
-enum Either<A, B> {
-    Left(A),
-    Right(B),
-}
-```
+<CodePlayground
+  client:visible
+  lang="rust"
+  title="Rust 析取和类型（Either）与模式匹配穷尽性验证"
+  description="以 Rust 枚举展示和类型 (Sum Type) 构造与模式匹配穷尽性证明"
+  initialCode={curryHowardRustSnippet}
+/>
 
 ```cpp
 // C++17: std::variant 表达和类型

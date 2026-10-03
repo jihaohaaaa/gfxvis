@@ -1,10 +1,17 @@
 import { useState } from "react";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import CanvasResizer from "../framework/CanvasResizer";
-import CapsuleTabs from "../framework/CapsuleTabs";
-import ExpandableDemo from "../framework/ExpandableDemo";
+import KdeTabs, { type KdeTabOption } from "../framework/KdeTabs";
+import KdeWindowShell from "../framework/KdeWindowShell";
+import InteractiveLayout from "../framework/InteractiveLayout";
+import KdeCard from "../framework/KdeCard";
+import KdeBadge from "../framework/KdeBadge";
+import KdeMessageBar from "../framework/KdeMessageBar";
+import CodePlayground from "../framework/CodePlayground";
 import { AutoMath } from "../framework/AutoMath";
+import ExpandableDemo from "../framework/ExpandableDemo";
 import PresetSelector from "../framework/PresetSelector";
+import KdeButton from "../framework/KdeButton";
 
 // ============================================================================
 // Types & Presets for Type Classes & Traits
@@ -183,13 +190,46 @@ const PRESETS: TypeClassPreset[] = [
   },
 ];
 
-// ============================================================================
-// Component Definition
-// ============================================================================
+const VIEW_OPTIONS: readonly KdeTabOption<
+  "dictionary_passing" | "coherence_sandbox" | "rust_vs_cpp" | "code_sandbox"
+>[] = [
+  { id: "dictionary_passing", label: "字典传递脱糖流程" },
+  { id: "coherence_sandbox", label: "孤儿规则与一致性沙盒" },
+  { id: "rust_vs_cpp", label: "Rust 显式 impl vs C++ Concepts 隐式匹配" },
+  { id: "code_sandbox", label: "Rust Trait 沙盒" },
+];
+
+const TRAITS_RUST_CODE = `// Rust 中的 Trait 特设多态与孤儿规则
+pub trait Printable {
+    fn format(&self) -> String;
+}
+
+pub struct User {
+    pub id: u64,
+    pub name: String,
+}
+
+// 显式为本地类型实现 Trait (符合孤儿规则)
+impl Printable for User {
+    fn format(&self) -> String {
+        format!("User #{} ({})", self.id, self.name)
+    }
+}
+
+// 泛型函数带 Trait 约束 (静态单态化)
+fn print_item<T: Printable>(item: &T) {
+    println!("[Printable Item] {}", item.format());
+}
+
+fn main() {
+    let u = User { id: 101, name: "Alice".into() };
+    print_item(&u);
+}
+`;
 
 export default function TypeClassesTraitsDiagram() {
   const [activeTab, setActiveTab] = useState<
-    "dictionary_passing" | "coherence_sandbox" | "rust_vs_cpp"
+    "dictionary_passing" | "coherence_sandbox" | "rust_vs_cpp" | "code_sandbox"
   >("dictionary_passing");
 
   const [selectedPresetId, setSelectedPresetId] = useState<string>("eq_show");
@@ -207,350 +247,358 @@ export default function TypeClassesTraitsDiagram() {
   return (
     <AutoMath>
       <ExpandableDemo id="type-classes-traits-sandbox">
-        <div className="my-8 rounded-xl border border-border/80 bg-card p-4 sm:p-6 shadow-sm">
-          {/* Header Info */}
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4">
-            <div>
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <span>类型类与特质（Type Classes & Traits）交互探针</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-medium">
-                  Ad-hoc 多态的数学驯服
-                </span>
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                动态推演 Wadler-Blott 字典传递脱糖流程、孤儿规则（Orphan
-                Rule）与全局一致性防线，以及 Rust 显式名义实现 vs C++20 Concepts
-                隐式结构匹配的哲学对决。
-              </p>
-            </div>
-          </div>
-
-          {/* Preset Selector */}
-          <div className="mb-4">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-              特设多态与 Trait 代表性预设
-            </label>
-            <PresetSelector
-              options={PRESETS.map((p) => ({
-                id: p.id,
-                label: p.label,
-                description: p.desc,
-              }))}
-              value={selectedPresetId}
-              onChange={(id: string) => {
-                setSelectedPresetId(id);
-                setIsViolatingOrphan(false);
-              }}
-            />
-          </div>
-
-          {/* Mode Capsule Tabs */}
-          <div className="mb-4">
-            <CapsuleTabs
-              options={[
-                { id: "dictionary_passing", label: "字典传递脱糖流程" },
-                { id: "coherence_sandbox", label: "孤儿规则与一致性沙盒" },
-                {
-                  id: "rust_vs_cpp",
-                  label: "Rust 显式 impl vs C++ Concepts 隐式匹配",
-                },
-              ]}
-              value={activeTab}
-              onChange={(tab) =>
-                setActiveTab(
-                  tab as
-                    "dictionary_passing" | "coherence_sandbox" | "rust_vs_cpp",
-                )
-              }
-              size="sm"
-            />
-          </div>
-
-          {/* Main Interactive Stage Container */}
-          <div className="relative overflow-hidden rounded-lg border border-border/70 bg-card/60 p-4 sm:p-5 h-[var(--demo-height,28rem)] flex flex-col justify-between">
-            {/* Canvas Toolbar with S/M/L heights */}
-            <CanvasToolbar onReset={handleReset} />
-
-            {/* Tab 1: Dictionary Passing Desugaring View */}
-            {activeTab === "dictionary_passing" && (
-              <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-                <div className="rounded-lg bg-card/80 p-3 border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span className="text-xs font-semibold text-muted-foreground block mb-0.5">
-                      类型类形式化声明 (Formal Typeclass Signature)
+        <KdeWindowShell
+          eyebrow="TYPE THEORY WORKSPACE · TYPE CLASSES & TRAITS"
+          mark="C"
+          modeTag="DENSE-DOCK"
+          title="类型类与特质（Type Classes & Traits）交互探针"
+        >
+          <InteractiveLayout
+            preset="dense-dock"
+            top={
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-[var(--kde-muted)]">
+                      探针视角：
                     </span>
-                    <div className="text-primary font-mono text-sm">
+                    <KdeTabs
+                      onChange={(val) => setActiveTab(val)}
+                      options={VIEW_OPTIONS}
+                      size="sm"
+                      value={activeTab}
+                    />
+                  </div>
+                </div>
+              </div>
+            }
+            main={
+              <div className="relative flex h-[var(--demo-height,28rem)] w-full flex-col overflow-hidden rounded-xl border border-[var(--kde-border)] bg-[var(--kde-canvas)] p-5 shadow-inner">
+                <CanvasToolbar onReset={handleReset} />
+
+                {activeTab === "code_sandbox" ? (
+                  <div className="flex-1 flex flex-col overflow-y-auto pr-1">
+                    <CodePlayground
+                      code={TRAITS_RUST_CODE}
+                      description="现场调用本地 rustc -O 编译并运行 Trait 特设多态与单态化泛型代码。"
+                      lang="rust"
+                      maxHeight="20rem"
+                      title="Rust Trait 沙盒"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    {/* Tab 1: Dictionary Passing Desugaring View */}
+                    {activeTab === "dictionary_passing" && (
+                      <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+                        <div className="rounded-lg bg-[var(--kde-raised)] p-3 border border-[var(--kde-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <span className="text-xs font-semibold text-[var(--kde-muted)] block mb-0.5">
+                              类型类形式化声明 (Formal Typeclass Signature)
+                            </span>
+                            <div className="text-[var(--kde-accent)] font-mono text-sm">
+                              {`$${currentPreset.formalTex}$`}
+                            </div>
+                          </div>
+                          <div className="text-xs px-2.5 py-1 rounded-md bg-[var(--kde-panel)] text-[var(--kde-ink)] font-mono border border-[var(--kde-border)]">
+                            目标接口：{currentPreset.typeclassName}
+                          </div>
+                        </div>
+
+                        {/* Dual Code Panel: High-level vs Desugared */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 text-xs font-mono">
+                          <div className="rounded-lg bg-[var(--kde-raised)] p-3.5 border border-[var(--kde-border)] flex flex-col justify-between">
+                            <div>
+                              <div className="text-[var(--kde-muted)] font-semibold text-[11px] mb-2 flex items-center justify-between">
+                                <span>1. 高层抽象源码（程序员视角）</span>
+                                <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold">
+                                  HIGH LEVEL
+                                </span>
+                              </div>
+                              <pre className="text-[var(--kde-ink)] whitespace-pre-wrap leading-relaxed text-[11px] bg-[var(--kde-panel)] p-2.5 rounded-lg border border-[var(--kde-border)]">
+                                {currentPreset.originalCode}
+                              </pre>
+                            </div>
+                            <div className="text-[11px] text-[var(--kde-muted)] mt-2 border-t border-[var(--kde-border)] pt-1.5">
+                              表面上看，函数只要求类型 T
+                              拥有某些操作，代码清爽干净。
+                            </div>
+                          </div>
+
+                          <div className="rounded-lg bg-[var(--kde-raised)] p-3.5 border border-[var(--kde-border)] flex flex-col justify-between">
+                            <div>
+                              <div className="text-[var(--kde-accent)] font-semibold text-[11px] mb-2 flex items-center justify-between">
+                                <span>2. 编译器注入字典后（脱糖底层机理）</span>
+                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                                  DESUGARED
+                                </span>
+                              </div>
+                              <pre className="text-[var(--kde-ink)] whitespace-pre-wrap leading-relaxed text-[11px] bg-[var(--kde-panel)] p-2.5 rounded-lg border border-[var(--kde-border)]">
+                                {currentPreset.desugaredCode}
+                              </pre>
+                            </div>
+                            <div className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-2 border-t border-[var(--kde-border)]/50 pt-1.5 font-sans">
+                              💡 <strong>脱糖奥秘</strong>
+                              ：类型类约束被化解为显式传递的“函数指针记录（Dictionary）”。
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tab 2: Coherence & Orphan Rules Sandbox */}
+                    {activeTab === "coherence_sandbox" && (
+                      <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+                        <div className="rounded-lg bg-[var(--kde-raised)] p-3 border border-[var(--kde-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <span className="font-bold text-sm text-[var(--kde-ink)]">
+                              多模块生态孤儿规则推演沙盒 (Coherence Checker)
+                            </span>
+                            <p className="text-xs text-[var(--kde-muted)] mt-0.5">
+                              当两个第三方 Crate
+                              同时试图为同一标准类型实现相同接口时会发生什么？
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <KdeButton
+                              size="xs"
+                              variant={
+                                !isViolatingOrphan ? "success" : "default"
+                              }
+                              onClick={() => setIsViolatingOrphan(false)}
+                            >
+                              遵守孤儿规则 (Safe)
+                            </KdeButton>
+                            <KdeButton
+                              size="xs"
+                              variant={isViolatingOrphan ? "danger" : "default"}
+                              onClick={() => setIsViolatingOrphan(true)}
+                            >
+                              违反孤儿规则 (Trigger E0117)
+                            </KdeButton>
+                          </div>
+                        </div>
+
+                        {/* Dependency Graph & Conflict Simulation */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                          <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-raised)] p-3">
+                            <div className="font-bold text-[var(--kde-ink)] mb-1">
+                              模块 A (Crate Alpha)
+                            </div>
+                            <div className="text-[11px] text-[var(--kde-muted)] leading-relaxed">
+                              {currentPreset.coherenceScenario.crateA}
+                            </div>
+                          </div>
+
+                          <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-raised)] p-3">
+                            <div className="font-bold text-[var(--kde-ink)] mb-1">
+                              模块 B (Crate Beta)
+                            </div>
+                            <div className="text-[11px] text-[var(--kde-muted)] leading-relaxed">
+                              {currentPreset.coherenceScenario.crateB}
+                            </div>
+                          </div>
+
+                          <div
+                            className={`rounded-lg border p-3 transition-colors ${
+                              !isViolatingOrphan
+                                ? "bg-emerald-500/10 border-emerald-500/40 text-[var(--kde-ink)] ring-1 ring-emerald-500/20"
+                                : "bg-rose-500/10 border-rose-500/40 text-[var(--kde-ink)] ring-1 ring-rose-500/20"
+                            }`}
+                          >
+                            <div className="font-bold mb-1">
+                              主应用 (App Main)
+                            </div>
+                            <div className="text-[11px] leading-relaxed">
+                              {!isViolatingOrphan
+                                ? "正确使用 Newtype 包装器，类型定义权属于本地，无二义性冲突。"
+                                : currentPreset.coherenceScenario.crateC}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Compiler Diagnostic Output Box */}
+                        <KdeMessageBar
+                          variant={!isViolatingOrphan ? "success" : "danger"}
+                          mode="card"
+                          title={
+                            !isViolatingOrphan
+                              ? "编译器一致性检查通过 (STATUS: PASSED)"
+                              : "编译器孤儿规则拦截 (STATUS: ERROR[E0117])"
+                          }
+                        >
+                          {!isViolatingOrphan
+                            ? currentPreset.coherenceScenario.compilerOutcome
+                            : currentPreset.coherenceScenario.diagnosticMessage}
+                        </KdeMessageBar>
+                      </div>
+                    )}
+
+                    {/* Tab 3: Rust Trait vs C++20 Concepts View */}
+                    {activeTab === "rust_vs_cpp" && (
+                      <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+                        <div className="text-center max-w-xl mx-auto py-0.5">
+                          <h4 className="text-sm font-bold text-[var(--kde-ink)]">
+                            系统级双雄的哲学分野：显式名义实现 vs 隐式结构匹配
+                          </h4>
+                          <p className="text-xs text-[var(--kde-muted)] mt-0.5">
+                            Rust 选择用严格的 impl 块守卫重构安全性；C++20
+                            选择用 Concepts 赋予模板极致的非侵入灵活性。
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 flex-1 text-xs">
+                          {/* Rust Column */}
+                          <KdeCard
+                            title="Rust: 显式名义实现 (impl Trait for T)"
+                            badge={
+                              <KdeBadge variant="warning">Nominal</KdeBadge>
+                            }
+                            footer={
+                              <div className="text-[10px] text-[var(--kde-muted)]">
+                                保证全局唯一映射，拒绝任何误打误撞的偶然匹配。
+                              </div>
+                            }
+                          >
+                            <pre className="text-[var(--kde-ink)] whitespace-pre-wrap leading-relaxed text-[11px] bg-[var(--kde-panel)] p-2.5 rounded-lg border border-[var(--kde-border)] font-mono mb-2">
+                              {currentPreset.rustVsCpp.rustCode}
+                            </pre>
+                            <div className="text-[11px] text-[var(--kde-ink)] space-y-1">
+                              <div>
+                                <strong>核心哲学：</strong>
+                                <span className="text-[var(--kde-muted)]">
+                                  {currentPreset.rustVsCpp.rustPhilosophy}
+                                </span>
+                              </div>
+                              <div>
+                                <strong>优势防线：</strong>
+                                <span className="text-[var(--kde-muted)]">
+                                  {currentPreset.rustVsCpp.rustPros}
+                                </span>
+                              </div>
+                            </div>
+                          </KdeCard>
+
+                          {/* C++ Column */}
+                          <KdeCard
+                            title="C++20: 隐式结构匹配 (Concepts / Requires)"
+                            badge={
+                              <KdeBadge variant="primary">Structural</KdeBadge>
+                            }
+                            footer={
+                              <div className="text-[10px] text-[var(--kde-muted)]">
+                                零胶水适配，第三方库无需感知概念存在即可被无缝消费。
+                              </div>
+                            }
+                          >
+                            <pre className="text-[var(--kde-ink)] whitespace-pre-wrap leading-relaxed text-[11px] bg-[var(--kde-panel)] p-2.5 rounded-lg border border-[var(--kde-border)] font-mono mb-2">
+                              {currentPreset.rustVsCpp.cppCode}
+                            </pre>
+                            <div className="text-[11px] text-[var(--kde-ink)] space-y-1">
+                              <div>
+                                <strong>核心哲学：</strong>
+                                <span className="text-[var(--kde-muted)]">
+                                  {currentPreset.rustVsCpp.cppPhilosophy}
+                                </span>
+                              </div>
+                              <div>
+                                <strong>优势自由：</strong>
+                                <span className="text-[var(--kde-muted)]">
+                                  {currentPreset.rustVsCpp.cppPros}
+                                </span>
+                              </div>
+                            </div>
+                          </KdeCard>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
+              </div>
+            }
+            side={
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <KdeCard title="特设多态与 Trait 代表性预设" variant="dense">
+                  <PresetSelector
+                    layout="vertical"
+                    size="xs"
+                    options={PRESETS.map((p) => ({
+                      id: p.id,
+                      label: p.label,
+                      description: p.desc,
+                    }))}
+                    value={selectedPresetId}
+                    onChange={(id: string) => {
+                      setSelectedPresetId(id);
+                      setIsViolatingOrphan(false);
+                    }}
+                  />
+                </KdeCard>
+
+                <KdeCard title="孤儿规则与一致性控制" variant="dense">
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--kde-muted)]">
+                        一致性状态：
+                      </span>
+                      <KdeBadge
+                        variant={!isViolatingOrphan ? "success" : "danger"}
+                      >
+                        {!isViolatingOrphan
+                          ? "COHERENT (PASSED)"
+                          : "ORPHAN VIOLATION (E0117)"}
+                      </KdeBadge>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <KdeButton
+                        size="xs"
+                        variant={!isViolatingOrphan ? "success" : "default"}
+                        onClick={() => setIsViolatingOrphan(false)}
+                      >
+                        遵守孤儿规则 (Safe)
+                      </KdeButton>
+                      <KdeButton
+                        size="xs"
+                        variant={isViolatingOrphan ? "danger" : "default"}
+                        onClick={() => setIsViolatingOrphan(true)}
+                      >
+                        违反孤儿规则 (Trigger E0117)
+                      </KdeButton>
+                    </div>
+                    <div className="text-[11px] text-[var(--kde-muted)] leading-relaxed border-t border-[var(--kde-border)] pt-1.5">
+                      Trait 实现必须满足：或者 Trait
+                      为本地定义，或者实现类型为本地类型。
+                    </div>
+                  </div>
+                </KdeCard>
+
+                <KdeCard title="形式化接口签名" variant="dense">
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2 rounded bg-[var(--kde-panel)] border border-[var(--kde-border)] font-mono text-[11px] text-[var(--kde-accent)]">
                       {`$${currentPreset.formalTex}$`}
                     </div>
-                  </div>
-                  <div className="text-xs px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground font-mono">
-                    目标接口：{currentPreset.typeclassName}
-                  </div>
-                </div>
-
-                {/* Dual Code Panel: High-level vs Desugared */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 text-xs font-mono">
-                  <div className="rounded-lg bg-muted/20 p-3.5 border border-border/60 flex flex-col justify-between">
-                    <div>
-                      <div className="text-muted-foreground font-semibold text-[11px] mb-2 flex items-center justify-between">
-                        <span>1. 高层抽象源码（程序员视角）</span>
-                        <span className="text-[10px] text-blue-400 font-bold">
-                          HIGH LEVEL
-                        </span>
-                      </div>
-                      <pre className="text-foreground/90 whitespace-pre-wrap leading-relaxed text-[11px] bg-black/20 p-2.5 rounded border border-white/5">
-                        {currentPreset.originalCode}
-                      </pre>
-                    </div>
-                    <div className="text-[11px] text-muted-foreground mt-2 border-t border-border/40 pt-1.5">
-                      表面上看，函数只要求类型 T 拥有某些操作，代码清爽干净。
+                    <div className="text-[11px] text-[var(--kde-muted)] leading-relaxed">
+                      目标接口：<strong>{currentPreset.typeclassName}</strong>
                     </div>
                   </div>
-
-                  <div className="rounded-lg bg-primary/5 p-3.5 border border-primary/20 flex flex-col justify-between">
-                    <div>
-                      <div className="text-primary font-semibold text-[11px] mb-2 flex items-center justify-between">
-                        <span>2. 编译器注入字典后（脱糖底层机理）</span>
-                        <span className="text-[10px] text-emerald-400 font-bold">
-                          DESUGARED
-                        </span>
-                      </div>
-                      <pre className="text-foreground/90 whitespace-pre-wrap leading-relaxed text-[11px] bg-black/30 p-2.5 rounded border border-white/10">
-                        {currentPreset.desugaredCode}
-                      </pre>
-                    </div>
-                    <div className="text-[11px] text-emerald-400 mt-2 border-t border-primary/20 pt-1.5">
-                      💡 <strong>脱糖奥秘</strong>
-                      ：类型类约束被化解为显式传递的“函数指针记录（Dictionary）”。
-                    </div>
-                  </div>
-                </div>
+                </KdeCard>
               </div>
-            )}
-
-            {/* Tab 2: Coherence & Orphan Rules Sandbox */}
-            {activeTab === "coherence_sandbox" && (
-              <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-                <div className="rounded-lg bg-card/80 p-3 border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <span className="font-bold text-sm text-foreground">
-                      多模块生态孤儿规则推演沙盒 (Coherence Checker)
-                    </span>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      当两个第三方 Crate
-                      同时试图为同一标准类型实现相同接口时会发生什么？
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsViolatingOrphan(false)}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                        !isViolatingOrphan
-                          ? "bg-emerald-600 text-white shadow-sm"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      遵守孤儿规则 (Safe)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsViolatingOrphan(true)}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                        isViolatingOrphan
-                          ? "bg-red-600 text-white shadow-sm"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      违反孤儿规则 (Trigger E0117)
-                    </button>
-                  </div>
+            }
+            bottom={
+              <KdeCard>
+                <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                  🔍 类型类与特质理论洞见 (Type Classes & Traits Insight)
                 </div>
-
-                {/* Dependency Graph & Conflict Simulation */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-                    <div className="font-bold text-foreground mb-1">
-                      模块 A (Crate Alpha)
-                    </div>
-                    <div className="text-[11px] text-muted-foreground leading-relaxed">
-                      {currentPreset.coherenceScenario.crateA}
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-                    <div className="font-bold text-foreground mb-1">
-                      模块 B (Crate Beta)
-                    </div>
-                    <div className="text-[11px] text-muted-foreground leading-relaxed">
-                      {currentPreset.coherenceScenario.crateB}
-                    </div>
-                  </div>
-
-                  <div
-                    className={`rounded-lg border p-3 transition-colors ${
-                      !isViolatingOrphan
-                        ? "bg-emerald-950/20 border-emerald-500/40 text-emerald-300"
-                        : "bg-red-950/25 border-red-500/50 text-red-300"
-                    }`}
-                  >
-                    <div className="font-bold mb-1">主应用 (App Main)</div>
-                    <div className="text-[11px] leading-relaxed">
-                      {!isViolatingOrphan
-                        ? "正确使用 Newtype 包装器，类型定义权属于本地，无二义性冲突。"
-                        : currentPreset.coherenceScenario.crateC}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Compiler Diagnostic Output Box */}
-                <div
-                  className={`rounded-lg p-3.5 border font-mono text-xs transition-colors ${
-                    !isViolatingOrphan
-                      ? "bg-emerald-950/15 border-emerald-500/30 text-emerald-300"
-                      : "bg-red-950/20 border-red-500/40 text-red-300"
-                  }`}
-                >
-                  <div className="font-bold text-[11px] mb-1.5 flex items-center justify-between">
-                    <span>
-                      编译器一致性检查器判定 (Coherence Resolution Trace)
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-black/40">
-                      {!isViolatingOrphan
-                        ? "STATUS: PASSED"
-                        : "STATUS: ERROR[E0117]"}
-                    </span>
-                  </div>
-                  <div className="text-[11px] leading-relaxed mt-1">
-                    {!isViolatingOrphan
-                      ? currentPreset.coherenceScenario.compilerOutcome
-                      : currentPreset.coherenceScenario.diagnosticMessage}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 3: Rust Trait vs C++20 Concepts View */}
-            {activeTab === "rust_vs_cpp" && (
-              <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-                <div className="text-center max-w-xl mx-auto py-0.5">
-                  <h4 className="text-sm font-bold text-foreground">
-                    系统级双雄的哲学分野：显式名义实现 vs 隐式结构匹配
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Rust 选择用严格的 impl 块守卫重构安全性；C++20 选择用
-                    Concepts 赋予模板极致的非侵入灵活性。
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 flex-1 text-xs">
-                  {/* Rust Column */}
-                  <div className="rounded-lg border border-amber-500/30 bg-amber-950/15 p-3.5 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between pb-2 border-b border-amber-500/20 mb-2">
-                        <span className="font-bold text-amber-400">
-                          Rust: 显式名义实现 (impl Trait for T)
-                        </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">
-                          Nominal
-                        </span>
-                      </div>
-                      <pre className="text-foreground/90 whitespace-pre-wrap leading-relaxed text-[11px] bg-black/30 p-2.5 rounded border border-white/5 font-mono mb-2">
-                        {currentPreset.rustVsCpp.rustCode}
-                      </pre>
-                      <div className="text-[11px] text-muted-foreground space-y-1">
-                        <div>
-                          <strong>核心哲学：</strong>
-                          {currentPreset.rustVsCpp.rustPhilosophy}
-                        </div>
-                        <div>
-                          <strong>优势防线：</strong>
-                          {currentPreset.rustVsCpp.rustPros}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-amber-300/80 font-mono mt-2 border-t border-amber-500/20 pt-1.5">
-                      保证全局唯一映射，拒绝任何误打误撞的偶然匹配。
-                    </div>
-                  </div>
-
-                  {/* C++ Column */}
-                  <div className="rounded-lg border border-cyan-500/30 bg-cyan-950/15 p-3.5 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between pb-2 border-b border-cyan-500/20 mb-2">
-                        <span className="font-bold text-cyan-400">
-                          C++20: 隐式结构匹配 (Concepts / Requires)
-                        </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">
-                          Structural
-                        </span>
-                      </div>
-                      <pre className="text-foreground/90 whitespace-pre-wrap leading-relaxed text-[11px] bg-black/30 p-2.5 rounded border border-white/5 font-mono mb-2">
-                        {currentPreset.rustVsCpp.cppCode}
-                      </pre>
-                      <div className="text-[11px] text-muted-foreground space-y-1">
-                        <div>
-                          <strong>核心哲学：</strong>
-                          {currentPreset.rustVsCpp.cppPhilosophy}
-                        </div>
-                        <div>
-                          <strong>优势自由：</strong>
-                          {currentPreset.rustVsCpp.cppPros}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-cyan-300/80 font-mono mt-2 border-t border-cyan-500/20 pt-1.5">
-                      零胶水适配，第三方库无需感知概念存在即可被无缝消费。
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Footer Insight */}
-            <div className="mt-3 rounded bg-muted/40 p-2.5 text-[11px] text-muted-foreground border border-border/40 flex items-start gap-2">
-              <span className="text-primary font-bold">💡 理论洞见：</span>
-              <span className="flex-1">{currentPreset.insight}</span>
-            </div>
-            <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
-          </div>
-
-          {/* Speed Reference Accordion */}
-          <details className="mt-4 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs">
-            <summary className="font-semibold text-foreground cursor-pointer select-none">
-              类型类（Type Classes）与 Trait 理论体系核心速查
-            </summary>
-            <div className="mt-3 text-xs text-muted-foreground space-y-3 leading-relaxed">
-              <p>
-                <strong>
-                  1. Wadler & Blott（1989）论文《How to make ad-hoc polymorphism
-                  less ad hoc》
-                </strong>
-                ： 类型类最初是为了优雅解决函数式编程中 $(==)${" "}
-                等重载操作符的类型安全而提出。它的核心贡献在于证明了：任何受约束的多态都可以通过
-                <strong>字典传递（Dictionary Passing）</strong>
-                完全等价地脱糖为普通的高阶函数调用。
-              </p>
-              <p>
-                <strong>2. 什么是全局一致性（Coherence）？</strong>：
-                如果给定一个类型和一个类型类，系统中最多只能存在
-                <strong>唯一一个合法实例</strong>
-                。如果同一个类型在不同的编译单元可以拥有两个不同的实例（例如一个按照升序排序，另一个按照降序排序），那么基于该排序构建的二叉搜索树（BST）在跨模块传递时就会被彻底破坏。
-              </p>
-              <p>
-                <strong>3. 孤儿规则（Orphan Rule）的数学本质</strong>： Rust
-                的孤儿规则是维持全局一致性的充要防线：规定实现块{" "}
-                <code className="text-primary">impl Trait for Type</code> 中，
-                <code className="text-primary">Trait</code> 或{" "}
-                <code className="text-primary">Type</code>{" "}
-                至少有一个必须属于当前本地
-                Crate。这杜绝了生态中任意两个第三方库由于各自实现相同 Trait
-                而发生的隐式命名碰撞。
-              </p>
-            </div>
-          </details>
-        </div>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--kde-ink)]">
+                  {currentPreset.insight}
+                </p>
+              </KdeCard>
+            }
+          />
+        </KdeWindowShell>
       </ExpandableDemo>
     </AutoMath>
   );

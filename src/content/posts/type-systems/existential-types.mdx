@@ -12,6 +12,87 @@ tags:
 ---
 
 import ExistentialTypesDiagram from "../../../components/diagrams/ExistentialTypesDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const existentialRustSnippet = `// Rust 存在类型实战：静态 impl Trait vs 动态 dyn Trait 异质容器
+use std::mem::size_of;
+
+trait Greeter {
+    fn greet(&self) -> String;
+}
+
+struct Robot {
+    model: &'static str,
+}
+struct Human {
+    name: String,
+}
+
+impl Greeter for Robot {
+    fn greet(&self) -> String {
+        format!("哔哔！机器人 {} 号上线", self.model)
+    }
+}
+
+impl Greeter for Human {
+    fn greet(&self) -> String {
+        format!("你好，我是人类 {}", self.name)
+    }
+}
+
+// 1. 静态存在类型 (impl Trait): 零开销单态化返回
+fn make_default_greeter() -> impl Greeter {
+    Robot { model: "T-800" }
+}
+
+fn main() {
+    println!("=== 静态存在类型 (impl Trait) ===");
+    let static_g = make_default_greeter();
+    println!("{}", static_g.greet());
+
+    println!("\\n=== 动态存在类型 (dyn Trait 胖指针) ===");
+    // 异质容器存放存在类型 Trait 对象
+    let mut list: Vec<Box<dyn Greeter>> = Vec::new();
+    list.push(Box::new(Robot { model: "R2-D2" }));
+    list.push(Box::new(Human { name: "Alice".into() }));
+
+    println!("Box<dyn Greeter> 胖指针大小: {} 字节 (数据指针 + 虚表指针)", size_of::<Box<dyn Greeter>>());
+
+    for item in list.iter() {
+        println!("分发调用: {}", item.greet());
+    }
+}
+`;
+
+export const existentialTsVaultSnippet = `// TypeScript 词法闭包存在类型封装实战
+interface SafeVault {
+  verify(key: string): boolean;
+  getUsage(): number;
+}
+
+function createVault(initialSecret: string): SafeVault {
+  // 见证数据 Witness：被封闭在词法作用域内部，外界严禁直接读取或修改
+  let secretKey = initialSecret;
+  let accessCount = 0;
+
+  // 打包返回存在类型黑盒
+  return {
+    verify(key: string): boolean {
+      accessCount++;
+      return key === secretKey;
+    },
+    getUsage(): number {
+      return accessCount;
+    },
+  };
+}
+
+const vault = createVault("super-secret-token-2026");
+
+console.log("尝试验证密码 'wrong-pass':", vault.verify("wrong-pass"));
+console.log("尝试验证密码 'super-secret-token-2026':", vault.verify("super-secret-token-2026"));
+console.log("调用次数记录 (封装状态):", vault.getUsage());
+`;
 
 在软件工程中，有一条被奉为圭臬的黄金定律：<strong>高内聚、低耦合、面向接口编程，而不是面向实现编程。</strong>
 
@@ -185,26 +266,15 @@ fn produce_squares() -> impl Iterator<Item = i32> {
 
 ### 4.2 动态存在类型：dyn Trait 与胖指针（Fat Pointer）
 
-当我们需要将不同类型的对象放入同一个集合（异质容器，如 `Vec<Box<dyn Draw>>`）时，静态存在类型无能为力。此时必须请出<strong>动态存在类型（Trait Objects / `dyn Trait`）</strong>：
+当我们需要将不同类型的对象放入同一个集合（异质容器，如 `Vec<Box<dyn Greeter>>`）时，静态存在类型无能为力。此时必须请出<strong>动态存在类型（Trait Objects / `dyn Trait`）</strong>：
 
-```rust
-trait Draw {
-    fn draw(&self);
-}
-
-struct Button { width: u32 }
-struct Image { path: String }
-
-impl Draw for Button { fn draw(&self) { println!("Drawing button"); } }
-impl Draw for Image { fn draw(&self) { println!("Drawing image"); } }
-
-// 动态存在类型封包：&dyn Draw 包含了具体见证类型指针与虚表指针
-fn render_ui(items: &[&dyn Draw]) {
-    for item in items {
-        item.draw(); // 运行时通过 vtable 间接调用
-    }
-}
-```
+<CodePlayground
+  client:visible
+  lang="rust"
+  title="Rust 存在类型实战：impl Trait vs dyn Trait 异质容器"
+  description="对比静态存在类型零开销返回与动态 Trait 对象胖指针 (16 字节) 虚表分发"
+  initialCode={existentialRustSnippet}
+/>
 
 ```mermaid
 flowchart LR
@@ -330,27 +400,13 @@ C# 编译器会在幕后自动合成一个私有的嵌套类（如 `<GeneratePri
 
 在没有私有字段的早期 JavaScript/TypeScript 时代，道格拉斯·克罗克福德（Douglas Crockford）推广的模块模式（Module Pattern），其本质就是无类型的存在量词打包：
 
-```typescript
-function createVault() {
-  // 见证数据 Witness：被封闭在词法作用域内的局部变量
-  let secretKey = "quantum-token-42";
-  let accessCount = 0;
-
-  // 打包返回存在类型黑盒：外部只能调用暴露的受控方法
-  return {
-    verify(key: string): boolean {
-      accessCount++;
-      return key === secretKey;
-    },
-    getUsage(): number {
-      return accessCount;
-    }
-  };
-}
-
-const vault = createVault();
-// 外部调用方绝对无法通过 vault.secretKey 读取或修改密钥！
-```
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="TypeScript 词法闭包存在类型封装实战"
+  description="以函数闭包隔离见证数据 Witness，封禁内部密钥与计数状态"
+  initialCode={existentialTsVaultSnippet}
+/>
 
 在这个场景中，词法作用域就是物理防爆舱，局部变量的内存地址被引擎的垃圾回收器（GC）保护在调用栈外部，向外部提供了最坚固的黑盒存在类型保障。
 

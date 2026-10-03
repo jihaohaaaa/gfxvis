@@ -12,6 +12,79 @@ tags:
 ---
 
 import DependentTypeDiagram from "../../../components/diagrams/DependentTypeDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const dependentRustConstSnippet = `// Rust 常量泛型 (Const Generics) 实战：编译期定长向量安全计算
+use std::ops::{Add, Mul};
+
+#[derive(Debug, PartialEq)]
+struct Vector<T, const N: usize> {
+    data: [T; N],
+}
+
+impl<T, const N: usize> Vector<T, N> {
+    fn new(data: [T; N]) -> Self {
+        Self { data }
+    }
+
+    // 只有当两个向量的长度 N 严格相等时，dot_product 才能在编译期通过！
+    fn dot_product(&self, other: &Vector<T, N>) -> T
+    where
+        T: Copy + Default + Add<Output = T> + Mul<Output = T>,
+    {
+        let mut sum = T::default();
+        for i in 0..N {
+            sum = sum + self.data[i] * other.data[i];
+        }
+        sum
+    }
+}
+
+fn main() {
+    let v1 = Vector::new([1.0, 2.0, 3.0]); // Vector<f64, 3>
+    let v2 = Vector::new([4.0, 5.0, 6.0]); // Vector<f64, 3>
+
+    let dot = v1.dot_product(&v2);
+    println!("=== Rust 常量泛型安全计算 ===");
+    println!("Vector 3D 点乘结果: {}", dot); // 1*4 + 2*5 + 3*6 = 4 + 10 + 18 = 32
+
+    // 如果取消注释下方维度不匹配的代码，rustc 编译期会当场拦截！
+    // let v2d = Vector::new([1.0, 2.0]);
+    // v1.dot_product(&v2d); // error[E0308]: mismatched types: expected \`[f64; 3]\`, found \`[f64; 2]\`
+}
+`;
+
+export const dependentTsRouteSnippet = `// TypeScript 模板字面量类型 (Template Literal Types) 编译期路由推导实战
+// 纯类型层面的路由参数抽取器：值（字符串模式）决定类型（参数对象结构）
+type ExtractRouteParams<T extends string> =
+  T extends \`\${string}:\${infer Param}/\${infer Rest}\`
+    ? { [K in Param | keyof ExtractRouteParams<Rest>]: string }
+    : T extends \`\${string}:\${infer Param}\`
+      ? { [K in Param]: string }
+      : Record<string, never>;
+
+function navigate<Path extends string>(
+  path: Path,
+  params: ExtractRouteParams<Path>
+): string {
+  let url = path as string;
+  for (const [key, value] of Object.entries(params)) {
+    url = url.replace(\`:\${key}\`, encodeURIComponent(value as string));
+  }
+  return url;
+}
+
+// 1. 单参数路由推导
+const route1 = navigate("/users/:userId", { userId: "42" });
+console.log("路由 1 生成:", route1);
+
+// 2. 多参数嵌套路由推导
+const route2 = navigate("/org/:orgId/projects/:projId/settings", {
+  orgId: "deepmind",
+  projId: "antigravity",
+});
+console.log("路由 2 生成:", route2);
+`;
 
 在软件工程的日常开发中，每个程序员都曾无数次与以下两类致命崩溃正面遭遇：
 1. <strong>数组下标越界异常（IndexOutOfBoundsException / Segmentation Fault）</strong>：试图从一个空列表或长度为 3 的数组中读取第 5 个元素；
@@ -291,39 +364,13 @@ Rust 以其对内存安全和零开销抽象的严苛追求著称。在演进历
 
 Rust 1.51 正式引入了 <strong>常量泛型（Min Const Generics）</strong>，允许直接将整型常量作为泛型参数：
 
-```rust
-// 向量结构体：长度 N 成为类型的一部分！
-struct Vector<T, const N: usize> {
-    data: [T; N],
-}
-
-impl<T, const N: usize> Vector<T, N> {
-    fn new(data: [T; N]) -> Self {
-        Self { data }
-    }
-
-    // 安全的内积计算：只有当两个向量的长度 N 严格相等时才能点乘！
-    fn dot_product(&self, other: &Vector<T, N>) -> T
-    where
-        T: std::ops::Mul<Output = T> + std::ops::Add<Output = T> + Default + Copy,
-    {
-        let mut sum = T::default();
-        for i in 0..N {
-            sum = sum + self.data[i] * other.data[i];
-        }
-        sum
-    }
-}
-
-fn main() {
-    let a = Vector::new([1.0, 2.0, 3.0]); // Vector<f64, 3>
-    let b = Vector::new([4.0, 5.0, 6.0]); // Vector<f64, 3>
-    let _ = a.dot_product(&b);            // ✅ 编译通过
-
-    let c = Vector::new([1.0, 2.0]);      // Vector<f64, 2>
-    // a.dot_product(&c);                 // 💥 编译期拦截：期望 [f64; 3]，实为 [f64; 2]！
-}
-```
+<CodePlayground
+  client:visible
+  lang="rust"
+  title="Rust 常量泛型（Const Generics）定长向量安全计算"
+  description="以长度参数 const N: usize 作为类型签名一部分，在编译期强制点乘内积维度一致性"
+  initialCode={dependentRustConstSnippet}
+/>
 
 ### 5.2 复杂类型层表达式计算的困境与 `generic_const_exprs`
 
@@ -381,28 +428,13 @@ type HandlerName = `on${Capitalize<Component>}${Capitalize<EventType>}`;
 
 这种能力让 TypeScript 可以在编译期<strong>解析路由路径或 SQL 语句中的变量占位符</strong>：
 
-```typescript
-// 纯类型层面的路由参数抽取器！
-type ExtractRouteParams<T extends string> =
-    T extends `${string}:${infer Param}/${infer Rest}`
-        ? { [K in Param | keyof ExtractRouteParams<Rest>]: string }
-        : T extends `${string}:${infer Param}`
-            ? { [K in Param]: string }
-            : {};
-
-// 类型推导结果自动变为: { userId: string; postId: string }
-type PostParams = ExtractRouteParams<"/users/:userId/posts/:postId">;
-
-function navigate<Path extends string>(path: Path, params: ExtractRouteParams<Path>) {
-    // ...
-}
-
-// ✅ 编译通过
-navigate("/users/:userId/posts/:postId", { userId: "42", postId: "100" });
-
-// 💥 编译报错：缺少 postId 字段！
-// navigate("/users/:userId/posts/:postId", { userId: "42" });
-```
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="TypeScript 模板字面量类型编译期路由参数推导"
+  description="以模板字符串值抽取类型参数，实现强类型编译期 navigate 参数自动匹配与校验"
+  initialCode={dependentTsRouteSnippet}
+/>
 
 在这里，`path` 字符串模板的具体“字面量值”，直接决定了后续 `params` 对象的强类型结构！这正是依赖类型思想在 Web 前端类型工程中的华丽投射。
 

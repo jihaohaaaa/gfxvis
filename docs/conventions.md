@@ -47,7 +47,7 @@
 - 每个 demo 自带"坐标轴"开关(默认开启):2D 用 `drawAxes`(含刻度 / 网格),3D 用 `core/3d/axes3d.ts` 的彩色轴线组(x 红 / y 绿 / z 蓝),scene API 提供 `setAxesVisible(v)`。
 - 交互区增强:每个 demo 由 `ExpandableDemo` 包裹,右上角"展开"进入伪全屏固定浮层(非 Fullscreen API),× 关闭恢复;同一实例状态保留;画布高度用 CSS 变量 `--demo-height`(默认 2D 20rem / 3D 28rem,展开 70vh)。
   - **CanvasToolbar 与视口高度/展开规范**:
-    - `<CanvasToolbar>` **必须且只能**作为 Canvas 画布容器（具备 `relative overflow-hidden` 类）的**直接子元素**，统一承载「↺ 复位」视野功能；
+    - `<CanvasToolbar>` **必须且只能**作为 Canvas 画布容器（具备 `relative overflow-hidden` 类）的**直接子元素**，统一承载「↺ 复位」视野功能；默认采用**智能抽屉式挂耳 HUD（Retractable Drawer HUD）**设计，静止时收缩贴附于右侧边缘（`data-toolbar-mode="drawer-hud"`），悬停或键盘聚焦时丝滑展开完整面板，彻底消除对画布内部顶部状态徽章、步进器与控制栏的内容遮挡；
     - 画布容器高度绑定 `h-[var(--demo-height,20rem)]`（3D/机箱为 `28rem`）；
     - **视口高度控制与自适应**: 画布底部横条（`CanvasResizer`）支持**双击恢复自适应高度**与**按住上下拖拽进入手动固定高度**（自适应态为半透明虚线条，手动态为主题色强调实线并悬停展示 px 数值与重置提示）；
     - **展开全屏按钮**: 统一置于外层组件卡片/视窗标题栏右上角（如 `KdeWindowShell` 头部或 `ExpandableDemo` 外层），与画布内部视口控制解耦。

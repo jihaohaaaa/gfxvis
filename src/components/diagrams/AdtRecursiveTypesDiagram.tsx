@@ -1,9 +1,17 @@
 import { useState } from "react";
 import CanvasToolbar from "../framework/CanvasToolbar";
 import CanvasResizer from "../framework/CanvasResizer";
-import CapsuleTabs from "../framework/CapsuleTabs";
-import ExpandableDemo from "../framework/ExpandableDemo";
+import KdeTabs, { type KdeTabOption } from "../framework/KdeTabs";
+import KdeWindowShell from "../framework/KdeWindowShell";
+import InteractiveLayout from "../framework/InteractiveLayout";
+import KdeCard from "../framework/KdeCard";
+import KdeBadge from "../framework/KdeBadge";
+import KdeButton from "../framework/KdeButton";
+import KdeButtonGroup from "../framework/KdeButtonGroup";
+import KdeProgressBar from "../framework/KdeProgressBar";
+import CodePlayground from "../framework/CodePlayground";
 import { AutoMath } from "../framework/AutoMath";
+import ExpandableDemo from "../framework/ExpandableDemo";
 import PresetSelector from "../framework/PresetSelector";
 
 // ============================================================================
@@ -59,7 +67,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "\\text{three}",
         statusLabel: "Folded (折叠抽象类型)",
         statusColor:
-          "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40",
+          "bg-indigo-500/15 text-indigo-800 dark:text-indigo-200 border border-indigo-500/40",
         desc: "未展开的抽象递归类型 Nat，对外屏蔽具体构造细节。",
       },
       {
@@ -67,7 +75,8 @@ const PRESETS: AdtPreset[] = [
         typeTex: "1 + \\text{Nat}",
         termTex: "\\text{inr} \\; (\\text{two})",
         statusLabel: "Unfolded Level 1 (首次解构)",
-        statusColor: "bg-sky-500/20 text-sky-300 border border-sky-500/40",
+        statusColor:
+          "bg-sky-500/15 text-sky-800 dark:text-sky-200 border border-sky-500/40",
         desc: "调用 unfold 后暴露顶层和类型：确定当前值是后继分支 inr(two)。",
       },
       {
@@ -76,7 +85,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "\\text{inr} \\; (\\text{inr} \\; (\\text{one}))",
         statusLabel: "Unfolded Level 2 (深入解构)",
         statusColor:
-          "bg-purple-500/20 text-purple-300 border border-purple-500/40",
+          "bg-purple-500/15 text-purple-800 dark:text-purple-200 border border-purple-500/40",
         desc: "再次展开暴露内部的后继结构：确认是 inr(inr(one))。",
       },
       {
@@ -86,7 +95,7 @@ const PRESETS: AdtPreset[] = [
           "\\text{inr} \\; (\\text{inr} \\; (\\text{inr} \\; (\\text{inl} \\; ())))",
         statusLabel: "Base Grounding (触底基底)",
         statusColor:
-          "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+          "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-500/40",
         desc: "最终触达零值基底 inl()，完成了有限深度的完全解构展开。",
       },
     ],
@@ -116,7 +125,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "[10, \\, 20]",
         statusLabel: "Folded (抽象列表)",
         statusColor:
-          "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40",
+          "bg-indigo-500/15 text-indigo-800 dark:text-indigo-200 border border-indigo-500/40",
         desc: "整体折叠的递归列表类型，存储数据序列 [10, 20]。",
       },
       {
@@ -124,7 +133,8 @@ const PRESETS: AdtPreset[] = [
         typeTex: "1 + A \\times \\text{List } A",
         termTex: "\\text{Cons}(10, \\, [20])",
         statusLabel: "Unfolded Head/Tail (头尾解构)",
-        statusColor: "bg-sky-500/20 text-sky-300 border border-sky-500/40",
+        statusColor:
+          "bg-sky-500/15 text-sky-800 dark:text-sky-200 border border-sky-500/40",
         desc: "展开第一层：获得表头元素 10 与尾部列表 [20]。",
       },
       {
@@ -133,7 +143,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "\\text{Cons}(10, \\, \\text{Cons}(20, \\, []))",
         statusLabel: "Unfolded Complete (全展开)",
         statusColor:
-          "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+          "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-500/40",
         desc: "展开第二层：暴露末尾的空链表 Nil 构造器 1。",
       },
     ],
@@ -163,7 +173,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "\\text{Node}(42, \\, \\text{Left}, \\, \\text{Right})",
         statusLabel: "Folded (整树折叠)",
         statusColor:
-          "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40",
+          "bg-indigo-500/15 text-indigo-800 dark:text-indigo-200 border border-indigo-500/40",
         desc: "折叠包装的二叉树抽象类型，封装了根节点与两棵子树。",
       },
       {
@@ -172,7 +182,8 @@ const PRESETS: AdtPreset[] = [
         termTex:
           "\\text{inr}(42, \\, \\text{LeftSubtree}, \\, \\text{RightSubtree})",
         statusLabel: "Unfolded (分叉解构)",
-        statusColor: "bg-sky-500/20 text-sky-300 border border-sky-500/40",
+        statusColor:
+          "bg-sky-500/15 text-sky-800 dark:text-sky-200 border border-sky-500/40",
         desc: "展开一层暴露当前值 42 以及左右子树指针。",
       },
     ],
@@ -203,7 +214,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "x : T",
         statusLabel: "Folded Parameter (自解构形参)",
         statusColor:
-          "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40",
+          "bg-indigo-500/15 text-indigo-800 dark:text-indigo-200 border border-indigo-500/40",
         desc: "形参 x 拥有递归类型 T，等待通过 unfold 算子解开自引用封印。",
       },
       {
@@ -212,7 +223,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "(\\text{unfold} \\; x) : T \\to R",
         statusLabel: "Unfolded Operator (成功解出函数体)",
         statusColor:
-          "bg-purple-500/20 text-purple-300 border border-purple-500/40",
+          "bg-purple-500/15 text-purple-800 dark:text-purple-200 border border-purple-500/40",
         desc: "调用 unfold 后，项从 T 蜕变为可调用的函数类型 T → R！",
       },
       {
@@ -221,7 +232,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "(\\text{unfold} \\; x) \\; x : R",
         statusLabel: "Self-Application Typed! (自应用类型检查通过)",
         statusColor:
-          "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+          "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-500/40",
         desc: "由于函数期望实参类型为 T，而 x 本身就是 T，自应用调用完全合法！",
       },
     ],
@@ -252,7 +263,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "[A, \\, B, \\, C, \\, D]",
         statusLabel: "Original Data (原始连续数据)",
         statusColor:
-          "bg-slate-500/20 text-slate-300 border border-slate-500/40",
+          "bg-[var(--kde-panel)] text-[var(--kde-ink)] border border-[var(--kde-border)]",
         desc: "没有聚焦位置的静态普通列表。",
       },
       {
@@ -262,7 +273,7 @@ const PRESETS: AdtPreset[] = [
           "(\\text{Left: } [A], \\; \\text{Focus: } B, \\; \\text{Right: } [C, \\, D])",
         statusLabel: "Derivative Focus (求导聚焦光标 B)",
         statusColor:
-          "bg-amber-500/20 text-amber-300 border border-amber-500/40",
+          "bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-500/40",
         desc: "列表在元素 B 处被一阶导数切开：上下文被精确记录为左侧 [A] 与右侧 [C, D]。",
       },
       {
@@ -272,7 +283,7 @@ const PRESETS: AdtPreset[] = [
           "(\\text{Left: } [B, \\, A], \\; \\text{Focus: } C, \\; \\text{Right: } [D])",
         statusLabel: "Zipper Step Right (光标 O(1) 右移)",
         statusColor:
-          "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+          "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-500/40",
         desc: "向右移动只需弹出右侧头并压入左侧，无需复制整条链表！",
       },
     ],
@@ -302,7 +313,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "\\text{Root Node}",
         statusLabel: "At Root (位于树根)",
         statusColor:
-          "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40",
+          "bg-indigo-500/15 text-indigo-800 dark:text-indigo-200 border border-indigo-500/40",
         desc: "光标聚焦在整棵二叉树的根节点，面包屑栈为空。",
       },
       {
@@ -311,7 +322,8 @@ const PRESETS: AdtPreset[] = [
         termTex:
           "\\text{Focus: LeftChild}, \\; \\text{Crumb: } [(\\text{LeftBranch}, \\text{RootVal}, \\text{RightSubtree})]",
         statusLabel: "Down Left (步入左子树)",
-        statusColor: "bg-sky-500/20 text-sky-300 border border-sky-500/40",
+        statusColor:
+          "bg-sky-500/15 text-sky-800 dark:text-sky-200 border border-sky-500/40",
         desc: "向下进入左子树：父节点与兄弟右子树被打包为一个面包屑推入上下文栈。",
       },
     ],
@@ -342,7 +354,8 @@ const PRESETS: AdtPreset[] = [
           "\\text{enum List } \\{ \\text{Nil}, \\; \\text{Cons}(u64, \\, \\text{List}) \\}",
         termTex: "\\text{sizeof}(\\text{List}) = \\infty",
         statusLabel: "Compile Error E0072 (无限尺寸死锁)",
-        statusColor: "bg-rose-500/20 text-rose-300 border border-rose-500/40",
+        statusColor:
+          "bg-rose-500/15 text-rose-800 dark:text-rose-200 border border-rose-500/40",
         desc: "直接内联导致类型定义陷入无限循环：无法在栈上预留固定字节。",
       },
       {
@@ -352,7 +365,7 @@ const PRESETS: AdtPreset[] = [
         termTex: "\\text{sizeof}(\\text{List}) = 16 \\; \\text{bytes}",
         statusLabel: "Resolved via Box (定长收敛)",
         statusColor:
-          "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+          "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-500/40",
         desc: "引入 Box 指针后，栈上尺寸严格收敛为 8 字节数据 + 8 字节指针！",
       },
     ],
@@ -361,17 +374,46 @@ const PRESETS: AdtPreset[] = [
   },
 ];
 
-const VIEW_OPTIONS = [
-  { id: "stepper", label: "Iso-recursive 折叠与展开 (Fold / Unfold)" },
-  { id: "zipper", label: "类型微积分与 Zipper (Type Derivatives)" },
-  { id: "memory", label: "内存布局与 Box 收敛 (Memory Layout)" },
+const VIEW_OPTIONS: readonly KdeTabOption<
+  "stepper" | "zipper" | "memory" | "code_sandbox"
+>[] = [
+  { id: "stepper", label: "Iso-recursive 折叠与展开" },
+  { id: "zipper", label: "类型微积分与 Zipper" },
+  { id: "memory", label: "内存布局与 Box 收敛" },
+  { id: "code_sandbox", label: "Rust 递归 ADT 沙盒" },
 ];
+
+const ADT_RUST_CODE = `// Rust 中的代数数据类型 (ADT) 与堆指针内存收敛
+#[derive(Debug, PartialEq, Eq)]
+pub enum List<T> {
+    Nil,
+    Cons(T, Box<List<T>>),
+}
+
+impl<T> List<T> {
+    pub fn len(&self) -> usize {
+        match self {
+            List::Nil => 0,
+            List::Cons(_, rest) => 1 + rest.len(),
+        }
+    }
+}
+
+fn main() {
+    // 构造链表 Cons(1, Cons(2, Cons(3, Nil)))
+    let list = List::Cons(1, Box::new(List::Cons(2, Box::new(List::Cons(3, Box::new(List::Nil))))));
+    
+    println!("递归 ADT 链表长度: {}", list.len());
+    println!("sizeof(List<i32>) 栈内存固定尺寸: {} 字节", std::mem::size_of::<List<i32>>());
+    println!("sizeof(Box<List<i32>>) 指针层尺寸: {} 字节", std::mem::size_of::<Box<List<i32>>>());
+}
+`;
 
 export default function AdtRecursiveTypesDiagram() {
   const [activePresetId, setActivePresetId] = useState<string>("nat_peano");
-  const [viewMode, setViewMode] = useState<"stepper" | "zipper" | "memory">(
-    "stepper",
-  );
+  const [viewMode, setViewMode] = useState<
+    "stepper" | "zipper" | "memory" | "code_sandbox"
+  >("stepper");
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
 
   const preset = PRESETS.find((p) => p.id === activePresetId) ?? PRESETS[0];
@@ -380,6 +422,8 @@ export default function AdtRecursiveTypesDiagram() {
     preset.stepperStates[currentStepIndex] ?? preset.stepperStates[0];
 
   const handleReset = () => {
+    setActivePresetId("nat_peano");
+    setViewMode("stepper");
     setCurrentStepIndex(0);
   };
 
@@ -391,224 +435,287 @@ export default function AdtRecursiveTypesDiagram() {
   return (
     <AutoMath>
       <ExpandableDemo id="adt-recursive-types-explorer">
-        <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
-          {/* Header */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                代数数据类型（ADT）与递归类型交互探针
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                ✨{" "}
-                <strong>多项式类型方程、Huet Zipper 形式导数与折叠展开</strong>
-                ：洞悉从类型半环到图灵完备重现的数学演进
-              </p>
-            </div>
-          </div>
-
-          {/* View Mode Switcher */}
-          <div className="mb-4 overflow-x-auto pb-1">
-            <CapsuleTabs
-              onChange={(val) =>
-                setViewMode(val as "stepper" | "zipper" | "memory")
-              }
-              options={VIEW_OPTIONS}
-              value={viewMode}
-            />
-          </div>
-
-          {/* Preset Selector */}
-          <div className="mb-4">
-            <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-              精选经典代数类型与递归演化预设：
-            </div>
-            <PresetSelector
-              onChange={handlePresetChange}
-              options={PRESETS.map((p) => ({
-                id: p.id,
-                label: p.label,
-                description: p.desc,
-              }))}
-              value={activePresetId}
-            />
-          </div>
-
-          {/* Equation & Mu-Type Overview Card */}
-          <div className="mb-5 rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  代数多项式同构方程 (Polynomial Equation)
-                </div>
-                <div className="mt-1 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
-                  {`$${preset.equationTex}$`}
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  类型级不动点形式化 (μ-Type)
-                </div>
-                <div className="mt-1 font-mono text-xs font-bold text-amber-600 dark:text-amber-300">
-                  {`$${preset.muTypeTex}$`}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Viewport Container with CanvasToolbar */}
-          <div className="relative mb-5 flex h-[var(--demo-height,26rem)] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-900/95 p-5 shadow-inner dark:border-slate-800">
-            <CanvasToolbar onReset={handleReset} />
-
-            {/* Stepper Toolbar (Visible in Stepper Mode) */}
-            {viewMode === "stepper" && (
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <KdeWindowShell
+          eyebrow="TYPE THEORY WORKSPACE · ADT & RECURSION"
+          mark="μ"
+          modeTag="DENSE-DOCK"
+          title="代数数据类型（ADT）与递归类型交互探针"
+        >
+          <InteractiveLayout
+            preset="dense-dock"
+            top={
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <button
-                    className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                    disabled={currentStepIndex <= 0}
-                    onClick={() => setCurrentStepIndex(0)}
-                    title="重置至折叠初态"
-                    type="button"
-                  >
-                    ⏮ 初始 (Folded)
-                  </button>
-                  <button
-                    className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                    disabled={currentStepIndex <= 0}
-                    onClick={() =>
-                      setCurrentStepIndex((prev) => Math.max(0, prev - 1))
-                    }
-                    title="折叠一层包装"
-                    type="button"
-                  >
-                    fold 折叠包装 ◀
-                  </button>
-                  <button
-                    className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-200 transition hover:bg-slate-700 disabled:opacity-40"
-                    disabled={currentStepIndex >= maxSteps - 1}
-                    onClick={() =>
-                      setCurrentStepIndex((prev) =>
-                        Math.min(maxSteps - 1, prev + 1),
-                      )
-                    }
-                    title="展开一层结构"
-                    type="button"
-                  >
-                    unfold 单步展开 ▶
-                  </button>
+                  <span className="text-xs font-semibold text-[var(--kde-muted)]">
+                    探针视角：
+                  </span>
+                  <KdeTabs
+                    onChange={(val) => setViewMode(val)}
+                    options={VIEW_OPTIONS}
+                    size="sm"
+                    value={viewMode}
+                  />
                 </div>
-
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${currentStep.statusColor}`}
-                  >
-                    {currentStep.statusLabel}
-                  </span>
-                  <span className="font-mono text-xs text-slate-400">
-                    深度：{currentStepIndex} / {maxSteps - 1}
-                  </span>
+                  <KdeBadge variant="primary">
+                    {`μ-Type: $${preset.muTypeTex}$`}
+                  </KdeBadge>
                 </div>
               </div>
-            )}
+            }
+            main={
+              <div className="relative flex h-[var(--demo-height,28rem)] w-full flex-col overflow-hidden rounded-xl border border-[var(--kde-border)] bg-[var(--kde-canvas)] p-5 shadow-inner">
+                <CanvasToolbar onReset={handleReset} />
 
-            {/* Main View Area */}
-            <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
-              {viewMode === "stepper" && (
-                <div className="space-y-4 py-2">
-                  <div className="text-xs font-semibold text-slate-400">
-                    当前 Iso-recursive 层级展开状态：
+                {viewMode === "code_sandbox" ? (
+                  <div className="flex-1 flex flex-col overflow-y-auto pr-1">
+                    <CodePlayground
+                      code={ADT_RUST_CODE}
+                      description="现场编译并运行 Rust 递归 enum 与 Box 指针尺寸度量代码。"
+                      lang="rust"
+                      maxHeight="20rem"
+                      title="Rust 递归 ADT 沙盒"
+                    />
                   </div>
+                ) : (
+                  <>
+                    {/* Stepper Toolbar (Visible in Stepper Mode) */}
+                    {viewMode === "stepper" && (
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--kde-border)] pb-3 pr-12">
+                        <KdeButtonGroup attached size="xs">
+                          <KdeButton
+                            size="xs"
+                            variant="default"
+                            disabled={currentStepIndex <= 0}
+                            onClick={() => setCurrentStepIndex(0)}
+                            title="重置至折叠初态"
+                          >
+                            ⏮ 初始 (Folded)
+                          </KdeButton>
+                          <KdeButton
+                            size="xs"
+                            variant="default"
+                            disabled={currentStepIndex <= 0}
+                            onClick={() =>
+                              setCurrentStepIndex((prev) =>
+                                Math.max(0, prev - 1),
+                              )
+                            }
+                            title="折叠一层包装"
+                          >
+                            fold 折叠包装 ◀
+                          </KdeButton>
+                          <KdeButton
+                            size="xs"
+                            variant="default"
+                            disabled={currentStepIndex >= maxSteps - 1}
+                            onClick={() =>
+                              setCurrentStepIndex((prev) =>
+                                Math.min(maxSteps - 1, prev + 1),
+                              )
+                            }
+                            title="展开一层结构"
+                          >
+                            unfold 单步展开 ▶
+                          </KdeButton>
+                        </KdeButtonGroup>
 
-                  {/* Main Term Box */}
-                  <div className="flex items-center justify-center overflow-x-auto px-4 py-2">
-                    <div className="rounded-2xl border border-indigo-700/60 bg-slate-800/60 px-6 py-4 shadow-xl backdrop-blur-md">
-                      <div className="font-mono text-base font-bold text-slate-100 sm:text-lg">
-                        {`$${currentStep.termTex}$`}
+                        <div className="flex items-center gap-2.5">
+                          <KdeProgressBar
+                            steps={maxSteps}
+                            value={currentStepIndex + 1}
+                            size="sm"
+                            className="w-28"
+                            showLabel={false}
+                          />
+                          <span className="font-mono text-xs font-semibold text-[var(--kde-muted)]">
+                            深度：{currentStepIndex} / {maxSteps - 1}
+                          </span>
+                          <KdeBadge
+                            variant={
+                              currentStepIndex === 0 ? "neutral" : "primary"
+                            }
+                          >
+                            {currentStep.statusLabel}
+                          </KdeBadge>
+                        </div>
                       </div>
-                      <div className="mt-2 text-xs font-mono text-indigo-300">
-                        类型签名：
-                        {`$${currentStep.typeTex}$`}
-                      </div>
+                    )}
+
+                    {/* Main View Area */}
+                    <div className="flex flex-1 flex-col justify-center overflow-y-auto overflow-x-auto text-center">
+                      {viewMode === "stepper" && (
+                        <div className="space-y-4 py-2">
+                          <div className="text-xs font-semibold text-[var(--kde-muted)]">
+                            当前 Iso-recursive 层级展开状态：
+                          </div>
+
+                          {/* Main Term Box */}
+                          <div className="flex items-center justify-center overflow-x-auto px-4 py-2">
+                            <div className="rounded-2xl border border-[var(--kde-border)] bg-[var(--kde-raised)] px-6 py-4 shadow-md backdrop-blur-md">
+                              <div className="font-mono text-base font-bold text-[var(--kde-ink)] sm:text-lg">
+                                {`$${currentStep.termTex}$`}
+                              </div>
+                              <div className="mt-2 font-mono text-xs text-[var(--kde-accent)]">
+                                类型签名：
+                                {`$${currentStep.typeTex}$`}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action & Explanation */}
+                          <div className="mx-auto max-w-xl text-left text-xs leading-relaxed text-[var(--kde-muted)] bg-[var(--kde-panel)] p-3 rounded-lg border border-[var(--kde-border)]">
+                            {currentStep.desc}
+                          </div>
+                        </div>
+                      )}
+
+                      {viewMode === "zipper" && (
+                        <div className="space-y-4 py-3 text-center">
+                          <div className="mx-auto max-w-xl text-left">
+                            <KdeCard
+                              title="Huet Zipper 形式导数与光标上下文"
+                              badge={
+                                <KdeBadge variant="primary">
+                                  Type Derivative
+                                </KdeBadge>
+                              }
+                              variant="default"
+                            >
+                              <div className="mb-2 text-xs font-medium text-[var(--kde-muted)]">
+                                一阶形式导数多项式：
+                              </div>
+                              <div className="my-2 overflow-x-auto rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-3 text-center font-mono text-sm font-bold text-[var(--kde-accent)]">
+                                {`$${preset.derivativeTex}$`}
+                              </div>
+                              <div className="mt-3 text-[11px] leading-relaxed text-[var(--kde-ink)]">
+                                💡 <strong>微积分几何解释</strong>：
+                                <span className="text-[var(--kde-muted)]">
+                                  {preset.zipperInterpretation}
+                                </span>
+                              </div>
+                            </KdeCard>
+                          </div>
+                        </div>
+                      )}
+
+                      {viewMode === "memory" && (
+                        <div className="space-y-4 py-3 text-center">
+                          <div className="mx-auto max-w-xl text-left">
+                            <KdeCard
+                              title="物理内存连续内联 vs 指针间接层 (Box Indirection)"
+                              badge={
+                                <KdeBadge variant="warning">
+                                  Memory Layout
+                                </KdeBadge>
+                              }
+                              variant="default"
+                            >
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-[var(--kde-ink)] ring-1 ring-rose-500/20">
+                                  <div className="text-[11px] font-semibold text-rose-700 dark:text-rose-400">
+                                    直接连续内联布局 (Direct Inlining)
+                                  </div>
+                                  <div className="mt-1 font-mono text-xs text-[var(--kde-ink)]">
+                                    {preset.memoryAnalysis.directSize}
+                                  </div>
+                                </div>
+
+                                <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-[var(--kde-ink)] ring-1 ring-emerald-500/20">
+                                  <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                                    Box 指针间接布局 (Box Indirection)
+                                  </div>
+                                  <div className="mt-1 font-mono text-xs text-[var(--kde-ink)]">
+                                    {preset.memoryAnalysis.boxedSize}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-3.5 border-t border-[var(--kde-border)]/50 pt-3 text-[11px] leading-relaxed text-[var(--kde-ink)]">
+                                💡 <strong>编译器物理约束</strong>：
+                                <span className="text-[var(--kde-muted)]">
+                                  {preset.memoryAnalysis.explanation}
+                                </span>
+                              </div>
+                            </KdeCard>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+                <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
+              </div>
+            }
+            side={
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <KdeCard title="经典代数类型与递归演化预设" variant="dense">
+                  <PresetSelector
+                    layout="vertical"
+                    size="xs"
+                    onChange={handlePresetChange}
+                    options={PRESETS.map((p) => ({
+                      id: p.id,
+                      label: p.label,
+                      description: p.desc,
+                    }))}
+                    value={activePresetId}
+                  />
+                </KdeCard>
+
+                <KdeCard title="展开状态与递归深度" variant="dense">
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--kde-muted)]">
+                        展开深度：
+                      </span>
+                      <span className="font-semibold text-[var(--kde-ink)]">
+                        {currentStepIndex} / {maxSteps - 1}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--kde-muted)]">
+                        当前状态：
+                      </span>
+                      <KdeBadge variant="primary">
+                        {currentStep.statusLabel}
+                      </KdeBadge>
+                    </div>
+                    <div className="pt-1">
+                      <KdeProgressBar
+                        steps={maxSteps}
+                        value={currentStepIndex + 1}
+                        size="sm"
+                        showLabel
+                      />
                     </div>
                   </div>
+                </KdeCard>
 
-                  {/* Action & Explanation */}
-                  <div className="mx-auto flex max-w-xl flex-col items-center gap-1.5 rounded-xl border border-slate-700/60 bg-slate-800/40 p-3 text-xs">
-                    <p className="text-slate-300">{currentStep.desc}</p>
+                <KdeCard title="代数多项式同构方程" variant="dense">
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2 rounded bg-[var(--kde-panel)] border border-[var(--kde-border)] font-mono text-[11px] text-[var(--kde-accent)]">
+                      {`$${preset.equationTex}$`}
+                    </div>
+                    <div className="text-[11px] text-[var(--kde-muted)] leading-relaxed">
+                      类型级不动点：<strong>{`$${preset.muTypeTex}$`}</strong>
+                    </div>
                   </div>
+                </KdeCard>
+              </div>
+            }
+            bottom={
+              <KdeCard>
+                <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                  🔍 代数结构与多项式理论洞见 (Algebraic Structure Insight)
                 </div>
-              )}
-
-              {viewMode === "zipper" && (
-                <div className="space-y-4 py-3 text-center">
-                  <div className="text-xs font-semibold text-sky-400">
-                    Huet Zipper 形式导数与光标上下文
-                  </div>
-
-                  <div className="mx-auto max-w-xl rounded-2xl border border-sky-600/40 bg-sky-950/20 p-5 shadow-lg backdrop-blur-sm">
-                    <div className="mb-2 text-xs font-medium text-slate-300">
-                      一阶形式导数多项式：
-                    </div>
-                    <div className="my-2 font-mono text-sm font-bold text-sky-200">
-                      {`$${preset.derivativeTex}$`}
-                    </div>
-                    <div className="mt-3 text-left text-[11px] leading-relaxed text-slate-400">
-                      💡 <strong>微积分几何解释</strong>：
-                      {preset.zipperInterpretation}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {viewMode === "memory" && (
-                <div className="space-y-4 py-3 text-center">
-                  <div className="text-xs font-semibold text-rose-400">
-                    物理内存连续内联 vs 指针间接层 (Box Indirection)
-                  </div>
-
-                  <div className="mx-auto max-w-xl rounded-2xl border border-rose-600/40 bg-rose-950/20 p-5 shadow-lg backdrop-blur-sm text-left">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <div className="rounded-lg bg-rose-900/30 p-3 border border-rose-800/50">
-                        <div className="text-[11px] font-semibold text-rose-300">
-                          直接连续内联布局 (Direct Inlining)
-                        </div>
-                        <div className="mt-1 font-mono text-xs text-rose-200">
-                          {preset.memoryAnalysis.directSize}
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg bg-emerald-900/30 p-3 border border-emerald-800/50">
-                        <div className="text-[11px] font-semibold text-emerald-300">
-                          Box 指针间接布局 (Box Indirection)
-                        </div>
-                        <div className="mt-1 font-mono text-xs text-emerald-200">
-                          {preset.memoryAnalysis.boxedSize}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 text-[11px] leading-relaxed text-slate-300">
-                      💡 <strong>编译器物理约束</strong>：
-                      {preset.memoryAnalysis.explanation}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
-          </div>
-
-          {/* Theoretical Insight Card */}
-          <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/30">
-            <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
-              🔍 代数结构与多项式理论洞见 (Algebraic Structure Insight)
-            </div>
-            <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
-              {preset.insight}
-            </p>
-          </div>
-        </div>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--kde-ink)]">
+                  {preset.insight}
+                </p>
+              </KdeCard>
+            }
+          />
+        </KdeWindowShell>
       </ExpandableDemo>
     </AutoMath>
   );

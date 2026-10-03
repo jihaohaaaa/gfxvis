@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { AutoMath } from "../framework/AutoMath";
 import ParamSlider from "../framework/ParamSlider";
 import PresetSelector, { type PresetOption } from "../framework/PresetSelector";
+import KdeCard from "../framework/KdeCard";
+import KdeBadge from "../framework/KdeBadge";
+import KdeGroupBox from "../framework/KdeGroupBox";
 
 const PRESETS: PresetOption[] = [
   {
@@ -134,13 +137,13 @@ export default function MatrixSimilarityDiagram() {
 
   return (
     <AutoMath>
-      <div className="my-8 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-5 shadow-sm dark:border-slate-800/80 dark:from-slate-900/60 dark:to-slate-950">
+      <div className="my-8 rounded-2xl border border-[var(--kde-border)] bg-[var(--kde-canvas)] p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            <div className="text-base font-semibold text-[var(--kde-ink)]">
               矩阵相似（Similarity）与坐标换基交换图
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-[var(--kde-muted)]">
               调节换基矩阵 $P$ 的旋转与缩放，实时观察矩阵内部数值{" "}
               {"$B = P^{-1}AP$"} 的变动，以及相似不变量的严格守恒
             </p>
@@ -148,11 +151,13 @@ export default function MatrixSimilarityDiagram() {
         </div>
 
         <div className="mb-5">
-          <PresetSelector
-            onChange={handlePreset}
-            options={PRESETS}
-            value={presetKey}
-          />
+          <KdeGroupBox title="矩阵变换预设">
+            <PresetSelector
+              onChange={handlePreset}
+              options={PRESETS}
+              value={presetKey}
+            />
+          </KdeGroupBox>
         </div>
 
         {/* Sliders */}
@@ -187,52 +192,53 @@ export default function MatrixSimilarityDiagram() {
         {/* Commutative Diagram & Matrices Display */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* Left: Commutative Diagram Visual Card */}
-          <div className="flex flex-col justify-between rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 dark:border-indigo-950/60 dark:bg-indigo-950/20 lg:col-span-6">
-            <div className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">
-              换基交换图（Commutative Diagram）
-            </div>
-
+          <KdeCard
+            title="换基交换图（Commutative Diagram）"
+            className="flex flex-col justify-between lg:col-span-6"
+          >
             <div className="my-4 flex flex-col items-center justify-center gap-3 text-center">
               {/* Top row: Base B */}
               <div className="flex items-center justify-center gap-6">
-                <div className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] px-3 py-1.5 shadow-xs">
+                  <span className="text-xs font-medium text-[var(--kde-muted)]">
                     原基底 {"$\\mathcal{B}$"}
                   </span>
-                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  <div className="text-sm font-semibold text-[var(--kde-ink)]">
                     {"$[\\mathbf{v}]_{\\mathcal{B}}$"}
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center">
-                  <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">
+                  <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300">
                     {"$\\xrightarrow{\\quad A \\quad}$"}
                   </span>
-                  <span className="text-[10px] text-slate-400">线性映射 T</span>
+                  <span className="text-[10px] text-[var(--kde-muted)]">
+                    线性映射 T
+                  </span>
                 </div>
 
-                <div className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] px-3 py-1.5 shadow-xs">
+                  <span className="text-xs font-medium text-[var(--kde-muted)]">
                     原基底 {"$\\mathcal{B}$"}
                   </span>
-                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  <div className="text-sm font-semibold text-[var(--kde-ink)]">
                     {"$[T(\\mathbf{v})]_{\\mathcal{B}}$"}
                   </div>
                 </div>
               </div>
 
               {/* Vertical transitions: P and P^-1 */}
-              <div className="flex w-full max-w-[280px] items-center justify-between px-6 text-xs text-slate-400">
+              <div className="flex w-full max-w-[280px] items-center justify-between px-6 text-xs text-[var(--kde-muted)]">
                 <div className="flex flex-col items-center">
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">
+                  <span className="font-semibold text-amber-700 dark:text-amber-300">
                     {"$P \\downarrow \\uparrow P^{-1}$"}
                   </span>
                 </div>
-                <div className="text-[10px] italic text-slate-400">
+                <div className="text-[10px] italic text-[var(--kde-muted)]">
                   坐标系等价映射
                 </div>
                 <div className="flex flex-col items-center">
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">
+                  <span className="font-semibold text-amber-700 dark:text-amber-300">
                     {"$P \\downarrow \\uparrow P^{-1}$"}
                   </span>
                 </div>
@@ -240,111 +246,110 @@ export default function MatrixSimilarityDiagram() {
 
               {/* Bottom row: Base C */}
               <div className="flex items-center justify-center gap-6">
-                <div className="rounded-lg border border-indigo-300 bg-white px-3 py-1.5 shadow-sm dark:border-indigo-800 dark:bg-slate-900">
-                  <span className="text-xs text-indigo-600 dark:text-indigo-400">
+                <div className="rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-1.5 shadow-xs">
+                  <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300">
                     新基底 {"$\\mathcal{C}$"}
                   </span>
-                  <div className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+                  <div className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">
                     {"$[\\mathbf{v}]_{\\mathcal{C}}$"}
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center">
-                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
                     {"$\\xrightarrow{\\quad B = P^{-1}AP \\quad}$"}
                   </span>
-                  <span className="text-[10px] text-slate-400">相似矩阵 B</span>
+                  <span className="text-[10px] text-[var(--kde-muted)]">
+                    相似矩阵 B
+                  </span>
                 </div>
 
-                <div className="rounded-lg border border-indigo-300 bg-white px-3 py-1.5 shadow-sm dark:border-indigo-800 dark:bg-slate-900">
-                  <span className="text-xs text-indigo-600 dark:text-indigo-400">
+                <div className="rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-1.5 shadow-xs">
+                  <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300">
                     新基底 {"$\\mathcal{C}$"}
                   </span>
-                  <div className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+                  <div className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">
                     {"$[T(\\mathbf{v})]_{\\mathcal{C}}$"}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded bg-white/70 p-2 text-center text-[11px] text-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
+            <div className="rounded border border-[var(--kde-border)] bg-[var(--kde-panel)] p-2 text-center text-[11px] text-[var(--kde-muted)]">
               公式闭环：
               {
                 "$[\\mathbf{v}]_{\\mathcal{C}} \\xrightarrow{P} [\\mathbf{v}]_{\\mathcal{B}} \\xrightarrow{A} [T(\\mathbf{v})]_{\\mathcal{B}} \\xrightarrow{P^{-1}} [T(\\mathbf{v})]_{\\mathcal{C}}$"
               }
             </div>
-          </div>
+          </KdeCard>
 
           {/* Right: Real-time Matrices & Invariants */}
-          <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/60 lg:col-span-6">
-            <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              矩阵数值联动与相似不变量探针
-            </div>
-
+          <KdeCard
+            title="矩阵数值联动与相似不变量探针"
+            className="flex flex-col justify-between lg:col-span-6"
+          >
             <div className="my-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {/* Matrix A */}
-              <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/60">
-                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-2.5">
+                <div className="text-[11px] font-medium text-[var(--kde-muted)]">
                   原基表示矩阵 $A$
                 </div>
-                <div className="mt-1 font-mono text-xs text-slate-800 dark:text-slate-200">
+                <div className="mt-1 font-mono text-xs font-semibold text-[var(--kde-ink)]">
                   {`$A = \\begin{pmatrix} ${fmt(a)} & ${fmt(b)} \\\\ ${fmt(c)} & ${fmt(d)} \\end{pmatrix}$`}
                 </div>
               </div>
 
               {/* Matrix P */}
-              <div className="rounded-lg bg-amber-50/60 p-2.5 dark:bg-amber-950/20">
-                <div className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5">
+                <div className="text-[11px] font-medium text-amber-800 dark:text-amber-200">
                   换基矩阵 $P$ (det={fmt(detP)})
                 </div>
-                <div className="mt-1 font-mono text-xs text-slate-800 dark:text-slate-200">
+                <div className="mt-1 font-mono text-xs font-semibold text-[var(--kde-ink)]">
                   {`$P = \\begin{pmatrix} ${fmt(p11)} & ${fmt(p12)} \\\\ ${fmt(p21)} & ${fmt(p22)} \\end{pmatrix}$`}
                 </div>
               </div>
 
               {/* Matrix B */}
-              <div className="rounded-lg bg-emerald-50/60 p-2.5 sm:col-span-2 dark:bg-emerald-950/20">
-                <div className="flex items-center justify-between text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+              <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-2.5 sm:col-span-2">
+                <div className="flex items-center justify-between text-[11px] font-medium text-emerald-800 dark:text-emerald-200">
                   <span>新基表示矩阵 {"$B = P^{-1}AP$"}</span>
                   {Math.abs(b12) < 1e-3 && Math.abs(b21) < 1e-3 && (
-                    <span className="rounded bg-emerald-200 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100">
-                      已对角化！
-                    </span>
+                    <KdeBadge variant="success">已对角化！</KdeBadge>
                   )}
                 </div>
-                <div className="mt-1 font-mono text-xs text-slate-800 dark:text-slate-200">
+                <div className="mt-1 font-mono text-xs font-semibold text-[var(--kde-ink)]">
                   {`$B = \\begin{pmatrix} ${fmt(b11)} & ${fmt(b12)} \\\\ ${fmt(b21)} & ${fmt(b22)} \\end{pmatrix}$`}
                 </div>
               </div>
             </div>
 
             {/* Invariants Probe Badge Card */}
-            <div className="rounded-lg border border-indigo-200/80 bg-indigo-50/30 p-3 dark:border-indigo-900/60 dark:bg-indigo-950/20">
-              <div className="mb-1 text-[11px] font-semibold text-indigo-900 dark:text-indigo-300">
+            <div className="rounded-lg border border-[var(--kde-border)] bg-[var(--kde-panel)] p-3 shadow-xs">
+              <div className="mb-1.5 text-[11px] font-semibold text-[var(--kde-ink)]">
                 相似不变量（严格恒等守恒）
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center justify-between rounded bg-white px-2 py-1 dark:bg-slate-900">
-                  <span className="text-slate-500">迹 tr</span>
-                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-center justify-between rounded border border-[var(--kde-border)] bg-[var(--kde-raised)] px-2 py-1">
+                  <span className="text-[var(--kde-muted)]">迹 tr</span>
+                  <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-300">
                     {`$\\operatorname{tr}(A)=${fmt(trA)}, \\; \\operatorname{tr}(B)=${fmt(trB)}$`}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded bg-white px-2 py-1 dark:bg-slate-900">
-                  <span className="text-slate-500">行列式 det</span>
-                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-center justify-between rounded border border-[var(--kde-border)] bg-[var(--kde-raised)] px-2 py-1">
+                  <span className="text-[var(--kde-muted)]">行列式 det</span>
+                  <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-300">
                     {`$\\det(A)=${fmt(detA)}, \\; \\det(B)=${fmt(detB)}$`}
                   </span>
                 </div>
               </div>
-              <div className="mt-1.5 flex items-center justify-between rounded bg-white px-2 py-1 text-xs dark:bg-slate-900">
-                <span className="text-slate-500">特征值谱</span>
-                <span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400">
+              <div className="mt-1.5 flex items-center justify-between rounded border border-[var(--kde-border)] bg-[var(--kde-raised)] px-2 py-1 text-xs">
+                <span className="text-[var(--kde-muted)]">特征值谱</span>
+                <span className="font-mono font-semibold text-indigo-700 dark:text-indigo-300">
                   {`$${eigStrA}$`}
                 </span>
               </div>
             </div>
-          </div>
+          </KdeCard>
         </div>
       </div>
     </AutoMath>

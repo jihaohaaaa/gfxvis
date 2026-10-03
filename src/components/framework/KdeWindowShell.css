@@ -174,12 +174,14 @@ html.dark .kde-window-shell {
   height: 100%;
   flex: 1 1 auto;
   flex-direction: column;
+  justify-content: flex-start;
   gap: 0.75rem;
   padding: 0.75rem;
   border: 1px solid var(--kde-border);
   border-radius: var(--kde-card-radius);
-  background: var(--kde-raised);
+  background: var(--kde-panel);
   color: var(--kde-ink);
+  overflow-y: auto;
 }
 
 .kde-window-shell__readouts {

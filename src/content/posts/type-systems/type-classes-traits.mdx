@@ -12,6 +12,74 @@ tags:
 ---
 
 import TypeClassesTraitsDiagram from "../../../components/diagrams/TypeClassesTraitsDiagram";
+import CodePlayground from "../../../components/framework/CodePlayground";
+
+export const typeClassesRustSnippet = `// Rust Trait 与 Newtype 模式实战：跨越孤儿规则
+use std::fmt;
+
+// 假设我们想为标准库 Vec<i32> 实现自定义的 Display
+// 直接写 impl fmt::Display for Vec<i32> 会触发 E0117 孤儿规则报错！
+
+// 解决方案：Newtype 模式重夺本地所有权
+struct PrettyIntList(Vec<i32>);
+
+impl fmt::Display for PrettyIntList {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[")?;
+        for (i, val) in self.0.iter().enumerate() {
+            if i > 0 {
+                write!(f, " -> ")?;
+            }
+            write!(f, "#{}:{}", i + 1, val)?;
+        }
+        write!(f, "]")
+    }
+}
+
+fn print_with_trait<T: fmt::Display>(item: &T) {
+    println!("Trait 约束打印结果: {}", item);
+}
+
+fn main() {
+    let raw_data = vec![10, 25, 42, 99];
+    let pretty = PrettyIntList(raw_data);
+    print_with_trait(&pretty);
+}
+`;
+
+export const typeClassesTsDictSnippet = `// TypeScript 显式字典传递 (Dictionary Passing) 模式实战
+// 1. 类型类字典接口 (Type Class Interface)
+interface SemiGroup<T> {
+  combine: (a: T, b: T) => T;
+}
+
+interface Monoid<T> extends SemiGroup<T> {
+  empty: () => T;
+}
+
+// 2. 全局字典单例 (Instance Dictionaries)
+const numberAdditionMonoid: Monoid<number> = {
+  combine: (a, b) => a + b,
+  empty: () => 0,
+};
+
+const stringConcatMonoid: Monoid<string> = {
+  combine: (a, b) => a + b,
+  empty: () => "",
+};
+
+// 3. 泛型高阶折叠函数 (接收隐式字典)
+function foldAll<T>(items: T[], M: Monoid<T>): T {
+  return items.reduce((acc, curr) => M.combine(acc, curr), M.empty());
+}
+
+// 运行测试
+const nums = [10, 20, 30, 40];
+console.log("数值加法 Monoid 聚合:", foldAll(nums, numberAdditionMonoid));
+
+const words = ["Type ", "Classes ", "in ", "TypeScript"];
+console.log("字符串拼接 Monoid 聚合:", foldAll(words, stringConcatMonoid));
+`;
 
 在编程语言漫长的演化史中，<strong>多态（Polymorphism）</strong>的实现方式曾经历过极其混乱的蛮荒时期。
 
@@ -177,7 +245,15 @@ impl<T> std::fmt::Display for Vec<T> { ... }
 2. 另一个独立的 `crate_beta` 也出于完全相同的需求，在自己包里写了一个格式稍有不同的 `impl Display for Vec<T>`；
 3. 你的应用程序同时引用了 `alpha` 和 `beta`。当你在 `main.rs` 里调用 `println!("{}", my_vec)` 时，<strong>编译器将当场陷入二义性死锁！或者更糟糕 —— 静默采用了其中一个版本导致逻辑失常！</strong>
 
-为了安全解绑，Rust 推荐使用 <strong>Newtype 模式</strong>（声明一个局部元组结构体 `struct MyVec<T>(Vec<T>)`），通过重夺类型的本地所有权，在维护全局一致性的前提下优雅化解冲突。
+为了安全解绑，Rust 推荐使用 <strong>Newtype 模式</strong>（声明一个局部元组结构体 `struct MyVec<T>(Vec<T>)`），通过重夺类型的本地所有权，在维护全局一致性的前提下优雅化解冲突：
+
+<CodePlayground
+  client:visible
+  lang="rust"
+  title="Rust Trait 与 Newtype 模式跨越孤儿规则实战"
+  description="以元组结构体包装外部类型并实现自定义 Display 特质"
+  initialCode={typeClassesRustSnippet}
+/>
 
 ### 4.2 C++20 Concepts：鸭子类型的纯编译期巅峰
 
@@ -264,31 +340,14 @@ public static T Add<T>(T a, T b) where T : INumber<T> {
 
 虽然 TypeScript 既没有 Rust 的 `trait`，也没有 Haskell 的类型类，但在函数式前端开发（如 `fp-ts`、`Effect`）中，工程师们直接使用<strong>纯正的字典传递模式</strong>手工实现类型类：
 
-```typescript
-// 1. 定义类型类字典接口
-interface Show<T> {
-  show: (value: T) => string;
-}
+<CodePlayground
+  client:visible
+  lang="ts"
+  title="TypeScript 显式字典传递（Dictionary Passing）模式实战"
+  description="以 Monoid 接口与实例字典实现通用的泛型高阶折叠聚合函数"
+  initialCode={typeClassesTsDictSnippet}
+/>
 
-// 2. 提供具体类型的全局字典单例
-const showNumber: Show<number> = {
-  show: (n) => `Number(${n})`,
-};
-
-const showDate: Show<Date> = {
-  show: (d) => d.toISOString(),
-};
-
-// 3. 泛型函数显式接收字典参数
-function printCollection<T>(items: T[], S: Show<T>): void {
-  for (const item of items) {
-    console.log(S.show(item));
-  }
-}
-
-// 调用时手动传递字典实例：
-printCollection([1, 2, 3], showNumber);
-```
 这种模式生动地印证了类型论的核心真理：<strong>语言特性的尽头往往是底层数据结构的显式投影。</strong>编译器不提供的功能，程序员完全可以用字典结构体手工编织。
 
 ---
