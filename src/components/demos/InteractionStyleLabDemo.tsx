@@ -1,6 +1,13 @@
 import "./InteractionStyleLabDemo.css";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
 import {
   drawAdaptiveAxes,
   drawArrow,
@@ -35,10 +42,12 @@ import ExpandableDemo, { useExpandable } from "../framework/ExpandableDemo";
 import KdeWindowShell from "../framework/KdeWindowShell";
 import KdeCard from "../framework/KdeCard";
 import KdeReadout from "../framework/KdeReadout";
+import KdeSelect from "../framework/KdeSelect";
 import KdeBadge from "../framework/KdeBadge";
 import InteractiveLayout, {
   type InteractiveLayoutPreset,
 } from "../framework/InteractiveLayout";
+import InteractiveViewportGroup from "../framework/InteractiveViewportGroup";
 import ParamSlider from "../framework/ParamSlider";
 import PresetSelector from "../framework/PresetSelector";
 import { useCanvas2D } from "../framework/useCanvas2D";
@@ -55,6 +64,29 @@ interface Props {
 
 type PlotColors = Pick<ThemeColors, "ink" | "muted" | "border" | "accent">;
 type WorkspaceTabId = "geometry" | "algebra" | "residual";
+type ProjectionViewId = "view-01" | "view-02" | "view-03" | "view-04";
+
+interface ProjectionViewConfig {
+  id: ProjectionViewId;
+  label: string;
+  targetId: ProjectionTargetId;
+  modeId: ProjectionModeId;
+}
+
+interface ProjectionCanvasProps {
+  viewId: ProjectionViewId;
+  label: string;
+  probe: { x: number; y: number };
+  targetId: ProjectionTargetId;
+  modeId: ProjectionModeId;
+  variant: InteractionStyle;
+  showInputVector: boolean;
+  showResidual: boolean;
+  showGizmo: boolean;
+  onProbeChange(probe: { x: number; y: number }): void;
+  onReset(): void;
+  testId?: string;
+}
 
 const TARGET_OPTIONS: { id: ProjectionTargetId; label: string }[] = [
   { id: "x-axis", label: "x 轴" },
@@ -64,6 +96,33 @@ const TARGET_OPTIONS: { id: ProjectionTargetId; label: string }[] = [
 const MODE_OPTIONS: readonly KdeTabOption<ProjectionModeId>[] = [
   { id: "orthogonal", label: "正交" },
   { id: "oblique", label: "斜投影" },
+];
+
+const DEFAULT_PROJECTION_VIEWS: readonly ProjectionViewConfig[] = [
+  {
+    id: "view-01",
+    label: "VIEW 01",
+    targetId: "x-axis",
+    modeId: "orthogonal",
+  },
+  {
+    id: "view-02",
+    label: "VIEW 02",
+    targetId: "x-axis",
+    modeId: "oblique",
+  },
+  {
+    id: "view-03",
+    label: "VIEW 03",
+    targetId: "line-yx",
+    modeId: "orthogonal",
+  },
+  {
+    id: "view-04",
+    label: "VIEW 04",
+    targetId: "line-yx",
+    modeId: "oblique",
+  },
 ];
 
 const WORKSPACE_TABS: readonly KdeTabOption<WorkspaceTabId>[] = [
@@ -167,6 +226,205 @@ function formatPair(x: number, y: number): string {
   return `(${x.toFixed(2)}, ${y.toFixed(2)})`;
 }
 
+function ProjectionCanvas({
+  viewId,
+  label,
+  probe,
+  targetId,
+  modeId,
+  variant,
+  showInputVector,
+  showResidual,
+  showGizmo,
+  onProbeChange,
+  onReset,
+  testId,
+}: ProjectionCanvasProps) {
+  const target = PROJECTION_TARGETS[targetId];
+  const mode = target.modes[modeId];
+
+  const gizmoArrows = useMemo(() => {
+    const directionSubspace =
+      targetId === "x-axis" ? { x: 1, y: 0 } : { x: 1, y: 1 };
+    const directionResidual =
+      targetId === "line-yx"
+        ? modeId === "orthogonal"
+          ? { x: -1, y: 1 }
+          : { x: 0, y: 1 }
+        : { x: 0, y: 1 };
+    return [
+      {
+        id: "subspace",
+        direction: directionSubspace,
+        color: "#2563eb",
+        label: "L",
+        lengthPx: 34,
+      },
+      {
+        id: "residual",
+        direction: directionResidual,
+        color: "#64748b",
+        label: "L^⊥",
+        lengthPx: 34,
+      },
+    ];
+  }, [modeId, targetId]);
+
+  const dragHandlers = useVectorDrag<"probe">({
+    targets: [
+      {
+        id: "probe",
+        x: probe.x,
+        y: probe.y,
+        bounds: PROBE_CLAMP,
+        arrows: gizmoArrows,
+      },
+    ],
+    onDrag(_, position) {
+      onProbeChange({
+        x: clamp(position.x, PROBE_CLAMP.xMin, PROBE_CLAMP.xMax),
+        y: clamp(position.y, PROBE_CLAMP.yMin, PROBE_CLAMP.yMax),
+      });
+    },
+  });
+
+  const { containerRef, canvasRef, resetBounds } = useCanvas2D(
+    {
+      initialBounds: PROJECTION_BOUNDS,
+      margin: 24,
+      onLeftDown: dragHandlers.onLeftDown,
+      onLeftMove: dragHandlers.onLeftMove,
+      onLeftUp: dragHandlers.onLeftUp,
+      onHover: dragHandlers.onHover,
+      onPointerLeave: dragHandlers.onPointerLeave,
+      draw(ctx, plot, theme) {
+        const [px, py] = mode.project(probe.x, probe.y);
+        const visible = getVisibleBounds(plot);
+        const plotTheme = getPlotTheme(variant, theme);
+        drawAdaptiveAxes(ctx, plot, plotTheme);
+
+        const activeTrack = dragHandlers.getActiveTrack();
+        if (activeTrack) drawDragGuideTrack(ctx, plot, activeTrack);
+
+        if (targetId === "x-axis") {
+          drawSegment(ctx, plot, visible.xMin, 0, visible.xMax, 0, {
+            color: plotTheme.border,
+            width: 3,
+          });
+        } else {
+          const minValue = Math.min(visible.xMin, visible.yMin);
+          const maxValue = Math.max(visible.xMax, visible.yMax);
+          drawSegment(ctx, plot, minValue, minValue, maxValue, maxValue, {
+            color: plotTheme.border,
+            width: 3,
+          });
+        }
+
+        const originX = plot.toScreenX(0);
+        const originY = plot.toScreenY(0);
+        const inputX = plot.toScreenX(probe.x);
+        const inputY = plot.toScreenY(probe.y);
+        const projectedX = plot.toScreenX(px);
+        const projectedY = plot.toScreenY(py);
+
+        if (showResidual) {
+          drawSegment(ctx, plot, px, py, probe.x, probe.y, {
+            color: plotTheme.muted,
+            width: 1.8,
+            dash: [5, 4],
+          });
+        }
+        if (showInputVector) {
+          drawArrow(
+            ctx,
+            originX,
+            originY,
+            inputX - originX,
+            inputY - originY,
+            plotTheme.ink,
+            10,
+            7,
+            2.4,
+          );
+        }
+        drawArrow(
+          ctx,
+          originX,
+          originY,
+          projectedX - originX,
+          projectedY - originY,
+          plotTheme.accent,
+          10,
+          7,
+          2.6,
+        );
+        drawPoint(ctx, plot, px, py, {
+          color: plotTheme.accent,
+          filled: false,
+          radius: 6,
+          width: 2,
+        });
+        if (showGizmo) {
+          drawDragGizmo(ctx, plot, probe.x, probe.y, {
+            color: plotTheme.ink,
+            isHoveredCenter: dragHandlers.isCenterHovered("probe"),
+            isDraggingCenter: dragHandlers.isCenterDragging("probe"),
+            hoveredArrowId: dragHandlers.getHoveredArrowId("probe"),
+            draggingArrowId: dragHandlers.getDraggingArrowId("probe"),
+            arrows: gizmoArrows,
+            opacity: dragHandlers.getOpacity("probe"),
+          });
+        }
+      },
+    },
+    [
+      mode,
+      probe,
+      targetId,
+      modeId,
+      variant,
+      showInputVector,
+      showResidual,
+      showGizmo,
+    ],
+  );
+
+  return (
+    <div
+      className="style-lab__viewport-card"
+      data-testid={testId ?? `projection-canvas-${viewId}`}
+      data-view-id={viewId}
+    >
+      <div className="style-lab__viewport-header">
+        <span>{label}</span>
+        <div className="style-lab__viewport-badges">
+          <KdeBadge variant="primary">{target.label}</KdeBadge>
+          <KdeBadge variant={modeId === "orthogonal" ? "success" : "warning"}>
+            {mode.label}
+          </KdeBadge>
+        </div>
+      </div>
+      <div
+        ref={containerRef}
+        className="style-lab__canvas-frame style-lab__viewport-canvas relative h-[var(--demo-height,20rem)] min-h-[14rem] w-full overflow-hidden"
+      >
+        <CanvasToolbar
+          onReset={() => {
+            resetBounds();
+            onReset();
+          }}
+        />
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 h-full w-full touch-none"
+          aria-label={`${label}，${target.label}，${mode.label}`}
+        />
+        <CanvasResizer className="absolute inset-x-0 bottom-0 z-20" />
+      </div>
+    </div>
+  );
+}
+
 export default function InteractionStyleLabDemo({
   variant,
   layout,
@@ -184,6 +442,12 @@ export default function InteractionStyleLabDemo({
   const [showInputVector, setShowInputVector] = useState(true);
   const [showResidual, setShowResidual] = useState(true);
   const [showGizmo, setShowGizmo] = useState(true);
+  const [denseViews, setDenseViews] = useState<ProjectionViewConfig[]>(() =>
+    DEFAULT_PROJECTION_VIEWS.map((view) => ({ ...view })),
+  );
+  const [dualViews, setDualViews] = useState<ProjectionViewConfig[]>(() =>
+    DEFAULT_PROJECTION_VIEWS.map((view) => ({ ...view })),
+  );
   const target = PROJECTION_TARGETS[targetId];
   const mode = target.modes[modeId];
   const projected = mode.project(probe.x, probe.y);
@@ -334,6 +598,7 @@ export default function InteractionStyleLabDemo({
       showResidual,
       showGizmo,
     ],
+    [layoutPreset, activeTab],
   );
 
   const secondaryCanvasState = useCanvas2D(
@@ -416,6 +681,7 @@ export default function InteractionStyleLabDemo({
       },
     },
     [probe, targetId, modeId, variant, showInputVector, showResidual],
+    [layoutPreset, activeTab],
   );
 
   useEffect(() => {
@@ -552,6 +818,40 @@ export default function InteractionStyleLabDemo({
         value={formatPair(residual[0], residual[1])}
       />
     </div>
+  );
+
+  const multiCanvasViews =
+    layoutPreset === "dense-dock"
+      ? denseViews
+      : layoutPreset === "dual-view"
+        ? dualViews
+        : undefined;
+  const displayReadouts = multiCanvasViews ? (
+    <div
+      className="style-lab__readouts grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4"
+      aria-live="polite"
+      data-testid="multi-canvas-readouts"
+    >
+      <KdeReadout
+        label="共享输入向量 $\\mathbf{x}$"
+        value={formatPair(probe.x, probe.y)}
+      />
+      {multiCanvasViews.map((view) => {
+        const viewTarget = PROJECTION_TARGETS[view.targetId];
+        const viewMode = viewTarget.modes[view.modeId];
+        const viewProjected = viewMode.project(probe.x, probe.y);
+        return (
+          <KdeReadout
+            key={view.id}
+            label={`${view.label} ${viewTarget.label} · ${viewMode.label}`}
+            value={formatPair(viewProjected[0], viewProjected[1])}
+            variant="accent"
+          />
+        );
+      })}
+    </div>
+  ) : (
+    readouts
   );
 
   const canvas = (
@@ -778,9 +1078,79 @@ export default function InteractionStyleLabDemo({
     </div>
   );
 
+  const resetProjectionView = () => undefined;
+
+  const renderProjectionCanvas = (
+    view: ProjectionViewConfig,
+    testId: string,
+  ) => (
+    <ProjectionCanvas
+      viewId={view.id}
+      label={view.label}
+      probe={probe}
+      targetId={view.targetId}
+      modeId={view.modeId}
+      variant={variant}
+      showInputVector={showInputVector}
+      showResidual={showResidual}
+      showGizmo={showGizmo}
+      onProbeChange={setProbe}
+      onReset={resetProjectionView}
+      testId={testId}
+    />
+  );
+
+  const denseCanvasGroup = (
+    <InteractiveViewportGroup
+      items={denseViews.map((view) =>
+        renderProjectionCanvas(view, `dense-dock-${view.id}`),
+      )}
+      columns={2}
+      mobileColumns={1}
+      className="style-lab__dense-canvas-grid"
+      itemClassName="style-lab__dense-canvas-grid-item"
+      testId="dense-dock-canvas-group"
+    />
+  );
+
+  const dualMainGroup = (
+    <InteractiveViewportGroup
+      items={dualViews
+        .slice(0, 2)
+        .map((view) => renderProjectionCanvas(view, `dual-main-${view.id}`))}
+      columns={1}
+      mobileColumns={1}
+      className="style-lab__dual-canvas-group"
+      itemClassName="style-lab__dual-canvas-item"
+      testId="dual-view-main-group"
+    />
+  );
+
+  const dualSecondaryGroup = (
+    <InteractiveViewportGroup
+      items={dualViews
+        .slice(2, 4)
+        .map((view) =>
+          renderProjectionCanvas(view, `dual-secondary-${view.id}`),
+        )}
+      columns={1}
+      mobileColumns={1}
+      className="style-lab__dual-canvas-group"
+      itemClassName="style-lab__dual-canvas-item"
+      testId="dual-view-secondary-group"
+    />
+  );
+
+  const geometryDisplay =
+    layoutPreset === "dense-dock"
+      ? denseCanvasGroup
+      : layoutPreset === "dual-view"
+        ? dualMainGroup
+        : canvas;
+
   const workspaceDisplay = (
     <div className="relative h-full w-full min-h-[20rem]">
-      {canvas}
+      {activeTab === "geometry" ? geometryDisplay : null}
       {activeTab === "algebra" && algebraView}
       {activeTab === "residual" && residualView}
     </div>
@@ -798,34 +1168,104 @@ export default function InteractionStyleLabDemo({
     />
   );
 
+  const renderViewConfig = (
+    views: readonly ProjectionViewConfig[],
+    setViews: Dispatch<SetStateAction<ProjectionViewConfig[]>>,
+    testId: string,
+  ) => (
+    <KdeCard
+      title="画布视图配置"
+      variant="dense"
+      testId={testId}
+      className="style-lab__dense-view-config-card"
+    >
+      <div className="style-lab__dense-view-config">
+        {views.map((view, index) => (
+          <div
+            key={view.id}
+            className="style-lab__dense-view-row"
+            data-testid={`${testId}-${view.id}`}
+          >
+            <div className="style-lab__dense-view-label">
+              <span>{view.label}</span>
+              <KdeBadge variant="neutral">{view.id}</KdeBadge>
+            </div>
+            <KdeSelect
+              options={TARGET_OPTIONS.map((option) => ({
+                value: option.id,
+                label: option.label,
+              }))}
+              value={view.targetId}
+              onChange={(nextTarget) =>
+                setViews((current) =>
+                  current.map((item, itemIndex) =>
+                    itemIndex === index
+                      ? { ...item, targetId: nextTarget as ProjectionTargetId }
+                      : item,
+                  ),
+                )
+              }
+              label="目标"
+              size="xs"
+            />
+            <KdeSelect
+              options={MODE_OPTIONS.map((option) => ({
+                value: option.id,
+                label: option.label,
+              }))}
+              value={view.modeId}
+              onChange={(nextMode) =>
+                setViews((current) =>
+                  current.map((item, itemIndex) =>
+                    itemIndex === index
+                      ? { ...item, modeId: nextMode as ProjectionModeId }
+                      : item,
+                  ),
+                )
+              }
+              label="模式"
+              size="xs"
+            />
+          </div>
+        ))}
+      </div>
+    </KdeCard>
+  );
+
   const controlPanel = (
     <aside
       className={`style-lab__control-panel flex flex-col gap-2.5 min-w-0 ${variant === "instrument" ? "style-lab__instrument-rack" : ""}`}
       data-control-panel={variant}
     >
-      <KdeCard
-        title="投影空间与模式"
-        badge={
-          <KdeBadge variant={modeId === "orthogonal" ? "success" : "warning"}>
-            {modeId.toUpperCase()}
-          </KdeBadge>
-        }
-      >
-        <div className="flex flex-col gap-2">
-          <div>
-            <div className="text-[11px] font-medium text-[var(--kde-muted)] mb-1">
-              目标子空间
+      {layoutPreset === "dense-dock" ? (
+        renderViewConfig(denseViews, setDenseViews, "dense-dock-view-config")
+      ) : layoutPreset === "dual-view" ? (
+        renderViewConfig(dualViews, setDualViews, "dual-view-view-config")
+      ) : (
+        <KdeCard
+          title="投影空间与模式"
+          badge={
+            <KdeBadge variant={modeId === "orthogonal" ? "success" : "warning"}>
+              {modeId.toUpperCase()}
+            </KdeBadge>
+          }
+        >
+          <div className="flex flex-col gap-2">
+            <div>
+              <div className="text-[11px] font-medium text-[var(--kde-muted)] mb-1">
+                目标子空间
+              </div>
+              {targetControl}
             </div>
-            {targetControl}
-          </div>
-          <div>
-            <div className="text-[11px] font-medium text-[var(--kde-muted)] mb-1">
-              投影模式
+            <div>
+              <div className="text-[11px] font-medium text-[var(--kde-muted)] mb-1">
+                投影模式
+              </div>
+              {modeControl}
             </div>
-            {modeControl}
           </div>
-        </div>
-      </KdeCard>
+        </KdeCard>
+      )}
 
       <KdeCard
         title="探测向量探针"
@@ -952,23 +1392,6 @@ export default function InteractionStyleLabDemo({
     </aside>
   );
 
-  const secondaryCanvas = (
-    <div
-      ref={secondaryCanvasState.containerRef}
-      className={`style-lab__canvas-frame style-lab__secondary-frame relative h-[var(--demo-height,100%)] min-h-[20rem] w-full overflow-hidden ${
-        activeTab === "geometry" ? "" : "hidden"
-      }`}
-    >
-      <CanvasToolbar onReset={secondaryCanvasState.resetBounds} />
-      <canvas
-        ref={secondaryCanvasState.canvasRef}
-        className="absolute inset-0 h-full w-full touch-none"
-        aria-label="投影结果与残差对照画布"
-      />
-      <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
-    </div>
-  );
-
   const workspaceTabs = (
     <div className="flex w-full items-center justify-between gap-2 overflow-x-auto">
       <KdeTabs<WorkspaceTabId>
@@ -1009,13 +1432,18 @@ export default function InteractionStyleLabDemo({
               ) : undefined
             }
             display={workspaceDisplay}
+            displayClassName={
+              layoutPreset === "dense-dock" || layoutPreset === "dual-view"
+                ? "kde-window-shell__display--viewport-group"
+                : undefined
+            }
             secondary={
               layoutPreset === "dual-view" && activeTab === "geometry"
-                ? secondaryCanvas
+                ? dualSecondaryGroup
                 : undefined
             }
             controls={controlPanel}
-            readouts={readouts}
+            readouts={displayReadouts}
           />
         </ExpandableDemo>
       </AutoMath>
@@ -1027,9 +1455,9 @@ export default function InteractionStyleLabDemo({
     layoutPreset,
     workspaceTabs,
     workspaceDisplay,
-    secondaryCanvas,
+    activeTab === "geometry" ? dualSecondaryGroup : undefined,
     controlPanel,
-    readouts,
+    displayReadouts,
   );
 
   return (
@@ -1053,7 +1481,7 @@ function renderLayout(
   layoutPreset: InteractiveLayoutPreset,
   workspaceTabs: ReactNode,
   workspaceDisplay: ReactNode,
-  secondaryCanvas: ReactNode,
+  secondaryCanvas: ReactNode | undefined,
   controlPanel: ReactNode,
   readouts: ReactNode,
 ): ReactNode {

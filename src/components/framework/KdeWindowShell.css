@@ -168,6 +168,25 @@ html.dark .kde-window-shell {
   background: var(--kde-canvas);
 }
 
+.kde-window-shell__display > * {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
+/* A viewport group already supplies its own cards and borders. Keep the
+   main region wrapper structural so it does not add a second white surface. */
+.kde-window-shell__display--viewport-group {
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .kde-window-shell__controls-rack {
   display: flex;
   min-width: 0;

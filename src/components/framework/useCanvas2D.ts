@@ -21,11 +21,14 @@ export interface UseCanvas2DResult {
  * Mounts the shared 2D canvas controller (createCanvas2D) and disposes it
  * on unmount or when the underlying DOM elements change. The options object
  * is captured dynamically; callers keep mutable state in refs and call `redraw()` to repaint.
+ * `mountDeps` can be used when a layout change replaces the referenced DOM
+ * elements while the React component itself remains mounted.
  * SSR-safe: DOM work happens only inside the effect.
  */
 export function useCanvas2D(
   options: Canvas2DOptions,
   deps?: unknown[],
+  mountDeps?: unknown[],
 ): UseCanvas2DResult {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -78,7 +81,7 @@ export function useCanvas2D(
       controller.dispose();
       controllerRef.current = null;
     };
-  }, []);
+  }, mountDeps ?? []);
 
   const redraw = useCallback(() => {
     controllerRef.current?.redraw();

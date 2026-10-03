@@ -19,6 +19,11 @@ GFXVis:本地托管的图形学/可视化技术博客(Astro Node standalone 服�
 - **按需具名导入（禁止整包/默认导入大对象）**:
   - 引入模块（特别是 Node.js 内置模块如 `node:fs`、`node:http`、`node:path` 等或第三方库）时，**禁止使用 `import http from "node:http"`、`import fs from "node:fs"` 这种默认全量导入**；
   - **必须按需具名导入具体使用的接口**，如 `import { createServer } from "node:http"`、`import { readFile, writeFile } from "node:fs/promises"`、`import { join, dirname } from "node:path"`。用到哪些就导入哪些，保持依赖树最小化和代码意图清晰。
+- **测试与 Island 截图规范 (Playwright E2E & Visual Inspection)**:
+  - 统一使用 `e2e/utils/screenshot.ts` 的 `captureIsland(page, name, options)` 原语；
+  - **默认零截图开销**：常规测试 `pnpm test:e2e` 默认不会生成任何截图，仅做可见性与运行时断言；
+  - **按运行时间戳隔离目录**：开启截图模式时，截图统一按执行启动时间分目录存放在 `.playwright-screenshots/<YYYY-MM-DD_HH-mm-ss>/<subDir>/<name>.png`，避免历次运行相互覆盖；
+  - **Agent 截图查阅边界**：**严禁在日常开发中主动无端运行/查阅截图**。**仅当用户明确报告存在渲染/排版/视觉 Bug，或明确要求查看最终渲染效果时**，才运行 `pnpm test:screenshots`（或 `SCREENSHOT=1 playwright test <spec-path>`），并通过 `view_file` 查阅 `.playwright-screenshots/` 下生成的图片进行视觉验证。
 
 ## 常用命令
 
@@ -27,3 +32,5 @@ GFXVis:本地托管的图形学/可视化技术博客(Astro Node standalone 服�
 - `pnpm lint` — ESLint 检查
 - `pnpm format` / `pnpm format:check` — 加粗规范自动迁移/检查 + Prettier 格式化 / 校验
 - `pnpm format:bold` / `pnpm format:bold:check` — 独立执行将 `**` 迁移为 `<strong>` / 检查是否存在违规裸 `**`
+- `pnpm test:e2e` — 运行 Playwright E2E 冒烟与交互测试（默认无截图）
+- `pnpm test:screenshots` — 运行测试并生成 Island 截图至 `.playwright-screenshots/`（仅在排查视觉 Bug 时按需使用）

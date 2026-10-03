@@ -64,7 +64,7 @@ export default function KdeReadout({
       </div>
 
       <div
-        className={`mt-1.5 min-w-0 overflow-x-auto font-mono text-xs ${VARIANT_VALUE_CLASSES[variant]}`}
+        className={`mt-1 min-w-0 overflow-x-auto overflow-y-hidden py-1 leading-normal font-mono text-xs ${VARIANT_VALUE_CLASSES[variant]}`}
       >
         {value}
       </div>

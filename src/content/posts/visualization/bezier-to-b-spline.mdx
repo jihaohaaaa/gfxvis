@@ -1,0 +1,626 @@
+---
+title: "从 Bézier 到 B-Spline：基函数、节点向量与局部控制"
+description: "从线性插值和 de Casteljau 算法出发，理解 Bernstein 基函数、B-Spline 的 knot vector、局部支撑与连续性。"
+date: 2026-10-03
+tags: ["visualization", "computer-graphics", "curves", "bezier", "b-spline"]
+draft: false
+---
+
+import BezierCasteljauDemo from "../../../components/demos/BezierCasteljauDemo";
+import BezierBasisDemo from "../../../components/demos/BezierBasisDemo";
+import BezierWeightDilutionDemo from "../../../components/demos/BezierWeightDilutionDemo";
+import BezierContinuityDemo from "../../../components/demos/BezierContinuityDemo";
+import BezierGlobalVsLocalDemo from "../../../components/demos/BezierGlobalVsLocalDemo";
+import BSplineLocalSupportDemo from "../../../components/demos/BSplineLocalSupportDemo";
+import BSplineContinuityDemo from "../../../components/demos/BSplineContinuityDemo";
+
+## 一、从线段和 `lerp` 开始
+
+设二维空间中的两个点为
+
+$$
+\mathbf P_0=(x_0,y_0),\qquad \mathbf P_1=(x_1,y_1),
+$$
+
+并令参数
+
+$$
+t\in[0,1].
+$$
+
+定义
+
+$$
+\mathbf C(t)=(1-t)\mathbf P_0+t\mathbf P_1.
+$$
+
+当 $t=0$ 时，$\mathbf C(t)=\mathbf P_0$；当 $t=1$ 时，$\mathbf C(t)=\mathbf P_1$。这就是图形学里常见的线性插值：
+
+$$
+\operatorname{lerp}(\mathbf A,\mathbf B,t)=(1-t)\mathbf A+t\mathbf B.
+$$
+
+两个权重始终满足
+
+$$
+(1-t)+t=1,
+$$
+
+所以当前位置是两个端点的加权平均。Bézier 曲线做的事情，就是把“两个点的加权平均”递归推广到更多控制点。
+
+## 二、二次 Bézier 与 de Casteljau
+
+现在给出三个控制点 $\mathbf P_0,\mathbf P_1,\mathbf P_2$。先在相邻控制点之间做一次插值：
+
+$$
+\mathbf Q_0(t)=(1-t)\mathbf P_0+t\mathbf P_1,
+$$
+
+$$
+\mathbf Q_1(t)=(1-t)\mathbf P_1+t\mathbf P_2.
+$$
+
+再对两个中间点做一次插值：
+
+$$
+\mathbf C(t)=(1-t)\mathbf Q_0(t)+t\mathbf Q_1(t).
+$$
+
+这就是二次 Bézier 的 de Casteljau 构造。它可以概括为：
+
+$$
+\boxed{\text{Bézier} = \text{不断重复的 lerp}}
+$$
+
+展开上式可以得到标准形式：
+
+$$
+\mathbf C(t)=(1-t)^2\mathbf P_0+2t(1-t)\mathbf P_1+t^2\mathbf P_2.
+$$
+
+在下面的工作台中，拖动控制点或移动 $t$，可以看到每一层插值点逐级汇聚到曲线上的 $\mathbf C(t)$。右侧可以独立选择要高亮的递归层级：$L_0$ 是原始控制点层，中间层依次是 $Q$、$R$ 等插值点，最后一层是 $C(t)$。增加控制点可以观察更高次 Bézier 的递归层数；隐藏中间层只改变观察视图，不改变数学结果：
+
+<BezierCasteljauDemo client:visible />
+
+## 三、Bernstein 基函数
+
+对 $n$ 次 Bézier，控制点为 $\mathbf P_0,\ldots,\mathbf P_n$，曲线可以写成
+
+$$
+\mathbf C(t)=\sum_{i=0}^{n}B_i^n(t)\mathbf P_i,
+$$
+
+其中
+
+$$
+B_i^n(t)=\binom ni t^i(1-t)^{n-i}.
+$$
+
+这些 $B_i^n(t)$ 就是 Bernstein 基函数。它们是控制点的权重，而不是额外的几何点。
+
+下方工作台把基函数曲线和几何图形拆成两张画布。左侧观察 basis 如何随 $t$ 变化，右侧拖动控制点观察凸包和 Bézier 曲线；两张画布共享同一组控制点和参数：
+
+<BezierBasisDemo client:visible />
+
+## 四、单位分解、凸包与端点导数
+
+Bernstein 基函数具备几项极其优雅且关键的数学与几何性质，它们共同构成了 Bézier 曲线强大交互可控性的根基。
+
+### 1. 权重归一性证明（Partition of Unity）
+
+对于任意 $n$ 次 Bézier 曲线，其基函数之和恒等于 $1$：
+
+$$
+\sum_{i=0}^{n} B_i^n(t) \equiv 1,\qquad \forall t \in \mathbb{R}.
+$$
+
+这项性质称为 <strong>单位分解（Partition of Unity）</strong>。
+
+<strong>证明</strong>：
+
+根据 Bernstein 基函数的定义：
+
+$$
+\sum_{i=0}^{n} B_i^n(t) = \sum_{i=0}^{n} \binom{n}{i} t^i (1-t)^{n-i}.
+$$
+
+回顾代数学中的经典 <strong>二项式定理（Binomial Theorem）</strong>：
+
+$$
+(a + b)^n = \sum_{i=0}^{n} \binom{n}{i} a^i b^{n-i}.
+$$
+
+令 $a = t$，$b = 1 - t$，代入二项式展开式中：
+
+$$
+\sum_{i=0}^{n} \binom{n}{i} t^i (1-t)^{n-i} = \big(t + (1 - t)\big)^n = 1^n = 1.
+$$
+
+由此严谨证毕：无论参数 $t$ 取何值、曲线次数 $n$ 多高，基函数权重之和恒等于 $1$。
+
+### 2. 凸包性质（Convex Hull Property）
+
+当参数限制在 $t \in [0, 1]$ 内时，由于 $t \ge 0$ 且 $1 - t \ge 0$，每一个 Bernstein 基函数都满足 <strong>非负性</strong>：
+
+$$
+B_i^n(t) \ge 0,\qquad \forall i \in \{0, 1, \ldots, n\}.
+$$
+
+结合上述权重和为 $1$ 的性质，这意味着曲线上的任意一点：
+
+$$
+\mathbf C(t) = \sum_{i=0}^{n} B_i^n(t) \mathbf P_i
+$$
+
+在数学本质上始终是所有控制点 $\mathbf P_0, \mathbf P_1, \ldots, \mathbf P_n$ 的 <strong>凸组合（Convex Combination）</strong>。
+
+因此，整条 Bézier 曲线在几何上 <strong>严格位于所有控制点所构成的凸包（Convex Hull）内部</strong>。无论用户如何拖拽扰动控制点，曲线绝不会越出凸多边形的外边界。这一几何包络特性赋予了曲线在交互建模、碰撞检测与包围盒计算中极高的稳定性。
+
+### 3. 三次 Bézier 端点导数逐项推导
+
+在工业界（矢量绘图、字体轮廓、动画缓动）中，<strong>三次（Cubic）Bézier 曲线</strong>（$n=3$）应用最为广泛。其实际形式为：
+
+$$
+\mathbf C(t) = (1-t)^3 \mathbf P_0 + 3t(1-t)^2 \mathbf P_1 + 3t^2(1-t) \mathbf P_2 + t^3 \mathbf P_3.
+$$
+
+对参数 $t$ 应用求导法则（乘积法则与链式法则）逐项求导：
+
+$$
+\begin{aligned}
+\mathbf C'(t) &= \frac{d}{dt}\big((1-t)^3\big) \mathbf P_0 + \frac{d}{dt}\big(3t(1-t)^2\big) \mathbf P_1 + \frac{d}{dt}\big(3t^2(1-t)\big) \mathbf P_2 + \frac{d}{dt}\big(t^3\big) \mathbf P_3 \\
+&= -3(1-t)^2 \mathbf P_0 + \big(3(1-t)^2 - 6t(1-t)\big) \mathbf P_1 + \big(6t(1-t) - 3t^2\big) \mathbf P_2 + 3t^2 \mathbf P_3.
+\end{aligned}
+$$
+
+考察区间两端的切向量：
+
+- <strong>起点切向量（$t = 0$）</strong>：将 $t = 0$ 代入上式，只有含 $(1-t)^2$ 的项非零：
+  $$
+  \mathbf C'(0) = -3 \mathbf P_0 + 3 \mathbf P_1 = 3(\mathbf P_1 - \mathbf P_0).
+  $$
+- <strong>终点切向量（$t = 1$）</strong>：将 $t = 1$ 代入上式，只有含 $t^2$ 的项非零：
+  $$
+  \mathbf C'(1) = -3 \mathbf P_2 + 3 \mathbf P_3 = 3(\mathbf P_3 - \mathbf P_2).
+  $$
+
+几何意义极其直观：
+- 起点 $t = 0$ 处的瞬时切线方向与线段 $\mathbf P_0 \to \mathbf P_1$ 严格重合，速率大小正比于弦长 $\|\mathbf P_1 - \mathbf P_0\|$ 的 $3$ 倍；
+- 终点 $t = 1$ 处的瞬时切线方向与线段 $\mathbf P_2 \to \mathbf P_3$ 严格重合，速率大小正比于弦长 $\|\mathbf P_3 - \mathbf P_2\|$ 的 $3$ 倍。
+
+### 4. 任意 $n$ 次 Bézier 的导数通用公式（基函数差分推导）
+
+将上述端点导数推广至任意 $n$ 次 Bézier 曲线。
+
+首先考察单个 Bernstein 基函数 $B_i^n(t) = \binom{n}{i} t^i (1-t)^{n-i}$ 对 $t$ 的导数：
+
+$$
+\begin{aligned}
+\frac{d}{dt} B_i^n(t) &= \binom{n}{i} \left[ i t^{i-1}(1-t)^{n-i} - (n-i) t^i (1-t)^{n-i-1} \right] \\
+&= n \left[ \binom{n-1}{i-1} t^{i-1}(1-t)^{(n-1)-(i-1)} - \binom{n-1}{i} t^i (1-t)^{(n-1)-i} \right] \\
+&= n \big( B_{i-1}^{n-1}(t) - B_i^{n-1}(t) \big),
+\end{aligned}
+$$
+
+约定当下标超出范围时 $B_{-1}^{n-1}(t) \equiv 0$、$B_n^{n-1}(t) \equiv 0$。
+
+将基函数导数代入整条曲线的微分中：
+
+$$
+\mathbf C'(t) = \sum_{i=0}^{n} \frac{d}{dt} B_i^n(t) \mathbf P_i = n \sum_{i=0}^{n} \big( B_{i-1}^{n-1}(t) - B_i^{n-1}(t) \big) \mathbf P_i.
+$$
+
+将求和式拆开为两项并对下标进行平移（Index Shifting）：
+
+$$
+\sum_{i=0}^{n} \big( B_{i-1}^{n-1}(t) - B_i^{n-1}(t) \big) \mathbf P_i = \sum_{i=0}^{n} B_{i-1}^{n-1}(t) \mathbf P_i - \sum_{i=0}^{n} B_i^{n-1}(t) \mathbf P_i.
+$$
+
+分别考察两项求和的边界与指标换元：
+1. <strong>第一项</strong> $\sum_{i=0}^n B_{i-1}^{n-1}(t) \mathbf P_i$：当 $i=0$ 时 $B_{-1}^{n-1}(t) = 0$（首项为零），有效指标为 $i = 1, \ldots, n$。令指标换元 $j = i - 1$（即 $i = j + 1$），则 $j$ 从 $0$ 变到 $n-1$：
+   $$
+   \sum_{i=1}^{n} B_{i-1}^{n-1}(t) \mathbf P_i = \sum_{j=0}^{n-1} B_j^{n-1}(t) \mathbf P_{j+1};
+   $$
+2. <strong>第二项</strong> $\sum_{i=0}^n B_i^{n-1}(t) \mathbf P_i$：当 $i=n$ 时 $B_n^{n-1}(t) = 0$（末项为零），有效指标为 $i = 0, \ldots, n-1$：
+   $$
+   \sum_{i=0}^{n} B_i^{n-1}(t) \mathbf P_i = \sum_{j=0}^{n-1} B_j^{n-1}(t) \mathbf P_j.
+   $$
+
+两式相减，重新合并在统一的求和区间 $0 \le i \le n-1$ 下：
+
+$$
+\mathbf C'(t) = n \left[ \sum_{i=0}^{n-1} B_i^{n-1}(t) \mathbf P_{i+1} - \sum_{i=0}^{n-1} B_i^{n-1}(t) \mathbf P_i \right] = n \sum_{i=0}^{n-1} B_i^{n-1}(t) (\mathbf P_{i+1} - \mathbf P_i).
+$$
+
+记相邻控制点的前向差分向量为 $\Delta \mathbf P_i = \mathbf P_{i+1} - \mathbf P_i$，并将标量 $n$ 移入求和号内与差分向量组合：
+
+$$
+\mathbf C'(t) = n \sum_{i=0}^{n-1} B_i^{n-1}(t) \Delta \mathbf P_i = \sum_{i=0}^{n-1} B_i^{n-1}(t) (n \Delta \mathbf P_i).
+$$
+
+<strong>核心几何洞察</strong>：
+> <strong>任意 $n$ 次 Bézier 曲线的导数曲线自身也是一条 $(n-1)$ 次 Bézier 曲线！</strong> 它的基函数是 $(n-1)$ 次 Bernstein 基函数 $B_i^{n-1}(t)$，其控制点序列恰好是原控制多边形各边差分向量放大 $n$ 倍后的新顶点（即 $\mathbf Q_i = n \Delta \mathbf P_i$）。
+
+将端点参数代入通用导数公式：
+- 在起点 $t = 0$ 时，由于 $B_0^{n-1}(0) = 1$，其余 $B_i^{n-1}(0) = 0$（$i > 0$），得到：
+  $$
+  \mathbf C'(0) = n (\mathbf P_1 - \mathbf P_0).
+  $$
+- 在终点 $t = 1$ 时，由于 $B_{n-1}^{n-1}(1) = 1$，其余 $B_i^{n-1}(1) = 0$（$i < n-1$），得到：
+  $$
+  \mathbf C'(1) = n (\mathbf P_n - \mathbf P_{n-1}).
+  $$
+
+### 5. 多段 Bézier 拼接与连续性条件（$C^0, G^1, C^1, C^2$）
+
+为了构建任意复杂曲线，通常需要将多段低次 Bézier 曲线首尾拼接。设左侧曲线段为 $\mathbf C(t)$（控制点 $\mathbf P_0, \mathbf P_1, \mathbf P_2, \mathbf P_3$），右侧曲线段为 $\mathbf D(t)$（控制点 $\mathbf Q_0, \mathbf Q_1, \mathbf Q_2, \mathbf Q_3$），两段曲线的参数域均为 $t \in [0, 1]$，在接缝处（$\mathbf C(1)$ 与 $\mathbf D(0)$）相连。
+
+在数学上，连续性根据对参数 $t$ 的各阶导数向量匹配程度严格分类：
+
+1. <strong>$C^0$ 参数 0 阶位置连续（Position Continuity）</strong>：
+   $$
+   \mathbf C(1) = \mathbf D(0) \iff \mathbf P_3 = \mathbf Q_0.
+   $$
+   两段曲线在空间中首尾相接、无缝隙断裂，但在接缝处允许存在任意方向的折角（0 阶导数相同，一阶导数向量不作要求）。
+
+2. <strong>$G^1$ 1 阶几何切线共线（Geometric Continuity）</strong>：
+   要求接缝两侧的一阶导数向量方向一致（同向共线），允许模长存在正比例缩放 $\alpha > 0$：
+   $$
+   \mathbf C'(1) = \alpha \mathbf D'(0) \iff \mathbf P_3 - \mathbf P_2 = \beta (\mathbf Q_1 - \mathbf Q_0),\qquad (\beta > 0).
+   $$
+   <strong>控制点几何约束</strong>：控制点 $\mathbf P_2$、接缝锚点 $\mathbf P_3 (=\mathbf Q_0)$ 与 $\mathbf Q_1$ <strong>三点严格共线且位于锚点两侧</strong>。两端手柄长度可以不相等（切线方向平滑，但参数速度大小发生跳变）。
+
+3. <strong>$C^1$ 参数 1 阶导数连续（Parametric 1st-Order Continuity）</strong>：
+   不仅切线方向一致，且对参数 $t$ 的一阶导数向量（速度向量）完全相等。结合 $C^0$ 条件 $\mathbf Q_0 = \mathbf P_3$ 代入化简：
+   $$
+   \mathbf C'(1) = \mathbf D'(0) \iff 3(\mathbf P_3 - \mathbf P_2) = 3(\mathbf Q_1 - \mathbf Q_0) \iff \mathbf P_3 - \mathbf P_2 = \mathbf Q_1 - \mathbf P_3 \iff \mathbf Q_1 = 2\mathbf P_3 - \mathbf P_2.
+   $$
+   <strong>控制点几何约束</strong>：接缝点 $\mathbf P_3$ 恰好为线段 $\mathbf P_2 \mathbf Q_1$ 的中点，即两端手柄关于接缝锚点<strong>中心对称且等长</strong>。
+
+4. <strong>$C^2$ 参数 2 阶导数连续（Parametric 2nd-Order Continuity）</strong>：
+   要求两段曲线在接缝处对参数 $t$ 的二阶导数向量（加速度向量）严格连续：
+   $$
+   \mathbf C''(1) = \mathbf D''(0).
+   $$
+   对三次 Bézier 曲线求二阶导数，代入两端参数可得两端的二阶导数表达式：
+   $$
+   \mathbf C''(1) = 6(\mathbf P_1 - 2\mathbf P_2 + \mathbf P_3),\qquad \mathbf D''(0) = 6(\mathbf Q_0 - 2\mathbf Q_1 + \mathbf Q_2).
+   $$
+   令 $\mathbf C''(1) = \mathbf D''(0)$，展开并代入已满足的 $C^1$ 条件（$\mathbf Q_0 = \mathbf P_3$ 且 $\mathbf Q_1 = 2\mathbf P_3 - \mathbf P_2$）：
+   $$
+   \begin{aligned}
+   \mathbf C''(1) = \mathbf D''(0) &\iff 6(\mathbf P_1 - 2\mathbf P_2 + \mathbf P_3) = 6(\mathbf Q_0 - 2\mathbf Q_1 + \mathbf Q_2) \\
+   &\iff \mathbf P_1 - 2\mathbf P_2 + \mathbf P_3 = \mathbf P_3 - 2(2\mathbf P_3 - \mathbf P_2) + \mathbf Q_2 \\
+   &\iff \mathbf Q_2 = \mathbf P_1 - 4\mathbf P_2 + 4\mathbf P_3.
+   \end{aligned}
+   $$
+
+   > <strong>差分向量含义简析</strong>：一阶差分 $\Delta \mathbf P_i = \mathbf P_{i+1} - \mathbf P_i$ 代表控制多边形的各条“边向量”（反映切线与速度）；二阶差分 $\Delta^2 \mathbf P_1 = \Delta \mathbf P_2 - \Delta \mathbf P_1 = \mathbf P_1 - 2\mathbf P_2 + \mathbf P_3$ 则是相邻两条边向量的差（反映控制多边形的转折弯曲量）。上述 $\mathbf C''(1) = \mathbf D''(0)$ 本质上等价于要求两侧在接缝处的二阶差分向量严格相等：$\Delta^2 \mathbf P_1 = \Delta^2 \mathbf Q_0$。
+
+下方工作台提供了两段三次 Bézier 曲线拼接的实时几何实验环境。你可以切换不同预设观察手柄约束的代数联动，或切换到「自由诊断模式」随意拖拽控制点，系统将实时计算接缝处的一阶与二阶导数向量，并判定实际达到的连续性阶数：
+
+<BezierContinuityDemo client:visible />
+
+#### Bézier 拼接的根本局限性：级联修改连锁反应
+
+从上述代数推导可见：为了维持接缝处的 $C^2$ 连续性，不仅 $\mathbf Q_1$ 被 $\mathbf P_2$ 锁定，连次邻控制点 $\mathbf Q_2$ 也被 $\mathbf P_1$ 和 $\mathbf P_2$ 严格锁定。
+
+如果在一条由 $10$ 段 Bézier 拼接的长曲线上，设计师修改了其中某一段的一个内部点，为了维持整条曲线的 $C^2$ 连续性，就必须像推倒多米诺骨牌一样，顺次重新计算并强制调整后续所有曲线段的控制点。这种<strong>强代数耦合与局部修改失效</strong>，正是促使计算机图形学发明 <strong>B-Spline</strong> 的核心驱动力。
+
+## 五、为什么需要 B-Spline
+
+单段 Bézier 曲线虽然形式优雅且具有优秀的端点与凸包性质，但在工程设计与复杂几何建模中，存在着两大约束其广泛应用的<strong>根本性结构缺陷</strong>：
+
+### 1. 结构性限制一：多项式次数与控制点数量刚性绑定
+
+对于任意单段 Bézier 曲线，$n+1$ 个控制点必定严格对应 $n$ 次多项式：
+
+$$
+\mathbf C(t) = \sum_{i=0}^{n} B_i^n(t) \mathbf P_i,\qquad \operatorname{deg}(\mathbf C) = n.
+$$
+
+如果要表达更加丰富复杂的几何特征，就必须增加控制点的数量，而这会直接导致多项式次数 $n$ 急剧飙升。高阶多项式在几何与数值计算上会带来一系列严重后果：
+
+1. <strong>高阶多项式振荡与过冲（类似龙格现象，Runge's Phenomenon）</strong>：
+   多项式次数过高时，高阶导数在控制点之间极易产生剧烈反向摆动与不自然的波纹起伏，曲线开始失去对控制多边形的良好逼近能力；
+2. <strong>局部控制力被稀释（权重严重摊薄，控制迟钝）</strong>：
+   Bézier 曲线本质上是所有控制点的加权平均（权重之和恒为 $1$）。当控制点增加到数十个（高阶 $n$）时，几十个控制点共同瓜分这 $1.0$ 的总权重，单个控制点的最大权重峰值会按 $O(1/\sqrt{n})$ 迅速衰减。这意味着单个控制点对曲线的拉扯影响力被严重摊薄，无论怎么大幅拖拽该控制点，曲线响应都极其微弱迟钝，难以精准做出鲜明的局部特征。
+
+   > <strong>定理：Bernstein 基函数最大峰值的 $O(1/\sqrt{n})$ 渐近衰减证明</strong>
+   >
+   > <strong>第 1 步：求基函数极值点位置</strong>
+   > 对第 $k$ 个 Bernstein 基函数 $B_k^n(t) = \binom{n}{k} t^k (1-t)^{n-k}$ 取自然对数并求导：
+   > $$
+   > \ln B_k^n(t) = \ln\binom{n}{k} + k \ln t + (n-k)\ln(1-t)
+   > $$
+   > 令一阶导数等于零：
+   > $$
+   > \frac{d}{dt} \ln B_k^n(t) = \frac{k}{t} - \frac{n-k}{1-t} = 0 \implies k(1-t) = (n-k)t \implies t^* = \frac{k}{n}
+   > $$
+   > 即 $B_k^n(t)$ 在参数位置 $t^* = \frac{k}{n}$ 处取得唯一全局最大值。
+   >
+   > <strong>第 2 步：代入斯特林公式（Stirling's Approximation）计算中心项峰值</strong>
+   > 考虑最具有代表性的中心控制点（设 $n$ 为偶数，$k = \frac{n}{2}$，峰值位于 $t^* = \frac{1}{2}$）：
+   > $$
+   > B_{n/2}^n\left(\frac{1}{2}\right) = \binom{n}{n/2} \left(\frac{1}{2}\right)^{n/2} \left(\frac{1}{2}\right)^{n/2} = \frac{n!}{\left[\left(\frac{n}{2}\right)!\right]^2} \cdot \frac{1}{2^n}
+   > $$
+   > 根据斯特林阶乘渐近公式 $m! \sim \sqrt{2\pi m} \left(\frac{m}{e}\right)^m$，分别展开分子与分母：
+   > - 分子：$n! \sim \sqrt{2\pi n} \left(\frac{n}{e}\right)^n$；
+   > - 分母：$\left[\left(\frac{n}{2}\right)!\right]^2 \sim \left[ \sqrt{2\pi \frac{n}{2}} \left(\frac{n}{2e}\right)^{n/2} \right]^2 = \pi n \left(\frac{n}{2e}\right)^n$。
+   >
+   > 代入化简组合数：
+   > $$
+   > \binom{n}{n/2} \sim \frac{\sqrt{2\pi n}\left(\frac{n}{e}\right)^n}{\pi n \left(\frac{n}{2e}\right)^n} = \frac{\sqrt{2\pi n}}{\pi n} \cdot 2^n = \sqrt{\frac{2}{\pi n}} \cdot 2^n
+   > $$
+   > 因此，中心控制点的最大权重峰值为：
+   > $$
+   > \boxed{ B_{n/2}^n\left(\frac{1}{2}\right) = \binom{n}{n/2} \cdot \frac{1}{2^n} \sim \sqrt{\frac{2}{\pi n}} \sim O\left(\frac{1}{\sqrt{n}}\right) }
+   > $$
+
+| 多项式阶数 $n$ | 控制点数量 | 单个控制点最大权重峰值 | 拖拽控制点 $10\text{ cm}$ 曲线响应 | 控制感评价 |
+| :--- | :--- | :--- | :--- | :--- |
+| <strong>$n=2$</strong> (二次) | 3 个 | <strong>$50.0\%$</strong> ($0.500$) | 曲线最大位移 $\approx 5.0\text{ cm}$ | 🟢 极其灵敏 |
+| <strong>$n=3$</strong> (三次) | 4 个 | <strong>$44.4\%$</strong> ($0.444$) | 曲线最大位移 $\approx 4.4\text{ cm}$ | 🟢 敏锐塑形 |
+| <strong>$n=10$</strong> | 11 个 | <strong>$24.6\%$</strong> ($0.246$) | 曲线最大位移 $\approx 2.5\text{ cm}$ | 🟡 局部钝化 |
+| <strong>$n=20$</strong> | 21 个 | <strong>$17.6\%$</strong> ($0.176$) | 曲线最大位移 $\approx 1.8\text{ cm}$ | 🔴 显著迟钝 |
+| <strong>$n=30$</strong> | 31 个 | <strong>$14.4\%$</strong> ($0.144$) | 曲线最大位移 $\approx 1.4\text{ cm}$ | 🔴 严重拉不动 |
+
+通过下方交互工作台，你可以实时调节多项式阶数 $n \in [2, 30]$，直观观察基函数群被压扁的 $O(1/\sqrt{n})$ 过程，并在右侧直接拖拽控制点实测曲线位移响应的衰减：
+
+<BezierWeightDilutionDemo client:visible />
+
+3. <strong>计算复杂度与数值稳定性崩溃</strong>：
+   de Casteljau 算法的求值开销随次数呈二次方 $O(n^2)$ 增长；在计算机浮点运算中，计算高阶幂项 $t^i (1-t)^{n-i}$ 与巨大组合数 $\binom{n}{i}$ 时，在区间两端极易发生浮点下溢与有效数字丢失（Catastrophic Cancellation），高阶差分更会急剧放大数值噪声。
+
+### 2. 结构性限制二：Bernstein 基函数的全局支撑（Global Support）与局部编辑失效
+
+比多项式次数绑定更为致命的缺陷在于 Bernstein 基函数的<strong>全域非零性（全局支撑）</strong>。
+
+我们可以直接通过<strong>曲线扰动响应 $\Delta \mathbf C(t)$</strong> 看透其代数本质：
+
+1. <strong>原曲线定义</strong>：Bézier 曲线是所有控制点的加权平均：
+   $$
+   \mathbf C_{\text{orig}}(t) = \sum_{i=0}^n B_i^n(t)\mathbf P_i = B_0^n(t)\mathbf P_0 + \cdots + B_k^n(t)\mathbf P_k + \cdots + B_n^n(t)\mathbf P_n.
+   $$
+
+2. <strong>微调单个控制点（$\mathbf P_k \to \mathbf P_k + \Delta \mathbf P_k$）</strong>：
+   假设设计师只想修改第 $k$ 个控制点的位置，而其余控制点全部保持不变。此时新曲线把求和展开式中的第 $k$ 项替换为 $(\mathbf P_k + \Delta \mathbf P_k)$：
+   $$
+   \mathbf C_{\text{new}}(t) = B_0^n(t)\mathbf P_0 + \cdots + B_k^n(t)(\mathbf P_k + \Delta \mathbf P_k) + \cdots + B_n^n(t)\mathbf P_n.
+   $$
+   用求和记号写出，即将未修改的项（$i \ne k$）与被修改的第 $k$ 项分开：
+   $$
+   \mathbf C_{\text{new}}(t) = \sum_{i \ne k} B_i^n(t)\mathbf P_i + B_k^n(t)(\mathbf P_k + \Delta \mathbf P_k).
+   $$
+   将第 $k$ 项的括号展开：
+   $$
+   \mathbf C_{\text{new}}(t) = \sum_{i \ne k} B_i^n(t)\mathbf P_i + B_k^n(t)\mathbf P_k + B_k^n(t)\Delta \mathbf P_k.
+   $$
+   把前两部分重新合并回完整的原曲线 $\sum_{i=0}^n B_i^n(t)\mathbf P_i = \mathbf C_{\text{orig}}(t)$：
+   $$
+   \mathbf C_{\text{new}}(t) = \underbrace{\left( \sum_{i \ne k} B_i^n(t)\mathbf P_i + B_k^n(t)\mathbf P_k \right)}_{\mathbf C_{\text{orig}}(t)} + B_k^n(t)\Delta \mathbf P_k = \mathbf C_{\text{orig}}(t) + B_k^n(t)\Delta \mathbf P_k.
+   $$
+
+3. <strong>计算曲线位移响应 $\Delta \mathbf C(t)$</strong>：
+   将新旧两式相减，未被修改的所有控制点项全部精确抵消：
+   $$
+   \Delta \mathbf C(t) = \mathbf C_{\text{new}}(t) - \mathbf C_{\text{orig}}(t) = \left[ \mathbf C_{\text{orig}}(t) + B_k^n(t)\Delta \mathbf P_k \right] - \mathbf C_{\text{orig}}(t) = B_k^n(t) \cdot \Delta \mathbf P_k.
+   $$
+
+4. <strong>致命缺陷：处处非零与全局蠕动</strong>：
+   回顾 Bernstein 基函数的定义：
+   $$
+   B_k^n(t) = \binom{n}{k} t^k (1-t)^{n-k}.
+   $$
+   在参数开区间 $t \in (0, 1)$ 内，由于 $t > 0$ 且 $1 - t > 0$，因此 $B_k^n(t)$ <strong>处处严格大于 0（在整个区间内没有任何一段等于零）</strong>。
+
+   这意味着：只要你移动了控制点 $\mathbf P_k$（$\Delta \mathbf P_k \ne \mathbf 0$），整条曲线上所有参数位置都有：
+   $$
+   \Delta \mathbf C(t) \ne \mathbf 0,\qquad \forall t \in (0, 1).
+   $$
+
+<strong>工业建模痛点（牵一发而动全身）</strong>：
+在工业 CAD 造型、汽车车身曲面设计或矢量字体轮廓调整中，如果设计师为了修整局部的某处小倒角而移动了一个控制点，整条曲线上<strong>无论相距多远的所有点都会发生位置与曲率偏移（全域蠕动）</strong>。此前已经精心调优好的其他局部特征将被全部破坏。这种无法隔离修改范围的特性称为 <strong>全局控制（Global Control）</strong>。
+
+反观后文的 B-Spline：由于其基函数具有<strong>局部紧支撑（Local Support）</strong>，当参数走出局部区间时基函数严格为零，从而能保证远处 $\Delta \mathbf C(u) = \mathbf 0$（曲线其余部分绝对静止），这正是 B-Spline 能够统治工业 CAD 建模的最核心原因。
+
+### 3. 交互实验：全局蠕动 vs 局部支撑与高阶振荡
+
+下方工作台对比了相同控制点集下<strong>高阶 Bézier 曲线</strong>（全域 100% 蠕动与高阶波动）与<strong>三次 B-Spline 曲线</strong>（严格局部支撑与平滑低次多项式）的动态响应：
+
+<BezierGlobalVsLocalDemo client:visible />
+
+### 4. B-Spline 的核心设计哲学：从全局多项式到局部紧支撑基函数
+
+面对上述两大结构性困境，计算机图形学先驱们提出了极其自然而深刻的破局设想：
+
+> <strong>构想</strong>：能不能既保留“基函数加权控制点”的优雅凸组合框架，又将多项式次数与控制点数量彻底解耦？让曲线由多段固定的低次（如三次）多项式拼接而成，且每个控制点<strong>仅影响其附近有限的一小段参数区间</strong>？
+
+B-Spline 给出的答案是：
+1. <strong>次数解耦</strong>：将曲线多项式次数固定为平滑易控的常数 $p$（通常为三次 $p=3$），控制点数量 $n+1$ 可以任意无限增减；
+2. <strong>引入节点向量（Knot Vector）</strong>：用一串非递减的实数节点序列将参数轴划分为多个局部区间（Knot Span）；
+3. <strong>构造局部紧支撑（Compact Support）基函数</strong>：通过递推公式构造的 B 样条基函数 $N_{i,p}(u)$ 仅在有限的 $p+1$ 个 Knot Span 上非零，在其余广阔的参数域内<strong>严格恒等于零</strong>。
+
+由此，拖动控制点 $\mathbf P_i$ 只会引起其有限局部区间的形变，整条曲线的其余部分保持绝对静止，完美实现了工业建模所需要的 <strong>局部可控性（Local Control）</strong>。
+
+## 六、knot vector 与 knot span
+
+给定次数 $p$，B-Spline 曲线写成
+
+$$
+\mathbf C(u)=\sum_{i=0}^{n}N_{i,p}(u)\mathbf P_i.
+$$
+
+这里的 $N_{i,p}(u)$ 是 B-Spline basis，$u$ 是参数。额外给出的一串节点称为 knot vector：
+
+$$
+U=(u_0,u_1,\ldots,u_m).
+$$
+
+相邻节点之间的非空区间
+
+$$
+[u_j,u_{j+1})
+$$
+
+就是 knot span。每个 span 内，曲线是一个 $p$ 次多项式；相邻 span 通过 basis 的递推关系自动连接。
+
+Cox–de Boor 递推从 0 次 basis 开始：
+
+$$
+N_{i,0}(u)=
+\begin{cases}
+1,&u_i\le u<u_{i+1},\\
+0,&\text{otherwise}.
+\end{cases}
+$$
+
+对 $p>0$：
+
+$$
+N_{i,p}(u)=
+\frac{u-u_i}{u_{i+p}-u_i}N_{i,p-1}(u)
++\frac{u_{i+p+1}-u}{u_{i+p+1}-u_{i+1}}N_{i+1,p-1}(u).
+$$
+
+分母为零的项按零处理，这正是重复 knot 能够改变连续性的原因。
+
+## 七、Span → Basis：一个 span 中哪些 basis 不为零
+
+先固定一个非空 span：
+
+$$
+[u_j,u_{j+1}).
+$$
+
+对普通的、没有退化宽度的 span，只有附近的 $p+1$ 个 basis 可能不为零：
+
+$$
+N_{j-p,p},N_{j-p+1,p},\ldots,N_{j,p}.
+$$
+
+这意味着 cubic B-Spline 在一个普通 span 内只需要四个控制点。整条曲线可以拥有很多控制点，但某个参数位置只读取局部窗口。
+
+在交互工作台的 `Span → Basis` 视图中，可以选择任意非空 span，查看：
+
+- span 参数区间；
+- 活跃 basis 编号；
+- 当前 $u$ 下的数值权重；
+- 权重和是否为 `1`。
+
+## 八、Basis → Span：一个 basis 覆盖哪些 span
+
+反过来固定某个 basis：
+
+$$
+N_{i,p}(u).
+$$
+
+它的理论支撑区间是
+
+$$
+[u_i,u_{i+p+1}).
+$$
+
+在这个区间外，$N_{i,p}(u)=0$。因此可以反查所有与该支撑区间有正长度交集的 knot span。
+
+这两个方向是同一件事的两种观察方式：
+
+| 观察方向 | 固定对象 | 查找结果 |
+| --- | --- | --- |
+| Span → Basis | 一个 knot span | 该 span 内可能非零的 basis |
+| Basis → Span | 一个 basis | 该 basis 的非零支撑 span |
+
+第三个工作台把这两种方向放在同一个检查器里。切换 Tab 不会重置控制点、次数、knot 或参数：
+
+<BSplineLocalSupportDemo client:visible />
+
+### 8.1 partition of unity
+
+在有效参数域内，B-Spline basis 同样满足
+
+$$
+\sum_iN_{i,p}(u)=1.
+$$
+
+所以在每个普通 knot span 中，曲线点都是当前活跃控制点的凸组合。交互界面会同时列出活跃 basis 和当前数值权重，并显示权重和。
+
+### 8.2 局部控制
+
+如果只改变 $\mathbf P_i$，曲线变化范围被限制在 $N_{i,p}(u)$ 的支撑区间。反过来，固定某个 span 时，也只会读取 $p+1$ 个控制点。
+
+这就是 B-Spline 相对于高次 Bézier 的关键升级：
+
+$$
+\boxed{\text{global polynomial}\longrightarrow\text{local piecewise polynomial}}
+$$
+
+## 九、knot 重数与连续性
+
+在内部 knot 处，重复次数会影响相邻 span 的连接光滑度。对次数为 $p$ 的 B-Spline，如果内部 knot 的重数为 $m$，通常连续性为
+
+$$
+C^{p-m}.
+$$
+
+以 cubic 为例：
+
+| 重数 $m$ | 连续性 | 几何直觉 |
+| ---: | ---: | --- |
+| 1 | $C^2$ | 位置、切向量和二阶导数保持连续 |
+| 2 | $C^1$ | 没有尖角，但曲率连接变弱 |
+| 3 | $C^0$ | 位置连续，切向量可以跳变 |
+| 4 | 断开 | 两侧不再共享连接点约束 |
+
+第四个工作台用同一组控制点切换 knot 重数，观察拼接处的连续性变化：
+
+<BSplineContinuityDemo client:visible />
+
+## 十、Bézier 与 B-Spline 对照
+
+两者都可以写成“basis 加权控制点”：
+
+$$
+\text{Bézier:}\qquad \mathbf C(t)=\sum_iB_i^p(t)\mathbf P_i,
+$$
+
+$$
+\text{B-Spline:}\qquad \mathbf C(u)=\sum_iN_{i,p}(u)\mathbf P_i.
+$$
+
+区别在于 basis 的支撑方式：
+
+| | Bézier | B-Spline |
+| --- | --- | --- |
+| 基函数 | Bernstein | Cox–de Boor B-Spline basis |
+| 参数域 | 单个区间 | knot vector 划分的多个 span |
+| 控制点数量 | 通常为 $p+1$ | 可以远大于 $p+1$ |
+| 控制范围 | 通常影响整段曲线 | 只影响局部支撑区间 |
+| 曲线形式 | 单段 polynomial | piecewise polynomial |
+| 连续性 | 单段内部天然光滑 | 由 knot 重数控制 |
+
+最值得保留的心智模型是：
+
+$$
+\boxed{
+\text{B-Spline}=
+\text{局部支撑的 basis}
+\times
+\text{许多控制点}
+\times
+\text{多个低次 polynomial span}
+}
+$$
+
+## 十一、总结与后续方向
+
+Bézier 让我们看到，曲线可以由控制点的加权组合构成；de Casteljau 算法则把这个组合变成了可以逐层观察的递归插值。
+
+B-Spline 在此基础上加入 knot vector，把参数域切成多个 span，并让每个 basis 只在有限范围内生效。理解 B-Spline 时，要始终同时问两个问题：
+
+1. 固定一个 knot span，哪些 basis 不为零？
+2. 固定一个 basis，它覆盖哪些 knot span？
+
+前者解释“当前位置读取哪些控制点”，后者解释“移动一个控制点会影响哪里”。两种方向结合起来，局部控制和 partition of unity 就不再只是公式，而会变成一个可以直接检查的数据结构。
+
+下一篇可以在这个基础上加入权重 $w_i$，从 B-Spline 推到 NURBS，并解释圆锥曲线为什么能够被有理 Bézier 和有理 B-Spline 精确表示。

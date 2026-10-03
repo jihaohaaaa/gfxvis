@@ -1,0 +1,76 @@
+.bezier-basis__viewport-group {
+  --interactive-viewport-gap: 0.75rem;
+}
+
+.bezier-basis__viewport-item {
+  min-width: 0;
+}
+
+.bezier-basis__viewport {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--kde-border);
+  border-radius: var(--kde-card-radius);
+  background: var(--kde-raised);
+  box-shadow: 0 2px 8px rgb(15 23 42 / 0.08);
+}
+
+.bezier-basis__viewport-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--kde-border);
+  padding: 0.45rem 0.6rem;
+  color: var(--kde-ink);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.bezier-basis__viewport-caption {
+  color: var(--kde-accent);
+}
+
+.bezier-basis__canvas {
+  border: 0;
+  border-radius: 0;
+  background: var(--kde-canvas);
+}
+
+.bezier-demo__stack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.bezier-demo__weight-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.bezier-demo__weight-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--kde-muted);
+  font-size: 0.72rem;
+}
+
+.bezier-demo__weight-row strong {
+  color: var(--kde-accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.bezier-demo__readouts {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+}

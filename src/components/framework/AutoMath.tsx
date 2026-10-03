@@ -180,6 +180,10 @@ export function transformMathChildren(
     }
 
     if (hasChanges) {
+      const elementWithRef = children as { ref?: unknown };
+      if (elementWithRef.ref !== undefined && newProps.ref === undefined) {
+        newProps.ref = elementWithRef.ref;
+      }
       return React.cloneElement(
         children,
         newProps as Partial<Record<string, unknown>>,

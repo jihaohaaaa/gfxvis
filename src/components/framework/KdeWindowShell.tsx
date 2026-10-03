@@ -12,6 +12,7 @@ export interface KdeWindowShellProps {
   mark?: string;
   modeTag?: string;
   display?: ReactNode;
+  displayClassName?: string;
   controls?: ReactNode;
   tabs?: ReactNode;
   footer?: ReactNode;
@@ -41,6 +42,7 @@ export default function KdeWindowShell({
   mark = "B",
   modeTag = "WINDOWED",
   display,
+  displayClassName = "",
   controls,
   tabs,
   footer,
@@ -128,14 +130,14 @@ export default function KdeWindowShell({
               children ??
               (display ? (
                 <div
-                  className="kde-window-shell__display"
+                  className={`kde-window-shell__display ${displayClassName}`.trim()}
                   aria-label={`${title} 显示区`}
                 >
                   {display}
                 </div>
               ) : (
                 <div
-                  className="kde-window-shell__display"
+                  className={`kde-window-shell__display ${displayClassName}`.trim()}
                   aria-label={`${title} 显示区`}
                 />
               ))

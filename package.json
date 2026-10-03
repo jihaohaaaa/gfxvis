@@ -19,7 +19,9 @@
     "format:check": "prettier --check . && tsx scripts/format-bold.ts --check",
     "validate": "pnpm typecheck && pnpm lint && pnpm check:headings && pnpm format:check",
     "test:e2e": "pnpm build && playwright test",
-    "test:e2e:ui": "pnpm build && playwright test --ui"
+    "test:e2e:ui": "pnpm build && playwright test --ui",
+    "test:screenshots": "pnpm build && SCREENSHOT=1 playwright test",
+    "test:screenshots:ui": "pnpm build && SCREENSHOT=1 playwright test --ui"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.1",
