@@ -455,22 +455,20 @@ function HullCanvas2D({
   };
 
   return (
-    <AutoMath>
-      <div
-        ref={containerRef}
-        className="relative h-[var(--demo-height,100%)] min-h-[20rem] w-full overflow-hidden rounded-xl border border-border bg-surface"
-        data-affine-dimension={dimension}
-      >
-        <CanvasToolbar onReset={handleReset} />
-        <canvas
-          ref={canvasRef}
-          aria-label="拖动平面点，观察仿射包与凸包"
-          className="absolute inset-0 h-full w-full touch-none"
-          data-testid={canvasTestId}
-        />
-        <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
-      </div>
-    </AutoMath>
+    <div
+      ref={containerRef}
+      className="relative flex-1 h-full min-h-[var(--demo-height,20rem)] w-full overflow-hidden"
+      data-affine-dimension={dimension}
+    >
+      <CanvasToolbar onReset={handleReset} />
+      <canvas
+        ref={canvasRef}
+        aria-label="拖动平面点，观察仿射包与凸包"
+        className="absolute inset-0 h-full w-full touch-none"
+        data-testid={canvasTestId}
+      />
+      <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
+    </div>
   );
 }
 
@@ -486,82 +484,152 @@ function VertexCoordinatesRack({
   isFourPoint?: boolean;
 }) {
   return (
-    <AutoMath>
-      <KdeCard
-        title="顶点坐标与拖拽目标"
-        badge={
-          dimension !== undefined ? (
-            <KdeBadge variant={dimension === 2 ? "primary" : "warning"}>
-              dim = {dimension}
-            </KdeBadge>
-          ) : undefined
-        }
-      >
-        <div className="grid gap-1.5">
-          {points.map((point, index) => {
-            const isRedundant = redundantIndices?.includes(index) ?? false;
-            return (
-              <div
-                key={index}
-                data-console-readout
-                className={`flex items-center justify-between gap-2 rounded-[var(--kde-control-radius,0.35rem)] border px-2.5 py-1.5 transition-colors ${
-                  isRedundant
-                    ? "border-amber-400/80 bg-amber-500/10 text-amber-950 dark:border-amber-700/80 dark:bg-amber-950/40 dark:text-amber-200"
-                    : "border-[var(--kde-border)] bg-[var(--kde-panel)] text-[var(--kde-ink)]"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold shadow-xs ${
-                      isRedundant
-                        ? "bg-amber-500 text-white dark:bg-amber-600"
-                        : "bg-[var(--kde-accent)] text-[var(--kde-accent-ink)]"
-                    }`}
-                  >
-                    P{index}
-                  </span>
-                  {isFourPoint && (
-                    <KdeBadge variant={isRedundant ? "warning" : "success"}>
-                      {isRedundant ? "内部冗余" : "极点"}
-                    </KdeBadge>
-                  )}
-                </div>
-
-                <output className="font-mono rounded border border-[var(--kde-border)] bg-[var(--kde-raised)] px-2 py-0.5 text-xs text-[var(--kde-ink)] shadow-2xs">
-                  ({point.x.toFixed(2)}, {point.y.toFixed(2)})
-                </output>
+    <KdeCard
+      title="顶点坐标与拖拽目标"
+      badge={
+        dimension !== undefined ? (
+          <KdeBadge variant={dimension === 2 ? "primary" : "warning"}>
+            dim = {dimension}
+          </KdeBadge>
+        ) : undefined
+      }
+    >
+      <div className="grid gap-1.5">
+        {points.map((point, index) => {
+          const isRedundant = redundantIndices?.includes(index) ?? false;
+          return (
+            <div
+              key={index}
+              data-console-readout
+              className={`flex items-center justify-between gap-2 rounded-[var(--kde-control-radius,0.35rem)] border px-2.5 py-1.5 transition-colors ${
+                isRedundant
+                  ? "border-amber-400/80 bg-amber-500/10 text-amber-950 dark:border-amber-700/80 dark:bg-amber-950/40 dark:text-amber-200"
+                  : "border-[var(--kde-border)] bg-[var(--kde-panel)] text-[var(--kde-ink)]"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold shadow-xs ${
+                    isRedundant
+                      ? "bg-amber-500 text-white dark:bg-amber-600"
+                      : "bg-[var(--kde-accent)] text-[var(--kde-accent-ink)]"
+                  }`}
+                >
+                  P{index}
+                </span>
+                {isFourPoint && (
+                  <KdeBadge variant={isRedundant ? "warning" : "success"}>
+                    {isRedundant ? "内部冗余" : "极点"}
+                  </KdeBadge>
+                )}
               </div>
-            );
-          })}
-        </div>
 
-        <div className="mt-2.5">
-          {!isFourPoint ? (
-            <KdeMessageBar
-              variant={dimension === 2 ? "success" : "warning"}
-              mode="card"
-              title={dimension === 2 ? "仿射无关 (2D 面)" : "共线退化 (1D 线)"}
+              <output className="font-mono rounded border border-[var(--kde-border)] bg-[var(--kde-raised)] px-2 py-0.5 text-xs text-[var(--kde-ink)] shadow-2xs">
+                ({point.x.toFixed(2)}, {point.y.toFixed(2)})
+              </output>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-2.5">
+        {!isFourPoint ? (
+          <KdeMessageBar
+            variant={dimension === 2 ? "success" : "warning"}
+            mode="card"
+            title={dimension === 2 ? "仿射无关 (2D 面)" : "共线退化 (1D 线)"}
+          >
+            {dimension === 2
+              ? "3 点仿射无关，生成非退化实心三角形凸包。"
+              : "3 点共线退化，凸包与仿射包退化为线段与直线。"}
+          </KdeMessageBar>
+        ) : (
+          <KdeMessageBar
+            variant={
+              (redundantIndices?.length ?? 0) === 0 ? "success" : "warning"
+            }
+            mode="card"
+            title={`凸包极点统计：${4 - (redundantIndices?.length ?? 0)} / 4 极点`}
+          >
+            {(redundantIndices?.length ?? 0) === 0
+              ? "所有 4 个顶点均为凸包极点，无内部冗余。"
+              : `点 P${redundantIndices!.join(", P")} 属于内部冗余点（可由其余点凸组合表示）。`}
+          </KdeMessageBar>
+        )}
+      </div>
+    </KdeCard>
+  );
+}
+
+function VertexCoordinatesRack3D({
+  points,
+  affineDimension,
+}: {
+  points: readonly Point3[];
+  affineDimension: number;
+}) {
+  return (
+    <KdeCard
+      title="空间四点坐标 (3D Coordinates)"
+      badge={
+        <KdeBadge variant={affineDimension === 3 ? "primary" : "warning"}>
+          dim = {affineDimension}
+        </KdeBadge>
+      }
+    >
+      <div className="grid gap-1.5">
+        {points.map((point, index) => {
+          const isElevated = index === 3;
+          return (
+            <div
+              key={index}
+              data-console-readout
+              className={`flex items-center justify-between gap-2 rounded-[var(--kde-control-radius,0.35rem)] border px-2.5 py-1.5 transition-colors ${
+                isElevated
+                  ? "border-[var(--kde-accent)]/60 bg-[var(--kde-accent)]/10 text-[var(--kde-ink)]"
+                  : "border-[var(--kde-border)] bg-[var(--kde-panel)] text-[var(--kde-ink)]"
+              }`}
             >
-              {dimension === 2
-                ? "3 点仿射无关，生成非退化实心三角形凸包。"
-                : "3 点共线退化，凸包与仿射包退化为线段与直线。"}
-            </KdeMessageBar>
-          ) : (
-            <KdeMessageBar
-              variant={
-                (redundantIndices?.length ?? 0) === 0 ? "success" : "warning"
-              }
-              mode="card"
-              title={`凸包极点统计：${4 - (redundantIndices?.length ?? 0)} / 4 极点`}
-            >
-              {(redundantIndices?.length ?? 0) === 0
-                ? "所有 4 个顶点均为凸包极点，无内部冗余。"
-                : `点 P${redundantIndices!.join(", P")} 属于内部冗余点（可由其余点凸组合表示）。`}
-            </KdeMessageBar>
-          )}
-        </div>
-      </KdeCard>
-    </AutoMath>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold shadow-xs ${
+                    isElevated
+                      ? "bg-[var(--kde-accent)] text-[var(--kde-accent-ink)]"
+                      : "border border-[var(--kde-border)] bg-[var(--kde-panel)] text-[var(--kde-ink)]"
+                  }`}
+                >
+                  P{index}
+                </span>
+                <span className="text-xs text-[var(--kde-muted)]">
+                  {isElevated ? "顶点 (动态高度)" : "底面基底点"}
+                </span>
+              </div>
+
+              <output className="font-mono rounded border border-[var(--kde-border)] bg-[var(--kde-raised)] px-2 py-0.5 text-xs text-[var(--kde-ink)] shadow-2xs">
+                ({point.x.toFixed(2)}, {point.y.toFixed(2)},{" "}
+                {point.z.toFixed(2)})
+              </output>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-2.5">
+        <KdeMessageBar
+          variant={affineDimension === 3 ? "success" : "warning"}
+          mode="card"
+          title={
+            affineDimension === 3
+              ? "空间非退化 (3D Simplex)"
+              : "共面退化极限 (2D Face)"
+          }
+        >
+          {affineDimension === 3
+            ? "四点张成空间 3 维单纯形，有向体积 V > 0。"
+            : "第四点落在底面仿射平面，体积归零退化为二维三角形。"}
+        </KdeMessageBar>
+      </div>
+    </KdeCard>
   );
 }
 
@@ -577,7 +645,27 @@ function R2ThreePointExperiment({
 
   const reset = () => setPoints(copyPoints(initialPoints));
   const readouts = (
-    <div className="grid w-full min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+    <div className="flex w-full min-w-0 flex-col gap-3">
+      <div
+        className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+        data-testid="affine-readouts"
+      >
+        <MetricCard
+          label="仿射维数 $\dim \operatorname{aff}(S)$"
+          testId="r2-three-affine-dimension"
+          value={String(dimension)}
+        />
+        <MetricCard
+          label="相关性判定"
+          testId="r2-three-status"
+          value={dimension === 2 ? "仿射无关" : "仿射相关"}
+        />
+        <MetricCard
+          label="重心格采样 $N = \binom{10+2}{2}$"
+          testId="r2-three-sample-count"
+          value={String(samples.length)}
+        />
+      </div>
       <FormulaCard
         title="仿射包、凸包与共线退化公理判定"
         definitions={
@@ -631,23 +719,6 @@ function R2ThreePointExperiment({
           )
         }
       />
-      <div className="grid gap-2 sm:grid-cols-3" data-testid="affine-readouts">
-        <MetricCard
-          label="仿射维数 $\dim \operatorname{aff}(S)$"
-          testId="r2-three-affine-dimension"
-          value={String(dimension)}
-        />
-        <MetricCard
-          label="相关性判定"
-          testId="r2-three-status"
-          value={dimension === 2 ? "仿射无关" : "仿射相关"}
-        />
-        <MetricCard
-          label="重心格采样 $N = \binom{10+2}{2}$"
-          testId="r2-three-sample-count"
-          value={String(samples.length)}
-        />
-      </div>
     </div>
   );
   const controls = (
@@ -674,20 +745,18 @@ function R2ThreePointExperiment({
   );
 
   return (
-    <AutoMath>
-      <KdeWindowShell
-        channel="CH 02"
-        title="仿射包与凸包实验 · R² 三点无关性测试"
-        eyebrow="BREEZE WORKSPACE · AFFINE HULL"
-        mark="B"
-        modeTag="R² 3-PTS"
-        testId="affine-hull-convex-redundancy-demo"
-        tabs={scenarioSelector}
-        display={canvas}
-        controls={controls}
-        footer={readouts}
-      />
-    </AutoMath>
+    <KdeWindowShell
+      channel="CH 02"
+      title="仿射包与凸包实验 · R² 三点无关性测试"
+      eyebrow="BREEZE WORKSPACE · AFFINE HULL"
+      mark="B"
+      modeTag="R² 3-PTS"
+      testId="affine-hull-convex-redundancy-demo"
+      tabs={scenarioSelector}
+      display={canvas}
+      controls={controls}
+      footer={readouts}
+    />
   );
 }
 
@@ -743,7 +812,32 @@ function R2FourPointExperiment({
     />
   );
   const readouts = (
-    <div className="grid w-full min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+    <div className="flex w-full min-w-0 flex-col gap-3">
+      <div
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+        data-testid="affine-readouts"
+      >
+        <MetricCard
+          label="仿射维数 $\dim \operatorname{aff}(S)$"
+          testId="r2-four-affine-dimension"
+          value={String(affineDimension)}
+        />
+        <MetricCard
+          label="仿射关系"
+          testId="r2-four-affine-status"
+          value="仿射相关（二维最多 3 点无关）"
+        />
+        <MetricCard
+          label="凸包顶点数 $|V(\operatorname{conv})|$"
+          testId="r2-four-hull-vertex-count"
+          value={String(hull.length)}
+        />
+        <MetricCard
+          label="凸冗余判定"
+          testId="r2-four-redundancy-summary"
+          value={redundancyText}
+        />
+      </div>
       <FormulaCard
         title="仿射冗余 vs 凸冗余与极点判据"
         definitions={
@@ -800,32 +894,13 @@ function R2FourPointExperiment({
           )
         }
       />
-      <div className="grid gap-2 sm:grid-cols-4" data-testid="affine-readouts">
-        <MetricCard
-          label="仿射维数 $\dim \operatorname{aff}(S)$"
-          testId="r2-four-affine-dimension"
-          value={String(affineDimension)}
-        />
-        <MetricCard
-          label="仿射关系"
-          testId="r2-four-affine-status"
-          value="仿射相关（二维最多 3 点仿射无关）"
-        />
-        <MetricCard
-          label="凸包顶点数 $|V(\operatorname{conv})|$"
-          testId="r2-four-hull-vertex-count"
-          value={String(hull.length)}
-        />
-        <MetricCard
-          label="凸冗余判定"
-          testId="r2-four-redundancy-summary"
-          value={redundancyText}
-        />
-      </div>
-      <div className="col-span-full flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted">
         {points.map((_point, index) => (
           <span key={index} data-testid={`r2-four-point-status-${index}`}>
-            P{index}：{redundantIndices.includes(index) ? "凸冗余" : "凸包顶点"}
+            <strong>P{index}</strong>：
+            {redundantIndices.includes(index)
+              ? "内部凸冗余点（剔除不影响凸包）"
+              : "凸包极点（不可剔除顶点）"}
           </span>
         ))}
       </div>
@@ -836,42 +911,40 @@ function R2FourPointExperiment({
   );
 
   return (
-    <AutoMath>
-      <KdeWindowShell
-        channel="CH 02"
-        title="仿射包与凸包实验 · R² 四点冗余度判定"
-        eyebrow="BREEZE WORKSPACE · AFFINE HULL"
-        mark="B"
-        modeTag="R² 4-PTS"
-        testId="affine-hull-convex-redundancy-demo"
-        tabs={scenarioSelector}
-        display={canvas}
-        footer={readouts}
-        controls={
-          <div className="space-y-4" data-testid="r2-four-experiment">
-            <KdeGroupBox
-              title="SCENARIO PRESETS & VERTICES"
-              subtitle="四点在二维中必仿射相关，但凸包未必有冗余顶点。拖动点，观察哪些点仍是凸包的极点。"
-              action={
-                <PresetSelector
-                  label="点集预设："
-                  options={FOUR_POINT_PRESETS}
-                  value={preset}
-                  onChange={handlePresetChange}
-                />
-              }
-            >
-              <VertexCoordinatesRack
-                points={points}
-                redundantIndices={redundantIndices}
-                dimension={affineDimension}
-                isFourPoint={true}
+    <KdeWindowShell
+      channel="CH 02"
+      title="仿射包与凸包实验 · R² 四点冗余度判定"
+      eyebrow="BREEZE WORKSPACE · AFFINE HULL"
+      mark="B"
+      modeTag="R² 4-PTS"
+      testId="affine-hull-convex-redundancy-demo"
+      tabs={scenarioSelector}
+      display={canvas}
+      footer={readouts}
+      controls={
+        <div className="space-y-4" data-testid="r2-four-experiment">
+          <KdeGroupBox
+            title="SCENARIO PRESETS & VERTICES"
+            subtitle="四点在二维中必仿射相关，但凸包未必有冗余顶点。拖动点，观察哪些点仍是凸包的极点。"
+            action={
+              <PresetSelector
+                label="点集预设："
+                options={FOUR_POINT_PRESETS}
+                value={preset}
+                onChange={handlePresetChange}
               />
-            </KdeGroupBox>
-          </div>
-        }
-      />
-    </AutoMath>
+            }
+          >
+            <VertexCoordinatesRack
+              points={points}
+              redundantIndices={redundantIndices}
+              dimension={affineDimension}
+              isFourPoint={true}
+            />
+          </KdeGroupBox>
+        </div>
+      }
+    />
   );
 }
 
@@ -1067,7 +1140,7 @@ function R3FourPointExperiment({
   const canvas = (
     <div
       ref={containerRef}
-      className="relative h-[var(--demo-height,100%)] min-h-[24rem] w-full overflow-hidden rounded-xl border border-border bg-surface"
+      className="relative flex-1 h-full min-h-[var(--demo-height,28rem)] w-full overflow-hidden"
       data-testid="r3-tetra-canvas-container"
     >
       <CanvasToolbar onReset={handleReset} />
@@ -1075,7 +1148,32 @@ function R3FourPointExperiment({
     </div>
   );
   const readouts = (
-    <div className="grid w-full min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+    <div className="flex w-full min-w-0 flex-col gap-3">
+      <div
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+        data-testid="affine-readouts"
+      >
+        <MetricCard
+          label="仿射维数 $\dim \operatorname{aff}(S)$"
+          testId="r3-affine-dimension"
+          value={String(affineDimension)}
+        />
+        <MetricCard
+          label="相关性判定"
+          testId="r3-affine-status"
+          value={affineDimension === 3 ? "仿射无关" : "仿射相关"}
+        />
+        <MetricCard
+          label="四面体体积 $V$"
+          testId="r3-tetra-volume"
+          value={volume.toFixed(3)}
+        />
+        <MetricCard
+          label="重心格采样 $N = \binom{10+3}{3}$"
+          testId="r3-sample-count"
+          value={String(sampleCount)}
+        />
+      </div>
       <FormulaCard
         title="四面体有向体积与三维退化判据"
         definitions={
@@ -1119,77 +1217,53 @@ function R3FourPointExperiment({
           )
         }
       />
-      <div className="grid gap-2 sm:grid-cols-4" data-testid="affine-readouts">
-        <MetricCard
-          label="仿射维数 $\dim \operatorname{aff}(S)$"
-          testId="r3-affine-dimension"
-          value={String(affineDimension)}
-        />
-        <MetricCard
-          label="相关性判定"
-          testId="r3-affine-status"
-          value={affineDimension === 3 ? "仿射无关" : "仿射相关"}
-        />
-        <MetricCard
-          label="四面体体积 $V$"
-          testId="r3-tetra-volume"
-          value={volume.toFixed(3)}
-        />
-        <MetricCard
-          label="重心格采样 $N = \binom{10+3}{3}$"
-          testId="r3-sample-count"
-          value={String(sampleCount)}
-        />
-      </div>
       <p className="text-xs text-muted">
-        P0、P1、P2 为底面顶点；P3
-        位于底面内部投影上方。高度为零时四点共面，仿射维数降为 2。
+        $P_0, P_1, P_2$ 为底面固定顶点；$P_3$ 沿底面法向 $z$
+        轴移动。高度为零时四点共面，仿射维数降为 2。
       </p>
     </div>
   );
 
   return (
-    <AutoMath>
-      <KdeWindowShell
-        channel="CH 02"
-        title="仿射包与凸包实验 · R³ 四面体退化测试"
-        eyebrow="BREEZE WORKSPACE · AFFINE HULL"
-        mark="B"
-        modeTag="R³ 4-PTS"
-        testId="affine-hull-convex-redundancy-demo"
-        tabs={scenarioSelector}
-        display={canvas}
-        footer={readouts}
-        controls={
-          <div className="space-y-4" data-testid="r3-four-experiment">
-            <KdeGroupBox
-              title="3D SIMPLEX ELEVATION"
-              subtitle="底面三点固定，调节 P3 的高度观察四面体从三维单纯形退化为平面三角形。"
-              action={
-                <div data-testid="tetra-height-control">
-                  <ParamSlider
-                    labelMode="adaptive"
-                    label="第四点高度 $h$"
-                    min={0}
-                    max={1.5}
-                    step={0.05}
-                    value={height}
-                    onChange={setHeight}
-                    display={height.toFixed(2)}
-                    widthClass="w-36"
-                  />
-                </div>
-              }
-            >
-              <div className="rounded-[var(--kde-control-radius,0.35rem)] border border-[var(--kde-border)] bg-[var(--kde-panel)] p-2.5 text-xs text-[var(--kde-muted)]">
-                当前底面 $P_0, P_1, P_2$ 位于 $z=0$ 平面，顶点 $P_3$ 沿法向 $z$
-                轴移动。$h &gt; 0$ 时张成体积 $V &gt; 0$ 的非退化四面体。
+    <KdeWindowShell
+      channel="CH 02"
+      title="仿射包与凸包实验 · R³ 四面体退化测试"
+      eyebrow="BREEZE WORKSPACE · AFFINE HULL"
+      mark="B"
+      modeTag="R³ 4-PTS"
+      testId="affine-hull-convex-redundancy-demo"
+      tabs={scenarioSelector}
+      display={canvas}
+      footer={readouts}
+      controls={
+        <div className="space-y-4" data-testid="r3-four-experiment">
+          <KdeGroupBox
+            title="3D SIMPLEX ELEVATION"
+            subtitle="底面三点固定，调节 P3 的高度观察四面体从三维单纯形退化为平面三角形。"
+            action={
+              <div data-testid="tetra-height-control">
+                <ParamSlider
+                  labelMode="adaptive"
+                  label="第四点高度 $h$"
+                  min={0}
+                  max={1.5}
+                  step={0.05}
+                  value={height}
+                  onChange={setHeight}
+                  display={height.toFixed(2)}
+                  widthClass="w-36"
+                />
               </div>
-            </KdeGroupBox>
-          </div>
-        }
-      />
-    </AutoMath>
+            }
+          >
+            <VertexCoordinatesRack3D
+              points={points}
+              affineDimension={affineDimension}
+            />
+          </KdeGroupBox>
+        </div>
+      }
+    />
   );
 }
 
@@ -1212,27 +1286,25 @@ function FormulaCard({
         : "primary";
 
   return (
-    <AutoMath>
-      <KdeCard
-        title={title}
-        badge={<KdeBadge variant={badgeVariant}>形式化公理与判据</KdeBadge>}
-        footer={
-          <KdeMessageBar
-            variant={statusType === "info" ? "info" : statusType}
-            mode="card"
-          >
-            {status}
-          </KdeMessageBar>
-        }
-      >
-        <div
-          className="space-y-1.5 leading-relaxed text-xs text-[var(--kde-muted)]"
-          data-console-formula
+    <KdeCard
+      title={title}
+      badge={<KdeBadge variant={badgeVariant}>形式化公理与判据</KdeBadge>}
+      footer={
+        <KdeMessageBar
+          variant={statusType === "info" ? "info" : statusType}
+          mode="card"
         >
-          {definitions}
-        </div>
-      </KdeCard>
-    </AutoMath>
+          {status}
+        </KdeMessageBar>
+      }
+    >
+      <div
+        className="space-y-1.5 leading-relaxed text-xs text-[var(--kde-muted)]"
+        data-console-formula
+      >
+        {definitions}
+      </div>
+    </KdeCard>
   );
 }
 
@@ -1246,13 +1318,11 @@ function MetricCard({
   testId: string;
 }) {
   return (
-    <AutoMath>
-      <KdeReadout
-        label={label}
-        value={<span data-testid={testId}>{value}</span>}
-        testId={testId ? `${testId}-container` : undefined}
-      />
-    </AutoMath>
+    <KdeReadout
+      label={label}
+      value={<span data-testid={testId}>{value}</span>}
+      testId={testId ? `${testId}-container` : undefined}
+    />
   );
 }
 

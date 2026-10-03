@@ -1,0 +1,1268 @@
+---
+title: "从 Bézier 到 B-Spline：基函数、节点向量与局部控制"
+description: "从线性插值和 de Casteljau 算法出发，理解 Bernstein 基函数、B-Spline 的 knot vector、局部支撑与连续性。"
+date: 2026-10-03
+tags: ["visualization", "computer-graphics", "curves", "bezier", "b-spline"]
+draft: false
+---
+
+import BezierCasteljauDemo from "../../../components/demos/BezierCasteljauDemo";
+import BezierBasisDemo from "../../../components/demos/BezierBasisDemo";
+import BezierWeightDilutionDemo from "../../../components/demos/BezierWeightDilutionDemo";
+import BezierContinuityDemo from "../../../components/demos/BezierContinuityDemo";
+import BezierGlobalVsLocalDemo from "../../../components/demos/BezierGlobalVsLocalDemo";
+import BSplineBasisStepDemo from "../../../components/demos/BSplineBasisStepDemo";
+import BSplineLocalSupportDemo from "../../../components/demos/BSplineLocalSupportDemo";
+import BSplineContinuityDemo from "../../../components/demos/BSplineContinuityDemo";
+
+## 一、从线段和 `lerp` 开始
+
+设二维空间中的两个点为
+
+$$
+\mathbf P_0=(x_0,y_0),\qquad \mathbf P_1=(x_1,y_1),
+$$
+
+并令参数
+
+$$
+t\in[0,1].
+$$
+
+定义
+
+$$
+\mathbf C(t)=(1-t)\mathbf P_0+t\mathbf P_1.
+$$
+
+当 $t=0$ 时，$\mathbf C(t)=\mathbf P_0$；当 $t=1$ 时，$\mathbf C(t)=\mathbf P_1$。这就是图形学里常见的线性插值：
+
+$$
+\operatorname{lerp}(\mathbf A,\mathbf B,t)=(1-t)\mathbf A+t\mathbf B.
+$$
+
+两个权重始终满足
+
+$$
+(1-t)+t=1,
+$$
+
+所以当前位置是两个端点的加权平均。Bézier 曲线做的事情，就是把“两个点的加权平均”递归推广到更多控制点。
+
+## 二、二次 Bézier 与 de Casteljau
+
+现在给出三个控制点 $\mathbf P_0,\mathbf P_1,\mathbf P_2$。先在相邻控制点之间做一次插值：
+
+$$
+\mathbf Q_0(t)=(1-t)\mathbf P_0+t\mathbf P_1,
+$$
+
+$$
+\mathbf Q_1(t)=(1-t)\mathbf P_1+t\mathbf P_2.
+$$
+
+再对两个中间点做一次插值：
+
+$$
+\mathbf C(t)=(1-t)\mathbf Q_0(t)+t\mathbf Q_1(t).
+$$
+
+这就是二次 Bézier 的 de Casteljau 构造。它可以概括为：
+
+$$
+\boxed{\text{Bézier} = \text{不断重复的 lerp}}
+$$
+
+展开上式可以得到标准形式：
+
+$$
+\mathbf C(t)=(1-t)^2\mathbf P_0+2t(1-t)\mathbf P_1+t^2\mathbf P_2.
+$$
+
+在下面的工作台中，拖动控制点或移动 $t$，可以看到每一层插值点逐级汇聚到曲线上的 $\mathbf C(t)$。右侧可以独立选择要高亮的递归层级：$L_0$ 是原始控制点层，中间层依次是 $Q$、$R$ 等插值点，最后一层是 $C(t)$。增加控制点可以观察更高次 Bézier 的递归层数；隐藏中间层只改变观察视图，不改变数学结果：
+
+<BezierCasteljauDemo client:visible />
+
+## 三、Bernstein 基函数
+
+对 $n$ 次 Bézier，控制点为 $\mathbf P_0,\ldots,\mathbf P_n$，曲线可以写成
+
+$$
+\mathbf C(t)=\sum_{i=0}^{n}B_i^n(t)\mathbf P_i,
+$$
+
+其中
+
+$$
+B_i^n(t)=\binom ni t^i(1-t)^{n-i},\qquad i=0,\dots,n.
+$$
+
+这些 $B_i^n(t)$ 就是 Bernstein 基函数。它们是控制点的权重，而不是额外的几何点。
+
+### 1. 抽象多项式向量空间 $\mathcal P_n$ 与基底变换视角
+
+从现代线性代数的抽象向量空间视角来看，Bernstein 基函数有着极为深刻的代数本质：
+
+设 $\mathcal P_n$ 为实数域上全体次数不超过 $n$ 的一元多项式构成的向量空间：
+
+$$
+\mathcal P_n = \{ f(t) \mid f(t) = a_0 + a_1 t + \cdots + a_n t^n,\quad a_k \in \mathbb R \}.
+$$
+
+由于标准<strong>幂基（Power Basis）</strong> $\{1, t, t^2, \ldots, t^n\}$ 是它的一组自然基底，故该空间的维数为：
+
+$$
+\dim \mathcal P_n = n + 1.
+$$
+
+每个 Bernstein 多项式 $B_i^n(t)$ 本身显然也是一个次数不超过 $n$ 的实系数多项式（即 $B_i^n \in \mathcal P_n$）。更关键的是，这 $n+1$ 个 Bernstein 多项式是<strong>严格线性无关</strong>的，因此它们同样构成了多项式空间 $\mathcal P_n$ 的一组完备标准基！
+
+这意味着一个核心观念：
+> <strong>“Bézier 多项式”并不是某种特殊的新多项式，Bézier 形式本质上就是用 Bernstein 基来表示多项式向量空间 $\mathcal P_n$ 中的元素。</strong>
+
+任意多项式 $f(t) \in \mathcal P_n$ 在幂基下的表示与在 Bernstein 基下的表示，仅仅是<strong>同一个多项式在向量空间 $\mathcal P_n$ 中更换了一组基</strong>：
+
+$$
+\boxed{
+\text{幂基表示 } \{1, t, \ldots, t^n\}
+\quad\xleftrightarrow{\quad\text{基底变换（Change of Basis）}\quad}\quad
+\text{Bernstein 基表示 } \{B_0^n(t), \ldots, B_n^n(t)\}
+}
+$$
+
+### 2. Bernstein 基函数线性无关性严格证明（基变换三角矩阵法）
+
+为什么任意 $n$ 次的 $n+1$ 个 Bernstein 多项式 $\{B_0^n(t), B_1^n(t), \ldots, B_n^n(t)\}$ 一定在多项式空间 $\mathcal P_n$ 中<strong>严格线性无关</strong>？
+
+我们通过构造从标准幂基到 Bernstein 基的<strong>基变换矩阵</strong>给出严格证明：
+
+<strong>1. 将 Bernstein 多项式按二项式定理展开</strong>：
+对于第 $i$ 个 Bernstein 基函数 $B_i^n(t) = \binom{n}{i} t^i (1-t)^{n-i}$，对 $(1-t)^{n-i}$ 应用二项式展开：
+$$
+(1-t)^{n-i} = \sum_{j=0}^{n-i} (-1)^j \binom{n-i}{j} t^j.
+$$
+乘上 $\binom{n}{i} t^i$ 后得到其按升幂展开的代数形式：
+$$
+B_i^n(t) = \binom{n}{i} t^i \sum_{j=0}^{n-i} (-1)^j \binom{n-i}{j} t^j = \binom{n}{i} t^i - \binom{n}{i}(n-i) t^{i+1} + \cdots + (-1)^{n-i} \binom{n}{i} t^n.
+$$
+
+<strong>2. 关键结构：三角稀疏性与主对角元素</strong>：
+观察上式可以发现：
+- 在 $B_i^n(t)$ 的展开式中，<strong>最低次幂恰好是 $t^i$</strong>，其系数为 $\binom{n}{i}$；
+- 所有低于 $i$ 次的项（即 $1, t, t^2, \ldots, t^{i-1}$）的系数<strong>严格为 $0$</strong>！
+
+<strong>3. 写为矩阵乘法形式</strong>：
+将 $n+1$ 个 Bernstein 多项式与标准幂基向量 $\mathbf t = [1, t, t^2, \ldots, t^n]^T$ 联立为矩阵方程：
+$$
+\begin{bmatrix}
+B_0^n(t) \\
+B_1^n(t) \\
+B_2^n(t) \\
+\vdots \\
+B_n^n(t)
+\end{bmatrix}
+=
+\begin{bmatrix}
+\binom{n}{0} & -\binom{n}{0}\binom{n}{1} & * & \cdots & (-1)^n \binom{n}{0} \\
+0 & \binom{n}{1} & -\binom{n}{1}\binom{n-1}{1} & \cdots & (-1)^{n-1} \binom{n}{1} \\
+0 & 0 & \binom{n}{2} & \cdots & (-1)^{n-2} \binom{n}{2} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & 0 & \cdots & \binom{n}{n}
+\end{bmatrix}
+\begin{bmatrix}
+1 \\
+t \\
+t^2 \\
+\vdots \\
+t^n
+\end{bmatrix}.
+$$
+
+<strong>4. 计算基变换矩阵的行列式</strong>：
+设上述转换矩阵为 $\mathbf M_{B \leftarrow P}$。显而易见，$\mathbf M_{B \leftarrow P}$ 是一个<strong>上三角矩阵（Upper Triangular Matrix）</strong>。
+根据线性代数定理，上三角矩阵的行列式等于其主对角线上所有元素的乘积：
+$$
+\det(\mathbf M_{B \leftarrow P}) = \prod_{i=0}^n \binom{n}{i} = \binom{n}{0} \binom{n}{1} \binom{n}{2} \cdots \binom{n}{n}.
+$$
+因为每一个二项式组合数均严格大于零：
+$$
+\binom{n}{i} = \frac{n!}{i!(n-i)!} \ge 1 > 0,\qquad \forall i \in \{0, 1, \ldots, n\},
+$$
+所以矩阵行列式严格非零：
+$$
+\boxed{\det(\mathbf M_{B \leftarrow P}) > 0 \neq 0}
+$$
+
+<strong>5. 结论</strong>：
+由于基变换矩阵 $\mathbf M_{B \leftarrow P}$ 严格非奇异（满秩可逆），且标准幂基 $\{1, t, t^2, \ldots, t^n\}$ 本身线性无关，根据线性代数基底变换定理：
+$$
+\boxed{\{B_0^n(t), B_1^n(t), \ldots, B_n^n(t)\} \text{ 严格线性无关，且构成 } \mathcal P_n \text{ 的一组标准基}}
+$$
+证明完毕。$\blacksquare$
+
+### 3. 二次多项式基变换手算展开（$n=2$）
+
+以二次多项式（$n=2$）为例，二次 Bernstein 基函数为：
+
+$$
+B_0^2(t) = (1-t)^2,\qquad B_1^2(t) = 2t(1-t),\qquad B_2^2(t) = t^2.
+$$
+
+设有一个普通的二次多项式 $f(t) = a + bt + ct^2$，我们希望将其转换为 Bézier 形式 $f(t) = q_0 B_0^2(t) + q_1 B_1^2(t) + q_2 B_2^2(t)$：
+
+$$
+\begin{aligned}
+f(t) &= q_0 (1-t)^2 + q_1 \cdot 2t(1-t) + q_2 t^2 \\
+&= q_0 (1 - 2t + t^2) + 2q_1 (t - t^2) + q_2 t^2 \\
+&= q_0 + (-2q_0 + 2q_1)t + (q_0 - 2q_1 + q_2)t^2.
+\end{aligned}
+$$
+
+对比幂基 $a + bt + ct^2$ 的同次项系数：
+
+$$
+\begin{cases}
+q_0 = a, \\
+-2q_0 + 2q_1 = b, \\
+q_0 - 2q_1 + q_2 = c.
+\end{cases}
+\implies
+\begin{cases}
+q_0 = a, \\
+q_1 = a + \dfrac{1}{2}b, \\
+q_2 = a + b + c.
+\end{cases}
+$$
+
+代回即可得到同一个二次多项式的 <strong>Bernstein / Bézier 展开式</strong>：
+
+$$
+\boxed{
+a + bt + ct^2 \equiv a(1-t)^2 + \left(a + \frac{b}{2}\right) 2t(1-t) + (a+b+c) t^2
+}
+$$
+
+为了从线性代数视角理解上述变换，我们将上述方程组补齐未出现的 $0$ 系数并严格按列对齐：
+
+$$
+\begin{cases}
+\begin{alignedat}{3}
+1 q_0 &+ 0 q_1 &+ 0 q_2 &= a, \\
+-2 q_0 &+ 2 q_1 &+ 0 q_2 &= b, \\
+1 q_0 &- 2 q_1 &+ 1 q_2 &= c
+\end{alignedat}
+\end{cases}
+\iff
+\begin{cases}
+\begin{alignedat}{3}
+q_0 &= 1 a &+ 0 b &+ 0 c, \\
+q_1 &= 1 a &+ \frac{1}{2} b &+ 0 c, \\
+q_2 &= 1 a &+ 1 b &+ 1 c.
+\end{alignedat}
+\end{cases}
+$$
+
+此时逐行提取系数，便可直接写出极其工整对称的<strong>基底坐标变换矩阵形式</strong>：
+
+$$
+\underbrace{
+\begin{bmatrix} a \\ b \\ c \end{bmatrix}
+=
+\begin{bmatrix}
+1 & 0 & 0 \\
+-2 & 2 & 0 \\
+1 & -2 & 1
+\end{bmatrix}
+\begin{bmatrix} q_0 \\ q_1 \\ q_2 \end{bmatrix}
+}_{\text{对应左侧待定系数方程组}}
+\iff
+\underbrace{
+\begin{bmatrix} q_0 \\ q_1 \\ q_2 \end{bmatrix}
+=
+\begin{bmatrix}
+1 & 0 & 0 \\
+1 & \frac{1}{2} & 0 \\
+1 & 1 & 1
+\end{bmatrix}
+\begin{bmatrix} a \\ b \\ c \end{bmatrix}
+}_{\text{对应右侧直接求解结果}}
+$$
+
+变换矩阵为主对角元均非零的可逆下三角阵（$\det \neq 0$），在幂基多项式与 Bernstein 基 Bézier 形式之间建立了严格的可逆线性同构（坐标一一双射）。
+
+下方工作台把基函数曲线和几何图形拆成两张画布。左侧观察 basis 如何随 $t$ 变化，右侧拖动控制点观察凸包和 Bézier 曲线；两张画布共享同一组控制点和参数：
+
+<BezierBasisDemo client:visible />
+
+## 四、单位分解、凸包与端点导数
+
+Bernstein 基函数具备几项极其优雅且关键的数学与几何性质，它们共同构成了 Bézier 曲线强大交互可控性的根基。
+
+### 1. 权重归一性证明（Partition of Unity）
+
+对于任意 $n$ 次 Bézier 曲线，其基函数之和恒等于 $1$：
+
+$$
+\sum_{i=0}^{n} B_i^n(t) \equiv 1,\qquad \forall t \in \mathbb{R}.
+$$
+
+这项性质称为 <strong>单位分解（Partition of Unity）</strong>。
+
+<strong>证明</strong>：
+
+根据 Bernstein 基函数的定义：
+
+$$
+\sum_{i=0}^{n} B_i^n(t) = \sum_{i=0}^{n} \binom{n}{i} t^i (1-t)^{n-i}.
+$$
+
+回顾代数学中的经典 <strong>二项式定理（Binomial Theorem）</strong>：
+
+$$
+(a + b)^n = \sum_{i=0}^{n} \binom{n}{i} a^i b^{n-i}.
+$$
+
+令 $a = t$，$b = 1 - t$，代入二项式展开式中：
+
+$$
+\sum_{i=0}^{n} \binom{n}{i} t^i (1-t)^{n-i} = \big(t + (1 - t)\big)^n = 1^n = 1.
+$$
+
+由此严谨证毕：无论参数 $t$ 取何值、曲线次数 $n$ 多高，基函数权重之和恒等于 $1$。
+
+### 2. 凸包性质（Convex Hull Property）
+
+当参数限制在 $t \in [0, 1]$ 内时，由于 $t \ge 0$ 且 $1 - t \ge 0$，每一个 Bernstein 基函数都满足 <strong>非负性</strong>：
+
+$$
+B_i^n(t) \ge 0,\qquad \forall i \in \{0, 1, \ldots, n\}.
+$$
+
+结合上述权重和为 $1$ 的性质，这意味着曲线上的任意一点：
+
+$$
+\mathbf C(t) = \sum_{i=0}^{n} B_i^n(t) \mathbf P_i
+$$
+
+在数学本质上始终是所有控制点 $\mathbf P_0, \mathbf P_1, \ldots, \mathbf P_n$ 的 <strong>凸组合（Convex Combination）</strong>。
+
+因此，整条 Bézier 曲线在几何上 <strong>严格位于所有控制点所构成的凸包（Convex Hull）内部</strong>。无论用户如何拖拽扰动控制点，曲线绝不会越出凸多边形的外边界。这一几何包络特性赋予了曲线在交互建模、碰撞检测与包围盒计算中极高的稳定性。
+
+### 3. 三次 Bézier 端点导数逐项推导
+
+在工业界（矢量绘图、字体轮廓、动画缓动）中，<strong>三次（Cubic）Bézier 曲线</strong>（$n=3$）应用最为广泛。其实际形式为：
+
+$$
+\mathbf C(t) = (1-t)^3 \mathbf P_0 + 3t(1-t)^2 \mathbf P_1 + 3t^2(1-t) \mathbf P_2 + t^3 \mathbf P_3.
+$$
+
+对参数 $t$ 应用求导法则（乘积法则与链式法则）逐项求导：
+
+$$
+\begin{aligned}
+\mathbf C'(t) &= \frac{d}{dt}\big((1-t)^3\big) \mathbf P_0 + \frac{d}{dt}\big(3t(1-t)^2\big) \mathbf P_1 + \frac{d}{dt}\big(3t^2(1-t)\big) \mathbf P_2 + \frac{d}{dt}\big(t^3\big) \mathbf P_3 \\
+&= -3(1-t)^2 \mathbf P_0 + \big(3(1-t)^2 - 6t(1-t)\big) \mathbf P_1 + \big(6t(1-t) - 3t^2\big) \mathbf P_2 + 3t^2 \mathbf P_3.
+\end{aligned}
+$$
+
+考察区间两端的切向量：
+
+- <strong>起点切向量（$t = 0$）</strong>：将 $t = 0$ 代入上式，只有含 $(1-t)^2$ 的项非零：
+  $$
+  \mathbf C'(0) = -3 \mathbf P_0 + 3 \mathbf P_1 = 3(\mathbf P_1 - \mathbf P_0).
+  $$
+- <strong>终点切向量（$t = 1$）</strong>：将 $t = 1$ 代入上式，只有含 $t^2$ 的项非零：
+  $$
+  \mathbf C'(1) = -3 \mathbf P_2 + 3 \mathbf P_3 = 3(\mathbf P_3 - \mathbf P_2).
+  $$
+
+几何意义极其直观：
+- 起点 $t = 0$ 处的瞬时切线方向与线段 $\mathbf P_0 \to \mathbf P_1$ 严格重合，速率大小正比于弦长 $\|\mathbf P_1 - \mathbf P_0\|$ 的 $3$ 倍；
+- 终点 $t = 1$ 处的瞬时切线方向与线段 $\mathbf P_2 \to \mathbf P_3$ 严格重合，速率大小正比于弦长 $\|\mathbf P_3 - \mathbf P_2\|$ 的 $3$ 倍。
+
+### 4. 任意 $n$ 次 Bézier 的导数通用公式（基函数差分推导）
+
+将上述端点导数推广至任意 $n$ 次 Bézier 曲线。
+
+首先考察单个 Bernstein 基函数 $B_i^n(t) = \binom{n}{i} t^i (1-t)^{n-i}$ 对 $t$ 的导数：
+
+$$
+\begin{aligned}
+\frac{d}{dt} B_i^n(t) &= \binom{n}{i} \left[ i t^{i-1}(1-t)^{n-i} - (n-i) t^i (1-t)^{n-i-1} \right] \\
+&= n \left[ \binom{n-1}{i-1} t^{i-1}(1-t)^{(n-1)-(i-1)} - \binom{n-1}{i} t^i (1-t)^{(n-1)-i} \right] \\
+&= n \big( B_{i-1}^{n-1}(t) - B_i^{n-1}(t) \big),
+\end{aligned}
+$$
+
+约定当下标超出范围时 $B_{-1}^{n-1}(t) \equiv 0$、$B_n^{n-1}(t) \equiv 0$。
+
+将基函数导数代入整条曲线的微分中：
+
+$$
+\mathbf C'(t) = \sum_{i=0}^{n} \frac{d}{dt} B_i^n(t) \mathbf P_i = n \sum_{i=0}^{n} \big( B_{i-1}^{n-1}(t) - B_i^{n-1}(t) \big) \mathbf P_i.
+$$
+
+将求和式拆开为两项并对下标进行平移（Index Shifting）：
+
+$$
+\sum_{i=0}^{n} \big( B_{i-1}^{n-1}(t) - B_i^{n-1}(t) \big) \mathbf P_i = \sum_{i=0}^{n} B_{i-1}^{n-1}(t) \mathbf P_i - \sum_{i=0}^{n} B_i^{n-1}(t) \mathbf P_i.
+$$
+
+分别考察两项求和的边界与指标换元：
+1. <strong>第一项</strong> $\sum_{i=0}^n B_{i-1}^{n-1}(t) \mathbf P_i$：当 $i=0$ 时 $B_{-1}^{n-1}(t) = 0$（首项为零），有效指标为 $i = 1, \ldots, n$。令指标换元 $j = i - 1$（即 $i = j + 1$），则 $j$ 从 $0$ 变到 $n-1$：
+   $$
+   \sum_{i=1}^{n} B_{i-1}^{n-1}(t) \mathbf P_i = \sum_{j=0}^{n-1} B_j^{n-1}(t) \mathbf P_{j+1};
+   $$
+2. <strong>第二项</strong> $\sum_{i=0}^n B_i^{n-1}(t) \mathbf P_i$：当 $i=n$ 时 $B_n^{n-1}(t) = 0$（末项为零），有效指标为 $i = 0, \ldots, n-1$：
+   $$
+   \sum_{i=0}^{n} B_i^{n-1}(t) \mathbf P_i = \sum_{j=0}^{n-1} B_j^{n-1}(t) \mathbf P_j.
+   $$
+
+两式相减，重新合并在统一的求和区间 $0 \le i \le n-1$ 下：
+
+$$
+\mathbf C'(t) = n \left[ \sum_{i=0}^{n-1} B_i^{n-1}(t) \mathbf P_{i+1} - \sum_{i=0}^{n-1} B_i^{n-1}(t) \mathbf P_i \right] = n \sum_{i=0}^{n-1} B_i^{n-1}(t) (\mathbf P_{i+1} - \mathbf P_i).
+$$
+
+记相邻控制点的前向差分向量为 $\Delta \mathbf P_i = \mathbf P_{i+1} - \mathbf P_i$，并将标量 $n$ 移入求和号内与差分向量组合：
+
+$$
+\mathbf C'(t) = n \sum_{i=0}^{n-1} B_i^{n-1}(t) \Delta \mathbf P_i = \sum_{i=0}^{n-1} B_i^{n-1}(t) (n \Delta \mathbf P_i).
+$$
+
+<strong>核心几何洞察</strong>：
+> <strong>任意 $n$ 次 Bézier 曲线的导数曲线自身也是一条 $(n-1)$ 次 Bézier 曲线！</strong> 它的基函数是 $(n-1)$ 次 Bernstein 基函数 $B_i^{n-1}(t)$，其控制点序列恰好是原控制多边形各边差分向量放大 $n$ 倍后的新顶点（即 $\mathbf Q_i = n \Delta \mathbf P_i$）。
+
+将端点参数代入通用导数公式：
+- 在起点 $t = 0$ 时，由于 $B_0^{n-1}(0) = 1$，其余 $B_i^{n-1}(0) = 0$（$i > 0$），得到：
+  $$
+  \mathbf C'(0) = n (\mathbf P_1 - \mathbf P_0).
+  $$
+- 在终点 $t = 1$ 时，由于 $B_{n-1}^{n-1}(1) = 1$，其余 $B_i^{n-1}(1) = 0$（$i < n-1$），得到：
+  $$
+  \mathbf C'(1) = n (\mathbf P_n - \mathbf P_{n-1}).
+  $$
+
+### 5. 多段 Bézier 拼接与连续性条件（$C^0, G^1, C^1, C^2$）
+
+为了构建任意复杂曲线，通常需要将多段低次 Bézier 曲线首尾拼接。设左侧曲线段为 $\mathbf C(t)$（控制点 $\mathbf P_0, \mathbf P_1, \mathbf P_2, \mathbf P_3$），右侧曲线段为 $\mathbf D(t)$（控制点 $\mathbf Q_0, \mathbf Q_1, \mathbf Q_2, \mathbf Q_3$），两段曲线的参数域均为 $t \in [0, 1]$，在接缝处（$\mathbf C(1)$ 与 $\mathbf D(0)$）相连。
+
+在数学上，连续性根据对参数 $t$ 的各阶导数向量匹配程度严格分类：
+
+1. <strong>$C^0$ 参数 0 阶位置连续（Position Continuity）</strong>：
+   $$
+   \mathbf C(1) = \mathbf D(0) \iff \mathbf P_3 = \mathbf Q_0.
+   $$
+   两段曲线在空间中首尾相接、无缝隙断裂，但在接缝处允许存在任意方向的折角（0 阶导数相同，一阶导数向量不作要求）。
+
+2. <strong>$G^1$ 1 阶几何切线共线（Geometric Continuity）</strong>：
+   要求接缝两侧的一阶导数向量方向一致（同向共线），允许模长存在正比例缩放 $\alpha > 0$：
+   $$
+   \mathbf C'(1) = \alpha \mathbf D'(0) \iff \mathbf P_3 - \mathbf P_2 = \beta (\mathbf Q_1 - \mathbf Q_0),\qquad (\beta > 0).
+   $$
+   <strong>控制点几何约束</strong>：控制点 $\mathbf P_2$、接缝锚点 $\mathbf P_3 (=\mathbf Q_0)$ 与 $\mathbf Q_1$ <strong>三点严格共线且位于锚点两侧</strong>。两端手柄长度可以不相等（切线方向平滑，但参数速度大小发生跳变）。
+
+3. <strong>$C^1$ 参数 1 阶导数连续（Parametric 1st-Order Continuity）</strong>：
+   不仅切线方向一致，且对参数 $t$ 的一阶导数向量（速度向量）完全相等。结合 $C^0$ 条件 $\mathbf Q_0 = \mathbf P_3$ 代入化简：
+   $$
+   \mathbf C'(1) = \mathbf D'(0) \iff 3(\mathbf P_3 - \mathbf P_2) = 3(\mathbf Q_1 - \mathbf Q_0) \iff \mathbf P_3 - \mathbf P_2 = \mathbf Q_1 - \mathbf P_3 \iff \mathbf Q_1 = 2\mathbf P_3 - \mathbf P_2.
+   $$
+   <strong>控制点几何约束</strong>：接缝点 $\mathbf P_3$ 恰好为线段 $\mathbf P_2 \mathbf Q_1$ 的中点，即两端手柄关于接缝锚点<strong>中心对称且等长</strong>。
+
+4. <strong>$C^2$ 参数 2 阶导数连续（Parametric 2nd-Order Continuity）</strong>：
+   要求两段曲线在接缝处对参数 $t$ 的二阶导数向量（加速度向量）严格连续：
+   $$
+   \mathbf C''(1) = \mathbf D''(0).
+   $$
+   对三次 Bézier 曲线求二阶导数，代入两端参数可得两端的二阶导数表达式：
+   $$
+   \mathbf C''(1) = 6(\mathbf P_1 - 2\mathbf P_2 + \mathbf P_3),\qquad \mathbf D''(0) = 6(\mathbf Q_0 - 2\mathbf Q_1 + \mathbf Q_2).
+   $$
+   令 $\mathbf C''(1) = \mathbf D''(0)$，展开并代入已满足的 $C^1$ 条件（$\mathbf Q_0 = \mathbf P_3$ 且 $\mathbf Q_1 = 2\mathbf P_3 - \mathbf P_2$）：
+   $$
+   \begin{aligned}
+   \mathbf C''(1) = \mathbf D''(0) &\iff 6(\mathbf P_1 - 2\mathbf P_2 + \mathbf P_3) = 6(\mathbf Q_0 - 2\mathbf Q_1 + \mathbf Q_2) \\
+   &\iff \mathbf P_1 - 2\mathbf P_2 + \mathbf P_3 = \mathbf P_3 - 2(2\mathbf P_3 - \mathbf P_2) + \mathbf Q_2 \\
+   &\iff \mathbf Q_2 = \mathbf P_1 - 4\mathbf P_2 + 4\mathbf P_3.
+   \end{aligned}
+   $$
+
+   > <strong>差分向量含义简析</strong>：一阶差分 $\Delta \mathbf P_i = \mathbf P_{i+1} - \mathbf P_i$ 代表控制多边形的各条“边向量”（反映切线与速度）；二阶差分 $\Delta^2 \mathbf P_1 = \Delta \mathbf P_2 - \Delta \mathbf P_1 = \mathbf P_1 - 2\mathbf P_2 + \mathbf P_3$ 则是相邻两条边向量的差（反映控制多边形的转折弯曲量）。上述 $\mathbf C''(1) = \mathbf D''(0)$ 本质上等价于要求两侧在接缝处的二阶差分向量严格相等：$\Delta^2 \mathbf P_1 = \Delta^2 \mathbf Q_0$。
+
+下方工作台提供了两段三次 Bézier 曲线拼接的实时几何实验环境。你可以切换不同预设观察手柄约束的代数联动，或切换到「自由诊断模式」随意拖拽控制点，系统将实时计算接缝处的一阶与二阶导数向量，并判定实际达到的连续性阶数：
+
+<BezierContinuityDemo client:visible />
+
+#### Bézier 拼接的根本局限性：级联修改连锁反应
+
+从上述代数推导可见：为了维持接缝处的 $C^2$ 连续性，不仅 $\mathbf Q_1$ 被 $\mathbf P_2$ 锁定，连次邻控制点 $\mathbf Q_2$ 也被 $\mathbf P_1$ 和 $\mathbf P_2$ 严格锁定。
+
+如果在一条由 $10$ 段 Bézier 拼接的长曲线上，设计师修改了其中某一段的一个内部点，为了维持整条曲线的 $C^2$ 连续性，就必须像推倒多米诺骨牌一样，顺次重新计算并强制调整后续所有曲线段的控制点。这种<strong>强代数耦合与局部修改失效</strong>，正是促使计算机图形学发明 <strong>B-Spline</strong> 的核心驱动力。
+
+## 五、为什么需要 B-Spline
+
+单段 Bézier 曲线虽然形式优雅且具有优秀的端点与凸包性质，但在工程设计与复杂几何建模中，存在着两大约束其广泛应用的<strong>根本性结构缺陷</strong>：
+
+### 1. 结构性限制一：多项式次数与控制点数量刚性绑定
+
+对于任意单段 Bézier 曲线，$n+1$ 个控制点必定严格对应 $n$ 次多项式：
+
+$$
+\mathbf C(t) = \sum_{i=0}^{n} B_i^n(t) \mathbf P_i,\qquad \operatorname{deg}(\mathbf C) = n.
+$$
+
+如果要表达更加丰富复杂的几何特征，就必须增加控制点的数量，而这会直接导致多项式次数 $n$ 急剧飙升。高阶多项式在几何与数值计算上会带来两大严重后果：
+
+1. <strong>局部控制力被稀释（权重严重摊薄，控制迟钝）</strong>：
+   Bézier 曲线本质上是所有控制点的加权平均（权重之和恒为 $1$）。当控制点增加到数十个（高阶 $n$）时，几十个控制点共同瓜分这 $1.0$ 的总权重，单个控制点的最大权重峰值会按 $O(1/\sqrt{n})$ 迅速衰减。这意味着单个控制点对曲线的拉扯影响力被严重摊薄，无论怎么大幅拖拽该控制点，曲线响应都极其微弱迟钝，难以精准做出鲜明的局部特征。
+
+   > <strong>定理：Bernstein 基函数最大峰值的 $O(1/\sqrt{n})$ 渐近衰减证明</strong>
+   >
+   > <strong>第 1 步：求基函数极值点位置</strong>
+   > 对第 $k$ 个 Bernstein 基函数 $B_k^n(t) = \binom{n}{k} t^k (1-t)^{n-k}$ 取自然对数并求导：
+   > $$
+   > \ln B_k^n(t) = \ln\binom{n}{k} + k \ln t + (n-k)\ln(1-t)
+   > $$
+   > 令一阶导数等于零：
+   > $$
+   > \frac{d}{dt} \ln B_k^n(t) = \frac{k}{t} - \frac{n-k}{1-t} = 0 \implies k(1-t) = (n-k)t \implies t^* = \frac{k}{n}
+   > $$
+   > 即 $B_k^n(t)$ 在参数位置 $t^* = \frac{k}{n}$ 处取得唯一全局最大值。
+   >
+   > <strong>第 2 步：代入斯特林公式（Stirling's Approximation）计算中心项峰值</strong>
+   > 考虑最具有代表性的中心控制点（设 $n$ 为偶数，$k = \frac{n}{2}$，峰值位于 $t^* = \frac{1}{2}$）：
+   > $$
+   > B_{n/2}^n\left(\frac{1}{2}\right) = \binom{n}{n/2} \left(\frac{1}{2}\right)^{n/2} \left(\frac{1}{2}\right)^{n/2} = \frac{n!}{\left[\left(\frac{n}{2}\right)!\right]^2} \cdot \frac{1}{2^n}
+   > $$
+   > 根据斯特林阶乘渐近公式 $m! \sim \sqrt{2\pi m} \left(\frac{m}{e}\right)^m$，分别展开分子与分母：
+   > - 分子：$n! \sim \sqrt{2\pi n} \left(\frac{n}{e}\right)^n$；
+   > - 分母：$\left[\left(\frac{n}{2}\right)!\right]^2 \sim \left[ \sqrt{2\pi \frac{n}{2}} \left(\frac{n}{2e}\right)^{n/2} \right]^2 = \pi n \left(\frac{n}{2e}\right)^n$。
+   >
+   > 代入化简组合数：
+   > $$
+   > \binom{n}{n/2} \sim \frac{\sqrt{2\pi n}\left(\frac{n}{e}\right)^n}{\pi n \left(\frac{n}{2e}\right)^n} = \frac{\sqrt{2\pi n}}{\pi n} \cdot 2^n = \sqrt{\frac{2}{\pi n}} \cdot 2^n
+   > $$
+   > 因此，中心控制点的最大权重峰值为：
+   > $$
+   > \boxed{ B_{n/2}^n\left(\frac{1}{2}\right) = \binom{n}{n/2} \cdot \frac{1}{2^n} \sim \sqrt{\frac{2}{\pi n}} \sim O\left(\frac{1}{\sqrt{n}}\right) }
+   > $$
+
+| 多项式阶数 $n$ | 控制点数量 | 单个控制点最大权重峰值 | 拖拽控制点 $10\text{ cm}$ 曲线响应 | 控制感评价 |
+| :--- | :--- | :--- | :--- | :--- |
+| <strong>$n=2$</strong> (二次) | 3 个 | <strong>$50.0\%$</strong> ($0.500$) | 曲线最大位移 $\approx 5.0\text{ cm}$ | 🟢 极其灵敏 |
+| <strong>$n=3$</strong> (三次) | 4 个 | <strong>$44.4\%$</strong> ($0.444$) | 曲线最大位移 $\approx 4.4\text{ cm}$ | 🟢 敏锐塑形 |
+| <strong>$n=10$</strong> | 11 个 | <strong>$24.6\%$</strong> ($0.246$) | 曲线最大位移 $\approx 2.5\text{ cm}$ | 🟡 局部钝化 |
+| <strong>$n=20$</strong> | 21 个 | <strong>$17.6\%$</strong> ($0.176$) | 曲线最大位移 $\approx 1.8\text{ cm}$ | 🔴 显著迟钝 |
+| <strong>$n=30$</strong> | 31 个 | <strong>$14.4\%$</strong> ($0.144$) | 曲线最大位移 $\approx 1.4\text{ cm}$ | 🔴 严重拉不动 |
+
+通过下方交互工作台，你可以实时调节多项式阶数 $n \in [2, 30]$，直观观察基函数群被压扁的 $O(1/\sqrt{n})$ 过程，并在右侧直接拖拽控制点实测曲线位移响应的衰减：
+
+<BezierWeightDilutionDemo client:visible />
+
+2. <strong>计算复杂度与数值稳定性崩溃</strong>：
+   de Casteljau 算法的求值开销随次数呈二次方 $O(n^2)$ 增长；在计算机浮点运算中，计算高阶幂项 $t^i (1-t)^{n-i}$ 与巨大组合数 $\binom{n}{i}$ 时，在区间两端极易发生浮点下溢与有效数字丢失（Catastrophic Cancellation），高阶差分更会急剧放大数值噪声。
+
+### 2. 结构性限制二：Bernstein 基函数的全局支撑（Global Support）与局部编辑失效
+
+比多项式次数绑定更为致命的缺陷在于 Bernstein 基函数的<strong>全域非零性（全局支撑）</strong>。
+
+我们可以直接通过<strong>曲线扰动响应 $\Delta \mathbf C(t)$</strong> 看透其代数本质：
+
+1. <strong>原曲线定义</strong>：Bézier 曲线是所有控制点的加权平均：
+   $$
+   \mathbf C_{\text{orig}}(t) = \sum_{i=0}^n B_i^n(t)\mathbf P_i = B_0^n(t)\mathbf P_0 + \cdots + B_k^n(t)\mathbf P_k + \cdots + B_n^n(t)\mathbf P_n.
+   $$
+
+2. <strong>微调单个控制点（$\mathbf P_k \to \mathbf P_k + \Delta \mathbf P_k$）</strong>：
+   假设设计师只想修改第 $k$ 个控制点的位置，而其余控制点全部保持不变。此时新曲线把求和展开式中的第 $k$ 项替换为 $(\mathbf P_k + \Delta \mathbf P_k)$：
+   $$
+   \mathbf C_{\text{new}}(t) = B_0^n(t)\mathbf P_0 + \cdots + B_k^n(t)(\mathbf P_k + \Delta \mathbf P_k) + \cdots + B_n^n(t)\mathbf P_n.
+   $$
+   用求和记号写出，即将未修改的项（$i \ne k$）与被修改的第 $k$ 项分开：
+   $$
+   \mathbf C_{\text{new}}(t) = \sum_{i \ne k} B_i^n(t)\mathbf P_i + B_k^n(t)(\mathbf P_k + \Delta \mathbf P_k).
+   $$
+   将第 $k$ 项的括号展开：
+   $$
+   \mathbf C_{\text{new}}(t) = \sum_{i \ne k} B_i^n(t)\mathbf P_i + B_k^n(t)\mathbf P_k + B_k^n(t)\Delta \mathbf P_k.
+   $$
+   把前两部分重新合并回完整的原曲线 $\sum_{i=0}^n B_i^n(t)\mathbf P_i = \mathbf C_{\text{orig}}(t)$：
+   $$
+   \mathbf C_{\text{new}}(t) = \underbrace{\left( \sum_{i \ne k} B_i^n(t)\mathbf P_i + B_k^n(t)\mathbf P_k \right)}_{\mathbf C_{\text{orig}}(t)} + B_k^n(t)\Delta \mathbf P_k = \mathbf C_{\text{orig}}(t) + B_k^n(t)\Delta \mathbf P_k.
+   $$
+
+3. <strong>计算曲线位移响应 $\Delta \mathbf C(t)$</strong>：
+   将新旧两式相减，未被修改的所有控制点项全部精确抵消：
+   $$
+   \Delta \mathbf C(t) = \mathbf C_{\text{new}}(t) - \mathbf C_{\text{orig}}(t) = \left[ \mathbf C_{\text{orig}}(t) + B_k^n(t)\Delta \mathbf P_k \right] - \mathbf C_{\text{orig}}(t) = B_k^n(t) \cdot \Delta \mathbf P_k.
+   $$
+
+4. <strong>致命缺陷：处处非零与全局蠕动</strong>：
+   回顾 Bernstein 基函数的定义：
+   $$
+   B_k^n(t) = \binom{n}{k} t^k (1-t)^{n-k}.
+   $$
+   在参数开区间 $t \in (0, 1)$ 内，由于 $t > 0$ 且 $1 - t > 0$，因此 $B_k^n(t)$ <strong>处处严格大于 0（在整个区间内没有任何一段等于零）</strong>。
+
+   这意味着：只要你移动了控制点 $\mathbf P_k$（$\Delta \mathbf P_k \ne \mathbf 0$），整条曲线上所有参数位置都有：
+   $$
+   \Delta \mathbf C(t) \ne \mathbf 0,\qquad \forall t \in (0, 1).
+   $$
+
+<strong>工业建模痛点（牵一发而动全身）</strong>：
+在工业 CAD 造型、汽车车身曲面设计或矢量字体轮廓调整中，如果设计师为了修整局部的某处小倒角而移动了一个控制点，整条曲线上<strong>无论相距多远的所有点都会发生位置与曲率偏移（全域蠕动）</strong>。此前已经精心调优好的其他局部特征将被全部破坏。这种无法隔离修改范围的特性称为 <strong>全局控制（Global Control）</strong>。
+
+反观后文的 B-Spline：由于其基函数具有<strong>局部紧支撑（Local Support）</strong>，当参数走出局部区间时基函数严格为零，从而能保证远处 $\Delta \mathbf C(u) = \mathbf 0$（曲线其余部分绝对静止），这正是 B-Spline 能够统治工业 CAD 建模的最核心原因。
+
+### 3. 交互实验：全局蠕动 vs 局部支撑与次数解耦
+
+下方工作台对比了相同控制点集下<strong>高阶 Bézier 曲线</strong>（全域 100% 蠕动与高次控制迟钝）与<strong>三次 B-Spline 曲线</strong>（严格局部支撑与敏锐低次多项式）的动态响应：
+
+<BezierGlobalVsLocalDemo client:visible />
+
+### 4. B-Spline 的核心设计哲学：从全局多项式到局部紧支撑基函数
+
+面对上述两大结构性困境，计算机图形学先驱们提出了极其自然而深刻的破局设想：
+
+> <strong>构想</strong>：能不能既保留“基函数加权控制点”的优雅凸组合框架，又将多项式次数与控制点数量彻底解耦？让曲线由多段固定的低次（如三次）多项式拼接而成，且每个控制点<strong>仅影响其附近有限的一小段参数区间</strong>？
+
+B-Spline 给出的答案是：
+1. <strong>次数解耦</strong>：将曲线多项式次数固定为平滑易控的常数 $p$（通常为三次 $p=3$），控制点数量 $n+1$ 可以任意无限增减；
+2. <strong>引入节点向量（Knot Vector）</strong>：用一串非递减的实数节点序列将参数轴划分为多个局部区间（Knot Span）；
+3. <strong>构造局部紧支撑（Compact Support）基函数</strong>：通过递推公式构造的 B 样条基函数 $N_{i,p}(u)$ 仅在有限的 $p+1$ 个 Knot Span 上非零，在其余广阔的参数域内<strong>严格恒等于零</strong>。
+
+由此，拖动控制点 $\mathbf P_i$ 只会引起其有限局部区间的形变，整条曲线的其余部分保持绝对静止，完美实现了工业建模所需要的 <strong>局部可控性（Local Control）</strong>。
+
+## 六、什么是 Knot 与分段多项式
+
+这是初学 B-Spline 最容易产生抽象困惑的地方：<strong>为什么要在控制点之外引入一串看似繁琐的节点序列（Knot Vector）？Knot 到底是什么？</strong>
+
+一句话看透其物理与几何本质：
+
+> <strong>Knot（节点）是参数轴上划分不同多项式区间（Polynomial Segment）的“刻度切分点”。</strong>
+
+设参数轴上有一串单调非递减的实数序列：
+
+$$
+U = (u_0, u_1, \ldots, u_m),\qquad u_0 \le u_1 \le \cdots \le u_m.
+$$
+
+这一序列就称为 <strong>节点向量（Knot Vector）</strong>。它把连续的参数轴切分成了若干个相邻的半开半闭参数区间：
+
+$$
+[u_0, u_1),\quad [u_1, u_2),\quad [u_2, u_3),\quad \ldots,\quad [u_{m-1}, u_m).
+$$
+
+每一个相邻节点构成的区间 $[u_j, u_{j+1})$ 称为一个 <strong>Knot Span（节点跨度）</strong>。理解 Knot Span 包含两个递进的数学层次：
+
+1. <strong>参数轴区间长度：非零 Span vs 零 Span</strong>
+   - <strong>非零 Knot Span（Non-zero Knot Span，即 $u_j < u_{j+1}$）</strong>：区间长度 $u_{j+1} - u_j > 0$，参数 $u$ 变化后曲线具有非零长度；
+   - <strong>零 Knot Span / 退化跨度（Zero Knot Span，即 $u_j = u_{j+1}$）</strong>：当节点向量中存在重复节点（如两端夹持或内部多重节点）时，区间 $[u_j, u_j) = \emptyset$ 长度为零，退化为空集，参数 $u$ 无法变化，曲线产生非零长度。
+
+2. <strong>函数空间支撑与几何段：有效参数域内的非零 Span</strong>
+   - 落在<strong>标准有效参数域 $[u_p, u_{m-p}]$</strong> 内部的非零 Span，在该区间上才拥有完整的 $p+1$ 个活跃基函数并严格满足单位分解（$\sum N_{i,p}(u) \equiv 1$）；
+   - 因此，<strong>有效参数域内的每一个非零 Knot Span，在几何上都严格对应一段由 $p+1$ 个控制点加权生成的独立 $p$ 次代数多项式曲线段（Bézier 段）</strong>。
+
+> <strong>核心心智模型：分段多项式（Piecewise Polynomial）</strong>
+> 整条 B-Spline 曲线并非由单一全局多项式构成，而是由有效参数域内各<strong>非零 Knot Span</strong> 对应的多项式片段，在各节点交界处以数学上<strong>严格可控的光滑度（连续性 $C^{p-r}$）</strong>天衣无缝拼装而成的复合曲线。
+
+因此，B-Spline 的数学本质就是：
+
+$$
+\boxed{\text{B-Spline} = \text{Piecewise Polynomial（分段多项式）}}
+$$
+
+## 七、从 0 次开始构造 B-Spline 基函数（阶梯演化手算）
+
+理解 B-Spline 基函数的构造的最清晰自然的路径，是从最简单的 $0$ 次阶梯函数开始，由特殊到一般、由浅入深逐层演化。
+
+### 1. 0 次 B-Spline 基函数（$p=0$：阶梯方块函数）
+
+$0$ 次基函数是所有 B-Spline 的源头基础。定义如下：
+
+$$
+\boxed{
+N_{i,0}(u) =
+\begin{cases}
+1, & u_i \le u < u_{i+1} \text{ 且 } u_i < u_{i+1}, \\
+0, & \text{其他}.
+\end{cases}
+}
+$$
+
+> <strong>零跨度约定</strong>：若 $u_i = u_{i+1}$（即落在零 Knot Span 上），则该基函数恒等于零 $N_{i,0}(u) \equiv 0$。这正是 Cox–de Boor 递推式在遇到分母为 $0$ 时统一按 $0/0 := 0$ 约定处理的代数根源。
+
+<strong>代数与几何形态</strong>：
+假设节点向量为 $U = \{0, 1, 2, 3, 4\}$，那么：
+- $N_{0,0}(u) = 1$（当 $0 \le u < 1$ 时），其余区间全为 $0$；
+- $N_{1,0}(u) = 1$（当 $1 \le u < 2$ 时），其余区间全为 $0$；
+- $N_{2,0}(u) = 1$（当 $2 \le u < 3$ 时），其余区间全为 $0$。
+
+每一个 0 次基函数在几何上就是一个个互不重叠的<strong>独立单位方块（Box Function）</strong>。
+
+<strong>0 次 B-Spline 曲线是什么样？</strong>
+将 0 次基函数代入曲线求和式 $\mathbf C(u) = \sum_{i} N_{i,0}(u) \mathbf P_i$：
+- 当 $0 \le u < 1$ 时，只有 $N_{0,0}(u)=1$，曲线输出 $\mathbf C(u) = \mathbf P_0$；
+- 当 $1 \le u < 2$ 时，只有 $N_{1,0}(u)=1$，曲线输出 $\mathbf C(u) = \mathbf P_1$；
+- 当 $2 \le u < 3$ 时，只有 $N_{2,0}(u)=1$，曲线输出 $\mathbf C(u) = \mathbf P_2$。
+
+因此，0 次 B-Spline 根本不是平滑曲线，而是随着参数 $u$ 步进在各个控制点之间发生瞬时跳跃的 <strong>分段常数（Piecewise Constant）</strong> 点列。
+
+下方工作台展示了 0 次 B-Spline 基函数与离散几何点列的映射关系。你可以拖动参数探针 $u$ 观察各区间内的权重跳变，或切换不同的几何场景预设：
+
+<BSplineBasisStepDemo client:visible initialDegree="0" id="bspline-basis-step-demo-p0" />
+
+### 2. Cox–de Boor 递推思想（金字塔加权）
+
+既然 0 次基函数如此简陋，如何生成平滑曲线？
+
+计算机图形学先驱 Cox 与 de Boor 发现：<strong>高阶 B-Spline 基函数，完全可以由低一阶的两个相邻基函数通过参数比例进行线性加权递推得到</strong>。这与 Bézier 曲线中 de Casteljau 算法逐级 `lerp` 的思想如出一辙！
+
+<strong>Cox–de Boor 递推通用公式</strong>：
+对于任意次数 $p > 0$：
+
+$$
+\boxed{
+N_{i,p}(u) = \frac{u - u_i}{u_{i+p} - u_i} N_{i,p-1}(u) + \frac{u_{i+p+1} - u}{u_{i+p+1} - u_{i+1}} N_{i+1,p-1}(u)
+}
+$$
+
+> <strong>分母为零约定</strong>：若递推式中某个分母为 $0$（例如在重复节点处 $u_{i+p} = u_i$），则该项系数直接约定为 $0$（避免除以零异常）。
+
+### 3. 1 次 B-Spline 基函数（$p=1$：线性三角帽子手算推导）
+
+取均匀节点向量 $U = \{0, 1, 2, 3, 4\}$，我们亲手推导基函数 $N_{1,1}(u)$ 的完整解析式。
+
+根据 Cox–de Boor 递推公式，令 $i=1, p=1$：
+
+$$
+N_{1,1}(u) = \frac{u - u_1}{u_2 - u_1} N_{1,0}(u) + \frac{u_3 - u}{u_3 - u_2} N_{2,0}(u).
+$$
+
+代入节点数值 $u_1 = 1, u_2 = 2, u_3 = 3$：
+
+$$
+N_{1,1}(u) = \frac{u - 1}{2 - 1} N_{1,0}(u) + \frac{3 - u}{3 - 2} N_{2,0}(u) = (u - 1) N_{1,0}(u) + (3 - u) N_{2,0}(u).
+$$
+
+分区间逐段考察：
+1. <strong>在区间 $[1, 2)$ 内部</strong>：$N_{1,0}(u) = 1$，$N_{2,0}(u) = 0$：
+   $$
+   N_{1,1}(u) = (u - 1) \cdot 1 + 0 = u - 1.
+   $$
+   基函数从 $u=1$ 处的 $0$ <strong>线性上升</strong>到 $u=2$ 处的 $1$；
+2. <strong>在区间 $[2, 3)$ 内部</strong>：$N_{1,0}(u) = 0$，$N_{2,0}(u) = 1$：
+   $$
+   N_{1,1}(u) = 0 + (3 - u) \cdot 1 = 3 - u.
+   $$
+   基函数从 $u=2$ 处的 $1$ <strong>线性下降</strong>到 $u=3$ 处的 $0$；
+3. <strong>在其余所有区间（$u < 1$ 或 $u \ge 3$）</strong>：$N_{1,0}(u) = 0$ 且 $N_{2,0}(u) = 0$，故 $N_{1,1}(u) \equiv 0$。
+
+合并得到 $N_{1,1}(u)$ 的分段解析式：
+
+$$
+N_{1,1}(u) =
+\begin{cases}
+u - 1, & 1 \le u < 2, \\
+3 - u, & 2 \le u < 3, \\
+0, & \text{其他}.
+\end{cases}
+$$
+
+<strong>核心几何直觉</strong>：
+- $N_{1,1}(u)$ 的形态是一个跨越 $[1, 3)$ 两个 Span 的 <strong>三角帽子（Hat Function）</strong>；
+- <strong>1 次 B-Spline 曲线</strong>：在每一个区间 $[u_i, u_{i+1})$ 内部，只有 $N_{i-1,1}(u)$（下降段）与 $N_{i,1}(u)$（上升段）两个基函数非零。由于 $N_{i-1,1}(u) + N_{i,1}(u) \equiv 1$，令局部归一化参数 $t = \frac{u - u_i}{u_{i+1} - u_i} \in [0, 1]$，曲线精确退化为相邻两点间的线性插值 $\mathbf C(u) = (1-t)\mathbf P_{i-1} + t\mathbf P_i$。整条 1 次 B-Spline 就是直接连接各控制顶点的<strong>首尾相连多边形折线</strong>。
+
+下方工作台展示了 1 次 B-Spline 线性三角帽子基函数的形态与多边形折线几何。你可以滑动参数探针 $u$ 或拖拽右侧控制点测试局部拉扯响应：
+
+<BSplineBasisStepDemo client:visible initialDegree="1" id="bspline-basis-step-demo-p1" />
+
+### 4. 2 次 B-Spline 基函数（$p=2$：抛物线山包手算推导）
+
+令 $p=2$，考察均匀节点 $u_i = i$ 下的基函数 $N_{0,2}(u)$。
+
+根据递推公式，令 $i=0, p=2$：
+
+$$
+N_{0,2}(u) = \frac{u - u_0}{u_2 - u_0} N_{0,1}(u) + \frac{u_3 - u}{u_3 - u_1} N_{1,1}(u) = \frac{u}{2} N_{0,1}(u) + \frac{3 - u}{2} N_{1,1}(u).
+$$
+
+它由两个 1 次三角帽基函数 $N_{0,1}(u)$（支撑在 $[0, 2)$）和 $N_{1,1}(u)$（支撑在 $[1, 3)$）线性组合而成。支撑区间覆盖 $[0, 3)$，分三段代入展开：
+
+1. <strong>在区间 $0 \le u < 1$</strong>：
+   此时 $N_{0,1}(u) = u$，$N_{1,1}(u) = 0$：
+   $$
+   N_{0,2}(u) = \frac{u}{2}(u) + 0 = \frac{u^2}{2};
+   $$
+2. <strong>在区间 $1 \le u < 2$</strong>：
+   此时 $N_{0,1}(u) = 2 - u$，$N_{1,1}(u) = u - 1$：
+   $$
+   \begin{aligned}
+   N_{0,2}(u) &= \frac{u}{2}(2 - u) + \frac{3 - u}{2}(u - 1) \\
+   &= \frac{2u - u^2 + (3u - 3 - u^2 + u)}{2} \\
+   &= \frac{-2u^2 + 6u - 3}{2};
+   \end{aligned}
+   $$
+3. <strong>在区间 $2 \le u < 3$</strong>：
+   此时 $N_{0,1}(u) = 0$，$N_{1,1}(u) = 3 - u$：
+   $$
+   N_{0,2}(u) = 0 + \frac{3 - u}{2}(3 - u) = \frac{(3 - u)^2}{2}.
+   $$
+
+合并得到 $N_{0,2}(u)$ 的完整二次分段解析式：
+
+$$
+\boxed{
+N_{0,2}(u) =
+\begin{cases}
+\dfrac{u^2}{2}, & 0 \le u < 1, \\[6pt]
+\dfrac{-2u^2 + 6u - 3}{2}, & 1 \le u < 2, \\[6pt]
+\dfrac{(3 - u)^2}{2}, & 2 \le u < 3, \\[6pt]
+0, & \text{其他}.
+\end{cases}
+}
+$$
+
+<strong>平滑性验证</strong>：
+- 在交界点 $u=1$ 处：左侧值 $\frac{1}{2}$，右侧值 $\frac{-2(1)+6(1)-3}{2} = \frac{1}{2}$；左导数 $u|_{u=1} = 1$，右导数 $\frac{-4u+6}{2}|_{u=1} = 1$。位置与一阶导数严格连续（$C^1$ 连续）！
+- 在交界点 $u=2$ 处：左右两侧值均为 $\frac{1}{2}$，一阶导数均为 $-1$。
+- 几何形态：由三段抛物线平滑拼接而成的<strong>圆滑小山包</strong>。
+
+下方工作台展示了 2 次抛物线山包基函数与 $C^1$ 平滑曲线的生成过程。你可以切换预设观察不同拱形与双峰下的权重分布：
+
+<BSplineBasisStepDemo client:visible initialDegree="2" id="bspline-basis-step-demo-p2" />
+
+### 5. 3 次及更高次演化规律
+
+继续按此递推，3 次基函数 $N_{i,3}(u)$ 由两个 2 次山包加权合成，覆盖 4 个 Span，交界处自动升至 $C^2$ 连续（曲率连续）。
+
+整个递推演化的金字塔层次一目了然：
+- <strong>0 次（$p=0$）</strong>：单位方块阶梯 $\to$ 曲线为离散点；
+- <strong>1 次（$p=1$）</strong>：三角帽子 $\to$ 曲线为多边形折线；
+- <strong>2 次（$p=2$）</strong>：二次抛物线山包 $\to$ 曲线为 $C^1$ 平滑曲线；
+- <strong>3 次（$p=3$）</strong>：三次钟形平滑包 $\to$ 曲线为 $C^2$ 高度光顺曲线（工业 CAD 标准）。
+
+下方工作台展示了工业标准的 3 次（Cubic）平滑钟形基函数与 $C^2$ 光顺曲线。你可以自由切换几何场景预设、滑动参数 $u$ 或微调控制点：
+
+<BSplineBasisStepDemo client:visible initialDegree="3" id="bspline-basis-step-demo-p3" />
+
+### 6. 权重归一性（Partition of Unity）的数学归纳法严格证明
+
+B-Spline 基函数最关键的代数性质是<strong>权重归一性（单位分解，Partition of Unity）</strong>：在曲线的标准有效参数域内，所有非零基函数的代数和在任意参数点 $u$ 处<strong>严格恒等于 $1$</strong>：
+
+$$
+\sum_{i=0}^n N_{i,p}(u) \equiv 1,\qquad \forall u \in [u_p, u_{m-p}].
+$$
+
+我们通过对次数 $p$ 进行<strong>数学归纳法</strong>进行严格证明：
+
+<strong>1. 基础情形（Base Case: $p = 0$）</strong>：
+在有效参数域内，任意参数 $u$ 必唯一落在某一个非零 Knot Span $[u_j, u_{j+1})$ 之中。由 0 次基函数的定义式：
+$$
+N_{i,0}(u) =
+\begin{cases}
+1, & i = j, \\
+0, & i \neq j.
+\end{cases}
+$$
+因此，所有 0 次基函数之和为：
+$$
+\sum_i N_{i,0}(u) = N_{j,0}(u) = 1.
+$$
+基础情形成立。
+
+<strong>2. 归纳假设（Inductive Hypothesis）</strong>：
+假设结论对 $p-1$ 次基函数成立，即：
+$$
+\sum_i N_{i,p-1}(u) \equiv 1.
+$$
+
+<strong>3. 归纳递推（Inductive Step: 从 $p-1$ 次证明 $p$ 次）</strong>：
+将 Cox–de Boor 递推公式代入 $p$ 次基函数的全域求和式：
+$$
+\sum_i N_{i,p}(u) = \sum_i \left( \frac{u - u_i}{u_{i+p} - u_i} N_{i,p-1}(u) + \frac{u_{i+p+1} - u}{u_{i+p+1} - u_{i+1}} N_{i+1,p-1}(u) \right).
+$$
+
+将求和号拆开为两项独立的求和：
+$$
+\sum_i N_{i,p}(u) = \underbrace{\sum_i \frac{u - u_i}{u_{i+p} - u_i} N_{i,p-1}(u)}_{\text{第一项}} + \underbrace{\sum_i \frac{u_{i+p+1} - u}{u_{i+p+1} - u_{i+1}} N_{i+1,p-1}(u)}_{\text{第二项}}.
+$$
+
+对于第二项，对其求和哑指标做平移变换（令新下标 $k = i + 1$）：
+$$
+\sum_i \frac{u_{i+p+1} - u}{u_{i+p+1} - u_{i+1}} N_{i+1,p-1}(u) = \sum_k \frac{u_{k+p} - u}{u_{k+p} - u_k} N_{k,p-1}(u).
+$$
+
+由于求和符号中的字母只是虚拟哑指标，将 $k$ 重新记为 $i$：
+$$
+\sum_k \frac{u_{k+p} - u}{u_{k+p} - u_k} N_{k,p-1}(u) = \sum_i \frac{u_{i+p} - u}{u_{i+p} - u_i} N_{i,p-1}(u).
+$$
+
+将平移并重命名后的第二项代回原求和式中：
+$$
+\sum_i N_{i,p}(u) = \sum_i \frac{u - u_i}{u_{i+p} - u_i} N_{i,p-1}(u) + \sum_i \frac{u_{i+p} - u}{u_{i+p} - u_i} N_{i,p-1}(u).
+$$
+
+由于两项具有完全相同的求和指标范围与公共基函数因子 $N_{i,p-1}(u)$，将它们合并到同一个求和号下并通分相加：
+$$
+\begin{aligned}
+\sum_i N_{i,p}(u) &= \sum_i \left( \frac{u - u_i}{u_{i+p} - u_i} + \frac{u_{i+p} - u}{u_{i+p} - u_i} \right) N_{i,p-1}(u) \\
+&= \sum_i \left( \frac{(u - u_i) + (u_{i+p} - u)}{u_{i+p} - u_i} \right) N_{i,p-1}(u) \\
+&= \sum_i \left( \frac{u_{i+p} - u_i}{u_{i+p} - u_i} \right) N_{i,p-1}(u) \\
+&= \sum_i 1 \cdot N_{i,p-1}(u) \\
+&= \sum_i N_{i,p-1}(u).
+\end{aligned}
+$$
+
+根据归纳假设，$\sum_i N_{i,p-1}(u) = 1$。
+由此得到：
+$$
+\boxed{\sum_i N_{i,p}(u) = 1}
+$$
+归纳证明完毕。$\blacksquare$
+
+## 八、局部支撑（Local Support）与局部可控性机理
+
+有了上述由浅入深的逐级构造，B-Spline 最核心的几何杀手锏——<strong>局部支撑（Local Support）</strong> 的数学机理便不言自明。
+
+### 1. 紧支撑区间定理
+
+对于任意次数为 $p$ 的 B-Spline 基函数 $N_{i,p}(u)$，其非零区域<strong>被严格局限在一个有限的闭区间内部</strong>：
+
+$$
+\boxed{
+\operatorname{supp}(N_{i,p}) = [u_i, u_{i+p+1})
+}
+$$
+
+在区间外部（$u < u_i$ 或 $u \ge u_{i+p+1}$），基函数<strong>严格恒等于 $0$</strong>。
+
+<strong>跨度规律</strong>：
+- $0$ 次基函数覆盖 $p+1 = 1$ 个 Span $[u_i, u_{i+1})$；
+- $1$ 次基函数覆盖 $p+1 = 2$ 个 Span $[u_i, u_{i+2})$；
+- $2$ 次基函数覆盖 $p+1 = 3$ 个 Span $[u_i, u_{i+3})$；
+- $3$ 次基函数覆盖 $p+1 = 4$ 个 Span $[u_i, u_{i+4})$。
+
+### 2. 局部扰动隔离严格证明
+
+假设设计师修改了第 $k$ 个控制点 $\mathbf P_k \to \mathbf P_k + \Delta \mathbf P_k$，整条曲线的新旧位移差为：
+
+$$
+\Delta \mathbf C(u) = \mathbf C_{\text{new}}(u) - \mathbf C_{\text{orig}}(u) = N_{k,p}(u) \cdot \Delta \mathbf P_k.
+$$
+
+根据上述紧支撑定理：
+当参数 $u \notin [u_k, u_{k+p+1})$ 时，由于 $N_{k,p}(u) \equiv 0$，必有：
+
+$$
+\boxed{
+\Delta \mathbf C(u) \equiv \mathbf 0,\qquad \forall u \notin [u_k, u_{k+p+1})
+}
+$$
+
+<strong>工程价值</strong>：
+> <strong>修改控制点 $\mathbf P_k$，只会引起其对应支撑区间 $[u_k, u_{k+p+1})$ 内曲线的微调，整条曲线的其余区域保持绝对静止！</strong> 这彻底解决了单段 Bézier 曲线中“牵一发而动全身”的痛点。
+
+### 3. 活跃控制点窗口与局部计算复杂度
+
+反过来看：当我们要计算<strong>标准有效参数域 $u \in [u_p, u_{m-p}]$</strong> 处的曲线点 $\mathbf C(u)$ 时，只需先判定 $u$ 落在哪个<strong>非零 Knot Span</strong> $[u_j, u_{j+1})$ 内。在有效参数域的任意非零 Span 内部，整条曲线上非零的基函数<strong>有且仅有 $p+1$ 个</strong>：
+
+$$
+N_{j-p,p}(u),\quad N_{j-p+1,p}(u),\quad \ldots,\quad N_{j,p}(u).
+$$
+
+因此，将曲线方程限制在这一非零 Span $[u_j, u_{j+1})$ 上时，局部多项式段的解析式严格为：
+
+$$
+\boxed{
+\mathbf C_j(u) = \sum_{i=j-p}^j N_{i,p}(u) \mathbf P_i,\qquad u \in [u_j, u_{j+1})
+}
+$$
+
+这从代数上直接证明了：<strong>在标准有效参数域 $[u_p, u_{m-p}]$ 内的每一个非零 Knot Span 内部，曲线就是由当前活跃的 $p+1$ 个控制点加权生成的独立 $p$ 次多项式段</strong>。这意味着：
+- 计算任意一个曲线点的位置，<strong>只需要且仅需要访问附近的 $p+1$ 个控制点</strong>（对于三次 B-Spline，永远只有 4 个控制点参与）；
+- 即使整条复杂车身曲线上包含 $10000$ 个控制点，求值开销依然是恒定的 $O(p^2) = O(16)$，计算复杂度与控制点总数彻底脱钩！
+
+## 九、Knot Vector 的工程解剖与规范
+
+### 1. 控制点、次数与 Knot 数量刚性关系
+
+在实际工程编程与 CAD 格式（如 STEP）中，控制点数量、多项式次数与节点向量长度之间满足严格的代数守恒关系。
+
+设：
+- 控制点数量为 $n+1$ 个（下标 $\mathbf P_0, \mathbf P_1, \ldots, \mathbf P_n$）；
+- 曲线多项式次数为 $p$；
+- 节点向量为 $U = (u_0, u_1, \ldots, u_m)$，共 $m+1$ 个节点。
+
+标准守恒公式为：
+
+$$
+\boxed{m = n + p + 1 \iff \text{节点总数 } (m+1) = (n+1) + p + 1}
+$$
+
+<strong>实例速查</strong>：
+若我们要用 3 次（$p=3$）B-Spline 控制 $6$ 个控制点（$n=5$），则节点向量中必须包含 $m = 5 + 3 + 1 = 9$（总共 $10$ 个）节点。
+
+### 2. 为什么端点要重复 $p$ 次？——从“有限截断”与“Span 压缩”透视
+
+普通均匀节点构成的 B-Spline 曲线两端并不穿过起点 $\mathbf P_0$ 和终点 $\mathbf P_n$。而在工业几何建模中，我们通常希望曲线严格<strong>从第一个控制点出发，并在最后一个控制点精准收尾</strong>。
+
+构造这种 <strong>Clamped（端点夹持 / Open）B-Spline</strong> 的标准操作是：<strong>把最左端和最右端的节点数值各额外重复 $p$ 次（使得端点重数 Multiplicity 达到 $p+1$）</strong>：
+
+$$
+\boxed{
+U = (\underbrace{a, a, \ldots, a}_{p+1 \text{ 个}},\, u_{p+1},\, \ldots,\, u_{m-p-1},\, \underbrace{b, b, \ldots, b}_{p+1 \text{ 个}})
+}
+$$
+
+这绝非人为的形式规定，而是由<strong>有限 B-Spline 基函数的边界残缺性与跨度压缩</strong>所决定的核心物理机制。
+
+#### (1) 痛点：不重复端点时，左边界其实“缺了 $p$ 个基函数”
+
+我们可以将有限 B-Spline 理解为<strong>从双向无限的理想 B-Spline 序列中强行截断</strong>出来的产物：
+- 在双向无限序列中，每个 Span $[k, k+1)$ 左右都有无穷多个基函数延伸，处处拥有完整的 $p+1$ 个活跃基函数；
+- 但一旦截断为有限控制点 $\mathbf P_0, \mathbf P_1, \ldots, \mathbf P_n$，基函数只能从 $N_{0,p}$ 开始编号，负下标基函数 $N_{-p,p}, \ldots, N_{-1,p}$ 被全部切除。
+
+以二次（$p=2$）普通均匀节点 $U = \{0, 1, 2, 3, 4, \ldots\}$ 为例：
+1. <strong>区间 $[0, 1)$</strong>：对于 $2$ 次多项式，一个完整 Span 本来需要 $p+1 = 3$ 个活跃基函数 $N_{-2,2}, N_{-1,2}, N_{0,2}$。但由于我们只保留了 $N_{0,2}$，负下标基函数 $N_{-2,2}, N_{-1,2}$ 根本不存在，导致左端基函数严重残缺；
+2. <strong>区间 $[1, 2)$</strong>：理论上需要 $N_{-1,2}, N_{0,2}, N_{1,2}$，仍然缺少了 $N_{-1,2}$；
+3. <strong>直到区间 $[2, 3)$</strong>：所需的 $N_{0,2}, N_{1,2}, N_{2,2}$ 才第一次全部在有效列表中出现！
+
+因此，对于普通未夹持节点，标准有效参数域自然只能推迟到 $u_p = u_2 = 2$ 才真正开始，左侧留下了整整 $p = 2$ 个无法形成完整多项式包络的残缺 Span。
+
+#### (2) 一般规律：紧支撑跨度定理与 $p$ 层边界残缺
+
+对于任意次数 $p$，根据第八节所证的紧支撑定理，每个基函数的非零支撑域横跨 $p+1$ 个 Knot Span：
+
+$$
+\operatorname{supp}(N_{i,p}) = [u_i, u_{i+p+1}).
+$$
+
+这意味着：
+- 第一个基函数 $N_{0,p}$ 的非零起点在 $u_0$；
+- 直到第 $p+1$ 个基函数 $N_{p,p}$ 登场（其支撑起点在 $u_p$），参数区间 $[u_p, u_{p+1})$ 才首次集齐全部 $p+1$ 个活跃基函数 $\{N_{0,p}, N_{1,p}, \ldots, N_{p,p}\}$。
+
+因此，在左边界 $u_0$ 到 $u_p$ 之间，必然存在整整 $p$ 个“缺失了左侧负下标基函数”的残缺边界 Span。各阶残缺情况如下：
+- <strong>$p=1$（线性）</strong>：首个 Span $[u_0, u_1)$ 缺 $N_{-1,1}$（缺 1 个），需额外重复 $1$ 次，端点重数为 $1+1=2$；
+- <strong>$p=2$（二次）</strong>：首两个 Span 缺 $N_{-2,2}, N_{-1,2}$（缺 2 个），需额外重复 $2$ 次，端点重数为 $2+1=3$；
+- <strong>$p=3$（三次）</strong>：前三个 Span 缺 $N_{-3,3}, N_{-2,3}, N_{-1,3}$（缺 3 个），需额外重复 $3$ 次，端点重数为 $3+1=4$。
+
+#### (3) Clamping 的核心机理：将 $p$ 个残缺 Span 压缩为零长度
+
+如果我们希望曲线从参数 $a$ 立即拥有完整的 $p+1$ 个活跃基函数，同时又不能凭空生造负下标基函数，最自然优雅的几何解法就是：<strong>把那 $p$ 个残缺的 Span 全部压缩成长度为 0 的零跨度（Zero Span）</strong>！
+
+令：
+
+$$
+u_0 = u_1 = \cdots = u_p = a.
+$$
+
+此时原本位于有效域左侧的 $p$ 个残缺 Span：
+
+$$
+[u_0, u_1) = [a, a) = \emptyset,\quad [u_1, u_2) = [a, a) = \emptyset,\quad \ldots,\quad [u_{p-1}, u_p) = [a, a) = \emptyset
+$$
+
+全部被“压扁”退化为长度为 $0$ 的空区间。因此，<strong>参数轴上第一个长度非零的有效 Knot Span 直接就是 $[u_p, u_{p+1}) = [a, u_{p+1})$</strong>！
+
+> <strong>一句话看透 Clamping 本质</strong>：
+> $$
+> \boxed{\text{两端各额外重复 } p \text{ 次（重数达到 } p+1 \text{），本质上是将有限 B-Spline 两侧各 } p \text{ 个基函数残缺 Span 压缩为零长度。}}
+> $$
+
+#### (4) 伴随性质：曲线严格精确插值首尾控制点
+
+将端点重数提升至 $p+1$ 不仅消除了残缺 Span，还在代数上直接锁定了端点处的基函数取值：
+在左端点 $u = a$ 处：
+
+$$
+N_{0,p}(a) = 1,\qquad N_{i,p}(a) = 0\quad (\forall i > 0).
+$$
+
+将其代入曲线方程：
+
+$$
+\mathbf C(a) = \sum_{i=0}^n N_{i,p}(a)\mathbf P_i = N_{0,p}(a)\mathbf P_0 + \sum_{i=1}^n N_{i,p}(a)\mathbf P_i = 1 \cdot \mathbf P_0 + \mathbf 0 = \boxed{\mathbf P_0}.
+$$
+
+同理，在右端点 $u = b$ 处，有 $N_{n,p}(b) = 1$（其余 $N_{i,p}(b) = 0$），由此严格得出：
+
+$$
+\mathbf C(b) = \boxed{\mathbf P_n}.
+$$
+
+曲线完美穿过首尾控制点，实现了 CAD 建模中的精准定位锚接。
+
+### 3. 标准有效参数域、非零 Span 计数与 Bézier 极端情况
+
+结合上述端点压缩机理，对于工程中最标准的 Clamped B-Spline：
+
+1. <strong>标准有效参数域</strong>：
+   曲线的真正物理参数域为：
+   $$
+   \boxed{u \in [u_p, u_{m-p}] = [a, b]}
+   $$
+   外侧两端的各 $p$ 个退化 Span 均为零长度，求值算法仅在 $[u_p, u_{m-p}]$ 内运行。
+
+2. <strong>非零 Knot Span 总数与分段多项式计数</strong>：
+   若内部节点全为单节点（无内部重节点），由于两端各 $p$ 个退化跨度长度为 0，有效参数域内承载几何形态的非零 Knot Span 数量恰好为：
+   $$
+   \boxed{\text{非零 Knot Span 总数} = (m - 2p) = (n - p + 1) = \text{多项式分段数}}
+   $$
+
+3. <strong>统一透视：Bézier 曲线就是最极端的单段 Clamped B-Spline</strong>：
+   当控制点数量恰好等于阶数加一（即 $n = p$）时，总节点数为 $m+1 = (n+1) + p + 1 = 2(p+1)$。此时 Clamped 节点向量形态为：
+   $$
+   \boxed{
+   U = (\underbrace{0, 0, \ldots, 0}_{p+1 \text{ 个}},\, \underbrace{1, 1, \ldots, 1}_{p+1 \text{ 个}})
+   }
+   $$
+   代入非零 Span 计数公式：
+   $$
+   \text{非零 Knot Span 总数} = n - p + 1 = p - p + 1 = 1.
+   $$
+   此时中间没有任何内部节点切分，整个有效参数域 $[0, 1]$ 内<strong>仅剩唯一一个非零 Span</strong>，整条曲线退化为单段多项式，即一条标准的 $p$ 次 Bézier 曲线！这在代数与几何上完美统一了 Bézier 与 B-Spline 的理论谱系。
+
+## 十、双向透视：Span → Basis 与 Basis → Span
+
+理解 B-Spline 的数据结构，需要建立起灵活的双向透视心智模型：
+
+| 观察方向 | 固定对象 | 查询目标 | 核心工程意义 |
+| :--- | :--- | :--- | :--- |
+| <strong>Span → Basis</strong> | 固定一个<strong>非零 Knot Span</strong> $[u_j, u_{j+1})$ | 查找该 Span 内<strong>所有非零的基函数</strong>（共 $p+1$ 个） | <strong>前向求值视角</strong>：计算当前参数点 $\mathbf C(u)$ 需要读取哪几个控制点 |
+| <strong>Basis → Span</strong> | 固定一个基函数 $N_{i,p}(u)$ | 查找该基函数<strong>支撑覆盖的所有非零 Span</strong>（共 $p+1$ 个） | <strong>后向修改视角</strong>：拖动控制点 $\mathbf P_i$ 时哪些参数区间的曲线会发生位移 |
+
+### 1. 局部凸组合与局部凸包（Local Convex Hull Property）
+
+由于 B-Spline 基函数在标准有效参数域 $[u_p, u_{m-p}]$ 内严格满足非负性 $N_{i,p}(u) \ge 0$ 与单位分解 $\sum_{i=0}^n N_{i,p}(u) \equiv 1$：
+
+$$
+\mathbf C_j(u) = \sum_{i=j-p}^j N_{i,p}(u) \mathbf P_i,\qquad \sum_{i=j-p}^j N_{i,p}(u) \equiv 1,\quad N_{i,p}(u) \ge 0.
+$$
+
+因此，在标准有效参数域 $[u_p, u_{m-p}]$ 内的任意非零 Span 内部，曲线点 $\mathbf C(u)$ 始终是当前活跃的 $p+1$ 个控制点的<strong>局部凸组合（Local Convex Combination）</strong>。整条曲线紧密包络在局部相邻控制点构成的局部小凸包内部。
+
+### 2. 每段非零 Span 是标准 Bézier 曲线的严格证明
+
+一个至关重要的理论与工程结论是：<strong>在 B-Spline 标准有效参数域 $[u_p, u_{m-p}]$ 内的每一个非零 Knot Span 上，局部曲线段本质上就是一条标准的 $p$ 次 Bézier 曲线</strong>。
+
+我们可以从<strong>抽象多项式向量空间基底完备性</strong>与<strong>几何节点插入（Boehm 算法）</strong>两个维度给出完备证明：
+
+<strong>角度一：抽象多项式向量空间 $\mathcal P_p$ 的基底等价性</strong>
+1. 设 $u \in [u_j, u_{j+1})$ 为有效参数域内的任意非零 Span（$u_j < u_{j+1}$）。在该区间内，只有 $p+1$ 个基函数 $N_{j-p,p}(u), \dots, N_{j,p}(u)$ 非零；
+2. 由于区间内部没有其他节点切分点，这 $p+1$ 个基函数在此区间内均是连续光滑的单段实系数多项式，最高次数不超过 $p$；
+3. 引入局部参数的线性归一化仿射映射：
+   $$
+   t = \frac{u - u_j}{u_{j+1} - u_j} \in [0, 1].
+   $$
+   该仿射变换是一对一线性同构，保持多项式的最高次数 $p$ 不变；
+4. 曲线在该 Span 内的分量函数 $x(t), y(t)$ 均属于多项式向量空间 $\mathcal P_p$（$\dim \mathcal P_p = p+1$）。正如我们在第三节所证，Bernstein 基函数族 $\{B_k^p(t)\}_{k=0}^p = \{B_0^p(t), B_1^p(t), \ldots, B_p^p(t)\}$ 是空间 $\mathcal P_p$ 的一组完备标准基；
+5. 因此，局部多项式段 $\mathbf C_j(u)$ <strong>必然且唯一地</strong>可以展开为 Bernstein 基的线性组合：
+   $$
+   \mathbf C_j(u) = \sum_{k=0}^p B_k^p(t) \mathbf Q_k^{(j)},\qquad t = \frac{u - u_j}{u_{j+1} - u_j} \in [0, 1].
+   $$
+   其中坐标向量序列 $\mathbf Q_0^{(j)}, \mathbf Q_1^{(j)}, \ldots, \mathbf Q_p^{(j)}$ 就是该 Span 所对应的 <strong>$p$ 次 Bézier 控制多边形顶点</strong>。
+
+> <strong>核心概念辨析：Bézier 形式 vs 权重归一性（Partition of Unity）</strong>
+> - <strong>“能写成 Bézier 形式”</strong>：完全由“该段属于多项式空间 $\mathcal P_p$”以及“Bernstein 基是 $\mathcal P_p$ 的完备基”所保证，这纯粹是<strong>多项式向量空间中的基底变换（Change of Basis）</strong>代数性质，无需依赖 B-Spline 基函数的全域求和性质；
+> - <strong>“权重归一性（Partition of Unity）”</strong>：$\sum_i N_{i,p}(u) \equiv 1$ 则是 Cox–de Boor 递推算法在几何上保证曲线落在控制点局部凸包内的<strong>度量几何性质</strong>（在第七节通过数学归纳法证明）。
+>
+> 两者分别在“代数基底完备性”与“几何凸组合归一性”两个正交维度，构筑起 B-Spline 坚实的理论基础。
+
+<strong>角度二：几何节点插入提取（Boehm 算法 / de Boor 三角网）</strong>
+如何实际求出各段的 Bézier 控制点 $\mathbf Q_k^{(j)}$？
+- 根据 <strong>Boehm 节点插入算法（Boehm's Knot Insertion Algorithm）</strong>：若我们在 Span 左端点 $u_j$ 和右端点 $u_{j+1}$ 处反复插入节点，使其重数均达到 $p$（即 $r = p$）；
+- 根据连续性阶数定理，端点处的连续性降低为 $C^{p-p} = C^0$（仅端点位置保持接触连接）；
+- 此时，原本跨 Span 共享的 B-Spline 基函数彻底分裂为单段独立的 Bernstein 基函数，而在此过程中通过 de Boor 算法计算出的新顶点序列，恰好就是该 Span 的 Bézier 控制点 $\mathbf Q_0^{(j)} = \mathbf C(u_j), \mathbf Q_1^{(j)}, \ldots, \mathbf Q_p^{(j)} = \mathbf C(u_{j+1})$！
+
+由此得出核心结论：
+$$
+\boxed{\text{B-Spline 曲线} = \text{由多段通过节点向量光滑缝合（} C^{p-r} \text{）的 Bézier 曲线段拼装而成}}
+$$
+
+> <strong>提示</strong>：下方交互工作台与跨度色块条中所列出的 $s_3, s_4, s_5, \ldots$，均特指处于有效参数域 $[u_p, u_{m-p}]$ 内的<strong>非零 Knot Span</strong>（两端夹持产生的退化零跨度已自动剔除）。你可以自由切换视角并点击具体 Span 或 Basis 进行双向交叉印证：
+
+<BSplineLocalSupportDemo client:visible />
+
+## 十一、Knot 重数与连续性阶数突变（$C^{p-r}$）
+
+B-Spline 能够统治工业 CAD 的另一个杀手锏，在于它<strong>可以通过调整内部节点的重复次数（Multiplicity），在同一条曲线内部精确控制局部的光滑度</strong>。
+
+<strong>连续性阶数定理</strong>：
+> 若次数为 $p$ 的 B-Spline 曲线在某个内部节点 $u_k$ 处的重复度为 $r$（即该节点数值在向量中连续出现 $r$ 次），则曲线在该节点处的参数连续性为：
+> $$
+> \boxed{C^{p-r}}
+> $$
+
+以工业界最标准的三次 B-Spline（$p=3$）为例：
+
+| 内部 Knot 重数 $r$ | 连续性阶数 $C^{3-r}$ | 几何表现与物理意义 | 典型工业应用场景 |
+| :---: | :---: | :--- | :--- |
+| <strong>$r=1$</strong>（单节点） | <strong>$C^2$</strong> 连续 | 位置、切线（一阶导）与曲率（二阶导）完全连续平滑 | 汽车车身、飞机蒙皮外表面流线造型 |
+| <strong>$r=2$</strong>（二重节点） | <strong>$C^1$</strong> 连续 | 切线方向平滑，但曲率大小发生瞬时跳变 | 机械零件圆弧与直线的相切过渡 |
+| <strong>$r=3$</strong>（三重节点） | <strong>$C^0$</strong> 连续 | 曲线位置连续，但切线发生折角（尖点/硬折痕） | 带有锋利特征棱线的模具外壳 |
+| <strong>$r=4$</strong>（四重节点） | <strong>断开</strong> | 连续性丧失，曲线在节点处彻底断开分裂为两条独立子曲线 | 多零件组合装配边界 |
+
+通过下方交互工作台，你可以实时调整中部节点的重数 $r \in [1, 4]$，直观观察基函数在节点处的分裂过程以及空间曲线从曲率光滑到硬折角的形态突变：
+
+<BSplineContinuityDemo client:visible />
+
+## 十二、Bézier 与 B-Spline 的统一与心智模型
+
+### 1. Bézier 是无内部 Knot 的特殊 B-Spline
+
+学完上述全部内容后，我们可以得出整个曲线理论中最为优美统一的终极结论：
+
+> <strong>Bézier 曲线本质上就是只有一个非零 Knot Span 的极端特殊 Clamped B-Spline！</strong>
+
+设有一个三次 Bézier 曲线（控制点 $\mathbf P_0, \mathbf P_1, \mathbf P_2, \mathbf P_3$），我们为其赋予一个没有任意内部节点的极值节点向量：
+
+$$
+U = (\underbrace{0, 0, 0, 0}_{4 \text{ 个}},\, \underbrace{1, 1, 1, 1}_{4 \text{ 个}}).
+$$
+
+此时整个参数域被完全限制在单个非零 Span $[0, 1]$ 内。代入 Cox–de Boor 递推式，计算出的 4 个 B-Spline 基函数恰好严格退化为经典 Bernstein 基函数：
+
+$$
+N_{0,3}(u) = (1-u)^3 = B_0^3(u),\qquad N_{1,3}(u) = 3u(1-u)^2 = B_1^3(u),
+$$
+
+$$
+N_{2,3}(u) = 3u^2(1-u) = B_2^3(u),\qquad N_{3,3}(u) = u^3 = B_3^3(u).
+$$
+
+### 2. 全景终极对比表
+
+| 维度 | Bézier 曲线 | B-Spline 曲线 |
+| :--- | :--- | :--- |
+| <strong>数学形式</strong> | $\mathbf C(t) = \sum_{i=0}^n B_i^n(t) \mathbf P_i$ | $\mathbf C(u) = \sum_{i=0}^n N_{i,p}(u) \mathbf P_i$ |
+| <strong>基函数族</strong> | Bernstein 基函数 | Cox–de Boor 紧支撑基函数 |
+| <strong>多项式次数与点数</strong> | <strong>强行绑定</strong>：$n+1$ 点必定对应 $n$ 次 | <strong>彻底解耦</strong>：任意点数均可保持固定 $p$ 次（如三次） |
+| <strong>支撑范围</strong> | <strong>全域支撑</strong>：$t \in (0, 1)$ 处处非零 | <strong>局部紧支撑</strong>：仅在 $[u_i, u_{i+p+1})$ 有限区间非零 |
+| <strong>修改控制点影响</strong> | <strong>全域蠕动</strong>：整条曲线所有点发生微动 | <strong>局部隔离</strong>：仅影响局部 $p+1$ 个 Span，远处绝对静止 |
+| <strong>连续性控制</strong> | 多段拼接需手动约束控制点手柄（易级联锁死） | 由节点重数 $r$ 自动管理（$C^{p-r}$ 灵活调控） |
+| <strong>局部求值复杂度</strong> | $O(n^2)$ 随点数增长 | $O(p^2)$ 与总点数无关（常数开销） |
+
+### 3. 核心思想升级全景图
+
+从 Bézier 到 B-Spline，图形学发生的最本质升级概括为：
+
+$$
+\boxed{
+\text{全局单段多项式（Global Polynomial）}
+\quad\xrightarrow{\quad\text{引入 Knot Vector}\quad}\quad
+\text{局部紧支撑分段多项式（Local Piecewise Polynomial）}
+}
+$$
+
+## 十三、总结与后续方向
+
+回顾整篇探索历程：
+1. 我们从最基础的 `lerp` 线性插值出发，通过 de Casteljau 算法构建了 Bernstein 基函数与单段 Bézier 曲线；
+2. 剖析了高阶 Bézier 曲线的结构性死穴：控制力稀释（$O(1/\sqrt{n})$ 峰值衰减）与全域蠕动（全局支撑）；
+3. 引入节点向量 Knot Vector，通过 $0$ 次阶梯方块 $\to$ $1$ 次三角帽子 $\to$ $2$ 次抛物线山包 $\to$ $3$ 次平滑钟形包的逐级递推，建立起 Cox–de Boor 体系；
+4. 掌握了局部支撑（Local Support）、双向 Span 透视与 Knot 重数（$C^{p-r}$）的工程控制精髓；
+5. 最终将 Bézier 曲线统一收敛为 B-Spline 在极值节点向量下的特殊单非零跨度形态。
+
+在掌握了 B-Spline 之后，现代工业 CAD 造型的终极形态是 <strong>NURBS（非均匀有理 B-Spline，Non-Uniform Rational B-Splines）</strong>——通过为每个控制点引入权重标量 $w_i$，使曲线在射影几何下能够精确表达圆、椭圆、双曲线等二次代数曲线（圆锥曲线），我们将会在后续章节中展开详细的射影有理构造推导。
+

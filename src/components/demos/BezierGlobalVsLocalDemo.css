@@ -1,0 +1,31 @@
+.bezier-global-local-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bgl-canvas-container {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(61, 174, 233, 0.04) 0%,
+    transparent 70%
+  );
+}
+
+.bgl-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--kde-muted, #626b73);
+}
+
+.bgl-legend-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 9999px;
+}
+
+.bgl-ghost-line {
+  stroke-dasharray: 4 3;
+}

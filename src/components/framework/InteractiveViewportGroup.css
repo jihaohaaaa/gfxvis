@@ -1,0 +1,33 @@
+.interactive-viewport-group {
+  --interactive-viewport-gap: 0.65rem;
+  display: grid;
+  min-width: 0;
+  height: 100%;
+  grid-template-columns: repeat(
+    var(--viewport-group-columns, 1),
+    minmax(0, 1fr)
+  );
+  gap: var(--interactive-viewport-gap);
+}
+
+.interactive-viewport-group__item {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+}
+
+.interactive-viewport-group__item > * {
+  min-width: 0;
+  height: 100%;
+}
+
+@media (max-width: 720px) {
+  .interactive-viewport-group {
+    grid-template-columns: repeat(
+      var(--viewport-group-mobile-columns, 1),
+      minmax(0, 1fr)
+    );
+  }
+}

@@ -1,5 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Initialize timestamped screenshot directory across all workers if screenshot mode is enabled
+if (
+  !process.env.SCREENSHOT_SESSION_DIR &&
+  (process.env.SCREENSHOT === "1" || process.env.SCREENSHOT === "true")
+) {
+  const d = new Date();
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  process.env.SCREENSHOT_SESSION_DIR = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+}
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,

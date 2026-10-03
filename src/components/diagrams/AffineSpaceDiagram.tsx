@@ -4,7 +4,6 @@ import ParamSlider from "../framework/ParamSlider";
 import KdeTabs from "../framework/KdeTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import CanvasToolbar from "../framework/CanvasToolbar";
-import CanvasResizer from "../framework/CanvasResizer";
 import { clamp } from "@math";
 import KdeWindowShell from "../framework/KdeWindowShell";
 import KdeCard from "../framework/KdeCard";
@@ -909,7 +908,7 @@ export default function AffineSpaceDiagram() {
             P_0)$
           </div>
           <div className="font-mono text-sm font-semibold text-[var(--kde-accent)]">
-            {`$[P]_{\\mathcal{F}} = (${lambda1.toFixed(2)},\\, ${lambda2.toFixed(2)})^T`}
+            {`$[P]_{\\mathcal{F}} = (${lambda1.toFixed(2)},\\, ${lambda2.toFixed(2)})^T$`}
           </div>
         </div>
       </KdeCard>
@@ -942,7 +941,7 @@ export default function AffineSpaceDiagram() {
   const homogenizationControls = (
     <div className="grid grid-cols-1 gap-3">
       <KdeCard
-        title="测试对象类型"
+        title="1. 测试对象类型"
         badge={<KdeBadge variant="primary">DIMENSION</KdeBadge>}
       >
         <KdeTabs<"point" | "vector">
@@ -957,11 +956,65 @@ export default function AffineSpaceDiagram() {
         />
       </KdeCard>
 
-      <KdeCard title="仿射平移向量 (tx, ty)">
+      <KdeCard
+        title="2. 原始输入坐标 (X, Y)"
+        badge={
+          <KdeBadge variant={testType === "point" ? "success" : "default"}>
+            {testType === "point" ? "W = 1" : "W = 0"}
+          </KdeBadge>
+        }
+        headerAction={
+          <KdeButtonGroup attached size="xs">
+            <KdeButton
+              size="xs"
+              onClick={() => {
+                setRawX(1.2);
+                setRawY(0.8);
+              }}
+              title="默认点 (1.2, 0.8)"
+            >
+              (1.2, 0.8)
+            </KdeButton>
+            <KdeButton
+              size="xs"
+              onClick={() => {
+                setRawX(2.0);
+                setRawY(-1.0);
+              }}
+              title="预设点 (2.0, -1.0)"
+            >
+              (2.0, -1)
+            </KdeButton>
+          </KdeButtonGroup>
+        }
+      >
+        <ParamSlider
+          labelMode="adaptive"
+          display={`${rawX.toFixed(1)}`}
+          label="输入 $X$"
+          max={3.0}
+          min={-3.0}
+          onChange={setRawX}
+          step={0.1}
+          value={rawX}
+        />
+        <ParamSlider
+          labelMode="adaptive"
+          display={`${rawY.toFixed(1)}`}
+          label="输入 $Y$"
+          max={3.0}
+          min={-3.0}
+          onChange={setRawY}
+          step={0.1}
+          value={rawY}
+        />
+      </KdeCard>
+
+      <KdeCard title="3. 仿射平移向量 (tx, ty)">
         <ParamSlider
           labelMode="adaptive"
           display={`${tx.toFixed(1)}`}
-          label="$t_x$"
+          label="平移 $t_x$"
           max={3.0}
           min={-3.0}
           onChange={setTx}
@@ -971,7 +1024,7 @@ export default function AffineSpaceDiagram() {
         <ParamSlider
           labelMode="adaptive"
           display={`${ty.toFixed(1)}`}
-          label="$t_y$"
+          label="平移 $t_y$"
           max={3.0}
           min={-3.0}
           onChange={setTy}
@@ -981,7 +1034,7 @@ export default function AffineSpaceDiagram() {
       </KdeCard>
 
       <KdeCard
-        title="线性旋转角 θ"
+        title="4. 线性旋转角 θ"
         headerAction={
           <KdeButtonGroup attached size="xs">
             <KdeButton size="xs" onClick={() => setThetaDeg(0)}>
@@ -1253,11 +1306,33 @@ export default function AffineSpaceDiagram() {
   const homogenizationReadouts = (
     <>
       <KdeCard
-        title="齐次分块矩阵作用方程"
+        title="齐次分块矩阵作用方程与代数展开"
         badge={<KdeBadge variant="primary">HOMOGENEOUS</KdeBadge>}
+        variant="highlight"
       >
-        <div className="overflow-x-auto py-1 text-xs">
-          {`$$\\begin{pmatrix} X' \\\\ Y' \\\\ W' \\end{pmatrix} = \\begin{pmatrix} \\cos\\theta & -\\sin\\theta & t_x \\\\ \\sin\\theta & \\cos\\theta & t_y \\\\ 0 & 0 & 1 \\end{pmatrix} \\begin{pmatrix} ${rawX.toFixed(1)} \\\\ ${rawY.toFixed(1)} \\\\ ${rawW} \\end{pmatrix} = \\begin{pmatrix} ${transformedX.toFixed(2)} \\\\ ${transformedY.toFixed(2)} \\\\ ${transformedW} \\end{pmatrix}$$`}
+        <div className="space-y-2 text-xs text-[var(--kde-ink)]">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[11px] font-semibold text-[var(--kde-muted)]">
+              齐次分块形式：
+            </span>
+            <div className="font-mono">
+              {
+                "$\\begin{pmatrix} \\mathbf{x}' \\\\ w' \\end{pmatrix} = \\begin{pmatrix} R(\\theta) & \\mathbf{t} \\\\ \\mathbf{0}^\\top & 1 \\end{pmatrix} \\begin{pmatrix} \\mathbf{x} \\\\ w \\end{pmatrix} = \\begin{pmatrix} R(\\theta)\\mathbf{x} + w\\mathbf{t} \\\\ w \\end{pmatrix}$"
+              }
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--kde-border)]/50 pt-1.5">
+            <span className="text-[11px] font-semibold text-[var(--kde-muted)]">
+              3D 矩阵数值作用：
+            </span>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+              <span>{`$M = \\begin{pmatrix} ${cosT.toFixed(2)} & ${(-sinT).toFixed(2)} & ${tx.toFixed(1)} \\\\ ${sinT.toFixed(2)} & ${cosT.toFixed(2)} & ${ty.toFixed(1)} \\\\ 0 & 0 & 1 \\end{pmatrix}$`}</span>
+              <span>{`$\\mathbf{p} = \\begin{pmatrix} ${rawX.toFixed(1)} \\\\ ${rawY.toFixed(1)} \\\\ ${rawW} \\end{pmatrix}$`}</span>
+              <span>{"$\\implies$"}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{`$\\mathbf{p}' = \\begin{pmatrix} ${transformedX.toFixed(2)} \\\\ ${transformedY.toFixed(2)} \\\\ ${transformedW} \\end{pmatrix}$`}</span>
+            </div>
+          </div>
         </div>
       </KdeCard>
 
@@ -1270,23 +1345,39 @@ export default function AffineSpaceDiagram() {
             : "方向向量 w = 0 线性子空间保持机制"
         }
       >
-        {testType === "point" ? (
-          <span>
-            {"📌 当输入为"}
-            <strong className="text-[var(--kde-ink)]">仿射点</strong>
-            {
-              "（$w = 1$）时，平移分量 $\\mathbf{t} \\times 1$ 起效，且输出高度恒为 $w' = 1$，严格保持在仿射切片超平面上！"
-            }
-          </span>
-        ) : (
-          <span>
-            {"🚀 当输入为"}
-            <strong className="text-[var(--kde-ink)]">方向向量</strong>
-            {
-              "（$w = 0$）时，平移分量 $\\mathbf{t} \\times 0 = 0$ 自动消去，向量只经历纯线性旋转，不产生平移，保持在向量子空间中！"
-            }
-          </span>
-        )}
+        <div className="space-y-1.5 text-xs leading-relaxed text-[var(--kde-ink)]">
+          {testType === "point" ? (
+            <>
+              <p>
+                {"📌 当输入为"}
+                <strong className="text-[var(--kde-ink)]">仿射点</strong>
+                {
+                  "（$w = 1$）时，平移分量 $\\mathbf{t} \\times 1 = \\mathbf{t}$ 完整起效，空间点同时完成刚体旋转与空间位移。"
+                }
+              </p>
+              <p className="border-t border-[var(--kde-border)]/50 pt-1 text-[11px] text-[var(--kde-muted)]">
+                {
+                  "矩阵底行 $[0, 0, 1] \\cdot [X, Y, 1]^\\top = 1$ 严格保证输出高度恒为 $W' = 1$，点始终约束在仿射切片超平面上，几何封闭！"
+                }
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                {"🚀 当输入为"}
+                <strong className="text-[var(--kde-ink)]">方向向量</strong>
+                {
+                  "（$w = 0$）时，平移分量 $\\mathbf{t} \\times 0 = \\mathbf{0}$ 自动消去，向量不产生平移位移，仅经历纯线性旋转 $R(\\theta)$。"
+                }
+              </p>
+              <p className="border-t border-[var(--kde-border)]/50 pt-1 text-[11px] text-[var(--kde-muted)]">
+                {
+                  "矩阵底行 $[0, 0, 1] \\cdot [X, Y, 0]^\\top = 0$ 严格保证输出高度恒为 $W' = 0$，向量始终约束在 $w=0$ 线性向量子空间中！"
+                }
+              </p>
+            </>
+          )}
+        </div>
       </KdeMessageBar>
     </>
   );
@@ -1308,7 +1399,6 @@ export default function AffineSpaceDiagram() {
               {mode === "point_vector" && pointVectorSvg}
               {mode === "frame_barycentric" && frameSvg}
               {mode === "homogenization" && homogenizationSvg}
-              <CanvasResizer className="absolute bottom-0 inset-x-0 z-20" />
             </div>
           }
           controls={
@@ -1319,10 +1409,22 @@ export default function AffineSpaceDiagram() {
             </div>
           }
           footer={
-            <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-              {mode === "point_vector" && pointVectorReadouts}
-              {mode === "frame_barycentric" && frameReadouts}
-              {mode === "homogenization" && homogenizationReadouts}
+            <div className="w-full">
+              {mode === "point_vector" && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {pointVectorReadouts}
+                </div>
+              )}
+              {mode === "frame_barycentric" && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {frameReadouts}
+                </div>
+              )}
+              {mode === "homogenization" && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {homogenizationReadouts}
+                </div>
+              )}
             </div>
           }
         />

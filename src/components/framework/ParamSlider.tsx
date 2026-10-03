@@ -5,8 +5,8 @@ import "./ParamSlider.css";
 interface ParamSliderProps {
   /** Label rendered before the range input (KaTeX node, string with $...$, or plain text). */
   label: ReactNode;
-  /** Allow prose wrapping, or keep the label together and move it above when space is tight. */
-  labelMode?: "flow" | "adaptive";
+  /** Allow prose wrapping, adaptive layout, or stacked top-label / full-width slider. */
+  labelMode?: "flow" | "adaptive" | "stacked";
   min: number;
   max: number;
   step: number;
@@ -31,20 +31,57 @@ export default function ParamSlider({
   display,
   digits = 2,
 }: ParamSliderProps) {
+  const renderedLabel =
+    typeof label === "string" ? (
+      <AutoMath as="span" className="text-sm">
+        {label}
+      </AutoMath>
+    ) : (
+      label
+    );
+
+  const renderedDisplay =
+    typeof display === "string" ? (
+      <AutoMath as="span" className="tabular-nums">
+        {display}
+      </AutoMath>
+    ) : (
+      <span className="tabular-nums">{value.toFixed(digits)}</span>
+    );
+
+  if (labelMode === "stacked") {
+    return (
+      <label
+        className="param-slider param-slider--stacked flex w-full flex-col gap-1 text-muted"
+        data-label-mode="stacked"
+      >
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span className="param-slider__label font-medium text-[var(--kde-ink,#232629)]">
+            {renderedLabel}
+          </span>
+          <span className="param-slider__value font-mono text-[var(--kde-accent,#3daee9)]">
+            {renderedDisplay}
+          </span>
+        </div>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+          className="param-slider__input w-full cursor-pointer accent-[var(--color-accent)]"
+        />
+      </label>
+    );
+  }
+
   return (
     <label
       className={`param-slider param-slider--${labelMode} flex items-center gap-2 text-muted`}
       data-label-mode={labelMode}
     >
-      <span className="param-slider__label">
-        {typeof label === "string" ? (
-          <AutoMath as="span" className="text-sm">
-            {label}
-          </AutoMath>
-        ) : (
-          label
-        )}
-      </span>
+      <span className="param-slider__label">{renderedLabel}</span>
       <span className="param-slider__controls">
         <input
           type="range"
@@ -56,7 +93,7 @@ export default function ParamSlider({
           className={`param-slider__input ${widthClass} accent-[var(--color-accent)]`}
         />
         <span className="param-slider__value tabular-nums">
-          {display ?? value.toFixed(digits)}
+          {renderedDisplay}
         </span>
       </span>
     </label>

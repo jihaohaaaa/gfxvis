@@ -20,11 +20,11 @@ test.describe("Matrix Inverse 文章与 MatrixInverseDemo E2E 冒烟测试", () 
     const canvas = page.locator("canvas").first();
     await expect(canvas).toBeVisible();
 
-    const shearBtn = page.getByRole("button", { name: /水平剪切/ });
-    if (await shearBtn.isVisible()) {
-      await shearBtn.click({ force: true });
-      await expect(page.getByText("保面积的仿射剪切").first()).toBeVisible();
-    }
+    const shearBtn = page.getByRole("button", { name: /水平剪切/ }).first();
+    await shearBtn.scrollIntoViewIfNeeded();
+    await expect(shearBtn).toBeVisible();
+    await shearBtn.click();
+    await expect(page.getByText(/保面积的仿射剪切/).first()).toBeVisible();
 
     // 3. 验证无运行时未捕获异常
     expect(errors).toEqual([]);

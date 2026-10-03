@@ -6,7 +6,7 @@
 
 lattice
 
-Bézier 曲线, B-Rep, B-Spline, NURBS
+B-Rep, NURBS
 
 ---
 
@@ -56,8 +56,11 @@ typescript 类型体操
 
 ---
 
-playground kde 风格
-
-深入 kde 风格
-
 引入 tailwind css lint
+
+公式复制
+
+---
+
+抽象向量空间1: 欧几里得空间, 矩阵空间, 线性映射空间, 线性泛函空间(对偶空间)
+抽象向量空间2: 多项式空间, 函数空间

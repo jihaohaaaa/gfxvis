@@ -1,0 +1,151 @@
+.bezier-demo__topbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.bezier-demo__topnote {
+  min-width: 0;
+  color: var(--kde-muted);
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.bezier-demo__degree-control {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bezier-demo__degree-label {
+  color: var(--kde-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.bezier-demo__degree-readout {
+  display: inline-flex;
+  min-width: 3.2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--kde-border);
+  border-radius: var(--kde-control-radius);
+  background: var(--kde-raised);
+  padding: 0.2rem 0.55rem;
+  color: var(--kde-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.bezier-demo__canvas {
+  border: 1px solid var(--kde-border);
+  border-radius: var(--kde-card-radius);
+  background: var(--kde-canvas);
+  box-shadow: inset 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.bezier-demo__stack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.bezier-demo__level-toggle-list {
+  display: flex;
+  min-width: 0;
+  max-height: 10rem;
+  flex-direction: column;
+  gap: 0.45rem;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.bezier-demo__level-toggle-list .kde-checkbox {
+  min-width: 0;
+}
+
+.bezier-demo__level-label-list {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+  border-top: 1px solid var(--kde-border);
+  padding-top: 0.55rem;
+  color: var(--kde-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.64rem;
+  line-height: 1.35;
+}
+
+.bezier-demo__level-label-group {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.bezier-demo__hint {
+  color: var(--kde-muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.bezier-demo__level-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
+  align-items: start;
+  gap: 0.35rem;
+  color: var(--kde-muted);
+  font-size: 0.64rem;
+  line-height: 1.15;
+}
+
+.bezier-demo__level-points {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.12rem 0.3rem;
+}
+
+.bezier-demo__point-token {
+  display: inline-flex;
+  min-width: max-content;
+  align-items: baseline;
+  gap: 0.3rem;
+  color: var(--kde-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+}
+
+.bezier-demo__point-separator {
+  color: var(--kde-muted);
+}
+
+.bezier-demo__readouts {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+}
+
+@media (max-width: 720px) {
+  .bezier-demo__topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bezier-demo__topnote {
+    text-align: left;
+  }
+
+  .bezier-demo__degree-control {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

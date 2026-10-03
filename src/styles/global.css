@@ -36,6 +36,18 @@ body {
   @apply bg-background text-ink antialiased;
 }
 
+/* Keep long display equations intact while confining their horizontal scroll
+   to the equation itself on narrow article viewports. */
+.prose .katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.prose .katex-display > .katex {
+  white-space: nowrap;
+}
+
 /* Article focus mode: keep only Astro islands and their required wrappers. */
 body.interactive-only-active article > header,
 body.interactive-only-active

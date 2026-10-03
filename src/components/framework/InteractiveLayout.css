@@ -11,8 +11,12 @@
 }
 
 .interactive-layout__region--main,
-.interactive-layout__region--secondary {
+.interactive-layout__region--secondary,
+.interactive-layout__region--side {
   min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .interactive-layout--side-right {
