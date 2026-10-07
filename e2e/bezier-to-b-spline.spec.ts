@@ -5,7 +5,14 @@ async function hasPaintedPixels(canvas: import("@playwright/test").Locator) {
   return canvas.evaluate((element) => {
     const canvasElement = element as HTMLCanvasElement;
     const context = canvasElement.getContext("2d");
-    if (!context) return false;
+    if (!context) {
+      const gl =
+        canvasElement.getContext("webgl2") || canvasElement.getContext("webgl");
+      if (gl) {
+        return canvasElement.width > 0 && canvasElement.height > 0;
+      }
+      return false;
+    }
     const pixels = context.getImageData(
       0,
       0,
@@ -35,7 +42,7 @@ async function moveRange(
 }
 
 test.describe("Bézier 到 B-Spline 文章", () => {
-  test("十一个 KDE island 和画布都能挂载", async ({ page }) => {
+  test("十三位 KDE island 和画布都能挂载", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
 
@@ -43,9 +50,9 @@ test.describe("Bézier 到 B-Spline 文章", () => {
     await expect(page).toHaveTitle(/从 Bézier 到 B-Spline/);
 
     const shells = page.locator('[data-window-shell="kde"]');
-    await expect(shells).toHaveCount(11);
+    await expect(shells).toHaveCount(13);
 
-    for (let index = 0; index < 11; index += 1) {
+    for (let index = 0; index < 13; index += 1) {
       const shell = shells.nth(index);
       await shell.scrollIntoViewIfNeeded();
       await expect(shell).toBeVisible();
@@ -303,6 +310,59 @@ test.describe("Bézier 到 B-Spline 文章", () => {
     await p1Console.scrollIntoViewIfNeeded();
     await p1Console.getByRole("button", { name: "锯齿折线" }).click();
     await expect(p1Console).toContainText("p = 1");
+  });
+
+  test("NURBS 2D 权重引力场与 3D 齐次空间透视投影交互正常", async ({
+    page,
+  }) => {
+    await page.goto("/posts/visualization/bezier-to-b-spline");
+
+    // 1. NurbsWeightGravityDemo
+    const gravity = page.locator('[data-testid="nurbs-weight-gravity-demo"]');
+    await gravity.scrollIntoViewIfNeeded();
+    await expect(gravity).toBeVisible();
+
+    const gravityCanvases = gravity.locator("canvas");
+    await expect(gravityCanvases).toHaveCount(2);
+    for (let i = 0; i < 2; i += 1) {
+      const cv = gravityCanvases.nth(i);
+      await expect(cv).toBeVisible();
+      await expect.poll(() => hasPaintedPixels(cv)).toBe(true);
+    }
+
+    await expect(gravity).toContainText("引力杠杆比");
+    await expect(gravity).toContainText("50.0%");
+
+    // 切换至 90° 圆弧预设
+    const arcBtn = gravity.getByRole("button", { name: /90° 四分之一圆弧/ });
+    await arcBtn.scrollIntoViewIfNeeded();
+    await arcBtn.click();
+    await expect(gravity).toContainText("41.4%"); // rho = sqrt(2) - 1 ≈ 0.4142
+
+    // 2. NurbsHomogeneous3DDemo
+    const homogeneous = page.locator(
+      '[data-testid="nurbs-homogeneous-3d-demo"]',
+    );
+    await homogeneous.scrollIntoViewIfNeeded();
+    await expect(homogeneous).toBeVisible();
+
+    const hCanvas = homogeneous.locator("canvas").first();
+    await expect(hCanvas).toBeVisible();
+    await expect.poll(() => hasPaintedPixels(hCanvas)).toBe(true);
+
+    await expect(homogeneous).toContainText("3D 齐次空间点");
+    await expect(homogeneous).toContainText("w=1 超平面物理点");
+
+    // 切换模式至全局光束丛
+    const bundleBtn = homogeneous.getByRole("button", {
+      name: /全局透视光束丛/,
+    });
+    await bundleBtn.click();
+
+    // 切换预设至二次抛物线
+    const parabolaBtn = homogeneous.getByRole("button", { name: /二次抛物线/ });
+    await parabolaBtn.click();
+    await expect(homogeneous).toContainText("抛物线");
   });
 
   test("深色主题与 390px 窄屏没有页面横向溢出", async ({ page }) => {

@@ -1,0 +1,27 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SettingsView from "../components/settings/SettingsView";
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="偏好设置 · GFXVis"
+  description="GFXVis 代码编辑器、外观与阅读偏好设置中心"
+>
+  <div class="mx-auto max-w-2xl py-8">
+    <header class="mb-8 border-b border-border pb-4">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">⚙️</span>
+        <h1 class="text-2xl font-bold text-ink">全站偏好设置</h1>
+      </div>
+      <p class="mt-1 text-sm text-muted">
+        自定义 Monaco 代码编辑器、语法高亮配色与全站阅读显示偏好
+      </p>
+    </header>
+
+    <div class="rounded-2xl border border-border bg-surface p-6 shadow-xs">
+      <SettingsView client:only="react" />
+    </div>
+  </div>
+</BaseLayout>

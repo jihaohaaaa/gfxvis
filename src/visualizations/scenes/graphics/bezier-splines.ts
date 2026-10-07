@@ -540,3 +540,130 @@ export function getContinuityForMultiplicity(
 ): number {
   return multiplicity >= degree + 1 ? -1 : degree - multiplicity;
 }
+
+export type Point3 = [number, number, number];
+
+/**
+ * 计算 NURBS 有理基函数族 R_{i,p}(u) 与分母 ∑ N_{j,p}(u) * w_j
+ */
+export function nurbsBasisAll(
+  degree: number,
+  u: number,
+  knots: KnotVector,
+  weights: readonly number[],
+): { rationalWeights: number[]; denominator: number } {
+  const controlPointCount = knots.length - degree - 1;
+  const rawBasis = Array.from({ length: controlPointCount }, (_, i) =>
+    bsplineBasis(i, degree, u, knots),
+  );
+
+  let denominator = 0;
+  for (let i = 0; i < controlPointCount; i += 1) {
+    const w = weights[i] ?? 1;
+    denominator += rawBasis[i] * w;
+  }
+
+  // 防止除以 0（当所有权重均接近 0 时回退）
+  const safeDenom = Math.abs(denominator) > EPSILON ? denominator : 1;
+  const rationalWeights = rawBasis.map((b, i) => {
+    const w = weights[i] ?? 1;
+    return (b * w) / safeDenom;
+  });
+
+  return { rationalWeights, denominator };
+}
+
+/**
+ * 计算单个 NURBS 有理基函数 R_{index, p}(u)
+ */
+export function nurbsBasis(
+  index: number,
+  degree: number,
+  u: number,
+  knots: KnotVector,
+  weights: readonly number[],
+): number {
+  const { rationalWeights } = nurbsBasisAll(degree, u, knots, weights);
+  return rationalWeights[index] ?? 0;
+}
+
+/**
+ * 在参数 u 处求值 2D NURBS 曲线 C(u) = ∑ R_{i,p}(u) * P_i
+ */
+export function evaluateNurbs(
+  points: readonly Point2[],
+  weights: readonly number[],
+  degree: number,
+  u: number,
+  knots: KnotVector,
+): Point2 {
+  const { rationalWeights } = nurbsBasisAll(degree, u, knots, weights);
+  let x = 0;
+  let y = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    const r = rationalWeights[i] ?? 0;
+    x += points[i][0] * r;
+    y += points[i][1] * r;
+  }
+  return [x, y];
+}
+
+/**
+ * 沿全部有效 Knot Span 采样 2D NURBS 曲线
+ */
+export function sampleNurbs(
+  points: readonly Point2[],
+  weights: readonly number[],
+  degree: number,
+  knots: KnotVector,
+  stepsPerSpan = 48,
+): Point2[] {
+  const spans = getNonEmptyKnotSpans(degree, knots);
+  if (spans.length === 0) return [];
+  const result: Point2[] = [];
+  spans.forEach((span, spanIndex) => {
+    for (let step = 0; step <= stepsPerSpan; step += 1) {
+      if (spanIndex > 0 && step === 0) continue;
+      const ratio = step / stepsPerSpan;
+      const u = span.start + (span.end - span.start) * ratio;
+      result.push(evaluateNurbs(points, weights, degree, u, knots));
+    }
+  });
+  return result;
+}
+
+/**
+ * 齐次射影求值：返回 3D 齐次空间点 ~C(u) = (wx, wy, w) 以及透视除法后的 2D 物理点 C(u) = (x, y)
+ */
+export function evaluateNurbsHomogeneous(
+  points: readonly Point2[],
+  weights: readonly number[],
+  degree: number,
+  u: number,
+  knots: KnotVector,
+): {
+  homogeneousPoint: Point3;
+  projectedPoint: Point2;
+  denominator: number;
+} {
+  const controlPointCount = knots.length - degree - 1;
+  let sumWX = 0;
+  let sumWY = 0;
+  let sumW = 0;
+
+  for (let i = 0; i < controlPointCount; i += 1) {
+    const b = bsplineBasis(i, degree, u, knots);
+    const w = weights[i] ?? 1;
+    const p = points[i] ?? [0, 0];
+    sumWX += b * w * p[0];
+    sumWY += b * w * p[1];
+    sumW += b * w;
+  }
+
+  const safeW = Math.abs(sumW) > EPSILON ? sumW : 1;
+  return {
+    homogeneousPoint: [sumWX, sumWY, sumW],
+    projectedPoint: [sumWX / safeW, sumWY / safeW],
+    denominator: sumW,
+  };
+}

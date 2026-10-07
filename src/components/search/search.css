@@ -1,0 +1,75 @@
+/* GFXVis Search System: KDE Breeze Glassmorphism and Highlights */
+
+mark.gfx-search-mark {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: inherit;
+  border-radius: 0.2rem;
+  padding: 0.05rem 0.2rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:is(.dark) mark.gfx-search-mark {
+  background-color: rgba(76, 194, 255, 0.25);
+}
+
+mark.gfx-search-mark-active {
+  background-color: rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.7);
+  font-weight: 600;
+}
+
+:is(.dark) mark.gfx-search-mark-active {
+  background-color: rgba(251, 191, 36, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.8);
+}
+
+/* Palette Card Highlights */
+mark.gfx-palette-highlight {
+  background-color: rgba(245, 158, 11, 0.28);
+  color: #b45309;
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.25rem;
+  font-weight: 600;
+}
+
+:is(.dark) mark.gfx-palette-highlight {
+  background-color: rgba(251, 191, 36, 0.32);
+  color: #fde68a;
+}
+
+/* KDE Breeze Amber-Gold Breathing Pulse Animation */
+@keyframes gfxSearchPulseAnim {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    transform: scale(1.18);
+    box-shadow: 0 0 16px 4px rgba(245, 158, 11, 0.85);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.6);
+  }
+}
+
+mark.gfx-search-pulse {
+  display: inline-block;
+  animation: gfxSearchPulseAnim 0.65s cubic-bezier(0.16, 1, 0.3, 1) 2;
+}
+
+/* Modal entrance animation */
+@keyframes gfx-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.gfx-search-dialog-panel {
+  animation: gfx-modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

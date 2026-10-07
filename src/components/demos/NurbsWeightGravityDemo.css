@@ -1,0 +1,63 @@
+.nurbs-weight__viewport-group {
+  --interactive-viewport-gap: 0.75rem;
+}
+
+.nurbs-weight__viewport-item {
+  min-width: 0;
+}
+
+.nurbs-weight__viewport {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--kde-border);
+  border-radius: var(--kde-card-radius);
+  background: var(--kde-raised);
+  box-shadow: 0 2px 8px rgb(15 23 42 / 0.08);
+}
+
+.nurbs-weight__viewport-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--kde-border);
+  padding: 0.45rem 0.6rem;
+  color: var(--kde-ink);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.nurbs-weight__viewport-caption {
+  color: var(--kde-accent);
+}
+
+.nurbs-weight__canvas {
+  border: 0;
+  border-radius: 0;
+  background: var(--kde-canvas);
+}
+
+.nurbs-demo__stack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.nurbs-demo__readout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--kde-ink);
+}
+
+.nurbs-demo__readout-val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--kde-accent);
+  font-weight: 600;
+}

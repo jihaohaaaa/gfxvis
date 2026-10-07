@@ -4,6 +4,9 @@ import "katex/dist/katex.min.css";
 import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
 import Sidebar from "../components/layout/Sidebar.astro";
+import SearchPalette from "../components/search/SearchPalette";
+import MiniSearchNavigator from "../components/search/MiniSearchNavigator";
+import SettingsModal from "../components/settings/SettingsModal";
 
 interface Props {
   title?: string;
@@ -166,6 +169,10 @@ const {
       </span>
       <span id="focus-toast-text">已开启专注模式</span>
     </div>
+
+    <SearchPalette client:load />
+    <MiniSearchNavigator client:load />
+    <SettingsModal client:only="react" />
 
     <script src="../scripts/scroll-top.ts"></script>
     <script src="../scripts/focus-mode.ts"></script>

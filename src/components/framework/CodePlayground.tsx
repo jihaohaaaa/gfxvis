@@ -1,11 +1,13 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import CodeMirror, { EditorView } from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { rust } from "@codemirror/lang-rust";
-import { cpp } from "@codemirror/lang-cpp";
-import { tags as t } from "@lezer/highlight";
-import { githubLightInit, githubDarkInit } from "@uiw/codemirror-theme-github";
+import { useState, useEffect, useCallback, useRef, useId } from "react";
+import Editor, { type OnMount } from "@monaco-editor/react";
 import { actions } from "astro:actions";
+import {
+  initMonaco,
+  mapLanguageToMonaco,
+  computeEditorHeight,
+} from "../../lib/editor/monaco";
+import { resolveMonacoTheme } from "../../lib/editor/themes";
+import { useGfxSettings } from "../../lib/settings/settings-store";
 
 export interface CodePlaygroundProps {
   lang: "node" | "ts" | "js" | "rust" | "cpp";
@@ -86,48 +88,17 @@ function useIsDarkMode(): boolean {
   return isDark;
 }
 
-const customEditorStyle = EditorView.theme({
-  "&": {
-    fontSize: "12px",
-    fontFamily:
-      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-  },
-  ".cm-scroller": {
-    fontFamily: "inherit",
-    lineHeight: "1.65",
-  },
-  ".cm-content": {
-    padding: "10px 0",
-  },
-  ".cm-line": {
-    padding: "0 12px",
-  },
-  ".cm-gutters": {
-    backgroundColor: "transparent",
-    borderRight: "1px solid var(--gfx-border, #e2e8f0)",
-    color: "var(--gfx-muted, #94a3b8)",
-  },
-  ".cm-activeLineGutter": {
-    backgroundColor: "transparent",
-    color: "var(--gfx-ink, #0f172a)",
-    fontWeight: "600",
-  },
-  "&.cm-focused": {
-    outline: "none",
-  },
-});
-
-const customGithubLight = githubLightInit({
-  styles: [
-    { tag: t.processingInstruction, color: "#d73a49" }, // #include, #define 等预处理指令在浅色模式下为标志性 GitHub 绯红
-  ],
-});
-
-const customGithubDark = githubDarkInit({
-  styles: [
-    { tag: t.processingInstruction, color: "#ff7b72" }, // 暗色模式下为标志性 GitHub 珊瑚红
-  ],
-});
+function parseMaxHeight(maxHeightStr?: string): number {
+  if (!maxHeightStr || maxHeightStr === "none") return 520;
+  if (maxHeightStr.endsWith("rem")) {
+    const rem = parseFloat(maxHeightStr);
+    return Math.round(rem * 16);
+  }
+  if (maxHeightStr.endsWith("px")) {
+    return parseInt(maxHeightStr, 10);
+  }
+  return 520;
+}
 
 export default function CodePlayground({
   lang,
@@ -150,31 +121,37 @@ export default function CodePlayground({
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [editorHeight, setEditorHeight] = useState(120);
+  const [monacoLoaded, setMonacoLoaded] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editorRef = useRef<any>(null);
   const isDark = useIsDarkMode();
+  const { settings } = useGfxSettings();
+
+  const uniqueId = useId().replace(/[:]/g, "_");
+  const modelExt =
+    lang === "ts"
+      ? "ts"
+      : lang === "node" || lang === "js"
+        ? "mjs"
+        : lang === "rust"
+          ? "rs"
+          : "cpp";
+  const modelPath = `file:///playground_${uniqueId}.${modelExt}`;
+
   const cfg = LANG_CONFIG[lang];
   const isDirty = currentCode !== defaultSnippet;
+  const maxHeightPx = parseMaxHeight(maxHeight);
+  const monacoLang = mapLanguageToMonaco(lang);
+  const activeTheme = resolveMonacoTheme(settings.editorTheme, isDark);
 
-  const extensions = useMemo(() => {
-    const list = [customEditorStyle];
-    switch (lang) {
-      case "cpp":
-        list.push(cpp());
-        break;
-      case "rust":
-        list.push(rust());
-        break;
-      case "ts":
-        list.push(javascript({ typescript: true, jsx: true }));
-        break;
-      case "node":
-      case "js":
-      default:
-        list.push(javascript({ typescript: false, jsx: false }));
-        break;
-    }
-    return list;
-  }, [lang]);
+  // 确保本地 Monaco 离线配置在客户端首次渲染时已注册
+  useEffect(() => {
+    initMonaco().then(() => {
+      setMonacoLoaded(true);
+    });
+  }, []);
 
   const handleRun = useCallback(async () => {
     setLoading(true);
@@ -224,11 +201,59 @@ export default function CodePlayground({
     setIsEditing(true);
   }, []);
 
+  const handleEditorMount: OnMount = useCallback(
+    (editor, monacoInstance) => {
+      // 确保当前模型的语言绑定到 monacoLang (针对 C++、Rust、TS、JS 强力激活语法高亮)
+      const model = editor.getModel();
+      if (model && monacoLang) {
+        monacoInstance.editor.setModelLanguage(model, monacoLang);
+      }
+
+      // 动态高度自适应
+      const updateHeight = () => {
+        const computed = computeEditorHeight(editor, maxHeightPx, 64);
+        setEditorHeight(computed);
+        requestAnimationFrame(() => {
+          editor.layout();
+        });
+      };
+
+      editor.onDidChangeModelContent(updateHeight);
+      if (typeof editor.onDidContentSizeChange === "function") {
+        editor.onDidContentSizeChange(updateHeight);
+      }
+      updateHeight();
+
+      // Ctrl / Cmd + Enter 快捷运行代码
+      editor.addCommand(
+        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
+        () => {
+          handleRun();
+        },
+      );
+    },
+    [handleRun, maxHeightPx, monacoLang],
+  );
+
+  // 当外部配置改变时同步 Monaco 配置
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.updateOptions({
+      fontSize: settings.editorFontSize,
+      lineNumbers: settings.editorLineNumbers ? "on" : "off",
+      minimap: { enabled: settings.editorMinimap },
+      tabSize: settings.editorTabSize,
+    });
+  }, [settings]);
+
   const hasOutput = output !== null;
   const isSuccess = output?.exitCode === 0;
 
   return (
     <div
+      data-component="code-playground"
       className={`my-6 overflow-hidden rounded-xl border border-border bg-surface shadow-xs transition-all ${className}`}
     >
       {/* 头部控制栏 */}
@@ -283,7 +308,7 @@ export default function CodePlayground({
             onClick={handleRun}
             disabled={loading}
             className="flex cursor-pointer items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1 font-semibold text-accent-foreground shadow-xs transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-            title="在服务器即时编译执行"
+            title="在服务器即时编译执行 (Ctrl/Cmd + Enter)"
           >
             {loading ? (
               <>
@@ -306,44 +331,77 @@ export default function CodePlayground({
         </div>
       )}
 
-      {/* CodeMirror 6 代码编辑/展示区 */}
-      <div className="relative">
-        <CodeMirror
-          value={currentCode}
-          onChange={(val) => setCurrentCode(val)}
-          theme={isDark ? customGithubDark : customGithubLight}
-          extensions={extensions}
-          editable={isEditing}
-          readOnly={!isEditing}
-          maxHeight={maxHeight !== "none" ? maxHeight : undefined}
-          basicSetup={{
-            lineNumbers: true,
-            highlightActiveLineGutter: isEditing,
-            highlightSpecialChars: true,
-            history: true,
-            foldGutter: true,
-            drawSelection: true,
-            dropCursor: isEditing,
-            allowMultipleSelections: false,
-            indentOnInput: isEditing,
-            syntaxHighlighting: true,
-            bracketMatching: true,
-            closeBrackets: isEditing,
-            autocompletion: isEditing,
-            rectangularSelection: false,
-            crosshairCursor: false,
-            highlightActiveLine: isEditing,
-            highlightSelectionMatches: true,
-            closeBracketsKeymap: isEditing,
-            defaultKeymap: true,
-            searchKeymap: true,
-            historyKeymap: true,
-            foldKeymap: true,
-            completionKeymap: isEditing,
-            lintKeymap: false,
-          }}
-          className="text-xs"
-        />
+      {/* Monaco Editor 代码编辑/展示区 */}
+      <div
+        className="relative transition-all"
+        style={{ height: `${editorHeight}px` }}
+      >
+        {monacoLoaded ? (
+          <Editor
+            path={modelPath}
+            height="100%"
+            language={monacoLang}
+            value={currentCode}
+            theme={activeTheme}
+            onChange={(val) => setCurrentCode(val ?? "")}
+            onMount={handleEditorMount}
+            loading={
+              <div className="flex h-24 items-center justify-center gap-2 text-xs text-muted">
+                <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                <span>载入 Monaco Editor...</span>
+              </div>
+            }
+            options={{
+              readOnly: !isEditing,
+              minimap: { enabled: settings.editorMinimap },
+              lineNumbers: settings.editorLineNumbers ? "on" : "off",
+              lineNumbersMinChars: 2,
+              glyphMargin: false,
+              folding: true,
+              lineDecorationsWidth: 4,
+              scrollBeyondLastLine: false,
+              fontSize: settings.editorFontSize,
+              fontFamily:
+                'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              automaticLayout: true,
+              overviewRulerLanes: 0,
+              hideCursorInOverviewRuler: true,
+              scrollbar: {
+                vertical: "auto",
+                horizontal: "auto",
+                verticalScrollbarSize: 6,
+                horizontalScrollbarSize: 6,
+              },
+              stickyScroll: { enabled: false },
+              tabSize: settings.editorTabSize,
+              wordWrap: "on",
+              contextmenu: true,
+              renderLineHighlight: isEditing ? "all" : "none",
+              fixedOverflowWidgets: true,
+              quickSuggestions: {
+                other: isEditing,
+                comments: false,
+                strings: isEditing,
+              },
+              suggestOnTriggerCharacters: isEditing,
+              acceptSuggestionOnCommitCharacter: true,
+              acceptSuggestionOnEnter: "on",
+              parameterHints: {
+                enabled: true,
+                cycle: true,
+              },
+              hover: {
+                enabled: "on",
+                delay: 150,
+              },
+            }}
+          />
+        ) : (
+          <div className="flex h-24 items-center justify-center gap-2 text-xs text-muted">
+            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+            <span>载入 Monaco Editor...</span>
+          </div>
+        )}
       </div>
 
       {/* 控制台输出区 */}

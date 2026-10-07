@@ -1,8 +1,8 @@
 ---
-title: "从 Bézier 到 B-Spline：基函数、节点向量与局部控制"
-description: "从线性插值和 de Casteljau 算法出发，理解 Bernstein 基函数、B-Spline 的 knot vector、局部支撑与连续性。"
+title: "从 Bézier 到 B-Spline 再到 NURBS：基函数、节点向量与射影有理全体系"
+description: "从线性插值与 de Casteljau 出发，深入 Bernstein 基函数与 B-Spline 局部支撑，完整推导 NURBS 有理基函数、权重引力效应、二次曲线解析表示与 3D 齐次透视除法。"
 date: 2026-10-03
-tags: ["visualization", "computer-graphics", "curves", "bezier", "b-spline"]
+tags: ["visualization", "computer-graphics", "curves", "bezier", "b-spline", "nurbs"]
 draft: false
 ---
 
@@ -14,6 +14,9 @@ import BezierGlobalVsLocalDemo from "../../../components/demos/BezierGlobalVsLoc
 import BSplineBasisStepDemo from "../../../components/demos/BSplineBasisStepDemo";
 import BSplineLocalSupportDemo from "../../../components/demos/BSplineLocalSupportDemo";
 import BSplineContinuityDemo from "../../../components/demos/BSplineContinuityDemo";
+import NurbsWeightGravityDemo from "../../../components/demos/NurbsWeightGravityDemo";
+import NurbsHomogeneous3DDemo from "../../../components/demos/NurbsHomogeneous3DDemo";
+import CircleStereographicDemo from "../../../components/demos/CircleStereographicDemo";
 
 ## 一、从线段和 `lerp` 开始
 
@@ -1255,14 +1258,612 @@ $$
 }
 $$
 
-## 十三、总结与后续方向
+## 十三、B-Spline 的痛点：为什么多项式曲线画不出一个真圆？
 
-回顾整篇探索历程：
-1. 我们从最基础的 `lerp` 线性插值出发，通过 de Casteljau 算法构建了 Bernstein 基函数与单段 Bézier 曲线；
-2. 剖析了高阶 Bézier 曲线的结构性死穴：控制力稀释（$O(1/\sqrt{n})$ 峰值衰减）与全域蠕动（全局支撑）；
-3. 引入节点向量 Knot Vector，通过 $0$ 次阶梯方块 $\to$ $1$ 次三角帽子 $\to$ $2$ 次抛物线山包 $\to$ $3$ 次平滑钟形包的逐级递推，建立起 Cox–de Boor 体系；
-4. 掌握了局部支撑（Local Support）、双向 Span 透视与 Knot 重数（$C^{p-r}$）的工程控制精髓；
-5. 最终将 Bézier 曲线统一收敛为 B-Spline 在极值节点向量下的特殊单非零跨度形态。
+在现代工业 CAD 与机械工程体系中，回转体、轴承、导轨与管道等构件对圆、椭圆等二次曲线（Conic Sections）以及圆柱、圆球面等二次曲面（Quadrics）有着绝对零误差的解析精度需求。然而，经典分段多项式 B-Spline 在数学上面临一道本质鸿沟：
 
-在掌握了 B-Spline 之后，现代工业 CAD 造型的终极形态是 <strong>NURBS（非均匀有理 B-Spline，Non-Uniform Rational B-Splines）</strong>——通过为每个控制点引入权重标量 $w_i$，使曲线在射影几何下能够精确表达圆、椭圆、双曲线等二次代数曲线（圆锥曲线），我们将会在后续章节中展开详细的射影有理构造推导。
+> <strong>无论你如何增加控制点数量、无论将多项式次数提高到多少，经典分段多项式 B-Spline 曲线在数学上永远无法精确画出一个真正的圆！</strong>
 
+### 1. 严谨反证法定理：多项式与圆的几何决裂
+
+为什么多项式参数曲线绝对无法表示圆弧？我们可以给出一个极为优美简洁的初等代数反证法证明。
+
+> <strong>定理（多项式圆弧不存在性定理）</strong>：
+> 在实数域 $\mathbb R$ 上，不存在任意非退化的实系数多项式参数曲线 $(x(t), y(t))$，能够使其在某参数区间 $t \in [a, b]$（$a < b$）上的轨迹完全落在单位圆 $x^2 + y^2 = 1$ 上。
+
+<strong>证明</strong>：
+反设存在两个实系数多项式 $P(t)$ 与 $Q(t)$，使得对于所有 $t \in [a, b]$，点 $(P(t), Q(t))$ 均落在单位圆周上。即恒等式成立：
+
+$$
+P(t)^2 + Q(t)^2 \equiv 1,\qquad \forall t \in [a, b].
+$$
+
+设多项式 $P(t)$ 与 $Q(t)$ 的次数分别为 $m = \deg(P)$ 与 $n = \deg(Q)$。不妨设 $m \ge n \ge 0$。
+
+我们讨论 $m$ 的取值：
+1. <strong>若 $m = 0$</strong>：则 $P(t) = c_1$（常数），由于 $n \le m$，必有 $Q(t) = c_2$（常数）。此时参数曲线退化为一个单一孤立点 $(c_1, c_2)$，根本不是一段连续移动的非退化曲线段；
+2. <strong>若 $m \ge 1$</strong>：设 $P(t)$ 的最高次项为 $a_m t^m$（$a_m \ne 0$）。
+   - 若 $m > n$，则在多项式 $F(t) = P(t)^2 + Q(t)^2 - 1$ 中，最高次项由 $P(t)^2$ 唯一主导，其最高次项为 $a_m^2 t^{2m}$。因为 $a_m \ne 0$，故最高次项系数 $a_m^2 \ne 0$；
+   - 若 $m = n$，设 $Q(t)$ 的最高次项为 $b_m t^m$。此时 $F(t)$ 的最高次项为 $(a_m^2 + b_m^2) t^{2m}$。由于在实数域中实数平方非负且 $a_m \ne 0$，最高次项绝不会抵消，即 $a_m^2 + b_m^2 \ne 0$。
+
+无论哪种情况，$F(t) = P(t)^2 + Q(t)^2 - 1$ 都是一个最高次项系数不为零的<strong>有限次非零实多项式</strong>。
+
+根据代数基本定理，一个有限次非零一元实多项式 $F(t)$ 在实数轴上<strong>至多只能拥有有限个离散孤立实根</strong>。
+
+然而根据我们的反设，$F(t) = 0$ 在整个非退化连续区间 $[a, b]$ 上处处成立，即拥有不可数无穷多个实根！
+
+有限次非零多项式拥有不可数无穷多个根，矛盾。
+
+因此反设不成立。<strong>任何非退化实多项式参数曲线，在数学上绝对不可能严丝合缝地贴合一段真圆弧。</strong> $\blacksquare$
+
+### 2. 有理多项式
+
+既然纯多项式 $P(t)$ 无法满足平方和为常数的严苛条件，那么如何打破这道枷锁？
+
+答案是<strong>引入除法</strong>，将“纯多项式”（Polynomials）扩展为“有理多项式”（Rational Polynomials）：
+
+$$
+x(t) = \frac{X(t)}{W(t)},\qquad y(t) = \frac{Y(t)}{W(t)}.
+$$
+
+当分母 $W(t)$ 不再恒为 $1$ 时，单位圆的方程变形为：
+
+$$
+\left(\frac{X(t)}{W(t)}\right)^2 + \left(\frac{Y(t)}{W(t)}\right)^2 = 1
+\quad\Longleftrightarrow\quad
+X(t)^2 + Y(t)^2 \equiv W(t)^2.
+$$
+
+这正是数论与几何学中的<strong>勾股多项式三元组（Pythagorean Triples for Polynomials）</strong>。有了分母 $W(t)$ 作为归一化自由度，我们终于能够在多项式的框架下精确表示二次曲线。
+
+将这一思想注入 B-Spline，就诞生了计算机图形学与 CAD 工业的最终方案——<strong>NURBS</strong>。
+
+---
+
+## 十四、NURBS 的数学形式：权重标量与有理基函数
+
+<strong>NURBS</strong> 是 <strong>Non-Uniform Rational B-Splines（非均匀有理 B-样条）</strong> 的缩写。它的每一个字母都代表了一项关键的数学特性：
+- <strong>Non-Uniform（非均匀）</strong>：节点向量 $U$ 中的内部节点间距无需相等，支持 Clamped 边界与局部自适应密度；
+- <strong>Rational（有理）</strong>：引入独立权重标量 $w_i$，基函数包含多项式除法分式；
+- <strong>B-Splines（B-样条）</strong>：底层依然基于 Cox–de Boor 局部紧支撑递推核。
+
+### 1. NURBS 曲线的标准定义
+
+设给定 $n+1$ 个空间控制点 $\mathbf P_0, \mathbf P_1, \dots, \mathbf P_n$、一组相对应的正实数<strong>权重标量</strong> $w_0, w_1, \dots, w_n > 0$、以及一个合法的 $p$ 次节点向量 $U = (u_0, u_1, \dots, u_{n+p+1})$。
+
+$p$ 次 NURBS 曲线 $\mathbf C(u)$ 的标准解析表达式定义为：
+
+$$
+\mathbf C(u) = \frac{\sum_{i=0}^n N_{i,p}(u) w_i \mathbf P_i}{\sum_{j=0}^n N_{j,p}(u) w_j},\qquad u \in [u_p, u_{n+1}].
+$$
+
+其中 $N_{i,p}(u)$ 为由节点向量 $U$ 依 Cox–de Boor 算法生成的标准 $p$ 次 B-Spline 基函数。
+
+为了将该表达式重写为直观的“基函数加权线性组合”形式，我们定义 <strong>$p$ 次有理基函数（Rational Basis Functions）</strong> $R_{i,p}(u)$：
+
+$$
+R_{i,p}(u) = \frac{w_i N_{i,p}(u)}{\sum_{j=0}^n w_j N_{j,p}(u)}.
+$$
+
+从而，NURBS 曲线可以写为：
+
+$$
+\mathbf C(u) = \sum_{i=0}^n R_{i,p}(u) \mathbf P_i.
+$$
+
+### 2. 有理基函数 $R_{i,p}(u)$ 的五大核心数学性质
+
+有理基函数 $R_{i,p}(u)$ 继承了 B-Spline 的全部几何品质，同时因权重的加入而获得了更多的自由度：
+
+#### ① 严格权性守恒（Partition of Unity）
+对定义域内的任意参数 $u$，所有有理基函数之和恒等于 $1$：
+
+$$
+\sum_{i=0}^n R_{i,p}(u) = \sum_{i=0}^n \frac{w_i N_{i,p}(u)}{\sum_{j=0}^n w_j N_{j,p}(u)} = \frac{\sum_{i=0}^n w_i N_{i,p}(u)}{\sum_{j=0}^n w_j N_{j,p}(u)} \equiv 1.
+$$
+
+该性质保证了曲线具有<strong>仿射不变性（Affine Invariance）</strong>：对所有控制点整体施加平移、旋转、缩放后求值曲线，与先求值曲线再整体变换的结果完全相同。
+
+#### ② 严格非负性与凸包性（Convex Hull Property）
+只要所有控制点权重满足 $w_i > 0$（工业 CAD 的强制前置约束），则由于 $N_{i,p}(u) \ge 0$，分母 $\sum w_j N_{j,p}(u) > 0$，故对任意 $i$ 与 $u$ 恒有：
+
+$$
+R_{i,p}(u) \ge 0.
+$$
+
+结合权性守恒，曲线上的每一个点 $\mathbf C(u)$ 必然是当前非零基函数对应控制点的严格凸组合（Convex Combination）。曲线永远被严格约束在当前活跃控制点的凸包内部！
+
+#### ③ 局部紧支撑完全继承（Local Support）
+观察 $R_{i,p}(u)$ 的分子 $w_i N_{i,p}(u)$。由于权重 $w_i > 0$ 为有限常数，而分母在有效区间内处处严格大于零，因此 $R_{i,p}(u)$ 为零的充要条件就是 $N_{i,p}(u) = 0$。
+
+这意味着：<strong>有理基函数 $R_{i,p}(u)$ 的非零支撑区间与经典 B-Spline 基函数 $N_{i,p}(u)$ 完全相同，依然严格锁死在单个半开半闭区间 $[u_i, u_{i+p+1})$ 内！</strong> 修改某个控制点的权重 $w_i$，其几何影响同样只会被限制在局部的 $p+1$ 个 Span 内，绝不会发生全域漂移。
+
+#### ④ 射影缩放等价性（Scale Invariance）
+如果将所有控制点的权重同时乘以同一个任意正实数常数 $c > 0$（即令 $w_i' = c \cdot w_i$），则有理基函数保持绝对不变：
+
+$$
+R_{i,p}'(u) = \frac{(c \cdot w_i) N_{i,p}(u)}{\sum_{j=0}^n (c \cdot w_j) N_{j,p}(u)} = \frac{c \cdot \left(w_i N_{i,p}(u)\right)}{c \cdot \sum_{j=0}^n w_j N_{j,p}(u)} = R_{i,p}(u).
+$$
+
+这揭示了一个极为深刻的几何事实：<strong>在 NURBS 体系中，绝对权重的大小毫无物理意义，控制点之间权重的“相对比例”才决定最终几何形态。</strong>
+
+#### ⑤ 等权向经典 B-Spline 的完全退化性
+当所有权重取相同数值（例如标准默认值 $w_0 = w_1 = \dots = w_n = 1$）时：
+
+$$
+R_{i,p}(u) = \frac{1 \cdot N_{i,p}(u)}{\sum_{j=0}^n 1 \cdot N_{j,p}(u)} = \frac{N_{i,p}(u)}{1} = N_{i,p}(u).
+$$
+
+NURBS 体系以极其自然的姿态向下兼容，完全退化为标准的经典多项式 B-Spline。
+
+---
+
+## 十五、权重 $w_i$ 的几何与物理直觉：引力场与杠杆定律
+
+在直观的交互与几何心智中，权重 $w_i$ 究竟扮演着什么角色？
+
+### 1. 质心系统与引力场视角
+
+我们可以借用经典力学中的<strong>质心（Center of Mass）</strong>模型来建立极其清晰的直觉：
+
+想像空间中有 $n+1$ 个质量质点 $\mathbf P_i$。在某一时刻 $u$，经典 B-Spline 赋予质点 $\mathbf P_i$ 的基础质量分配比例为 $N_{i,p}(u)$。
+而 NURBS 所引入的权重 $w_i$，相当于给该质点加装了一个<strong>重力放大器（Mass Multiplier）</strong>，使其等效引力质量突变为：
+
+$$
+M_i(u) = w_i \cdot N_{i,p}(u).
+$$
+
+整个系统的总质量为分母 $W(u) = \sum M_j(u)$。曲线点 $\mathbf C(u)$ 本质上就是这组动态质量质点的总质心：
+
+$$
+\mathbf C(u) = \frac{\sum M_i(u) \mathbf P_i}{\sum M_j(u)}.
+$$
+
+- 当我们调大某控制点 $\mathbf P_k$ 的权重 $w_k$ 时，$M_k(u)$ 显著增加，导致总质量分母同步膨胀；
+- 分母膨胀的结果是：<strong>其他所有控制点 $\mathbf P_{j}$（$j \ne k$）的有效基函数份额 $R_{j,p}(u)$ 被全盘按比例稀释压低</strong>；
+- 整个质心体系被强行吸附偏向质点 $\mathbf P_k$。因此，$w_k$ 就像是一个<strong>可调引力吸铁石</strong>。
+
+### 2. 二次样条中点拉伸比定理与代数证明
+
+为了定量刻画权重对曲线的拉扯幅度，我们考察最基础也最重要的二次有理样条片段（控制点 $\mathbf P_0, \mathbf P_1, \mathbf P_2$，节点向量 $U = [0, 0, 0, 1, 1, 1]$）。
+
+令两端点权重为单位权 $w_0 = w_2 = 1$，仅调节中部控制点 $\mathbf P_1$ 的引力权重 $w_1 = w$。
+
+> <strong>定理（中点引力杠杆定律）</strong>：
+> 记端点弦中点为 $\mathbf M = \frac{\mathbf P_0 + \mathbf P_2}{2}$。在参数正中点 $u = 0.5$ 处，曲线点 $\mathbf C(0.5)$ 始终严格位于连结弦中点 $\mathbf M$ 与控制点 $\mathbf P_1$ 的中线线段上，其位置由以下杠杆拉伸比公式决定：
+>
+> $$
+> \mathbf C(0.5) = \mathbf M + \rho(w) \cdot (\mathbf P_1 - \mathbf M),\qquad \rho(w) = \frac{w}{1+w} \in [0, 1).
+> $$
+
+<strong>代数证明</strong>：
+在 $u = 0.5$ 处，计算二次 Bernstein / B-Spline 基函数的基础数值：
+
+$$
+N_{0,2}(0.5) = (1-0.5)^2 = 0.25,\quad N_{1,2}(0.5) = 2 \times 0.5 \times (1-0.5) = 0.5,\quad N_{2,2}(0.5) = 0.5^2 = 0.25.
+$$
+
+代入 NURBS 分子与分母计算：
+
+$$
+D(0.5) = w_0 N_{0,2}(0.5) + w_1 N_{1,2}(0.5) + w_2 N_{2,2}(0.5) = 1 \times 0.25 + w \times 0.5 + 1 \times 0.25 = 0.5 + 0.5w = 0.5(1+w).
+$$
+
+分子向量为：
+
+$$
+\mathbf N(0.5) = 0.25 \mathbf P_0 + 0.5 w \mathbf P_1 + 0.25 \mathbf P_2 = 0.5 \left( \frac{\mathbf P_0 + \mathbf P_2}{2} \right) + 0.5 w \mathbf P_1 = 0.5 \mathbf M + 0.5 w \mathbf P_1.
+$$
+
+两式相除，消去公共常数系数 $0.5$：
+
+$$
+\mathbf C(0.5) = \frac{0.5 \mathbf M + 0.5 w \mathbf P_1}{0.5(1+w)} = \frac{\mathbf M + w \mathbf P_1}{1+w}.
+$$
+
+将分子中的 $w \mathbf P_1$ 拆解为 $(1+w)\mathbf M + w(\mathbf P_1 - \mathbf M) - \mathbf M$：
+
+$$
+\mathbf C(0.5) = \frac{(1+w)\mathbf M + w(\mathbf P_1 - \mathbf M)}{1+w} = \mathbf M + \left(\frac{w}{1+w}\right)(\mathbf P_1 - \mathbf M). \quad \blacksquare
+$$
+
+函数 $\rho(w) = \frac{w}{1+w}$ 揭示了极其美妙的几何引力谱系：
+1. <strong>$w \to 0$（零引力退化）</strong>：$\rho(0) = 0$，$\mathbf C(0.5) = \mathbf M$。中间控制点失去所有话语权，整条曲线彻底退化为连接 $\mathbf P_0$ 与 $\mathbf P_2$ 的直线段；
+2. <strong>$w = 1$（多项式抛物线）</strong>：$\rho(1) = \frac{1}{2}$。中点恰好位于弦中点到控制点 $\mathbf P_1$ 的几何中心；
+3. <strong>$w = 1/\sqrt{2} \approx 0.7071$</strong>：$\rho = \frac{1/\sqrt{2}}{1 + 1/\sqrt{2}} = \frac{1}{\sqrt{2}+1} = \sqrt{2}-1$。曲线恰好收缩成完美的正交圆弧。
+4. <strong>$w \to +\infty$（极限吸附）</strong>：$\rho(w) \to 1$，$\mathbf C(0.5) \to \mathbf P_1$。整条曲线被强行拽成紧贴控制多边形的折线尖角。
+
+在下方交互工作台中，拖动控制点或调节权重滑块 $w_1$，观察引力杠杆效应以及下方有理基函数谱系的动态重构：
+
+<NurbsWeightGravityDemo client:visible />
+
+---
+
+## 十六、二次曲线的精确圆弧构造：代数恒等式证明
+
+现在，我们进入本篇最硬核的数学核心：<strong>如何利用二次有理样条精确构造圆弧，并用代数恒等式证明其零误差？</strong>
+
+### 1. 单位圆的有理参数化：正弦与余弦二倍角公式（万能代换）
+
+单位圆周 $x^2 + y^2 = 1$ 上的任意非极点均可由极角 $\theta \in (-\pi, \pi)$ 参数化为 $(\cos\theta, \sin\theta)$。引入半角正切参数：
+
+$$
+t = \tan\frac{\theta}{2},\qquad t \in (-\infty, +\infty).
+$$
+
+#### 步骤一：推导余弦二倍角有理分式
+根据余弦二倍角公式与基本三角恒等式：
+
+$$
+\cos\theta = \cos^2\frac{\theta}{2} - \sin^2\frac{\theta}{2} = \frac{\cos^2\frac{\theta}{2} - \sin^2\frac{\theta}{2}}{\cos^2\frac{\theta}{2} + \sin^2\frac{\theta}{2}}.
+$$
+
+分子与分母同除以 $\cos^2\frac{\theta}{2}$：
+
+$$
+\cos\theta = \frac{1 - \tan^2\frac{\theta}{2}}{1 + \tan^2\frac{\theta}{2}} = \frac{1 - t^2}{1 + t^2}.
+$$
+
+#### 步骤二：推导正弦二倍角有理分式
+类似地，根据正弦二倍角公式：
+
+$$
+\sin\theta = 2\sin\frac{\theta}{2}\cos\frac{\theta}{2} = \frac{2\sin\frac{\theta}{2}\cos\frac{\theta}{2}}{\cos^2\frac{\theta}{2} + \sin^2\frac{\theta}{2}}.
+$$
+
+分子与分母同除以 $\cos^2\frac{\theta}{2}$：
+
+$$
+\sin\theta = \frac{2\tan\frac{\theta}{2}}{1 + \tan^2\frac{\theta}{2}} = \frac{2t}{1 + t^2}.
+$$
+
+#### 步骤三：代数平方和展开验证
+直接展开平方和进行代数验证：
+
+$$
+x(t)^2 + y(t)^2 = \left(\frac{1-t^2}{1+t^2}\right)^2 + \left(\frac{2t}{1+t^2}\right)^2 = \frac{(1 - 2t^2 + t^4) + 4t^2}{(1+t^2)^2} = \frac{1 + 2t^2 + t^4}{(1+t^2)^2} = \frac{(1+t^2)^2}{(1+t^2)^2} \equiv 1.
+$$
+
+#### 几何对应：圆周角与圆心角
+从几何上看，若在单位圆极点 $S(-1, 0)$ 引出与圆周上点 $P(\cos\theta, \sin\theta)$ 的割线，根据初等平面几何的<strong>圆周角定理</strong>（同弧所对圆周角恰为圆心角的一半），该割线与水平轴的夹角恰好等于半角 $\theta/2$，其斜率正是 $t = \tan(\theta/2)$。
+
+分母与分子均为二次多项式，这在理论上彻底宣判了：<strong>利用二次有理样条完全有能力精确表达圆弧！</strong>
+
+在下方交互视口中，上视口展示了半角 $\theta/2$（圆周角）与圆心角 $\theta$ 的二倍角几何联动以及圆周点 $P(t) = (\cos\theta, \sin\theta)$；下视口联动绘制了正余弦有理分量曲线 $\cos\theta = \frac{1-t^2}{1+t^2}$ 与 $\sin\theta = \frac{2t}{1+t^2}$，并实时验证平方和恒等于 $1$：
+
+<CircleStereographicDemo client:visible />
+
+### 2. 定理 1：90° 四分之一圆弧的二次有理构造与恒等式展开
+
+在工业 CAD 中，直角拐角的圆弧倒角最为常见。
+
+> <strong>构造准则</strong>：
+> 设控制点放置在单位正方形的三个角点：
+>
+> $$
+> \mathbf P_0 = (1, 0),\qquad \mathbf P_1 = (1, 1),\qquad \mathbf P_2 = (0, 1).
+> $$
+>
+> 节点向量设为 $U = [0, 0, 0, 1, 1, 1]$，两端权重设为 $w_0 = 1, w_2 = 1$。
+> 则中间控制点的权重必须精确设为：
+>
+> $$
+> w_1 = \frac{1}{\sqrt{2}} = \frac{\sqrt{2}}{2}
+> $$
+>
+> 此时生成的二次 NURBS 曲线在 $t \in [0, 1]$ 上恰好是第一象限的精确单位圆弧。
+
+#### 步骤一：代数表达式推导
+对于节点向量 $[0, 0, 0, 1, 1, 1]$，参数 $t \in [0, 1]$ 对应的三个二次 Bernstein 基函数为：
+
+$$
+B_0(t) = (1-t)^2,\qquad B_1(t) = 2t(1-t),\qquad B_2(t) = t^2.
+$$
+
+计算分母 $D(t)$：
+
+$$
+D(t) = w_0 B_0(t) + w_1 B_1(t) + w_2 B_2(t) = (1-t)^2 + \sqrt{2}t(1-t) + t^2.
+$$
+
+计算分子向量 $\mathbf N(t) = (N_x(t), N_y(t))$：
+
+$$
+\mathbf N(t) = (1-t)^2 \begin{pmatrix} 1 \\ 0 \end{pmatrix} + \sqrt{2}t(1-t) \begin{pmatrix} 1 \\ 1 \end{pmatrix} + t^2 \begin{pmatrix} 0 \\ 1 \end{pmatrix}.
+$$
+
+拆解各个分量：
+
+$$
+N_x(t) = (1-t)^2 + \sqrt{2}t(1-t),
+$$
+
+$$
+N_y(t) = \sqrt{2}t(1-t) + t^2.
+$$
+
+#### 步骤二：全域代数恒等式完全证明
+为了证明对<strong>所有</strong> $t \in [0, 1]$，曲线点始终落在单位圆上，我们必须证明：
+
+$$
+N_x(t)^2 + N_y(t)^2 \equiv D(t)^2.
+$$
+
+我们分别对左侧和右侧进行严格的多项式展开：
+
+首先计算 $N_x(t)^2$：
+
+$$
+N_x(t)^2 = \left[ (1-t)^2 + \sqrt{2}t(1-t) \right]^2 = (1-t)^4 + 2\sqrt{2}t(1-t)^3 + 2t^2(1-t)^2.
+$$
+
+接着计算 $N_y(t)^2$：
+
+$$
+N_y(t)^2 = \left[ \sqrt{2}t(1-t) + t^2 \right]^2 = 2t^2(1-t)^2 + 2\sqrt{2}t^3(1-t) + t^4.
+$$
+
+将两式相加，合并同类项：
+
+$$
+N_x(t)^2 + N_y(t)^2 = (1-t)^4 + 2\sqrt{2}t(1-t)^3 + 4t^2(1-t)^2 + 2\sqrt{2}t^3(1-t) + t^4. \qquad \text{(式 A)}
+$$
+
+现在展开分母平方 $D(t)^2$。将 $D(t)$ 视为两项之和：$A = (1-t)^2 + t^2$，$B = \sqrt{2}t(1-t)$：
+
+$$
+D(t)^2 = (A + B)^2 = A^2 + 2AB + B^2.
+$$
+
+分别计算：
+- $A^2 = \left[(1-t)^2 + t^2\right]^2 = (1-t)^4 + 2t^2(1-t)^2 + t^4$；
+- $2AB = 2\left[(1-t)^2 + t^2\right]\left[\sqrt{2}t(1-t)\right] = 2\sqrt{2}t(1-t)^3 + 2\sqrt{2}t^3(1-t)$；
+- $B^2 = \left[\sqrt{2}t(1-t)\right]^2 = 2t^2(1-t)^2$。
+
+将这三部分全部合并：
+
+$$
+D(t)^2 = \left[ (1-t)^4 + 2t^2(1-t)^2 + t^4 \right] + \left[ 2\sqrt{2}t(1-t)^3 + 2\sqrt{2}t^3(1-t) \right] + 2t^2(1-t)^2
+$$
+
+$$
+= (1-t)^4 + 2\sqrt{2}t(1-t)^3 + 4t^2(1-t)^2 + 2\sqrt{2}t^3(1-t) + t^4. \qquad \text{(式 B)}
+$$
+
+对比式 (A) 与式 (B)：<strong>两者在每一个代数项上的系数完全一致。</strong>
+
+因此：
+
+$$
+N_x(t)^2 + N_y(t)^2 - D(t)^2 \equiv 0
+\implies
+\left(\frac{N_x(t)}{D(t)}\right)^2 + \left(\frac{N_y(t)}{D(t)}\right)^2 \equiv 1. \quad \blacksquare
+$$
+
+这证明了该构造在整个区间上绝对严格与圆弧重合。
+
+### 3. 定理 2：任意圆心角 $\theta \in (0, \pi)$ 的一般圆弧通式定理与因式分解证明
+
+上述 90° 圆弧只是特例。在工程实际中，圆心角可能为 30°、60°、120° 等任意角度 $\theta \in (0, \pi)$。
+
+> <strong>一般圆弧构造定理</strong>：
+> 欲构造一段半径为 $R = 1$、圆心角为 $\theta \in (0, \pi)$ 的对称圆弧，我们将对称轴置于 $X$ 轴上：
+> 1. <strong>两端控制点</strong>：取圆弧端点
+>
+>    $$
+>    \mathbf P_0 = \left(\cos\frac{\theta}{2}, -\sin\frac{\theta}{2}\right),\qquad \mathbf P_2 = \left(\cos\frac{\theta}{2}, \sin\frac{\theta}{2}\right)；
+>    $$
+>
+> 2. <strong>中间控制点</strong>：取两端点处圆切线的几何交点（切线外推）
+>
+>    $$
+>    \mathbf P_1 = \left(\frac{1}{\cos(\theta/2)}, 0\right)；
+>    $$
+>
+> 3. <strong>权重配置</strong>：端点权重设为 $1$，中间权重设为半角的余弦值
+>
+>    $$
+>    w_0 = 1,\qquad w_1 = \cos\frac{\theta}{2},\qquad w_2 = 1.
+>    $$
+
+该通式能保证在任意角度下处处落在单位圆上？下面给出证明。
+
+<strong>因式分解证明</strong>：
+为简化记号，记 $c = \cos\frac{\theta}{2}$，$s = \sin\frac{\theta}{2}$。由于 $\theta \in (0, \pi)$，显然有 $c \in (0, 1)$，$s \in (0, 1)$ 且满足 $c^2 + s^2 = 1$。
+
+三个控制点与权重分别为：
+- $\mathbf P_0 = (c, -s)$，$w_0 = 1$；
+- $\mathbf P_1 = (1/c, 0)$，$w_1 = c$；
+- $\mathbf P_2 = (c, s)$，$w_2 = 1$。
+
+计算分母多项式：
+
+$$
+D(t) = 1 \cdot (1-t)^2 + c \cdot 2t(1-t) + 1 \cdot t^2 = (1-t)^2 + 2c t(1-t) + t^2.
+$$
+
+计算 $X$ 轴分子多项式：
+
+$$
+N_x(t) = c(1-t)^2 + \left(c \cdot \frac{1}{c}\right) 2t(1-t) + c t^2 = c(1-t)^2 + 2t(1-t) + c t^2.
+$$
+
+计算 $Y$ 轴分子多项式：
+
+$$
+N_y(t) = (-s)(1-t)^2 + (c \cdot 0) 2t(1-t) + s t^2 = s \left[ t^2 - (1-t)^2 \right] = s (t - (1-t))(t + (1-t)) = s(2t-1).
+$$
+
+现在我们要验证 $D(t)^2 - N_x(t)^2 = N_y(t)^2$。我们利用初等平方差公式进行因式分解：
+
+$$
+D(t)^2 - N_x(t)^2 = \big(D(t) - N_x(t)\big) \cdot \big(D(t) + N_x(t)\big).
+$$
+
+分别计算这两个因子：
+1. <strong>因子一：差式 $D(t) - N_x(t)$</strong>：
+
+   $$
+   D(t) - N_x(t) = \big[(1-t)^2 + 2c t(1-t) + t^2\big] - \big[c(1-t)^2 + 2t(1-t) + c t^2\big]
+   $$
+
+   $$
+   = (1-c)(1-t)^2 - 2(1-c)t(1-t) + (1-c)t^2
+   $$
+
+   提取公因式 $(1-c)$：
+
+   $$
+   = (1-c) \left[ (1-t)^2 - 2t(1-t) + t^2 \right] = (1-c) \big[ (1-t) - t \big]^2 = (1-c)(1-2t)^2 = (1-c)(2t-1)^2.
+   $$
+
+2. <strong>因子二：和式 $D(t) + N_x(t)$</strong>：
+
+   $$
+   D(t) + N_x(t) = \big[(1-t)^2 + 2c t(1-t) + t^2\big] + \big[c(1-t)^2 + 2t(1-t) + c t^2\big]
+   $$
+
+   $$
+   = (1+c)(1-t)^2 + 2(1+c)t(1-t) + (1+c)t^2
+   $$
+
+   提取公因式 $(1+c)$：
+
+   $$
+   = (1+c) \left[ (1-t)^2 + 2t(1-t) + t^2 \right] = (1+c) \big[ (1-t) + t \big]^2 = (1+c) \cdot 1^2 = 1+c.
+   $$
+
+现在，将两个因子重新乘回：
+
+$$
+D(t)^2 - N_x(t)^2 = \big(D(t) - N_x(t)\big) \cdot \big(D(t) + N_x(t)\big) = (1-c)(2t-1)^2 \cdot (1+c)
+$$
+
+$$
+= (1-c)(1+c) \cdot (2t-1)^2 = (1 - c^2)(2t-1)^2.
+$$
+
+因为 $1 - c^2 = s^2 = \sin^2\frac{\theta}{2}$，所以上式等于：
+
+$$
+s^2(2t-1)^2 = \big[s(2t-1)\big]^2.
+$$
+
+而我们先前求得的 $Y$ 轴分量正是 $N_y(t) = s(2t-1)$！因此：
+
+$$
+D(t)^2 - N_x(t)^2 \equiv N_y(t)^2
+\iff
+N_x(t)^2 + N_y(t)^2 \equiv D(t)^2. \quad \blacksquare
+$$
+
+---
+
+## 十七、射影几何视界：齐次空间升维与超平面透视除法
+
+Bézier 与 B-Spline 的精髓在于线性多项式与凸组合；而 NURBS 却引入了<strong>分母除法</strong>，这让曲线求导、积分和求交算法变得极为复杂。
+
+但理样条并不是为了精确拟合二次曲线而生拼硬凑出来的补丁。<strong>在更高维度的射影几何（Projective Geometry）视界下，NURBS 展现出了统一。</strong>
+
+### 1. 齐次坐标升维：从 2D/3D 到 4D 射影空间
+
+计算机图形学管线处理相机透视投影时，会将三维顶点 $(x, y, z)$ 扩充为四维齐次坐标 $(X, Y, Z, W) = (w x, w y, w z, w)$。
+
+NURBS 在数学上使用了完全相同的一致升维映射。
+
+设物理空间中有一个二维控制点 $\mathbf P_i = (x_i, y_i)$，其带有权重标量 $w_i > 0$。我们将其<strong>升维定义为三维齐次控制点 $\widetilde{\mathbf P}_i \in \mathbb R^3$</strong>：
+
+$$
+\widetilde{\mathbf P}_i = \begin{pmatrix} w_i x_i \\ w_i y_i \\ w_i \end{pmatrix}.
+$$
+
+类似地，若物理空间为三维 $\mathbf P_i = (x_i, y_i, z_i)$，则升维映射到四维齐次控制点 $\widetilde{\mathbf P}_i = (w_i x_i, w_i y_i, w_i z_i, w_i) \in \mathbb R^4$。
+
+### 2. 升维后有理曲线退化为纯线性 B-Spline
+
+现在，我们在高维齐次空间中，直接使用<strong>完全非有理的经典 B-Spline 公式</strong>来定义一条高维空间样条曲线 $\widetilde{\mathbf C}(u)$：
+
+$$
+\widetilde{\mathbf C}(u) = \sum_{i=0}^n N_{i,p}(u) \widetilde{\mathbf P}_i.
+$$
+
+让我们将 $\widetilde{\mathbf P}_i$ 的各个分量分别展开：
+
+$$
+\widetilde{\mathbf C}(u) = \sum_{i=0}^n N_{i,p}(u) \begin{pmatrix} w_i x_i \\ w_i y_i \\ w_i \end{pmatrix}
+= \begin{pmatrix} \sum_{i=0}^n N_{i,p}(u) w_i x_i \\ \sum_{i=0}^n N_{i,p}(u) w_i y_i \\ \sum_{i=0}^n N_{i,p}(u) w_i \end{pmatrix}
+= \begin{pmatrix} \widetilde X(u) \\ \widetilde Y(u) \\ \widetilde W(u) \end{pmatrix}.
+$$
+
+请仔细注视这个高维曲线 $\widetilde{\mathbf C}(u)$：
+- 它的每一个分量，都是<strong>纯多项式</strong>的线性组合
+- 它<strong>没有任何除法（非有理多项式）</strong>
+- 它的导数、切线、曲率和连续性，完全由前十二章的经典 Cox–de Boor 算法百分之百支配
+
+### 3. 透视除法（Perspective Division）：物理世界是 $w=1$ 超平面的透视切片
+
+那么，我们在低维物理世界看到的非线性有理曲线 $\mathbf C(u)$ 从何而来？
+
+只需要施加一次图形学最为熟悉的<strong>透视除法（Perspective Division）</strong>：
+
+$$
+\mathbf C(u) = \operatorname{proj}\big(\widetilde{\mathbf C}(u)\big) = \left( \frac{\widetilde X(u)}{\widetilde W(u)}, \, \frac{\widetilde Y(u)}{\widetilde W(u)} \right) = \frac{\sum N_{i,p}(u) w_i \mathbf P_i}{\sum N_{j,p}(u) w_j}.
+$$
+
+经过透视映射后的几何图像：
+1. <strong>物理世界</strong>，正是高维射影空间中方程为 $w = 1$ 的<strong>仿射超平面（Affine Hyperplane）</strong>
+2. 高维纯多项式曲线 $\widetilde{\mathbf C}(u)$ 悬浮在空间中。从高维原点 $(0, 0, 0)$ 发射出一束束射线（Rays），穿透曲线上的每个点 $\widetilde{\mathbf C}(u)$
+3. 这些视线光束打在超平面 $w = 1$ 上的交点轨迹，在物理世界中投射出的影子，就是所谓的 <strong>NURBS 有理曲线</strong>
+
+> <strong>观察</strong>：
+> <strong>无需复杂的“有理曲线”；所谓 NURBS，可以是高维简单纯多项式 B-Spline 在低维物理超平面上的投影。</strong>
+
+所有在物理空间中看似神秘复杂的性质，在高维空间中全部迎刃而解：
+- 为什么将所有权重同乘常数 $c$ 曲线不变？因为所有齐次控制点 $\widetilde{\mathbf P}_i$ 被沿原点射线同步拉伸了 $c$ 倍，生成的高维曲线 $\widetilde{\mathbf C}(u)$ 同样沿射线整体放大了 $c$ 倍，但从原点发出的投影视线方向分毫不差，在 $w=1$ 上的投影交点完全静止！
+- 为什么圆弧切线外推控制点 $\mathbf P_1 = (1/\cos(\theta/2), 0)$ 配合权重 $w_1 = \cos(\theta/2)$ 能生成圆？因为升维后它的齐次坐标分量是 $w_1 \mathbf P_1 = \cos(\theta/2) \cdot (1/\cos(\theta/2), 0) = (1, 0)$——在齐次空间中它其实就在单位圆柱面上，透视投影将切线拉扯与权重缩放完美对消！
+
+在下方 3D 交互场景中呈现了这一高维升维与透视除法的空间全貌。切换动态光束追踪（Trace）与透视光锥（Bundle）模式，旋转观察高维空间多项式曲线如何穿透 $w=1$ 超平面：
+
+<NurbsHomogeneous3DDemo client:visible />
+
+---
+
+## 十八、几何工业的阶梯：Bézier $\to$ B-Spline $\to$ NURBS 全体系总览
+
+至此，文章已经完整走完了现代计算几何与工业造型技术半个多世纪的三次飞跃。
+
+### 1. 三大几何范式的演进矩阵
+
+| 评估维度 | ① Bézier 曲线 | ② B-Spline 曲线 | ③ NURBS 曲线 |
+| :--- | :--- | :--- | :--- |
+| <strong>核心数学基础</strong> | 单段 Bernstein 多项式 | 分段 Cox–de Boor 局部多项式 | 齐次射影空间分段多项式 + 透视除法 |
+| <strong>核心控制结构</strong> | 控制多边形 $\{ \mathbf P_i \}$ | 控制多边形 $\{ \mathbf P_i \}$ + 节点向量 $U$ | 控制多边形 $\{ \mathbf P_i \}$ + 节点向量 $U$ + 权重标量 $\{ w_i \}$ |
+| <strong>多项式次数</strong> | 强绑定：点数减一（$n = \text{点数}-1$） | 自由解耦：任意点数保持固定次数 $p$ | 自由解耦：任意点数保持固定次数 $p$ |
+| <strong>局部支撑特性</strong> | <strong>无</strong>（修改一点，整条曲线全局蠕动） | <strong>严格局部紧支撑</strong>（限制在 $p+1$ 个跨度内） | <strong>严格局部紧支撑</strong>（保持 B-Spline 紧支撑区间） |
+| <strong>二次曲线表示能力</strong> | <strong>完全无法精确表示</strong>（存在固有近似误差） | <strong>完全无法精确表示</strong>（仅能多段逼近） | <strong>全域解析零误差精确表示</strong>（圆、椭圆、双曲） |
+| <strong>典型应用领域</strong> | 字体排版（TrueType）、矢量插画（SVG） | 路径动画、简单 CAD 曲线骨架 | 工业高端 CAD、空气动力学蒙皮、船舶制造 |
+
+### 2. 为什么现代工业标准统一选用 NURBS？
+
+无论是工业数据交换标准 <strong>STEP</strong>，还是现代工业建模内核如 <strong>Siemens Parasolid</strong>、<strong>Dassault Systèmes ACIS(Revit)</strong> 以及开源内核 <strong>OpenCASCADE</strong>，其底层曲面造型的核心数据结构全部建立在 NURBS 之上。
+
+原因极其纯粹：<strong>NURBS 提供了工业界有史以来最强大的几何大一统（Grand Unified Geometry）能力</strong>：
+1. <strong>统一解析形体与自由形体</strong>：平面、圆柱面、圆球面、圆锥面、环面（经典解析机械零件）与汽车流线型车身、航空叶片（复杂自由曲面），在 NURBS 体系下不需要维护两套割裂的代码库，它们全都是统一 NURBS 数据结构的不同参数配置；
+2. <strong>极高的数值稳定性</strong>：保留了强凸包性与仿射/射影不变性，数控加工计算交线与刀轨时具备极佳的收敛容错边界；
+3. <strong>向下兼容性</strong>：只需将权重置为 $1$、节点向量置为 Clamped，就能无缝承载旧有的全部 Bézier 与 B-Spline 资产。
+
+### 3. 终极心智模型：包含与特化的几何谱系
+
+整个曲线体系的终极哲学关系可以归结为以下严谨的包含谱系：
+
+$$
+\boxed{\quad \text{Bézier 曲线} \quad\subset\quad \text{B-Spline 曲线} \quad\subset\quad \text{NURBS 曲线} \quad}
+$$
+
+- <strong>B-Spline 是退化的 NURBS</strong>：当 NURBS 曲线的所有权重标量取相同常数（$w_0 = w_1 = \dots = w_n = 1$）时，透视分母恒为 $1$，NURBS 无缝退化为经典 B-Spline；
+- <strong>Bézier 是极值的 B-Spline</strong>：当 B-Spline 的节点向量两端重数达到 $p+1$ 且内部不包含任何有效非零节点时，分段基函数收敛为单跨度 Bernstein 基函数，B-Spline 无缝退化为经典 Bézier。
+
+从两点之间的 `lerp` 线性插值，到高阶递归的 de Casteljau；
+从 Bernstein 的全局膨胀，到 Cox–de Boor 的节点向量局部紧支撑；
+再到引入权重，利用齐次射影几何在高维空间画出精确二次曲线的透视投影——
+人类用半个世纪的数学探索，将微积分、代数学与射影几何交织熔铸为这套现代计算机图形学的宏伟基石。当你下一次在 CAD 软件中轻点鼠标绘制一条优雅流畅的曲面时，那每一次平滑的曲率流动背后，都是这一宏大数学体系在物理世界中的静默绽放。

@@ -1,9 +1,16 @@
-import { useId, useMemo, useState, useEffect, useCallback } from "react";
-import CodeMirror, { EditorView } from "@uiw/react-codemirror";
-import { rust } from "@codemirror/lang-rust";
-import { tags as t } from "@lezer/highlight";
-import { githubLightInit, githubDarkInit } from "@uiw/codemirror-theme-github";
+import {
+  useId,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+import Editor from "@monaco-editor/react";
 import { actions } from "astro:actions";
+import { initMonaco, computeEditorHeight } from "../../lib/editor/monaco";
+import { resolveMonacoTheme } from "../../lib/editor/themes";
+import { useGfxSettings } from "../../lib/settings/settings-store";
 import CapsuleTabs from "../framework/CapsuleTabs";
 import ExpandableDemo from "../framework/ExpandableDemo";
 import { AutoMath } from "../framework/AutoMath";
@@ -93,45 +100,6 @@ function useIsDarkMode(): boolean {
 
   return isDark;
 }
-
-const customEditorStyle = EditorView.theme({
-  "&": {
-    fontSize: "12px",
-    fontFamily:
-      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-  },
-  ".cm-scroller": {
-    fontFamily: "inherit",
-    lineHeight: "1.65",
-  },
-  ".cm-content": {
-    padding: "8px 0",
-  },
-  ".cm-line": {
-    padding: "0 12px",
-  },
-  ".cm-gutters": {
-    backgroundColor: "transparent",
-    borderRight: "1px solid var(--gfx-border, #e2e8f0)",
-    color: "var(--gfx-muted, #94a3b8)",
-  },
-  ".cm-activeLineGutter": {
-    backgroundColor: "transparent",
-    color: "var(--gfx-ink, #0f172a)",
-    fontWeight: "600",
-  },
-  "&.cm-focused": {
-    outline: "none",
-  },
-});
-
-const customGithubLight = githubLightInit({
-  styles: [{ tag: t.processingInstruction, color: "#d73a49" }],
-});
-
-const customGithubDark = githubDarkInit({
-  styles: [{ tag: t.processingInstruction, color: "#ff7b72" }],
-});
 
 export default function BorrowConflictDemo() {
   const [scenarioId, setScenarioId] = useState<string>("same-var");
@@ -339,9 +307,33 @@ export default function BorrowConflictDemo() {
       '    println!("✓ 生命周期完全错开，无并发交集，安全通过！");',
       "}",
     ].join("\n");
-  }, [scenarioId, alpha1, alpha2, timeOverlap]);
+  }, [scenarioId, timeOverlap, alpha1, alpha2]);
 
-  const extensions = useMemo(() => [customEditorStyle, rust()], []);
+  const [editorHeight, setEditorHeight] = useState(200);
+  const [monacoLoaded, setMonacoLoaded] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editorRef = useRef<any>(null);
+  const { settings } = useGfxSettings();
+
+  useEffect(() => {
+    initMonaco().then(() => {
+      setMonacoLoaded(true);
+    });
+  }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleEditorMount = useCallback((editor: any) => {
+    editorRef.current = editor;
+    const updateHeight = () => {
+      const computed = computeEditorHeight(editor, 420, 100);
+      setEditorHeight(computed);
+      requestAnimationFrame(() => {
+        editor.layout();
+      });
+    };
+    editor.onDidContentSizeChange?.(updateHeight);
+    updateHeight();
+  }, []);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -845,24 +837,51 @@ export default function BorrowConflictDemo() {
               rustc -O 编译并捕获真机诊断）：
             </p>
 
-            {/* CodeMirror 6 只读展示 */}
-            <div className="relative">
-              <CodeMirror
-                value={generatedRustCode}
-                theme={isDark ? customGithubDark : customGithubLight}
-                extensions={extensions}
-                editable={false}
-                readOnly={true}
-                basicSetup={{
-                  lineNumbers: true,
-                  foldGutter: false,
-                  highlightActiveLineGutter: false,
-                  highlightSpecialChars: true,
-                  syntaxHighlighting: true,
-                  bracketMatching: true,
-                }}
-                className="text-xs"
-              />
+            {/* Monaco Editor 只读展示 */}
+            <div
+              className="relative transition-all"
+              style={{ height: `${editorHeight}px` }}
+            >
+              {monacoLoaded ? (
+                <Editor
+                  height="100%"
+                  language="rust"
+                  value={generatedRustCode}
+                  theme={resolveMonacoTheme(settings.editorTheme, isDark)}
+                  onMount={handleEditorMount}
+                  loading={
+                    <div className="flex h-24 items-center justify-center gap-2 text-xs text-muted">
+                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                      <span>载入 Monaco Editor...</span>
+                    </div>
+                  }
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: settings.editorMinimap },
+                    lineNumbers: settings.editorLineNumbers ? "on" : "off",
+                    lineNumbersMinChars: 2,
+                    folding: true,
+                    scrollBeyondLastLine: false,
+                    fontSize: settings.editorFontSize,
+                    fontFamily:
+                      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                    automaticLayout: true,
+                    scrollbar: {
+                      vertical: "auto",
+                      horizontal: "auto",
+                      verticalScrollbarSize: 6,
+                      horizontalScrollbarSize: 6,
+                    },
+                    tabSize: settings.editorTabSize,
+                    wordWrap: "on",
+                  }}
+                />
+              ) : (
+                <div className="flex h-24 items-center justify-center gap-2 text-xs text-muted">
+                  <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                  <span>载入 Monaco Editor...</span>
+                </div>
+              )}
             </div>
 
             {/* rustc 输出控制台 */}
